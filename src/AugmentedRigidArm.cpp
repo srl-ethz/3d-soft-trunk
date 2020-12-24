@@ -11,34 +11,6 @@ AugmentedRigidArm::AugmentedRigidArm() {
 //        abort();
 //    }
 //    rbdl_model->gravity = Vector3d(0., 0., -9.81);
-#if USE_ROS
-    // ros::init() requires argc and argv for remapping, but since we're not using command line arguments for this, input placeholder values that won't be used.
-    std::cout << "Setting up ROS node and publisher...\n";
-    int tmp_c = 1;
-    char *tmp_v[1];
-    strcpy(tmp_v[0], "placeholder");
-    ros::init(tmp_c, tmp_v, "joint_pub", ros::init_options::AnonymousName);
-    ros::NodeHandle n;
-    nodeHandle = &n;
-    joint_pub = n.advertise<sensor_msgs::JointState>("/joint_states", 10);
-    for (int i = 0; i < N_SEGMENTS; i++) {
-        // set up joint names
-        jointState.name.push_back(std::to_string(i) + "-base-ball-joint_x_joint");
-        jointState.name.push_back(std::to_string(i) + "-base-ball-joint_y_joint");
-        jointState.name.push_back(std::to_string(i) + "-base-ball-joint_z_joint");
-        jointState.name.push_back(std::to_string(i) + "-a-b_joint");
-        jointState.name.push_back(std::to_string(i) + "-middle-ball-joint_x_joint");
-        jointState.name.push_back(std::to_string(i) + "-middle-ball-joint_y_joint");
-        jointState.name.push_back(std::to_string(i) + "-middle-ball-joint_z_joint");
-        jointState.name.push_back(std::to_string(i) + "-c-d_joint");
-        jointState.name.push_back(std::to_string(i) + "-tip-ball-joint_x_joint");
-        jointState.name.push_back(std::to_string(i) + "-tip-ball-joint_y_joint");
-        jointState.name.push_back(std::to_string(i) + "-tip-ball-joint_z_joint");
-    }
-    for (int i = 0; i < N_SEGMENTS * JOINTS; i++)
-        jointState.position.push_back(0.0);
-    std::cout << "done.\n";
-#endif
 }
 
 void AugmentedRigidArm::setup_drake_model() {
@@ -253,21 +225,4 @@ void AugmentedRigidArm::simulate() {
     simulator.set_target_realtime_rate(1.0);
     simulator.Initialize();
     simulator.AdvanceTo(10);
-}
-
-AugmentedRigidArm::~AugmentedRigidArm() {
-#if USE_ROS
-    ros::shutdown();
-#endif
-
-}
-
-void AugmentedRigidArm::joint_publish() {
-#if USE_ROS
-    jointState.header.stamp = ros::Time::now();
-    for(int i=0; i<N_SEGMENTS*JOINTS; i++)
-      jointState.position[i] = m(i);
-    joint_pub.publish(jointState);
-    //  std::cout<<"publishing"<<jointState<<"\n";
-#endif
 }

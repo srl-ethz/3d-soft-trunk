@@ -27,24 +27,16 @@ public:
      * @param dq_ref
      * @param ddq_ref
      */
-    void curvatureDynamicControl(
+    void set_ref(
             const VectorXd &q_ref,
             const VectorXd &dq_ref,
             const VectorXd &ddq_ref);
 
     /**
-     * compute the pressures for good old PID control.
-     * @param q_ref target configuration
-     * @param pressures pointer to where you want the pressures values to be saved.
-     */
-    void curvaturePIDControl(
-            const VectorXd &q_ref,
-            VectorXd *pressures
-    );
-    /**
      * @brief update B(inertia matrix), C and G(gravity vector) in q space
      */
     void updateBCG(const VectorXd &q, const VectorXd &dq);
+
     MatrixXd B;
     MatrixXd C;
     VectorXd G;
@@ -55,8 +47,10 @@ private:
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
 
-    VectorXd k; /** @brief stiffness coefficient of silicone arm */ 
-    VectorXd d; /** @brief damping coefficient of silicone arm */
+    VectorXd K; /** @brief stiffness coefficient of silicone arm */
+    VectorXd D; /** @brief damping coefficient of silicone arm */
+    VectorXd K_p; /** @brief P gain for pose FB */
+    VectorXd K_d; /** @brief D gain for pose FB */
     VectorXd alpha;
 
     /**
@@ -68,14 +62,24 @@ private:
      */
     MatrixXd A_p2f;
     MatrixXd A_p2f_all;
-    
+
     std::vector<MiniPID> miniPIDs;
     bool use_feedforward;
     bool simulate;
+
     /**
-     * actuate the arm
-     * @param f force values
+     * actuate the arm using generalized forces
+     * @param f generalized force expressed in st_params::parametrization space
      */
     void actuate(VectorXd f);
 
+    std::thread control_thread;
+
+    void control_loop();
+
+    VectorXd q;
+    VectorXd dq;
+    VectorXd q_ref;
+    VectorXd dq_ref;
+    VectorXd ddq_ref;
 };

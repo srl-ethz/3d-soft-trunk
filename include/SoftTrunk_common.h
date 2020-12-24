@@ -16,19 +16,23 @@ using namespace Eigen;
 
 /** @brief which type of parametrization is used to describe the PCC configuration. */
 enum class ParametrizationType {
-    phi_theta /** as used in Katzschmann2019 */,
+    phi_theta, /** as used in Katzschmann2019 */
     longitudinal /** see yasu's report & DellaSantina2020 */
     };
 /** @brief the link structure of the rigid model */
 enum class RigidModelType {
-    original /** as proposed in Katzschmann2019 */,
+    original, /** as proposed in Katzschmann2019 */
     straw_bend /** see yasu's report */
     };
 /** @brief placement of arm */
 enum class ArmConfigurationType {
-    stalactite /** hanging from ceiling- stick "tight" to the ceiling */,
+    stalactite, /** hanging from ceiling- stick "tight" to the ceiling */
     stalagmite /** placed on floor- rise "might"ily from the floor */
-    };
+};
+enum class ControllerType {
+    dynamic,
+    pid
+};
 
 /** @brief robot-specific parameters SoftTrunk*/
 namespace st_params {
@@ -50,6 +54,13 @@ namespace st_params {
 
     /** @brief radius of the soft trunk, in meters. */
     const double r_trunk = 0.03;
+
+    // @todo separate into separate namespace for each parametrization
+    std::array<double, 3> k = {1, 1, 1};
+    std::array<double, 3> beta = {1, 1, 1};
+    std::array<double, 6> k_p = {1, 1, 1, 1, 1, 1}; /** @brief P gain for pose FB */
+    std::array<double, 6> k_d = {1, 1, 1, 1, 1, 1}; /** @brief D gain for pose FB */
+    std::array<double, 6> pid_p = {1, 1, 1, 1, 1, 1};
 
     /** @brief valve-related parameters */
     namespace valve {
@@ -78,6 +89,7 @@ namespace st_params {
     const ParametrizationType parametrization = ParametrizationType::phi_theta;
     const RigidModelType rigidModel = RigidModelType::straw_bend;
     const ArmConfigurationType armConfiguration = ArmConfigurationType::stalactite;
+    const ControllerType controller = ControllerType::dynamic;
 }
 
 void sleep(double sleep_secs) {
@@ -101,15 +113,3 @@ public:
     }
 };
 #define PI 3.141592
-/**
- * @brief period of one control step, in seconds. must be a value longer than the control loop.
- */
-#define CONTROL_PERIOD 0.005
-
-// set up ROS automatically if ROS is found
-#ifdef CATKIN_FOUND
-#define USE_ROS true  // do you want to publish joint states to ROS
-#endif
-#ifndef CATKIN_FOUND
-#define USE_ROS false
-#endif

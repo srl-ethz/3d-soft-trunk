@@ -12,16 +12,6 @@
 
 #include "SoftTrunk_common.h"
 
-#if USE_ROS
-#include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
-#endif
-
-/**
- * how many joints there are in one segment of the augmented rigid arm.
- */
-#define JOINTS 11
-
 /**
  * @brief Represents the augmented rigid arm model.
  * @details The rigid arm model  approximates the soft arm. (see paper etc. for more info on how this is so)
@@ -55,12 +45,6 @@ private:
      */
     void extract_B_G();
 
-#if USE_ROS
-    ros::Publisher joint_pub;
-    sensor_msgs::JointState jointState;
-    ros::NodeHandle *nodeHandle;
-#endif
-
     /**
      * @brief convert phi-theta bend to joint angles for a straw-bend joint.
      */
@@ -74,19 +58,11 @@ private:
 
     void update_Jxi(const VectorXd q);
 
-    /**
-    * @brief publish joint state to ROS
-    */
-    void joint_publish();
-
 public:
     /**
      * @param is_create_xacro set to true if you only want to generate the model's xacro model
      */
     explicit AugmentedRigidArm();
-
-    ~AugmentedRigidArm();
-
     /**
      * @brief m is the map from q to the augmented model's parameters
      */
