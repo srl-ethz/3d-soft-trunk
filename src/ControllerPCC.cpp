@@ -21,7 +21,6 @@ MiniPID ZieglerNichols(double Ku, double period) {
 ControllerPCC::ControllerPCC() {
     std::cout << "ControllerPCC created...\n";
     // set up PID controllers
-    // miniPIDs.resize(st_params::num_segments*2);
     if (st_params::controller == ControllerType::pid) {
         for (int j = 0; j < st_params::num_segments * 2; ++j)
             miniPIDs.push_back(MiniPID{st_params::pid_p[j], 0, 0});
@@ -40,7 +39,7 @@ ControllerPCC::ControllerPCC() {
         }
     }
 
-    alpha = VectorXd::Zero(st_params::num_segments * 2);
+    alpha = VectorXd::Zero(st_params::num_segments);
     A_f2p = MatrixXd::Zero(4, 2);
     A_p2f = MatrixXd::Zero(2, 4);
     A_p2f_all = MatrixXd::Zero(2 * st_params::num_segments, 4 * st_params::num_segments);
@@ -51,13 +50,12 @@ ControllerPCC::ControllerPCC() {
         A_p2f_all.block(2 * j, 4 * j, 2, 4) = A_p2f;
     }
 
-    alpha(0) = 0.00988;
-    alpha(1) = alpha(0);
-    alpha(2) = 0.0076;
-    alpha(3) = alpha(2);
+    alpha(0) = 0.0001;
+    alpha(1) = 0.0001;
 
     ara = std::make_unique<AugmentedRigidArm>();
-    vc = std::make_unique<ValveController>();
+    std::vector<int> map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    vc = std::make_unique<ValveController>("192.168.0.100", map, 400);
     cc = std::make_unique<CurvatureCalculator>();
 
     control_thread = std::thread(&ControllerPCC::control_loop, this);
@@ -86,7 +84,7 @@ void ControllerPCC::updateBCG(const VectorXd &q, const VectorXd &dq) {
 void ControllerPCC::actuate(VectorXd f) {
     VectorXd p_vectorized = VectorXd::Zero(2); /** @brief 2D vector that expresses net pressure for X&Y directions */
     VectorXd p_actual = VectorXd::Zero(4); /** @brief actual pressure output to each chamber */
-    Matrix2d mat; /** @brief mapping matrix from p_vectorized to p_actual */
+    Matrix2d mat; /** @brief mapping matrix from f to p_vectorized */
     double theta, phi;
     for (int segment = 0; segment < st_params::num_segments; ++segment) {
         // first calculate p_vectorized for each segment
@@ -107,12 +105,14 @@ void ControllerPCC::actuate(VectorXd f) {
                 mat << 0, -sin(phi), 0, cos(phi);
             else
                 mat << -cos(phi) * sin(theta), -sin(phi), -sin(phi) * sin(theta), cos(phi);
-            // @todo there probably needs to be an inversion here??
+            mat = mat.inverse();
             p_vectorized = mat * f.segment(2 * segment, 2);
+            p_vectorized /= alpha(segment);
         } else if (st_params::parametrization == ParametrizationType::longitudinal) {
             //  @todo this is unverified
             p_vectorized = (A_f2p * f.segment(2 * segment, 2)) / alpha(2 * segment);
         }
+        fmt::print("seg:{}\t{}\n", segment, p_vectorized.transpose());
 
         for (int i = 0; i < 2; ++i) {
             // convert vectorized pressure to actual pressure

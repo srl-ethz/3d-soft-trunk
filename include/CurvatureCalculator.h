@@ -1,6 +1,6 @@
 #pragma once
 
-#include "QualisysClient.h"
+#include "mobilerack-interface/QualisysClient.h"
 #include "SoftTrunk_common.h"
 
 #include <Eigen/Geometry>
@@ -25,6 +25,7 @@ private:
      */
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> abs_transforms;
     std::thread calculatorThread;
+    const char *qtm_address = "192.168.1.1";
 
     /**
      * @brief background process that calculates curvature

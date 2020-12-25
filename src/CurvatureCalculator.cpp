@@ -21,7 +21,7 @@ CurvatureCalculator::CurvatureCalculator() {
 }
 
 void CurvatureCalculator::setupQualisys() {
-    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1);
+    optiTrackClient = std::make_unique<QualisysClient>(qtm_address, 22222, st_params::num_segments + 1);
 }
 
 void CurvatureCalculator::setupIntegratedSensor() {

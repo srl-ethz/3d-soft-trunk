@@ -6,7 +6,7 @@
 
 #include "SoftTrunk_common.h"
 #include <AugmentedRigidArm.h>
-#include "ValveController.h"
+#include "mobilerack-interface/ValveController.h"
 #include "CurvatureCalculator.h"
 #include "MiniPID.h"
 
@@ -20,9 +20,7 @@ class ControllerPCC {
 public:
     ControllerPCC();
 
-    /**
-     * compute the torque required to actuate the arm with a dynamic controller.
-     * Implements the controller described in the paper.
+    /** @brief set the reference pose (trajectory) of the arm
      * @param q_ref
      * @param dq_ref
      * @param ddq_ref
@@ -51,7 +49,7 @@ private:
     VectorXd D; /** @brief damping coefficient of silicone arm */
     VectorXd K_p; /** @brief P gain for pose FB */
     VectorXd K_d; /** @brief D gain for pose FB */
-    VectorXd alpha;
+    VectorXd alpha; /** @brief used to convert torque to pressure (pressure = torque / alpha) */
 
     /**
      * @brief Provides a mapping matrix from pressure to force for a single segment.

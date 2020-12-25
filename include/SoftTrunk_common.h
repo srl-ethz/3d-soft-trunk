@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "mobilerack-interface/common.h"
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <iostream>
@@ -18,12 +19,12 @@ using namespace Eigen;
 enum class ParametrizationType {
     phi_theta, /** as used in Katzschmann2019 */
     longitudinal /** see yasu's report & DellaSantina2020 */
-    };
+};
 /** @brief the link structure of the rigid model */
 enum class RigidModelType {
     original, /** as proposed in Katzschmann2019 */
     straw_bend /** see yasu's report */
-    };
+};
 /** @brief placement of arm */
 enum class ArmConfigurationType {
     stalactite, /** hanging from ceiling- stick "tight" to the ceiling */
@@ -41,7 +42,7 @@ namespace st_params {
     std::array<double, 3> masses = {0.12, 0.12, 0.12};
     /** @brief length of each segment, in m */
     std::array<double, 3> lengths = {0.11, 0.11, 0.11};
-    const int num_segments = 3;
+    const int num_segments = 1;
 
     const std::string local_address = "192.168.1.111";
 
@@ -60,29 +61,10 @@ namespace st_params {
     std::array<double, 3> beta = {1, 1, 1};
     std::array<double, 6> k_p = {1, 1, 1, 1, 1, 1}; /** @brief P gain for pose FB */
     std::array<double, 6> k_d = {1, 1, 1, 1, 1, 1}; /** @brief D gain for pose FB */
-    std::array<double, 6> pid_p = {1, 1, 1, 1, 1, 1};
+    std::array<double, 6> pid_p = {700, 300, 0, 0, 0, 0};
 
-    /** @brief valve-related parameters */
-    namespace valve {
-        /** @brief IP address of Festo valves */
-        const char* address = "192.168.0.100";
-        /** @brief map[i] is the valve number for i-th actuator in controller */
-        std::array<int, 4> map = {1,2,3,4};
-        const int num_valves = 16;
-
-        /** @brief max pressure that can be sent out. Useful to prevent puncture of the arm with too high a pressure.
-        * for DragonSkin 30, set to 1200.
-        * for DragonSkin 10, set to 400.
-        * (not throughly examined- a larger or smaller value may be better)
-        */
-        const int max_pressure = 400;
-        const bool use_pid = false;
-        const bool log = true;
-    }
     /** @brief qualisys-related parameters */
     namespace qualisys {
-        const char *address = "172.17.12.81";
-        const unsigned short port = 22222;
         const bool log = true; /** @brief log curvature values */
     }
 
@@ -91,25 +73,3 @@ namespace st_params {
     const ArmConfigurationType armConfiguration = ArmConfigurationType::stalactite;
     const ControllerType controller = ControllerType::dynamic;
 }
-
-void sleep(double sleep_secs) {
-    std::this_thread::sleep_for(std::chrono::milliseconds((int) (sleep_secs * 1000)));
-}
-
-/** @brief use this to run a loop at a fixed rate, regardless of processing time in between. emulates the ros::Rate class. */
-class Rate {
-    double hz;
-    std::chrono::microseconds step;
-    std::chrono::time_point<std::chrono::steady_clock> next;
-public:
-    Rate(double hz) : hz(hz) {
-        step = std::chrono::microseconds((int) (1000000. / hz));
-        next = std::chrono::steady_clock::now() + step;
-    };
-
-    void sleep() {
-        std::this_thread::sleep_until(next);
-        next += step;
-    }
-};
-#define PI 3.141592
