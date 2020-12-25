@@ -31,15 +31,17 @@ void CurvatureCalculator::setupIntegratedSensor() {
 
 void CurvatureCalculator::calculator_loop() {
     std::ofstream log_file;
-    if (st_params::qualisys::log) {
+    if (log) {
         std::string filename = "log_curvature.csv";
         fmt::print("logging to {}\n", filename);
         log_file.open(filename);
         log_file << "timestamp";
     }
     for (int i = 0; i < st_params::num_segments; ++i) {
-        assert(st_params::parametrization == ParametrizationType::phi_theta);
-        log_file << fmt::format(", phi_{}, theta_{}", i, i);
+        if (st_params::parametrization == ParametrizationType::phi_theta)
+            log_file << fmt::format(", phi_{}, theta_{}", i, i);
+        else if (st_params::parametrization == ParametrizationType::longitudinal)
+            log_file << fmt::format(", La_{}, Lb_{}", i, i);
     }
     log_file << "\n";
 
@@ -49,6 +51,8 @@ void CurvatureCalculator::calculator_loop() {
     Rate rate{1. / interval};
     run = true;
     while (run) {
+        rate.sleep();
+        std::lock_guard<std::mutex> lock(mtx);
         // this loop continuously monitors the current state.
         calculateCurvature();
         // todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises?
@@ -58,16 +62,15 @@ void CurvatureCalculator::calculator_loop() {
         ddq = (dq - prev_dq) / interval;;//(1 - 0.2) * presmooth_ddq e+ 0.2 * ddq;
         prev_q = q;
         prev_dq = dq;
-        if (st_params::qualisys::log) {
+        if (log) {
             log_file << timestamp;
             for (int i = 0; i < 2 * st_params::num_segments; ++i) {
                 log_file << fmt::format(", {}", q(i));
             }
             log_file << "\n";
         }
-        rate.sleep();
     }
-    if (st_params::qualisys::log)
+    if (log)
         log_file.close();
 }
 
@@ -75,6 +78,13 @@ double sign(double val) {
     if (val == 0) return 0.0;
     else if (val > 0) return 1.0;
     else return -1.0;
+}
+
+void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq) {
+    std::lock_guard<std::mutex> lock(mtx);
+    q = this->q;
+    dq = this->dq;
+    ddq = this->ddq;
 }
 
 void CurvatureCalculator::calculateCurvature() {

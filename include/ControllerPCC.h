@@ -9,6 +9,7 @@
 #include "mobilerack-interface/ValveController.h"
 #include "CurvatureCalculator.h"
 #include "MiniPID.h"
+#include <mutex>
 
 /**
  * @brief Implements the PCC controller as described in paper.
@@ -30,15 +31,7 @@ public:
             const VectorXd &dq_ref,
             const VectorXd &ddq_ref);
 
-    /**
-     * @brief update B(inertia matrix), C and G(gravity vector) in q space
-     */
-    void updateBCG(const VectorXd &q, const VectorXd &dq);
-
-    MatrixXd B;
-    MatrixXd C;
-    VectorXd G;
-    MatrixXd J; // Eigen::Matrix<double, 3, 2*N_SEGMENTS>
+    void get_status(VectorXd &q, VectorXd dq, VectorXd &p_vectorized);
 
 private:
     std::unique_ptr<AugmentedRigidArm> ara;
@@ -51,19 +44,11 @@ private:
     VectorXd K_d; /** @brief D gain for pose FB */
     VectorXd alpha; /** @brief used to convert torque to pressure (pressure = torque / alpha) */
 
-    /**
-     * @brief Provides a mapping matrix from pressure to force for a single segment.
-     */
-    MatrixXd A_f2p;
-    /**
-     * @brief Provides a mapping matrix from force to pressure for a single segment.
-     */
-    MatrixXd A_p2f;
-    MatrixXd A_p2f_all;
-
     std::vector<MiniPID> miniPIDs;
-    bool use_feedforward;
-    bool simulate;
+    bool use_feedforward = false;
+    bool simulate = false;
+
+    bool is_initial_ref_received = false;
 
     /**
      * actuate the arm using generalized forces
@@ -72,6 +57,7 @@ private:
     void actuate(VectorXd f);
 
     std::thread control_thread;
+    std::mutex mtx;
 
     void control_loop();
 
@@ -80,4 +66,16 @@ private:
     VectorXd q_ref;
     VectorXd dq_ref;
     VectorXd ddq_ref;
+
+    VectorXd p_vectorized; /** @brief vector that expresses net pressure for X&Y directions, for each segment */
+
+    /**
+     * @brief update B(inertia matrix), C and G(gravity vector) in q space
+     */
+    void updateBCG(const VectorXd &q, const VectorXd &dq);
+
+    MatrixXd B;
+    MatrixXd C;
+    VectorXd G;
+    MatrixXd J; // Eigen::Matrix<double, 3, 2*N_SEGMENTS>
 };

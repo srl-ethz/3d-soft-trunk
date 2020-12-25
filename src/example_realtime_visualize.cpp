@@ -10,10 +10,12 @@ int main() {
     // run drake-visualizer as well
     CurvatureCalculator cc{};
     AugmentedRigidArm ara{};
+    VectorXd q, dq, ddq;
     Rate r{30};
     while (true) {
-        ara.update(cc.q, cc.dq);
-        fmt::print("----------\n{}\n", cc.q.transpose());
+        cc.get_curvature(q, dq, ddq);
+        ara.update(q, dq);
+        fmt::print("----------\n{}\n", q.transpose());
         r.sleep();
     }
     return 1;

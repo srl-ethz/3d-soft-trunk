@@ -8,6 +8,7 @@
 #include <fstream>
 #include <thread>
 #include <cmath>
+#include <mutex>
 
 /**
  * @brief Calculates the PCC configuration of each soft arm segment based on motion track / internal sensor measurement.
@@ -25,16 +26,18 @@ private:
      */
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> abs_transforms;
     std::thread calculatorThread;
-    const char *qtm_address = "192.168.1.1";
+    const char *qtm_address = "192.168.120.97";
 
     /**
      * @brief background process that calculates curvature
      */
     void calculator_loop();
+
     /**
      * @brief thread runs while this is true
      */
     bool run;
+    const bool log = true;
 
     /**
      * @brief calculates q from the current frame values.
@@ -42,6 +45,12 @@ private:
     void calculateCurvature();
 
     VectorXd initial_q;
+    std::mutex mtx;
+
+    /** @brief PCC configuration of each segment of soft arm. depends on st_params::parametrization */
+    VectorXd q;
+    VectorXd dq;
+    VectorXd ddq;
 
 public:
     explicit CurvatureCalculator();
@@ -56,8 +65,5 @@ public:
      */
     void setupIntegratedSensor();
 
-    /** @brief PCC configuration of each segment of soft arm. depends on st_params::parametrization */
-    VectorXd q;
-    VectorXd dq;
-    VectorXd ddq;
+    void get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq);
 };

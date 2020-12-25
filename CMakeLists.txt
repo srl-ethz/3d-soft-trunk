@@ -55,6 +55,9 @@ include_directories(include mobilerack-interface/include mobilerack-interface/su
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIRS})
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+
 ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
 TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient fmt)
 
@@ -77,7 +80,7 @@ add_executable(example_realtime_visualize src/example_realtime_visualize.cpp)
 target_link_libraries(example_realtime_visualize AugmentedRigidArm CurvatureCalculator)
 
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp mobilerack-interface/subm/MiniPID/MiniPID.cpp)
-target_link_libraries(ControllerPCC ${EIGEN3_LIBRARIES} AugmentedRigidArm CurvatureCalculator ValveController -pthread)
+target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads)
 
 # add_executable(example_ControllerPCC src/example_ControllerPCC.cpp)
 # target_link_libraries(example_ControllerPCC AugmentedRigidArm ControllerPCC SoftTrunkInterface)

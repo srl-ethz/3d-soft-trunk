@@ -12,9 +12,11 @@
 
 int main() {
     CurvatureCalculator cc{};
+    VectorXd q, dq, ddq;
     Rate r{5};
     while (true) {
-        fmt::print("==========\nq:\t{}\ndq:\t{}\nddq:\t{}\n", cc.q.transpose(), cc.dq.transpose(), cc.ddq.transpose());
+        cc.get_curvature(q, dq, ddq);
+        fmt::print("==========\nq:\t{}\ndq:\t{}\nddq:\t{}\n", q.transpose(), dq.transpose(), ddq.transpose());
         r.sleep();
     }
     return 1;

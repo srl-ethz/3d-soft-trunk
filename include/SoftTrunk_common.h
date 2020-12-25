@@ -44,8 +44,6 @@ namespace st_params {
     std::array<double, 3> lengths = {0.11, 0.11, 0.11};
     const int num_segments = 1;
 
-    const std::string local_address = "192.168.1.111";
-
     /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
      * for DragonSkin 30, set to 300.
      * for DragonSkin 10, set to 150.
@@ -63,13 +61,9 @@ namespace st_params {
     std::array<double, 6> k_d = {1, 1, 1, 1, 1, 1}; /** @brief D gain for pose FB */
     std::array<double, 6> pid_p = {700, 300, 0, 0, 0, 0};
 
-    /** @brief qualisys-related parameters */
-    namespace qualisys {
-        const bool log = true; /** @brief log curvature values */
-    }
 
-    const ParametrizationType parametrization = ParametrizationType::phi_theta;
+    const ParametrizationType parametrization = ParametrizationType::longitudinal;
     const RigidModelType rigidModel = RigidModelType::straw_bend;
     const ArmConfigurationType armConfiguration = ArmConfigurationType::stalactite;
-    const ControllerType controller = ControllerType::dynamic;
+    const ControllerType controller = ControllerType::pid;
 }
