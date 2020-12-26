@@ -18,7 +18,7 @@ using namespace Eigen;
 /** @brief which type of parametrization is used to describe the PCC configuration. */
 enum class ParametrizationType {
     phi_theta, /** as used in Katzschmann2019 */
-    longitudinal /** see yasu's report & DellaSantina2020 */
+    longitudinal /** see yasu's report & DellaSantina2020. longitudinal length calcuated with unit radius */
 };
 /** @brief the link structure of the rigid model */
 enum class RigidModelType {
@@ -32,7 +32,7 @@ enum class ArmConfigurationType {
 };
 enum class ControllerType {
     dynamic,
-    pid
+    pid /** for PID control, error is directly converted to pressure (i.e. alpha not used) */
 };
 
 /** @brief robot-specific parameters SoftTrunk*/
@@ -50,9 +50,6 @@ namespace st_params {
      * (not throughly examined- a larger or smaller value may be better)
     */
     const int p_offset = 150;
-
-    /** @brief radius of the soft trunk, in meters. */
-    const double r_trunk = 0.03;
 
     // @todo separate into separate namespace for each parametrization
     std::array<double, 3> k = {1, 1, 1};

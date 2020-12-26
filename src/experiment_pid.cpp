@@ -13,8 +13,8 @@ int main(){
             q_ref(2 * i) = 0.2;
             q_ref(2 * i + 1) = 0.5;
         } else if (st_params::parametrization == ParametrizationType::phi_theta) {
-            q_ref(2 * i) = 0.01;
-            q_ref(2 * i + 1) = 0.005;
+            q_ref(2 * i) = 0.3;
+            q_ref(2 * i + 1) = 0.3;
         }
     }
     ControllerPCC cpcc{};

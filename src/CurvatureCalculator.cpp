@@ -101,9 +101,8 @@ void CurvatureCalculator::calculateCurvature() {
             q(2 * i) = phi;
             q(2 * i + 1) = theta;
         } else if (st_params::parametrization == ParametrizationType::longitudinal) {
-            q(2 * i) = -st_params::r_trunk * cos(phi) *
-                       theta; // deltaLa (the difference in the length of La compared to neutral state)
-            q(2 * i + 1) = -st_params::r_trunk * cos(PI / 2 - phi) * theta; // deltaLb
+            q(2 * i) = -cos(phi) * theta; // deltaLa (the difference in the length of La compared to neutral state)
+            q(2 * i + 1) = -cos(PI / 2 - phi) * theta;
         }
     }
     // q -= initial_q; // implement better way to get rid of initial error...

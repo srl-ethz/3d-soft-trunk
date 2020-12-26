@@ -122,10 +122,10 @@ void ControllerPCC::actuate(VectorXd f) {
             mat = mat.inverse().eval();
             fmt::print("mat inv:{}\n", mat);
             p_vectorized_segment = mat * f.segment(2 * segment, 2);
-            p_vectorized_segment /= alpha(segment);
         } else if (st_params::parametrization == ParametrizationType::longitudinal)
-            p_vectorized_segment = f.segment(2 * segment, 2) / alpha(segment);
-
+            p_vectorized_segment = f.segment(2 * segment, 2);
+        if (st_params::controller == ControllerType::dynamic)
+            p_vectorized_segment /= alpha(segment); // convert force to pressure
         p_vectorized.segment(2 * segment, 2) = p_vectorized_segment; // save to p_vectorized
 
         for (int i = 0; i < 2; ++i) {

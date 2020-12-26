@@ -3,14 +3,6 @@
 
 AugmentedRigidArm::AugmentedRigidArm() {
     setup_drake_model();
-
-//    int segments= rbdl_model->dof_count / JOINTS;
-//    std::cout << "Robot model created, with " << rbdl_model->dof_count << " DoF. It is a " << segments << "-segment arm.\n";
-//    if (segments != N_SEGMENTS){
-//        std::cout <<"Error: Number of segments in URDF does not match that in code. \n";
-//        abort();
-//    }
-//    rbdl_model->gravity = Vector3d(0., 0., -9.81);
 }
 
 void AugmentedRigidArm::setup_drake_model() {
@@ -21,16 +13,19 @@ void AugmentedRigidArm::setup_drake_model() {
     multibody_plant->set_name(st_params::robot_name);
     multibody_plant->RegisterAsSourceForSceneGraph(&scene_graph);
 
+    std::string urdf_file = fmt::format("./urdf/{}.urdf", st_params::robot_name);
+    fmt::print("loading URDF file {}...\n", urdf_file);
     // load URDF into multibody_plant
     drake::multibody::ModelInstanceIndex plant_model_instance_index = drake::multibody::Parser(multibody_plant,
                                                                                                &scene_graph).AddModelFromFile(
-            fmt::format("./urdf/{}.urdf", st_params::robot_name));
+            urdf_file);
 
     // weld base link to world frame
     drake::math::RigidTransform<double> world_to_base{};
     if (st_params::armConfiguration == ArmConfigurationType::stalactite)
         world_to_base.set_rotation(drake::math::RollPitchYaw(PI, 0., 0.));
-    multibody_plant->WeldFrames(multibody_plant->world_frame(), multibody_plant->GetFrameByName("base_link"), world_to_base);
+    multibody_plant->WeldFrames(multibody_plant->world_frame(), multibody_plant->GetFrameByName("base_link"),
+                                world_to_base);
     multibody_plant->Finalize();
 
     // connect plant with scene_graph to get collision info
@@ -46,11 +41,6 @@ void AugmentedRigidArm::setup_drake_model() {
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    drake::systems::Context<double> &plant_context = diagram->GetMutableSubsystemContext(*multibody_plant,
-                                                                                         diagram_context.get());
-    diagram->Publish(*diagram_context); // this updates the visualization
-    fmt::print("loaded model with pose {}", multibody_plant->GetPositions(plant_context));
-
     int num_joints = multibody_plant->num_joints() - 1; // @todo: but why??
     fmt::print("model has {} joints\n", num_joints);
     joints_per_segment = num_joints / st_params::num_segments;
@@ -65,7 +55,13 @@ void AugmentedRigidArm::setup_drake_model() {
         assert(0); // not implemented yet
 
     // initialize variables
-    m = VectorXd::Zero(num_joints);
+    xi = VectorXd::Zero(num_joints);
+    B_xi = MatrixXd::Zero(num_joints, num_joints);
+    G_xi = VectorXd::Zero(num_joints);
+    Jm = MatrixXd::Zero(num_joints, 2 * st_params::num_segments);
+    dJm = MatrixXd::Zero(num_joints, 2 * st_params::num_segments);
+    Jxi = MatrixXd::Zero(3, num_joints);
+    update_drake_model();
 }
 
 VectorXd AugmentedRigidArm::straw_bend_joint(double phi, double theta) {
@@ -78,8 +74,9 @@ VectorXd AugmentedRigidArm::straw_bend_joint(double phi, double theta) {
     return angles;
 }
 
-void AugmentedRigidArm::update_m(const VectorXd& q) {
-    // useful placeholder variables
+void AugmentedRigidArm::calculate_m(const VectorXd &q, VectorXd &xi) {
+    xi = VectorXd::Zero(joints_per_segment * st_params::num_segments);
+    // intermediate variables useful for calculation
     double q_0;
     double q_1;
     int joint_id_head;
@@ -87,15 +84,14 @@ void AugmentedRigidArm::update_m(const VectorXd& q) {
     double phi;
     double deltaL;
     for (int segment_id = 0; segment_id < st_params::num_segments; ++segment_id) {
-        q_0 = q(2*segment_id);
-        q_1 = q(2*segment_id + 1);
-        if (st_params::parametrization == ParametrizationType::phi_theta){
+        q_0 = q(2 * segment_id);
+        q_1 = q(2 * segment_id + 1);
+        if (st_params::parametrization == ParametrizationType::phi_theta) {
             phi = q_0;
             theta = q_1;
-        }
-        else if (st_params::parametrization == ParametrizationType::longitudinal){
+        } else if (st_params::parametrization == ParametrizationType::longitudinal) {
             // use phi, theta parametrization because it's simpler for calculation
-            if (q_0 == 0){
+            if (q_0 == 0) {
                 if (q_1 == 0)
                     phi = 0;
                 else
@@ -104,9 +100,9 @@ void AugmentedRigidArm::update_m(const VectorXd& q) {
             else
                 phi = atan(q_1 / q_0);
             if (q_0 == 0)
-                theta = -q_1 / (st_params::r_trunk * cos(PI/2 - phi));
+                theta = -q_1 / cos(PI / 2 - phi);
             else
-                theta = -q_0 / (st_params::r_trunk * cos(phi));
+                theta = -q_0 / cos(phi);
             if (theta < 0){
                 theta = -theta;
                 phi += PI;
@@ -114,54 +110,69 @@ void AugmentedRigidArm::update_m(const VectorXd& q) {
         }
 
         joint_id_head = joints_per_segment * segment_id;
-        if (st_params::rigidModel == RigidModelType::straw_bend){
+        if (st_params::rigidModel == RigidModelType::straw_bend) {
             double b = st_params::lengths[segment_id] / 2.;
             if (theta != 0)
-                b = st_params::lengths[segment_id] / theta * sqrt(1. + 4. * sin(theta/2.) / theta * (sin(theta/2.) / theta - cos(theta / 2.)));
+                b = st_params::lengths[segment_id] / theta *
+                    sqrt(1. + 4. * sin(theta / 2.) / theta * (sin(theta / 2.) / theta - cos(theta / 2.)));
             double nu = 0;
             if (theta != 0)
                 nu = acos(1. / b * st_params::lengths[segment_id] / theta * sin(theta / 2.));
             deltaL = st_params::lengths[segment_id] / 2. - b;
 
-            m.segment(joint_id_head, 3) = straw_bend_joint(phi, theta / 2 - nu);
-            m(joints_per_segment * segment_id + 3) = deltaL;
-            m.segment(joint_id_head + 4, 3) = straw_bend_joint(phi, 2 * nu);
-            m(joints_per_segment * segment_id + 7) = deltaL;
-            m.segment(joint_id_head + 8, 3) = m.segment(joint_id_head, 3);
+            xi.segment(joint_id_head, 3) = straw_bend_joint(phi, theta / 2 - nu);
+            xi(joints_per_segment * segment_id + 3) = deltaL;
+            xi.segment(joint_id_head + 4, 3) = straw_bend_joint(phi, 2 * nu);
+            xi(joints_per_segment * segment_id + 7) = deltaL;
+            xi.segment(joint_id_head + 8, 3) = xi.segment(joint_id_head, 3);
         }
     }
+}
 
-    // update drake model and drake visualization
+void AugmentedRigidArm::update_drake_model() {
+    // update drake model
     drake::systems::Context<double> &plant_context = diagram->GetMutableSubsystemContext(*multibody_plant,
                                                                                          diagram_context.get());
-    multibody_plant->SetPositions(&plant_context, m);
+    multibody_plant->SetPositions(&plant_context, xi);
+
+    // update drake visualization
     diagram->Publish(*diagram_context);
+
+    // update some dynamic & kinematic params
+    multibody_plant->CalcMassMatrix(plant_context, &B_xi);
+    G_xi = multibody_plant->CalcGravityGeneralizedForces(plant_context);
+
+    std::string final_frame_name = fmt::format("mid-{}", st_params::num_segments - 1);
+    multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
+                                                       multibody_plant->GetFrameByName(final_frame_name),
+                                                       VectorXd::Zero(3), multibody_plant->world_frame(),
+                                                       multibody_plant->world_frame(), &Jxi);
 }
 
-void AugmentedRigidArm::update_Jm(const VectorXd q) {
-    // brute force calculate Jacobian numerically lol
-    //todo: verify that this numerical method is actually okay
+void AugmentedRigidArm::update_Jm(const VectorXd &q) {
+    // brute force calculate Jacobian numerically
+    // todo: verify that this numerical method is actually okay
     // this particular implementation only works because m of each element is totally independent of other elements
-//    Vector2Nd q_deltaX = Vector2Nd(q);
-//    Vector2Nd q_deltaY = Vector2Nd(q);
-//    double epsilon = 0.0001;
-//    for (int i = 0; i < N_SEGMENTS; ++i) {
-//        q_deltaX(2 * i) += epsilon;
-//        q_deltaY(2 * i + 1) += epsilon;
-//    }
-//    update_m(q);
-//    Eigen::Matrix<double, JOINTS * N_SEGMENTS, 1> xi_current = Eigen::Matrix<double, JOINTS * N_SEGMENTS, 1>(m);
-//    update_m(q_deltaX);
-//    Eigen::Matrix<double, JOINTS * N_SEGMENTS, 1> xi_deltaX = Eigen::Matrix<double, JOINTS * N_SEGMENTS, 1>(m);
-//    update_m(q_deltaY);
-//    Eigen::Matrix<double, JOINTS * N_SEGMENTS, 1> xi_deltaY = Eigen::Matrix<double, JOINTS * N_SEGMENTS, 1>(m);
-//    for (int j = 0; j < N_SEGMENTS; ++j) {
-//        Jm.block(JOINTS * j, 2 * j + 0, JOINTS, 1) = (xi_deltaX - xi_current).block(JOINTS * j, 0, JOINTS, 1) / epsilon;
-//        Jm.block(JOINTS * j, 2 * j + 1, JOINTS, 1) = (xi_deltaY - xi_current).block(JOINTS * j, 0, JOINTS, 1) / epsilon;
-//    }
+    VectorXd q_deltaX = q;
+    VectorXd q_deltaY = q;
+    VectorXd xi_current, xi_deltaX, xi_deltaY;
+    double epsilon = 0.001;
+    for (int i = 0; i < st_params::num_segments; ++i) {
+        q_deltaX(2 * i) += epsilon;
+        q_deltaY(2 * i + 1) += epsilon;
+    }
+    calculate_m(q, xi_current);
+    calculate_m(q_deltaX, xi_deltaX);
+    calculate_m(q_deltaY, xi_deltaY);
+    for (int i = 0; i < st_params::num_segments; ++i) {
+        Jm.block(joints_per_segment * i, 2 * i + 0, joints_per_segment, 1) = (xi_deltaX - xi_current).segment(
+                joints_per_segment * i, joints_per_segment);
+        Jm.block(joints_per_segment * i, 2 * i + 1, joints_per_segment, 1) = (xi_deltaY - xi_current).segment(
+                joints_per_segment * i, joints_per_segment);
+    }
 }
 
-void AugmentedRigidArm::update_dJm(const VectorXd q, const VectorXd dq) {
+void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq) {
     //todo: verify this numerical method too
 //    double epsilon = 0.1;
 //    Vector2Nd q_delta = Vector2Nd(q);
@@ -175,48 +186,16 @@ void AugmentedRigidArm::update_dJm(const VectorXd q, const VectorXd dq) {
 //    dJm = (Jxi_delta - Jxi_current) / epsilon;
 }
 
-void AugmentedRigidArm::update_Jxi(const VectorXd q) {
-//    update_m(q);
-//    MatrixNd Jxi_6D = MatrixNd::Constant (6, rbdl_model->dof_count, 0.);
-//    Jxi_6D.setZero();
-//    CalcBodySpatialJacobian(*rbdl_model, m, JOINTS*N_SEGMENTS, Jxi_6D);
-//    Jxi = Jxi_6D.block(3,0,3,N_SEGMENTS*JOINTS);
-}
-
 void AugmentedRigidArm::update(const VectorXd& q, const VectorXd& dq) {
     assert(q.size() % st_params::num_segments == 0);
     assert(dq.size() % st_params::num_segments == 0);
 
-    // first update m (augmented model parameters)
-    update_m(q);
-//    update_Jxi(q);
-//    extract_B_G();
-//    joint_publish();
-//
-//    update_Jm(q);
+    // first calculate m (augmented model parameters)
+    calculate_m(q, xi);
+    update_drake_model();
+    update_Jm(q);
 //    update_dJm(q, dq);
 //
-//    update_m(q);
-
-}
-
-void AugmentedRigidArm::extract_B_G() {
-    // the fun part- extracting the B_xi(inertia matrix) and G_xi(gravity) from RBDL, using unit vectors
-
-    // first run Inverse Dynamics with dQ and ddQ as zero vectors (gives gravity vector)
-//    VectorNd dQ_zeros = VectorNd::Zero(N_SEGMENTS * JOINTS);
-//    VectorNd ddQ_zeros = VectorNd::Zero(N_SEGMENTS * JOINTS);
-//    VectorNd tau = VectorNd::Zero(N_SEGMENTS * JOINTS);
-//    InverseDynamics(*rbdl_model, m, dQ_zeros, ddQ_zeros, tau);
-//    G_xi = tau;
-//
-//    // next, iterate through by making ddQ_zeros a unit vector and get inertia matrix
-//    for (int i = 0; i < N_SEGMENTS * JOINTS; ++i) {
-//        ddQ_zeros(i) = 0.1;
-//        InverseDynamics(*rbdl_model, m, dQ_zeros, ddQ_zeros, tau);
-//        B_xi.col(i) = (tau - G_xi) / ddQ_zeros(i);
-//        ddQ_zeros(i) = 0;
-//    }
 }
 
 void AugmentedRigidArm::simulate() {
