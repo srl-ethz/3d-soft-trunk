@@ -10,11 +10,11 @@
  * @param period oscillation period (in seconds)
  * @return MiniPID controller
  */
-MiniPID ZieglerNichols(double Ku, double period) {
+MiniPID ZieglerNichols(double Ku, double period, double control_period) {
     // https://en.wikipedia.org/wiki/Ziegler–Nichols_method
-    double Kp = 0.45 * Ku;
-    double Ki = 0; // Kp / (period/1.2) * CONTROL_PERIOD;
-    double Kd = 0.;
+    double Kp = 0.2 * Ku;
+    double Ki = 0.4 * Ku / period * control_period;
+    double Kd = 0.066 * Ku * period / control_period;
     return MiniPID(Kp, Ki, Kd);
 }
 
@@ -23,11 +23,10 @@ ControllerPCC::ControllerPCC() {
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
         for (int j = 0; j < st_params::num_segments * 2; ++j)
-            miniPIDs.push_back(MiniPID{st_params::pid_p[j], 0, 0});
+            miniPIDs.push_back(ZieglerNichols(st_params::pid_Ku[j], st_params::pid_Tu[j], dt));
     }
     // @todo probably used PD controllers for phi in original parameterization
 
-    assert(st_params::num_segments == 1);
     K = VectorXd::Zero(st_params::num_segments * 2);
     D = VectorXd::Zero(st_params::num_segments * 2);
     for (int i = 0; i < st_params::num_segments; ++i) {
@@ -46,7 +45,7 @@ ControllerPCC::ControllerPCC() {
 
     alpha = VectorXd::Zero(st_params::num_segments);
 
-    alpha(0) = 0.0001;
+    alpha(0) = 1;
     p_vectorized = VectorXd::Zero(2 * st_params::num_segments);
     q = VectorXd::Zero(2 * st_params::num_segments);
     dq = VectorXd::Zero(2 * st_params::num_segments);
@@ -55,7 +54,8 @@ ControllerPCC::ControllerPCC() {
     ddq_ref = VectorXd::Zero(2 * st_params::num_segments);
 
     ara = std::make_unique<AugmentedRigidArm>();
-    std::vector<int> map = {0, 1, 2, 3};//, 4, 5, 6, 7, 8, 9, 10, 11};
+    // +X, +Y, -X, -Y
+    std::vector<int> map = {0, 3, 2, 1, 4, 6, 7, 5, 11, 10, 8, 9};
     vc = std::make_unique<ValveController>("192.168.0.100", map, 400);
     cc = std::make_unique<CurvatureCalculator>();
 
@@ -79,10 +79,10 @@ void ControllerPCC::set_ref(const VectorXd &q_ref,
 void ControllerPCC::updateBCG(const VectorXd &q, const VectorXd &dq) {
     ara->update(q, dq);
     // these conversions from m space to q space are described in the paper
-//    B = ara->Jm.transpose() * ara->B_xi * ara->Jm;
-//    C = ara->Jm.transpose() * ara->B_xi * ara->dJm;
-//    G = ara->Jm.transpose() * ara->G_xi;
-//    J = ara->Jxi * ara->Jm;
+    B = ara->Jm.transpose() * ara->B_xi * ara->Jm;
+    C = ara->Jm.transpose() * ara->B_xi * ara->dJm;
+    G = ara->Jm.transpose() * ara->G_xi;
+    J = ara->Jxi * ara->Jm;
 }
 
 void ControllerPCC::get_status(VectorXd &q, VectorXd dq, VectorXd &p_vectorized) {
@@ -92,6 +92,9 @@ void ControllerPCC::get_status(VectorXd &q, VectorXd dq, VectorXd &p_vectorized)
     p_vectorized = this->p_vectorized;
 }
 
+void ControllerPCC::get_jacobian(MatrixXd &J){
+    J = this->J;
+}
 
 void ControllerPCC::actuate(VectorXd f) {
     VectorXd p_vectorized_segment = VectorXd::Zero(2); // part of p_vectorized, for each segment
@@ -152,11 +155,8 @@ void ControllerPCC::actuate(VectorXd f) {
 }
 
 void ControllerPCC::control_loop() {
-    fmt::print("starting control loop...\n");
-    Rate r{30};
+    Rate r{1./dt};
     VectorXd f = VectorXd::Zero(st_params::num_segments * 2);
-    VectorXd q, dq, ddq;
-    fmt::print("starting loop...\n");
     while (true) {
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);

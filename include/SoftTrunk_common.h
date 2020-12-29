@@ -42,7 +42,7 @@ namespace st_params {
     std::array<double, 3> masses = {0.12, 0.12, 0.12};
     /** @brief length of each segment, in m */
     std::array<double, 3> lengths = {0.11, 0.11, 0.11};
-    const int num_segments = 1;
+    const int num_segments = 3;
 
     /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
      * for DragonSkin 30, set to 300.
@@ -56,8 +56,8 @@ namespace st_params {
     std::array<double, 3> beta = {1, 1, 1};
     std::array<double, 6> k_p = {1, 1, 1, 1, 1, 1}; /** @brief P gain for pose FB */
     std::array<double, 6> k_d = {1, 1, 1, 1, 1, 1}; /** @brief D gain for pose FB */
-    std::array<double, 6> pid_p = {700, 300, 0, 0, 0, 0};
-
+    std::array<double, 6> pid_Ku = {800, 800, 500, 500, 400, 400};
+    std::array<double, 6> pid_Tu = {0.7, 0.7, 0.7, 0.7, 0.7, 0.7};
 
     const ParametrizationType parametrization = ParametrizationType::longitudinal;
     const RigidModelType rigidModel = RigidModelType::straw_bend;

@@ -53,7 +53,7 @@ private:
     VectorXd ddq;
 
 public:
-    explicit CurvatureCalculator();
+    CurvatureCalculator();
 
     // @todo is this actually called at the end??
     ~CurvatureCalculator();

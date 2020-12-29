@@ -32,6 +32,7 @@ public:
             const VectorXd &ddq_ref);
 
     void get_status(VectorXd &q, VectorXd dq, VectorXd &p_vectorized);
+    void get_jacobian(MatrixXd &J);
 
 private:
     std::unique_ptr<AugmentedRigidArm> ara;
@@ -42,11 +43,13 @@ private:
     VectorXd D; /** @brief damping coefficient of silicone arm */
     VectorXd K_p; /** @brief P gain for pose FB */
     VectorXd K_d; /** @brief D gain for pose FB */
-    VectorXd alpha; /** @brief used to convert torque to pressure (pressure = torque / alpha) */
+    VectorXd alpha; /** @brief used to convert torque to pressure (pressure = torque / alpha). Not used for PID control */
 
     std::vector<MiniPID> miniPIDs;
     bool use_feedforward = false;
     bool simulate = false;
+
+    const double dt = 1./30.;
 
     bool is_initial_ref_received = false;
 
@@ -63,6 +66,7 @@ private:
 
     VectorXd q;
     VectorXd dq;
+    VectorXd ddq;
     VectorXd q_ref;
     VectorXd dq_ref;
     VectorXd ddq_ref;

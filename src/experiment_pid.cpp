@@ -12,9 +12,9 @@ int main(){
         if (st_params::parametrization == ParametrizationType::phi_theta) {
             q_ref(2 * i) = 0.2;
             q_ref(2 * i + 1) = 0.5;
-        } else if (st_params::parametrization == ParametrizationType::phi_theta) {
-            q_ref(2 * i) = 0.3;
-            q_ref(2 * i + 1) = 0.3;
+        } else if (st_params::parametrization == ParametrizationType::longitudinal) {
+            q_ref(2 * i) = 0.15;
+            q_ref(2 * i + 1) = 0.15;
         }
     }
     ControllerPCC cpcc{};
@@ -25,6 +25,7 @@ int main(){
     while (true) {
         // the controller is updated at a much higher rate in a separate thread, this is just to show the output in realtime
         cpcc.get_status(q, dq, p_vectorized);
+        fmt::print("--------\n");
         fmt::print("q_meas:\t{}\n", q.transpose());
         fmt::print("q_ref:\t{}\n", q_ref.transpose());
         fmt::print("p_vec:\t{}\n", p_vectorized.transpose());

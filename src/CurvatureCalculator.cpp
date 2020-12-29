@@ -30,29 +30,37 @@ void CurvatureCalculator::setupIntegratedSensor() {
 
 
 void CurvatureCalculator::calculator_loop() {
-    std::ofstream log_file;
+    std::fstream log_file;
     if (log) {
         std::string filename = "log_curvature.csv";
         fmt::print("logging to {}\n", filename);
-        log_file.open(filename);
+        log_file.open(filename, std::fstream::out);
         log_file << "timestamp";
+        for (int i = 0; i < st_params::num_segments; ++i) {
+            if (st_params::parametrization == ParametrizationType::phi_theta)
+                log_file << fmt::format(", phi_{}, theta_{}", i, i);
+            else if (st_params::parametrization == ParametrizationType::longitudinal)
+                log_file << fmt::format(", La_{}, Lb_{}", i, i);
+        }
+        log_file << "\n";
     }
-    for (int i = 0; i < st_params::num_segments; ++i) {
-        if (st_params::parametrization == ParametrizationType::phi_theta)
-            log_file << fmt::format(", phi_{}, theta_{}", i, i);
-        else if (st_params::parametrization == ParametrizationType::longitudinal)
-            log_file << fmt::format(", La_{}, Lb_{}", i, i);
-    }
-    log_file << "\n";
 
     VectorXd prev_q = VectorXd::Zero(q.size());
     VectorXd prev_dq = VectorXd::Zero(dq.size());
     double interval = 0.01;
     Rate rate{1. / interval};
     run = true;
+    unsigned long long int last_timestamp;
     while (run) {
         rate.sleep();
         std::lock_guard<std::mutex> lock(mtx);
+        // first, update the internal data for transforms of each frame
+        optiTrackClient->getData(abs_transforms, timestamp);
+        // ignore if current timestep is same as previous
+        if (last_timestamp == timestamp)
+            continue;
+        last_timestamp = timestamp;
+
         // this loop continuously monitors the current state.
         calculateCurvature();
         // todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises?
@@ -88,8 +96,6 @@ void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq
 }
 
 void CurvatureCalculator::calculateCurvature() {
-    // first, update the internal data for transforms of each frame
-    optiTrackClient->getData(abs_transforms, timestamp);
     MatrixXd matrix;
     double phi, theta;
     // next, calculate the parameters

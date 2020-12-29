@@ -50,7 +50,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-include_directories(include mobilerack-interface/include mobilerack-interface/subm/MiniPID)
+include_directories(include mobilerack-interface/include)
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIRS})
@@ -79,17 +79,16 @@ target_link_libraries(example_AugmentedRigidArm AugmentedRigidArm)
 add_executable(example_realtime_visualize src/example_realtime_visualize.cpp)
 target_link_libraries(example_realtime_visualize AugmentedRigidArm CurvatureCalculator)
 
-add_library(ControllerPCC SHARED src/ControllerPCC.cpp mobilerack-interface/subm/MiniPID/MiniPID.cpp)
-target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads)
+add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
+target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads MiniPID)
 
 # add_executable(example_ControllerPCC src/example_ControllerPCC.cpp)
 # target_link_libraries(example_ControllerPCC AugmentedRigidArm ControllerPCC SoftTrunkInterface)
 
+add_executable(characterize_alpha src/characterize_alpha.cpp)
+target_link_libraries(characterize_alpha ControllerPCC)
 # add_executable(characterize_part2 src/characterize_part2.cpp)
 # target_link_libraries(characterize_part2 Manager)
-
-# add_executable(characterize_part1 src/characterize_part1.cpp)
-# target_link_libraries(characterize_part1 Manager)
 
 # add_executable(experiment src/experiment.cpp)
 # target_link_libraries(experiment Manager -pthread)
