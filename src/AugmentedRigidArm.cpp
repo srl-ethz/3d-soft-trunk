@@ -166,9 +166,9 @@ void AugmentedRigidArm::update_Jm(const VectorXd &q) {
     calculate_m(q_deltaY, xi_deltaY);
     for (int i = 0; i < st_params::num_segments; ++i) {
         Jm.block(joints_per_segment * i, 2 * i + 0, joints_per_segment, 1) = (xi_deltaX - xi_current).segment(
-                joints_per_segment * i, joints_per_segment);
+                joints_per_segment * i, joints_per_segment)/epsilon;
         Jm.block(joints_per_segment * i, 2 * i + 1, joints_per_segment, 1) = (xi_deltaY - xi_current).segment(
-                joints_per_segment * i, joints_per_segment);
+                joints_per_segment * i, joints_per_segment)/epsilon;
     }
 }
 
