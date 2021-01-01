@@ -19,44 +19,34 @@ MiniPID ZieglerNichols(double Ku, double period, double control_period) {
 }
 
 ControllerPCC::ControllerPCC() {
-    std::cout << "ControllerPCC created...\n";
+    assert(st_params::parametrization != ParametrizationType::phi_theta); // @todo figure out how to deal with phi-theta parametrization and re-implemnt
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
-        for (int j = 0; j < st_params::num_segments * 2; ++j)
-            miniPIDs.push_back(ZieglerNichols(st_params::pid_Ku[j], st_params::pid_Tu[j], dt));
+        for (int j = 0; j < st_params::num_segments; ++j){
+            miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for X direction
+            miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for Y direction
+        }
     }
     // @todo probably used PD controllers for phi in original parameterization
 
-    K = VectorXd::Zero(st_params::num_segments * 2);
-    D = VectorXd::Zero(st_params::num_segments * 2);
-    for (int i = 0; i < st_params::num_segments; ++i) {
-        if (st_params::parametrization == ParametrizationType::phi_theta) {
-            K[2 * i + 1] = st_params::k[i];
-            D[2 * i + 1] = st_params::beta[i]; // D[2*i] is set inside control loop
-        }
-    }
+    K << 1, 1, 1, 1, 1, 1;
+    D << 1, 1, 1, 1, 1, 1; // D[2*i] is set inside control loop
+    K_p << 1, 1, 1, 1, 1, 1;
+    K_d << 1, 1, 1, 1, 1, 1;
 
-    K_p = VectorXd::Zero(st_params::num_segments * 2);
-    K_d = VectorXd::Zero(st_params::num_segments * 2);
-    for (int i = 0; i < st_params::num_segments * 2; ++i) {
-        K_p[i] = st_params::k_p[i];
-        K_d[i] = st_params::k_d[i];
-    }
-
-    alpha = VectorXd::Zero(st_params::num_segments);
-
-    alpha(0) = 1;
-    p_vectorized = VectorXd::Zero(2 * st_params::num_segments);
     q = VectorXd::Zero(2 * st_params::num_segments);
     dq = VectorXd::Zero(2 * st_params::num_segments);
+    ddq = VectorXd::Zero(2 * st_params::num_segments);
     q_ref = VectorXd::Zero(2 * st_params::num_segments);
     dq_ref = VectorXd::Zero(2 * st_params::num_segments);
     ddq_ref = VectorXd::Zero(2 * st_params::num_segments);
 
+    p_vectorized = VectorXd::Zero(2 * st_params::num_segments);
+
     ara = std::make_unique<AugmentedRigidArm>();
     // +X, +Y, -X, -Y
     std::vector<int> map = {0, 3, 2, 1, 4, 6, 7, 5, 11, 10, 8, 9};
-    vc = std::make_unique<ValveController>("192.168.0.100", map, 400);
+    vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     cc = std::make_unique<CurvatureCalculator>();
 
     control_thread = std::thread(&ControllerPCC::control_loop, this);
@@ -76,7 +66,7 @@ void ControllerPCC::set_ref(const VectorXd &q_ref,
         is_initial_ref_received = true;
 }
 
-void ControllerPCC::updateBCG(const VectorXd &q, const VectorXd &dq) {
+void ControllerPCC::updateBCGJ(const VectorXd &q, const VectorXd &dq) {
     ara->update(q, dq);
     // these conversions from m space to q space are described in the paper
     B = ara->Jm.transpose() * ara->B_xi * ara->Jm;
@@ -85,16 +75,23 @@ void ControllerPCC::updateBCG(const VectorXd &q, const VectorXd &dq) {
     J = ara->Jxi * ara->Jm;
 }
 
-void ControllerPCC::get_status(VectorXd &q, VectorXd dq, VectorXd &p_vectorized) {
+void ControllerPCC::get_kinematic(VectorXd &q, VectorXd dq, MatrixXd &J) {
     std::lock_guard<std::mutex> lock(mtx);
     q = this->q;
     dq = this->dq;
+    J = this->J;
+}
+void ControllerPCC::get_dynamic(MatrixXd &B, MatrixXd &C, MatrixXd &G){
+    std::lock_guard<std::mutex> lock(mtx);
+    B = this->B;
+    C = this->C;
+    G = this->G;
+}
+void ControllerPCC::get_pressure(VectorXd& p_vectorized){
+    std::lock_guard<std::mutex> lock(mtx);
     p_vectorized = this->p_vectorized;
 }
 
-void ControllerPCC::get_jacobian(MatrixXd &J){
-    J = this->J;
-}
 
 void ControllerPCC::actuate(VectorXd f) {
     VectorXd p_vectorized_segment = VectorXd::Zero(2); // part of p_vectorized, for each segment
@@ -128,14 +125,14 @@ void ControllerPCC::actuate(VectorXd f) {
         } else if (st_params::parametrization == ParametrizationType::longitudinal)
             p_vectorized_segment = f.segment(2 * segment, 2);
         if (st_params::controller == ControllerType::dynamic)
-            p_vectorized_segment /= alpha(segment); // convert force to pressure
+            p_vectorized_segment /= alpha; // convert force to pressure
         p_vectorized.segment(2 * segment, 2) = p_vectorized_segment; // save to p_vectorized
 
         for (int i = 0; i < 2; ++i) {
             // convert vectorized pressure to actual pressure
             // do for N-S pair and E-W pair
-            p_actual[i + 0] = st_params::p_offset + p_vectorized_segment[i] / 2;
-            p_actual[i + 2] = st_params::p_offset - p_vectorized_segment[i] / 2;
+            p_actual[i + 0] = p_offset + p_vectorized_segment[i] / 2;
+            p_actual[i + 2] = p_offset - p_vectorized_segment[i] / 2;
             double minimum = std::min(p_actual[i + 0], p_actual[i + 2]);
             if (minimum < 0) {
                 p_actual[i + 0] -= minimum;
@@ -163,7 +160,7 @@ void ControllerPCC::control_loop() {
         if (!is_initial_ref_received)
             continue;
 
-        // variables to save the measured values.
+        // first get the current pose
         if (use_feedforward or simulate) {
             // don't use the actual values, since it's doing feedforward control.
             q = q_ref;
@@ -172,21 +169,27 @@ void ControllerPCC::control_loop() {
             // get the current configuration from CurvatureCalculator.
             cc->get_curvature(q, dq, ddq);
         }
+
+        // update rigid model and calculate params from it
+        updateBCGJ(q, dq);
+
+        // take care of pose-dependent parameters
         for (int i = 0; i < st_params::num_segments; ++i) {
-            // take care of pose-dependent parameters
             if (st_params::parametrization == ParametrizationType::phi_theta)
-                D(2 * i) = st_params::beta[i] * q(2 * i + 1) * q(2 * i + 1);
+                D(2 * i) = beta * q(2 * i + 1) * q(2 * i + 1);
         }
-        updateBCG(q, dq);
+
+        // calculate output
         if (st_params::controller == ControllerType::dynamic)
             f = G + C * dq_ref + B * ddq_ref +
                 K.asDiagonal() * q_ref + K_p.asDiagonal() * (q_ref - q) + D.asDiagonal() * dq_ref +
                 K_d.asDiagonal() * (dq_ref - dq);
         else if (st_params::controller == ControllerType::pid) {
-            for (int i = 0; i < 2 * st_params::num_segments; ++i) {
+            for (int i = 0; i < 2 * st_params::num_segments; ++i)
                 f[i] = miniPIDs[i].getOutput(q[i], q_ref[i]);
-            }
         }
+
+        // actuate robot
         actuate(f);
     }
 }

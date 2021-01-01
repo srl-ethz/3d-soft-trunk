@@ -22,9 +22,11 @@ int main(){
 
     Rate r{5};
     VectorXd q, dq, p_vectorized;
+    MatrixXd J;
     while (true) {
         // the controller is updated at a much higher rate in a separate thread, this is just to show the output in realtime
-        cpcc.get_status(q, dq, p_vectorized);
+        cpcc.get_kinematic(q, dq, J);
+        cpcc.get_pressure(p_vectorized);
         fmt::print("--------\n");
         fmt::print("q_meas:\t{}\n", q.transpose());
         fmt::print("q_ref:\t{}\n", q_ref.transpose());

@@ -22,30 +22,49 @@ public:
     ControllerPCC();
 
     /** @brief set the reference pose (trajectory) of the arm
-     * @param q_ref
-     * @param dq_ref
-     * @param ddq_ref
      */
     void set_ref(
             const VectorXd &q_ref,
             const VectorXd &dq_ref,
             const VectorXd &ddq_ref);
 
-    void get_status(VectorXd &q, VectorXd dq, VectorXd &p_vectorized);
-    void get_jacobian(MatrixXd &J);
+    /** @brief get current kinematic parameters of the arm (pose and Jacobian) */
+    void get_kinematic(VectorXd &q, VectorXd dq, MatrixXd &J);
+    /** @brief get current dynamic parameters of the arm
+     * @param B inertia matrix
+     * @param C
+     * @param G gravity torque
+     */
+    void get_dynamic(MatrixXd &B, MatrixXd &C, MatrixXd &G);
+    /** @brief get current pressure output to the arm */
+    void get_pressure(VectorXd &p_vectorized);
 
 private:
     std::unique_ptr<AugmentedRigidArm> ara;
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
 
+    // parameters for dynamic controller
     VectorXd K; /** @brief stiffness coefficient of silicone arm */
     VectorXd D; /** @brief damping coefficient of silicone arm */
     VectorXd K_p; /** @brief P gain for pose FB */
     VectorXd K_d; /** @brief D gain for pose FB */
-    VectorXd alpha; /** @brief used to convert torque to pressure (pressure = torque / alpha). Not used for PID control */
+    double alpha = 2.16e-4; /** @brief used to convert generalized force tau to pressure P (P = tau / alpha). Not used for PID control. Uses model-based value, which is very close to experimental value 2.88e-4. */
+    double beta; // ????
 
+    // parameters for PID controller
+    std::array<double, 3> Ku = {800, 500, 400}; /** @brief ultimate gain for each segment, used in Ziegler-Nichols method */
+    std::array<double, 3> Tu = {0.7, 0.7, 0.7}; /** @brief oscillation period for each segment, used in Ziegler-Nichols method */
     std::vector<MiniPID> miniPIDs;
+
+    /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
+     * for DragonSkin 30, set to 300.
+     * for DragonSkin 10, set to 150.
+     * (not throughly examined- a larger or smaller value may be better)
+     */
+    const int p_offset = 150;
+    const int p_max = 400; // 400 for DS 10, 1200 for DS 30
+
     bool use_feedforward = false;
     bool simulate = false;
 
@@ -64,6 +83,7 @@ private:
 
     void control_loop();
 
+    // arm configuration
     VectorXd q;
     VectorXd dq;
     VectorXd ddq;
@@ -74,12 +94,12 @@ private:
     VectorXd p_vectorized; /** @brief vector that expresses net pressure for X&Y directions, for each segment */
 
     /**
-     * @brief update B(inertia matrix), C and G(gravity vector) in q space
+     * @brief calculate dynamic & kinematic parameters using augmented rigid model
      */
-    void updateBCG(const VectorXd &q, const VectorXd &dq);
+    void updateBCGJ(const VectorXd &q, const VectorXd &dq);
 
-    MatrixXd B;
+    MatrixXd B; /** @brief inertia matrix */
     MatrixXd C;
-    VectorXd G;
-    MatrixXd J; // Eigen::Matrix<double, 3, 2*N_SEGMENTS>
+    VectorXd G; /** @brief gravity vector */
+    MatrixXd J; /** @brief Jacobian for tip of arm */
 };

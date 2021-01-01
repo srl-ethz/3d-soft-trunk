@@ -44,21 +44,6 @@ namespace st_params {
     std::array<double, 3> lengths = {0.11, 0.11, 0.11};
     const int num_segments = 3;
 
-    /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
-     * for DragonSkin 30, set to 300.
-     * for DragonSkin 10, set to 150.
-     * (not throughly examined- a larger or smaller value may be better)
-    */
-    const int p_offset = 150;
-
-    // @todo separate into separate namespace for each parametrization
-    std::array<double, 3> k = {1, 1, 1};
-    std::array<double, 3> beta = {1, 1, 1};
-    std::array<double, 6> k_p = {1, 1, 1, 1, 1, 1}; /** @brief P gain for pose FB */
-    std::array<double, 6> k_d = {1, 1, 1, 1, 1, 1}; /** @brief D gain for pose FB */
-    std::array<double, 6> pid_Ku = {800, 800, 500, 500, 400, 400};
-    std::array<double, 6> pid_Tu = {0.7, 0.7, 0.7, 0.7, 0.7, 0.7};
-
     const ParametrizationType parametrization = ParametrizationType::longitudinal;
     const RigidModelType rigidModel = RigidModelType::straw_bend;
     const ArmConfigurationType armConfiguration = ArmConfigurationType::stalactite;
