@@ -8,7 +8,7 @@
 int main() {
     // obtain data from motion tracking system and update the rigid model visualization in real time.
     // run drake-visualizer as well
-    CurvatureCalculator cc{};
+    CurvatureCalculator cc{SensorType::bend_labs};
     AugmentedRigidArm ara{};
     VectorXd q, dq, ddq;
     Rate r{30};

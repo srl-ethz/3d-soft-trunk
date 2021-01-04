@@ -1,7 +1,7 @@
 #include "CurvatureCalculator.h"
 
 
-CurvatureCalculator::CurvatureCalculator() {
+CurvatureCalculator::CurvatureCalculator(SensorType sensor_type): sensor_type(sensor_type) {
     // initialize size of arrays that record transforms
     abs_transforms.resize(st_params::num_segments + 1);
 
@@ -9,7 +9,14 @@ CurvatureCalculator::CurvatureCalculator() {
     dq = VectorXd::Zero(st_params::num_segments * 2);
     ddq = VectorXd::Zero(st_params::num_segments * 2);
 
-    setupQualisys();
+    if (sensor_type == SensorType::qualisys){
+        fmt::print("Using Qualisys to measure curvature...\n");
+        setupQualisys();
+    }
+    else if (sensor_type == SensorType::bend_labs){
+        fmt::print("Using Bend Labs sensor to measure curvature...\n");
+        setupIntegratedSensor();
+    }
 
     calculatorThread = std::thread(&CurvatureCalculator::calculator_loop, this);
 
@@ -25,7 +32,7 @@ void CurvatureCalculator::setupQualisys() {
 }
 
 void CurvatureCalculator::setupIntegratedSensor() {
-    // for future.
+    serialInterface = std::make_unique<SerialInterface>(serialPort, 38400);
 }
 
 
@@ -54,14 +61,19 @@ void CurvatureCalculator::calculator_loop() {
     while (run) {
         rate.sleep();
         std::lock_guard<std::mutex> lock(mtx);
-        // first, update the internal data for transforms of each frame
-        optiTrackClient->getData(abs_transforms, timestamp);
-        // ignore if current timestep is same as previous
-        if (last_timestamp == timestamp)
-            continue;
-        last_timestamp = timestamp;
 
-        // this loop continuously monitors the current state.
+        // first get data from the sensors
+        if (sensor_type == SensorType::qualisys){
+            // first, update the internal data for transforms of each frame
+            optiTrackClient->getData(abs_transforms, timestamp);
+            // ignore if current timestep is same as previous
+            if (last_timestamp == timestamp)
+                continue;
+            last_timestamp = timestamp;
+        }
+        else if (sensor_type == SensorType::bend_labs)
+            serialInterface->getData(bendLab_data);
+
         calculateCurvature();
         // todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises?
 //        presmooth_dq = (q - prev_q) / interval;
@@ -96,6 +108,13 @@ void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq
 }
 
 void CurvatureCalculator::calculateCurvature() {
+    if (sensor_type == SensorType::bend_labs)
+    {
+        assert(st_params::parametrization == ParametrizationType::longitudinal);
+        for (int i = 0; i < 2; i++)//@todo change 1 to st_params::num_segments
+            q(i) = bendLab_data[i] * PI / 180.;
+        return;
+    }
     MatrixXd matrix;
     double phi, theta;
     // next, calculate the parameters
