@@ -59,7 +59,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
 ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
-TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient fmt)
+TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt)
 
 # add_library(Manager SHARED src/Manager.cpp)
 # target_link_libraries(Manager SoftTrunkInterface AugmentedRigidArm ControllerPCC ${EIGEN3_LIBRARIES} -pthread)

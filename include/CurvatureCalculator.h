@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mobilerack-interface/QualisysClient.h"
+#include "mobilerack-interface/SerialInterface.h"
 #include "SoftTrunk_common.h"
 
 #include <Eigen/Geometry>
@@ -9,7 +10,10 @@
 #include <thread>
 #include <cmath>
 #include <mutex>
-
+enum class SensorType{
+    qualisys,
+    bend_labs
+};
 /**
  * @brief Calculates the PCC configuration of each soft arm segment based on motion track / internal sensor measurement.
  * @details For Qualisys mode, the frames have to be set up properly in QTM (using Rigid Body) first.
@@ -19,15 +23,23 @@
  */
 class CurvatureCalculator {
 private:
+    SensorType sensor_type;
+
     std::unique_ptr<QualisysClient> optiTrackClient;
-    unsigned long long int timestamp;
     /**
      * @brief recorded data from motion tracking system. Saves absolute transforms for each frame.
      */
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> abs_transforms;
-    std::thread calculatorThread;
     const char *qtm_address = "192.168.120.97";
+    
+    std::unique_ptr<SerialInterface> serialInterface;
+    std::vector<float> bendLab_data;
+    std::string serialPort = "/dev/cu.usbmodem14201";
 
+    unsigned long long int timestamp;
+    
+    std::thread calculatorThread;
+    
     /**
      * @brief background process that calculates curvature
      */
@@ -53,7 +65,7 @@ private:
     VectorXd ddq;
 
 public:
-    CurvatureCalculator();
+    CurvatureCalculator(SensorType sensor_type = SensorType::qualisys);
 
     // @todo is this actually called at the end??
     ~CurvatureCalculator();
