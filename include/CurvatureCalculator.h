@@ -16,9 +16,12 @@ enum class SensorType{
 };
 /**
  * @brief Calculates the PCC configuration of each soft arm segment based on motion track / internal sensor measurement.
- * @details For Qualisys mode, the frames have to be set up properly in QTM (using Rigid Body) first.
+ * @par Qualisys motion tracking sensor
+ * the frames have to be set up properly in QTM (using Rigid Body) first.
  * Rigid Body label conventions: base of robot is 0, tip of first segment is 1, and so on...
  * Z axis of each frame is parallel to lengthwise direction of the arm, and origin of each frame is at center of tip of segment
+ * @par Bend Labs sensor
+ * @image html bendlabs_coordinates.jpg
  * @todo cannot gracefully deal with missed frames etc when there are occlusions.
  */
 class CurvatureCalculator {
@@ -36,7 +39,7 @@ private:
     std::vector<float> bendLab_data;
     std::string serialPort = "/dev/cu.usbmodem14201";
 
-    unsigned long long int timestamp;
+    unsigned long long int timestamp = 0;
     
     std::thread calculatorThread;
     
@@ -67,7 +70,6 @@ private:
 public:
     CurvatureCalculator(SensorType sensor_type = SensorType::qualisys);
 
-    // @todo is this actually called at the end??
     ~CurvatureCalculator();
 
     void setupQualisys();

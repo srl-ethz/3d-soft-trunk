@@ -58,20 +58,19 @@ INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIRS})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
+### libraries
 ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
 TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt)
-
-# add_library(Manager SHARED src/Manager.cpp)
-# target_link_libraries(Manager SoftTrunkInterface AugmentedRigidArm ControllerPCC ${EIGEN3_LIBRARIES} -pthread)
-
-add_executable(example_CurvatureCalculator src/example_CurvatureCalculator.cpp)
-target_link_libraries(example_CurvatureCalculator CurvatureCalculator)
 
 add_library(AugmentedRigidArm SHARED src/AugmentedRigidArm.cpp)
 target_link_libraries(AugmentedRigidArm drake::drake ${catkin_LIBRARIES})
 
-add_executable(create_urdf src/create_urdf.cpp)
-target_link_libraries(create_urdf fmt)
+add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
+target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads MiniPID)
+
+### examples
+add_executable(example_CurvatureCalculator src/example_CurvatureCalculator.cpp)
+target_link_libraries(example_CurvatureCalculator CurvatureCalculator)
 
 add_executable(example_AugmentedRigidArm src/example_AugmentedRigidArm.cpp)
 target_link_libraries(example_AugmentedRigidArm AugmentedRigidArm)
@@ -79,19 +78,15 @@ target_link_libraries(example_AugmentedRigidArm AugmentedRigidArm)
 add_executable(example_realtime_visualize src/example_realtime_visualize.cpp)
 target_link_libraries(example_realtime_visualize AugmentedRigidArm CurvatureCalculator)
 
-add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
-target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads MiniPID)
-
-# add_executable(example_ControllerPCC src/example_ControllerPCC.cpp)
-# target_link_libraries(example_ControllerPCC AugmentedRigidArm ControllerPCC SoftTrunkInterface)
+### other programs (experiments etc.)
+add_executable(create_urdf src/create_urdf.cpp)
+target_link_libraries(create_urdf fmt)
 
 add_executable(characterize_alpha src/characterize_alpha.cpp)
 target_link_libraries(characterize_alpha ControllerPCC)
-# add_executable(characterize_part2 src/characterize_part2.cpp)
-# target_link_libraries(characterize_part2 Manager)
-
-# add_executable(experiment src/experiment.cpp)
-# target_link_libraries(experiment Manager -pthread)
 
 add_executable(experiment_pid src/experiment_pid.cpp)
 target_link_libraries(experiment_pid ControllerPCC)
+
+# add_executable(experiment src/experiment.cpp)
+# target_link_libraries(experiment Manager -pthread)
