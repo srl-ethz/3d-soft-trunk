@@ -1,7 +1,7 @@
 image: robotlocomotion/drake:latest
 before_script:
   - apt-get update --yes
-  - apt-get install --yes build-essential cmake libmodbus-dev
+  - apt-get install --yes build-essential cmake libmodbus-dev libserialport-dev
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 build:

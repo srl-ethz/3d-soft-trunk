@@ -18,6 +18,7 @@ int main() {
 
     assert(st_params::num_segments == st_params::lengths.size());
     assert(st_params::num_segments == st_params::masses.size());
+    assert(st_params::rigidModel == RigidModelType::straw_bend);
 
     fmt::print("generating XACRO file:\t{}\n", xacro_filename);
     std::ofstream xacro_file;
