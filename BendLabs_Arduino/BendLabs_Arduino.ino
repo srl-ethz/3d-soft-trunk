@@ -6,16 +6,19 @@
 
 #include <Wire.h>
 #include "SparkFun_Displacement_Sensor_Arduino_Library.h" // Click here to get the library: http://librarymanager/All#SparkFun_Displacement_Sensor
-#define DATA_SIZE 26
 
 ADS myFlexSensor; //Create instance of the ADS class
-char data[DATA_SIZE];
 float data_float[6];
+int num_data = sizeof(data_float) / sizeof(data_float[0]);
+
+// set dummy data for unconnected sensors
+float dummy = 0;
 
 void signal_filter(float * sample)
 {
   // copied from https://github.com/bendlabs/two_axis_ads/blob/master/examples/two_axis_ads_demo/two_axis_ads_demo.ino
   // LPF to filter out noise
+  // does processing on first 2 items in input array
   static float filter_samples[2][6];
   for(uint8_t i=0; i<2; i++)
   {
@@ -51,19 +54,12 @@ void deadzone_filter(float * sample)
 
 void setup()
 {
-  // @todo must implement robust way that won't randomly determine actual data to be start of transmission...
   Serial.begin(38400);
 
-  // set footer bytes
-  data[DATA_SIZE - 2] = '\r';
-  data[DATA_SIZE - 1] = '\n';
-
-  // set dummy data for unconnected sensors
-  float dummy = 3.14;
-  memcpy(&data[8], &dummy, sizeof(dummy));
-  memcpy(&data[12], &dummy, sizeof(dummy));
-  memcpy(&data[16], &dummy, sizeof(dummy));
-  memcpy(&data[20], &dummy, sizeof(dummy));
+  for (int i = 0; i < num_data; i++)
+  {
+    data_float[i] = dummy;
+  }
 
   Wire.begin();
   if (myFlexSensor.begin() == false)
@@ -86,10 +82,13 @@ void loop()
     signal_filter(data_float);
     deadzone_filter(data_float);
 
-    memcpy(&data[0], &data_float[0], sizeof(data_float[0]));
-    memcpy(&data[4], &data_float[1], sizeof(data_float[1]));
-
-    Serial.write(data, DATA_SIZE);
+    Serial.print("a");
+    for (int i=0; i < num_data; i++){
+      Serial.print(data_float[i]);
+      if (i != num_data-1)
+        Serial.print(",");
+    }
+    Serial.println();
   }
   delay(1);
 }
