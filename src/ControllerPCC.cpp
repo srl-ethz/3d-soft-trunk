@@ -18,8 +18,8 @@ MiniPID ZieglerNichols(double Ku, double period, double control_period) {
     return MiniPID(Kp, Ki, Kd);
 }
 
-ControllerPCC::ControllerPCC() {
-    assert(st_params::parametrization != ParametrizationType::phi_theta); // @todo figure out how to deal with phi-theta parametrization and re-implemnt
+ControllerPCC::ControllerPCC(SensorType sensor_type) {
+    assert(st_params::parametrization != ParametrizationType::phi_theta); /** @todo figure out how to deal with phi-theta parametrization and re-implemnt */
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
         for (int j = 0; j < st_params::num_segments; ++j){
@@ -27,11 +27,18 @@ ControllerPCC::ControllerPCC() {
             miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for Y direction
         }
     }
-    // @todo probably used PD controllers for phi in original parameterization
-
+    /** @todo probably used PD controllers for phi in original parameterization */
+    /** @todo set up properly for different num_segments */
+    K = VectorXd::Zero(2*st_params::num_segments);
     K << 1, 1, 1, 1, 1, 1;
+
+    D = VectorXd::Zero(2*st_params::num_segments);
     D << 1, 1, 1, 1, 1, 1; // D[2*i] is set inside control loop
+
+    K_p = VectorXd::Zero(2*st_params::num_segments);
     K_p << 1, 1, 1, 1, 1, 1;
+
+    K_d = VectorXd::Zero(2*st_params::num_segments);
     K_d << 1, 1, 1, 1, 1, 1;
 
     q = VectorXd::Zero(2 * st_params::num_segments);
@@ -47,7 +54,7 @@ ControllerPCC::ControllerPCC() {
     // +X, +Y, -X, -Y
     std::vector<int> map = {0, 3, 2, 1, 4, 6, 7, 5, 11, 10, 8, 9};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
-    cc = std::make_unique<CurvatureCalculator>();
+    cc = std::make_unique<CurvatureCalculator>(sensor_type);
 
     control_thread = std::thread(&ControllerPCC::control_loop, this);
 }
@@ -101,7 +108,7 @@ void ControllerPCC::actuate(VectorXd f) {
     for (int segment = 0; segment < st_params::num_segments; ++segment) {
         // first calculate p_vectorized_segment for each segment
         if (st_params::parametrization == ParametrizationType::phi_theta) {
-            // @todo I am seriously concerned about how this behaves near q = 0
+            /** @todo I am seriously concerned about how this behaves near q = 0 */
             if (simulate)
                 theta = q_ref(2 * segment + 1);
             else
@@ -144,7 +151,7 @@ void ControllerPCC::actuate(VectorXd f) {
             assert(p_actual[i + 0] >= 0);
             assert(p_actual[i + 2] >= 0);
             // assert(p_actual[i + 0] - p_actual[i + 2] == p_vectorized_segment[i]);
-            // @todo do fuzzier evaluation
+            /** @todo do fuzzier evaluation */
         }
         for (int i = 0; i < 4; ++i)
             vc->setSinglePressure(4 * segment + i, p_actual[i]);

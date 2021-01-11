@@ -19,7 +19,7 @@
  */
 class ControllerPCC {
 public:
-    ControllerPCC();
+    ControllerPCC(SensorType sensor_type = SensorType::qualisys);
 
     /** @brief set the reference pose (trajectory) of the arm
      */

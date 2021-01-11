@@ -71,11 +71,13 @@ void CurvatureCalculator::calculator_loop() {
                 continue;
             last_timestamp = timestamp;
         }
-        else if (sensor_type == SensorType::bend_labs)
+        else if (sensor_type == SensorType::bend_labs){
+            timestamp += 1; /** @todo somehow get timestamp for bend lab too */
             serialInterface->getData(bendLab_data);
+        }
 
         calculateCurvature();
-        // todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises?
+        /** todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises? */
 //        presmooth_dq = (q - prev_q) / interval;
         dq = (q - prev_q) / interval;;// (1 - 0.2) * presmooth_dq + 0.2 * dq;
 //        presmooth_ddq = (dq - prev_dq) / interval;
@@ -111,8 +113,11 @@ void CurvatureCalculator::calculateCurvature() {
     if (sensor_type == SensorType::bend_labs)
     {
         assert(st_params::parametrization == ParametrizationType::longitudinal);
-        for (int i = 0; i < 2; i++)//@todo change 1 to st_params::num_segments
-            q(i) = bendLab_data[i] * PI / 180.;
+        for (int i = 0; i < 1; i++){
+            /** @todo change 1 to st_params::num_segments */
+            q(2*i+0) = bendLab_data[2*i+1] * PI / 180.;
+            q(2*i+1) = bendLab_data[2*i+0] * PI / 180.;
+        }
         return;
     }
     MatrixXd matrix;
