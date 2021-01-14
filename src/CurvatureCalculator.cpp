@@ -125,7 +125,9 @@ void CurvatureCalculator::calculateCurvature() {
     // next, calculate the parameters
     for (int i = 0; i < st_params::num_segments; i++) {
         matrix = (abs_transforms[i].inverse() * abs_transforms[i + 1]).matrix();
-        phi = atan2(matrix(1, 3), matrix(0, 3)); // -PI/2 ~ PI/2
+        // use the Z axis of the segment tip frame, expressed using coordinates of segment base, to calculate phi & theta
+        // this way origin of coordinates don't matter, just the orientation
+        phi = atan2(matrix(1, 2), matrix(0, 2)); // -PI/2 ~ PI/2
         theta = acos(matrix(2, 2));
         if (st_params::parametrization == ParametrizationType::phi_theta) {
             q(2 * i) = phi;
