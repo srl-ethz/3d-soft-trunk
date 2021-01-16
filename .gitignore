@@ -1,0 +1,6 @@
+bin/
+CMakeFiles/
+html/
+lib/
+CMakeCache.txt
+Makefile
