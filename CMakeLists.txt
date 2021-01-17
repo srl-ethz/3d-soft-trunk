@@ -53,7 +53,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # use this when referring to files in project from C++ source
-add_compile_definitions(SOFTTRUNK_PROJECT_DIR="${PROJECT_SOURCE_DIR}")
+add_definitions(-DSOFTTRUNK_PROJECT_DIR="${PROJECT_SOURCE_DIR}")
 
 include_directories(include mobilerack-interface/include)
 
