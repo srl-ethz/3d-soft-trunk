@@ -2,7 +2,7 @@
 // Created by yasu on 31/10/18.
 //
 
-#include "ControllerPCC.h"
+#include "3d-soft-trunk/ControllerPCC.h"
 
 int main() {
     // procedure for data-driven characterization of alpha.

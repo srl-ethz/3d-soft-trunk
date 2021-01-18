@@ -1,5 +1,5 @@
 // Copyright 2018 ...
-#include "AugmentedRigidArm.h"
+#include "3d-soft-trunk/AugmentedRigidArm.h"
 
 AugmentedRigidArm::AugmentedRigidArm() {
     setup_drake_model();

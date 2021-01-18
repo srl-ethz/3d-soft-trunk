@@ -2,7 +2,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 
-#include <AugmentedRigidArm.h>
+#include <3d-soft-trunk/AugmentedRigidArm.h>
 
 namespace py = pybind11;
 

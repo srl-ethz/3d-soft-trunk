@@ -1,4 +1,4 @@
-#include "CurvatureCalculator.h"
+#include "3d-soft-trunk/CurvatureCalculator.h"
 
 
 CurvatureCalculator::CurvatureCalculator(SensorType sensor_type): sensor_type(sensor_type) {

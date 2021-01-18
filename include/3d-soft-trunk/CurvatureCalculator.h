@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mobilerack-interface/QualisysClient.h"
-#include "mobilerack-interface/SerialInterface.h"
+#include <mobilerack-interface/QualisysClient.h>
+#include <mobilerack-interface/SerialInterface.h>
 #include "SoftTrunk_common.h"
 
 #include <Eigen/Geometry>
@@ -66,18 +66,18 @@ private:
     VectorXd q;
     VectorXd dq;
     VectorXd ddq;
-
-public:
-    CurvatureCalculator(SensorType sensor_type = SensorType::qualisys);
-
-    ~CurvatureCalculator();
-
+    
     void setupQualisys();
 
     /**
      * @brief for future, if you want to use sensors embedded in arm.
      */
     void setupIntegratedSensor();
+    
+public:
+    CurvatureCalculator(SensorType sensor_type = SensorType::qualisys);
+
+    ~CurvatureCalculator();
 
     void get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq);
 };

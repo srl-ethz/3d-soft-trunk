@@ -5,10 +5,10 @@
 #pragma once
 
 #include "SoftTrunk_common.h"
-#include <AugmentedRigidArm.h>
-#include "mobilerack-interface/ValveController.h"
+#include "AugmentedRigidArm.h"
 #include "CurvatureCalculator.h"
-#include "MiniPID.h"
+#include <mobilerack-interface/ValveController.h>
+#include <MiniPID.h>
 #include <mutex>
 
 /**
