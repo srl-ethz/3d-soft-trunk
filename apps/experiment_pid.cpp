@@ -4,6 +4,9 @@
 
 #include "ControllerPCC.h"
 
+/**
+ * @brief run a PID controller
+ */
 int main(){
     VectorXd q_ref = VectorXd::Zero(st_params::num_segments * 2);
     VectorXd dq_ref = VectorXd::Zero(st_params::num_segments * 2);

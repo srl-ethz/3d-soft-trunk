@@ -77,25 +77,4 @@ target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveC
 pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
 target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm)
 
-### examples
-add_executable(example_CurvatureCalculator src/example_CurvatureCalculator.cpp)
-target_link_libraries(example_CurvatureCalculator CurvatureCalculator)
-
-add_executable(example_AugmentedRigidArm src/example_AugmentedRigidArm.cpp)
-target_link_libraries(example_AugmentedRigidArm AugmentedRigidArm)
-
-add_executable(example_realtime_visualize src/example_realtime_visualize.cpp)
-target_link_libraries(example_realtime_visualize AugmentedRigidArm CurvatureCalculator)
-
-### other programs (experiments etc.)
-add_executable(create_urdf src/create_urdf.cpp)
-target_link_libraries(create_urdf fmt)
-
-add_executable(characterize_alpha src/characterize_alpha.cpp)
-target_link_libraries(characterize_alpha ControllerPCC)
-
-add_executable(experiment_pid src/experiment_pid.cpp)
-target_link_libraries(experiment_pid ControllerPCC)
-
-# add_executable(experiment src/experiment.cpp)
-# target_link_libraries(experiment Manager -pthread)
+add_subdirectory(apps)

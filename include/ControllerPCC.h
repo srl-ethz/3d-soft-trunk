@@ -15,7 +15,7 @@
  * @brief Implements the PCC controller as described in paper.
  * @details It receives pointers to instances of AugmentedRigidArm and SoftArm, so it can access instances of those classes to retrieve information about them that can be used in the Manager class to control the Soft Trunk.
  * By setting USE_PID_CURVATURE_CONTROL to true in SoftTrunk_common_defs.h, it can also do PID control.
- * @todo it is in the midst of conversion process to new system, doesn't work for now.
+ * @todo actually implement dynamic control
  */
 class ControllerPCC {
 public:
