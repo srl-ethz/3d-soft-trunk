@@ -109,6 +109,20 @@ void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq
     ddq = this->ddq;
 }
 
+double a2theta(double a, double L){
+    /**
+     * @brief calculate curvature theta from measurment. Uses the solution of the 3rd-order approximation of actual function.
+     * see document of CurvatureCalculator for other details.
+     * solved y = x/2 - x^3/24 for x in Wolfram Alpha, then of the 3 solutions, used the one that corresponded to the desired area.
+     * since its solution is a complex function, std::complex math is used.
+     */
+    static const std::complex<double> i(0,1);
+    static std::complex<double> y = a / L; // Qualisys is in mm
+    static std::complex<double> tmp = pow(pow(9. * y*y - 4., 0.5) - 3.*y, 1./3.);
+    static std::complex<double> z = i * cbrt(2.) *(sqrt(3.) + i) / tmp - (1. + i*sqrt(3.)) * tmp / cbrt(2.);
+    return z.real();
+}
+
 void CurvatureCalculator::calculateCurvature() {
     if (sensor_type == SensorType::bend_labs)
     {
@@ -125,10 +139,9 @@ void CurvatureCalculator::calculateCurvature() {
     // next, calculate the parameters
     for (int i = 0; i < st_params::num_segments; i++) {
         matrix = (abs_transforms[i].inverse() * abs_transforms[i + 1]).matrix();
-        // use the Z axis of the segment tip frame, expressed using coordinates of segment base, to calculate phi & theta
-        // this way origin of coordinates don't matter, just the orientation
-        phi = atan2(matrix(1, 2), matrix(0, 2)); // -PI/2 ~ PI/2
-        theta = acos(matrix(2, 2));
+        // see documentation in header file for how this is calculated
+        phi = atan2(matrix(1, 3), matrix(0, 3));
+        theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2))/1000., L);
         if (st_params::parametrization == ParametrizationType::phi_theta) {
             q(2 * i) = phi;
             q(2 * i + 1) = theta;

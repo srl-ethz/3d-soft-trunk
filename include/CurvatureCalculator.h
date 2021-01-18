@@ -10,12 +10,18 @@
 #include <thread>
 #include <cmath>
 #include <mutex>
+#include <complex>
 enum class SensorType{
     qualisys,
     bend_labs
 };
 /**
  * @brief Calculates the PCC configuration of each soft arm segment based on motion track / internal sensor measurement.
+ * 
+ * Since the PCC model is just an approximation, there are several methods to calculate the curvature from the frame data from motion capture system.
+ * For this class, curvature is calculated using the origin of the frame for tip of each segment, expressed in coordinate frames of the base of the segment.
+ * The relation between theta and a in the image is unsolvable for x (a = tan(theta/2) * sin(theta) *L/theta where L is backbone length), so use a third order approximation instead (a = L (x/2 - x^3/24)) and solve with Wolfram Alpha.
+ * @image html img/calculation_from_frames.jpg
  * @par Qualisys motion tracking sensor
  * the frames have to be set up properly in QTM (using Rigid Body) first.
  * Rigid Body label conventions: base of robot is 0, tip of first segment is 1, and so on...
@@ -38,6 +44,8 @@ private:
     std::unique_ptr<SerialInterface> serialInterface;
     std::vector<float> bendLab_data;
     std::string serialPort = "/dev/cu.usbmodem14201";
+
+    const double L = 0.11; /** @brief backbone length in meters, this is assumed to be constant when bending. */
 
     unsigned long long int timestamp = 0;
     
