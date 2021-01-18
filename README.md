@@ -64,7 +64,7 @@ see more examples in `examples_python/` and `mobilerack-interface/examples_pytho
 ## Generating Documentation
 
 Uses Doxygen to generate documentation from inline comments in code. Install [Doxygen](http://www.doxygen.nl), and
-run `doxygen` in this directory to generate HTML (can be seen with browser at html/index.html) & LATEX output.
+run `doxygen Doxyfile` in this directory to generate HTML (can be seen with browser at html/index.html) & LATEX output.
 
 # Fabrication of Physical Soft Robot
 See **Soft Robot Fabrication.md**
