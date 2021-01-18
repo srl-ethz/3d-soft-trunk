@@ -10,10 +10,7 @@
 #include <thread>
 #include <cmath>
 #include <mutex>
-enum class SensorType{
-    qualisys,
-    bend_labs
-};
+
 /**
  * @brief Calculates the PCC configuration of each soft arm segment based on motion track / internal sensor measurement.
  * @par Qualisys motion tracking sensor
@@ -25,6 +22,18 @@ enum class SensorType{
  * @todo cannot gracefully deal with missed frames etc when there are occlusions.
  */
 class CurvatureCalculator {
+public:
+    enum class SensorType{
+        qualisys,
+        bend_labs
+    };
+
+    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type = SensorType::qualisys);
+
+    ~CurvatureCalculator();
+
+    void get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq);
+
 private:
     SensorType sensor_type;
 
@@ -74,10 +83,4 @@ private:
      */
     void setupIntegratedSensor();
     
-public:
-    CurvatureCalculator(SensorType sensor_type = SensorType::qualisys);
-
-    ~CurvatureCalculator();
-
-    void get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq);
 };

@@ -18,7 +18,7 @@ MiniPID ZieglerNichols(double Ku, double period, double control_period) {
     return MiniPID(Kp, Ki, Kd);
 }
 
-ControllerPCC::ControllerPCC(SensorType sensor_type) {
+ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
     assert(st_params::parametrization != ParametrizationType::phi_theta); /** @todo figure out how to deal with phi-theta parametrization and re-implemnt */
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {

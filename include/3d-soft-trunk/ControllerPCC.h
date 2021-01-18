@@ -19,7 +19,7 @@
  */
 class ControllerPCC {
 public:
-    ControllerPCC(SensorType sensor_type = SensorType::qualisys);
+    ControllerPCC(CurvatureCalculator::SensorType sensor_type = CurvatureCalculator::SensorType::qualisys);
 
     /** @brief set the reference pose (trajectory) of the arm
      */

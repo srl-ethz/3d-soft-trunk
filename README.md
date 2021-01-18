@@ -40,7 +40,26 @@ cmake -DCMAKE_PREFIX_PATH=/opt/drake .
 make
 ```
 
-executables are output to bin/.
+executables are output to bin, libraries are output to lib/.
+
+## Python interface
+In its current implementation, you must set the `$PYTHONPATH` environment variable to point to the directory containing the library binaries in order to run. (probably `3d-soft-trunk/lib`)
+
+```bash
+## run this everytime you open a new terminal to run a python script using this library
+PYTHONPATH=$PYTHONPATH:/path/to/lib
+## Alternatively, append the line to ~/.bashrc if you don't want to run it every time.
+python3
+>> import mobilerack_pybind_module
+>> vc = mobilerack_pybind_module.ValveController("192.168.0.100", [0, 1], 200)
+>> vc.setSinglePressure(0, 100)
+
+>> import softtrunk_pybind_module
+>> aar = softtrunk_pybind_module.AugmentedRigidArm()
+>> aar.update([0]*6, [0]*6)
+```
+
+see more examples in `examples_python/` and `mobilerack-interface/examples_python`.
 
 ## Generating Documentation
 

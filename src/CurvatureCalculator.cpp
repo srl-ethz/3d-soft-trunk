@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/CurvatureCalculator.h"
 
 
-CurvatureCalculator::CurvatureCalculator(SensorType sensor_type): sensor_type(sensor_type) {
+CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_type): sensor_type(sensor_type) {
     // initialize size of arrays that record transforms
     abs_transforms.resize(st_params::num_segments + 1);
 
@@ -9,11 +9,11 @@ CurvatureCalculator::CurvatureCalculator(SensorType sensor_type): sensor_type(se
     dq = VectorXd::Zero(st_params::num_segments * 2);
     ddq = VectorXd::Zero(st_params::num_segments * 2);
 
-    if (sensor_type == SensorType::qualisys){
+    if (sensor_type == CurvatureCalculator::SensorType::qualisys){
         fmt::print("Using Qualisys to measure curvature...\n");
         setupQualisys();
     }
-    else if (sensor_type == SensorType::bend_labs){
+    else if (sensor_type == CurvatureCalculator::SensorType::bend_labs){
         fmt::print("Using Bend Labs sensor to measure curvature...\n");
         setupIntegratedSensor();
     }
@@ -28,6 +28,7 @@ CurvatureCalculator::CurvatureCalculator(SensorType sensor_type): sensor_type(se
 }
 
 void CurvatureCalculator::setupQualisys() {
+    fmt::print("connecting to QTM at address {} (set in include/3d-soft-trunk/CurvatureCalculator.h)\n", qtm_address);
     optiTrackClient = std::make_unique<QualisysClient>(qtm_address, 22222, st_params::num_segments + 1);
 }
 
@@ -63,7 +64,7 @@ void CurvatureCalculator::calculator_loop() {
         std::lock_guard<std::mutex> lock(mtx);
 
         // first get data from the sensors
-        if (sensor_type == SensorType::qualisys){
+        if (sensor_type == CurvatureCalculator::SensorType::qualisys){
             // first, update the internal data for transforms of each frame
             optiTrackClient->getData(abs_transforms, timestamp);
             // ignore if current timestep is same as previous
@@ -71,7 +72,7 @@ void CurvatureCalculator::calculator_loop() {
                 continue;
             last_timestamp = timestamp;
         }
-        else if (sensor_type == SensorType::bend_labs){
+        else if (sensor_type == CurvatureCalculator::SensorType::bend_labs){
             timestamp += 1; /** @todo somehow get timestamp for bend lab too */
             serialInterface->getData(bendLab_data);
         }
@@ -110,7 +111,7 @@ void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq
 }
 
 void CurvatureCalculator::calculateCurvature() {
-    if (sensor_type == SensorType::bend_labs)
+    if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
     {
         assert(st_params::parametrization == ParametrizationType::longitudinal);
         for (int i = 0; i < 1; i++){
