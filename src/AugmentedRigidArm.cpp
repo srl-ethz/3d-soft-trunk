@@ -1,5 +1,5 @@
 // Copyright 2018 ...
-#include "AugmentedRigidArm.h"
+#include "3d-soft-trunk/AugmentedRigidArm.h"
 
 AugmentedRigidArm::AugmentedRigidArm() {
     setup_drake_model();
@@ -13,7 +13,7 @@ void AugmentedRigidArm::setup_drake_model() {
     multibody_plant->set_name(st_params::robot_name);
     multibody_plant->RegisterAsSourceForSceneGraph(&scene_graph);
 
-    std::string urdf_file = fmt::format("./urdf/{}.urdf", st_params::robot_name);
+    std::string urdf_file = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params::robot_name);
     fmt::print("loading URDF file {}...\n", urdf_file);
     // load URDF into multibody_plant
     drake::multibody::ModelInstanceIndex plant_model_instance_index = drake::multibody::Parser(multibody_plant,

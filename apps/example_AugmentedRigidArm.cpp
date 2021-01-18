@@ -2,7 +2,7 @@
 // Created by yasu on 26/10/18.
 //
 
-#include "AugmentedRigidArm.h"
+#include "3d-soft-trunk/AugmentedRigidArm.h"
 #include <stdio.h>
 #include <chrono>
 #include <thread>

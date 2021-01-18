@@ -2,7 +2,7 @@
 // Created by yasu on 22/10/18.
 //
 
-#include "CurvatureCalculator.h"
+#include "3d-soft-trunk/CurvatureCalculator.h"
 
 /**
  * @file example_CurvatureCalculator.cpp

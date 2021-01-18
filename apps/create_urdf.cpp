@@ -1,7 +1,7 @@
 //
 // Created by yasu on 24/10/18.
 //
-#include "SoftTrunk_common.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
 
 #include "fmt/core.h"
 #include <fstream>

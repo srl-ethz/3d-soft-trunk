@@ -11,32 +11,34 @@ option(RUN_X11_TESTS "Run tests that require X11" OFF)
 
 # include(CTest)
 
-if(APPLE)
-  set(FIND_PYTHON_EXECUTABLE_PATHS /usr/local/opt/python@3.8/bin)
-  set(FIND_PYTHON_INTERP_VERSION 3.8)
-else()
-  set(FIND_PYTHON_EXECUTABLE_PATHS /usr/bin)
-  set(FIND_PYTHON_INTERP_VERSION 3.6)
-endif()
-find_program(PYTHON_EXECUTABLE NAMES python3
-  PATHS "${FIND_PYTHON_EXECUTABLE_PATHS}"
-  NO_DEFAULT_PATH
-)
-find_package(PythonInterp ${FIND_PYTHON_INTERP_VERSION} MODULE REQUIRED)
+## commented out these lines setting up Python for Drake, since the setting of Python executable was interfering with this repo's pybind11
+## so far commenting out doesn't seem to cause a problem
+# if(APPLE)
+#   set(FIND_PYTHON_EXECUTABLE_PATHS /usr/local/opt/python@3.8/bin)
+#   set(FIND_PYTHON_INTERP_VERSION 3.8)
+# else()
+#   set(FIND_PYTHON_EXECUTABLE_PATHS /usr/bin)
+#   set(FIND_PYTHON_INTERP_VERSION 3.6)
+# endif()
+# find_program(PYTHON_EXECUTABLE NAMES python3
+#   PATHS "${FIND_PYTHON_EXECUTABLE_PATHS}"
+#   NO_DEFAULT_PATH
+# )
+# find_package(PythonInterp ${FIND_PYTHON_INTERP_VERSION} MODULE REQUIRED)
 
-execute_process(COMMAND ${PYTHON_EXECUTABLE}-config --exec-prefix
-  OUTPUT_VARIABLE PYTHON_EXEC_PREFIX
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-list(APPEND CMAKE_PREFIX_PATH "${PYTHON_EXEC_PREFIX}")
-find_package(PythonLibs ${FIND_PYTHON_INTERP_VERSION} MODULE REQUIRED)
+# execute_process(COMMAND ${PYTHON_EXECUTABLE}-config --exec-prefix
+#   OUTPUT_VARIABLE PYTHON_EXEC_PREFIX
+#   OUTPUT_STRIP_TRAILING_WHITESPACE
+# )
+# list(APPEND CMAKE_PREFIX_PATH "${PYTHON_EXEC_PREFIX}")
+# find_package(PythonLibs ${FIND_PYTHON_INTERP_VERSION} MODULE REQUIRED)
 
 find_package(drake CONFIG REQUIRED)
 
-get_filename_component(PYTHONPATH
-  "${drake_DIR}/../../python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages"
-  REALPATH
-)
+# get_filename_component(PYTHONPATH
+#   "${drake_DIR}/../../python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages"
+#   REALPATH
+# )
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
@@ -46,9 +48,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ### END OF find and setup for Drake
 
 # setup output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+# use this when referring to files in project from C++ source
+add_definitions(-DSOFTTRUNK_PROJECT_DIR="${PROJECT_SOURCE_DIR}")
 
 include_directories(include mobilerack-interface/include)
 
@@ -68,25 +73,8 @@ target_link_libraries(AugmentedRigidArm drake::drake ${catkin_LIBRARIES})
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
 target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads MiniPID)
 
-### examples
-add_executable(example_CurvatureCalculator src/example_CurvatureCalculator.cpp)
-target_link_libraries(example_CurvatureCalculator CurvatureCalculator)
+### set up pybind modules
+pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
+target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator)
 
-add_executable(example_AugmentedRigidArm src/example_AugmentedRigidArm.cpp)
-target_link_libraries(example_AugmentedRigidArm AugmentedRigidArm)
-
-add_executable(example_realtime_visualize src/example_realtime_visualize.cpp)
-target_link_libraries(example_realtime_visualize AugmentedRigidArm CurvatureCalculator)
-
-### other programs (experiments etc.)
-add_executable(create_urdf src/create_urdf.cpp)
-target_link_libraries(create_urdf fmt)
-
-add_executable(characterize_alpha src/characterize_alpha.cpp)
-target_link_libraries(characterize_alpha ControllerPCC)
-
-add_executable(experiment_pid src/experiment_pid.cpp)
-target_link_libraries(experiment_pid ControllerPCC)
-
-# add_executable(experiment src/experiment.cpp)
-# target_link_libraries(experiment Manager -pthread)
+add_subdirectory(apps)
