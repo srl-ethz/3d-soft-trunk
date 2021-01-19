@@ -118,9 +118,13 @@ double a2theta(double a, double L){
      * since its solution is a complex function, std::complex math is used.
      */
     static const std::complex<double> i(0,1);
-    static std::complex<double> y = a / L; // Qualisys is in mm
-    static std::complex<double> tmp = pow(pow(9. * y*y - 4., 0.5) - 3.*y, 1./3.);
-    static std::complex<double> z = i * cbrt(2.) *(sqrt(3.) + i) / tmp - (1. + i*sqrt(3.)) * tmp / cbrt(2.);
+    // declare static variables for a tiny bit of efficiency
+    static std::complex<double> y;
+    static std::complex<double> tmp;
+    static std::complex<double> z;
+    y = a / L; // Qualisys is in mm
+    tmp = pow(pow(9. * y*y - 4., 0.5) - 3.*y, 1./3.);
+    z = i * cbrt(2.) *(sqrt(3.) + i) / tmp - (1. + i*sqrt(3.)) * tmp / cbrt(2.);
     return z.real();
 }
 
@@ -148,7 +152,7 @@ void CurvatureCalculator::calculateCurvature() {
             q(2 * i + 1) = theta;
         } else if (st_params::parametrization == ParametrizationType::longitudinal) {
             q(2 * i) = -cos(phi) * theta; // deltaLa (the difference in the length of La compared to neutral state)
-            q(2 * i + 1) = -cos(PI / 2 - phi) * theta;
+            q(2 * i + 1) = -sin(phi) * theta;
         }
     }
     // q -= initial_q; // implement better way to get rid of initial error...
