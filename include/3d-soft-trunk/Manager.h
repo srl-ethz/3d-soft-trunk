@@ -20,7 +20,7 @@
 typedef void (* vFunctionCall)(double, Vector2Nd*);
 
 /**
- * @brief The topmost class for the SoftTrunk robot system. Has instances of AugmentedRigidArm, ControllerPCC, and SoftArm classes and orchestrates them to control the robot.
+ * @brief ATTENTION! THIS CLASS IS NO LONGER BEING USED, KEPT FOR NOW FOR REFERENCE. The topmost class for the SoftTrunk robot system. Has instances of AugmentedRigidArm, ControllerPCC, and SoftArm classes and orchestrates them to control the robot.
  *
  * ## When setting up a new arm configuration
  * * update SoftTrunk_common_defs.h with information of new configuration. This file contains constants that are used throughout the code.
