@@ -147,6 +147,7 @@ void AugmentedRigidArm::update_drake_model() {
                                                        multibody_plant->GetFrameByName(final_frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),
                                                        multibody_plant->world_frame(), &Jxi);
+    H_tip = multibody_plant->GetFrameByName(final_frame_name).CalcPose(plant_context,  multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
 }
 
 void AugmentedRigidArm::update_Jm(const VectorXd &q) {

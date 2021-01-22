@@ -109,6 +109,13 @@ void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq
     ddq = this->ddq;
 }
 
+Eigen::Transform<double, 3, Eigen::Affine> CurvatureCalculator::get_frame(int id){
+    std::lock_guard<std::mutex> lock(mtx);
+    assert(0 <= id && id < abs_transforms.size());
+    assert(sensor_type == SensorType::qualisys);
+    return abs_transforms[id];
+}
+
 double a2theta(double a, double L){
     /**
      * @brief calculate curvature theta from measurment. Uses the solution of the 3rd-order approximation of actual function.

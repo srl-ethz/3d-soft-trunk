@@ -33,6 +33,10 @@ public:
         qualisys,
         bend_labs
     };
+    enum class CalcMethod{
+        position,
+        orientation
+    };
 
     /**
      * @brief Construct a new Curvature Calculator object
@@ -44,6 +48,9 @@ public:
     ~CurvatureCalculator();
 
     void get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq);
+
+    /** @brief get a single frame data from qualisys, only usable when CurvatureCalculator is set to use Qualisys. */
+    Eigen::Transform<double, 3, Eigen::Affine> get_frame(int id);
 
 private:
     SensorType sensor_type;
@@ -57,7 +64,9 @@ private:
     std::unique_ptr<SerialInterface> serialInterface;
     std::vector<float> bendLab_data;
 
-    const double L = 0.11; /** @brief backbone length in meters, this is assumed to be constant when bending. */
+    const CalcMethod calcMethod = CalcMethod::position;
+
+    const double L = 0.12; /** @brief backbone length in meters, this is assumed to be constant when bending. */
 
     unsigned long long int timestamp = 0;
     
