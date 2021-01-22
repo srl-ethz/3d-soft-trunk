@@ -84,4 +84,7 @@ public:
 
     /** @brief the gravity vector, i.e. the force at each joint when the arm is completely stationary at its current configuration. */
     MatrixXd G_xi;
+
+    /** @brief the pose of the rigid body at the tip of the Drake model (relative to base frame), i.e. tip position calculated with forward kinematics using the PCC approximation. */
+    Eigen::Transform<double, 3, Eigen::Affine> H_tip;
 };

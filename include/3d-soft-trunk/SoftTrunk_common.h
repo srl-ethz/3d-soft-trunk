@@ -17,17 +17,17 @@ using namespace Eigen;
 
 /** @brief which type of parametrization is used to describe the PCC configuration. */
 enum class ParametrizationType {
-    phi_theta, /** as used in Katzschmann2019 */
-    longitudinal /** see yasu's report & DellaSantina2020. longitudinal length calcuated with unit radius */
+    phi_theta /** as used in Katzschmann2019 */,
+    longitudinal /** see [yasu's report](https://www.overleaf.com/read/rsnsrjphmpxx) & DellaSantina2020. longitudinal length calcuated with unit radius */
 };
 /** @brief the link structure of the rigid model */
 enum class RigidModelType {
-    original, /** as proposed in Katzschmann2019 */
+    original /** as proposed in Katzschmann2019 */,
     straw_bend /** see yasu's report */
 };
 /** @brief placement of arm */
 enum class ArmConfigurationType {
-    stalactite, /** hanging from ceiling- stick "tight" to the ceiling */
+    stalactite /** hanging from ceiling- stick "tight" to the ceiling */,
     stalagmite /** placed on floor- rise "might"ily from the floor */
 };
 enum class ControllerType {
