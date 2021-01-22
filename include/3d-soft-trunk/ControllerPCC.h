@@ -19,7 +19,7 @@
  */
 class ControllerPCC {
 public:
-    ControllerPCC(CurvatureCalculator::SensorType sensor_type = CurvatureCalculator::SensorType::qualisys);
+    ControllerPCC(CurvatureCalculator::SensorType sensor_type);
 
     /** @brief set the reference pose (trajectory) of the arm
      */
@@ -43,6 +43,9 @@ private:
     std::unique_ptr<AugmentedRigidArm> ara;
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
+
+    std::string qtm_address = "192.168.0.0";
+    std::string bendlabs_portname = "/dev/ttyUSB0";
 
     // parameters for dynamic controller
     VectorXd K; /** @brief stiffness coefficient of silicone arm */

@@ -20,7 +20,7 @@ int main(){
             q_ref(2 * i + 1) = 0.15;
         }
     }
-    ControllerPCC cpcc{};
+    ControllerPCC cpcc{CurvatureCalculator::SensorType::qualisys};
     cpcc.set_ref(q_ref, dq_ref, ddq_ref);
 
     Rate r{5};

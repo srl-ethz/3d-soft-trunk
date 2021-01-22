@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/CurvatureCalculator.h"
 
 
-CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_type): sensor_type(sensor_type) {
+CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address): sensor_type(sensor_type) {
     // initialize size of arrays that record transforms
     abs_transforms.resize(st_params::num_segments + 1);
 
@@ -11,11 +11,11 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 
     if (sensor_type == CurvatureCalculator::SensorType::qualisys){
         fmt::print("Using Qualisys to measure curvature...\n");
-        setupQualisys();
+        setupQualisys(address);
     }
     else if (sensor_type == CurvatureCalculator::SensorType::bend_labs){
         fmt::print("Using Bend Labs sensor to measure curvature...\n");
-        setupIntegratedSensor();
+        setupIntegratedSensor(address);
     }
 
     calculatorThread = std::thread(&CurvatureCalculator::calculator_loop, this);
@@ -27,13 +27,12 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 //    fmt::print("initial q measured:{}. This value is considered the offset and will be subtracted from future measurements.\n", initial_q);
 }
 
-void CurvatureCalculator::setupQualisys() {
-    fmt::print("connecting to QTM at address {} (set in include/3d-soft-trunk/CurvatureCalculator.h)\n", qtm_address);
-    optiTrackClient = std::make_unique<QualisysClient>(qtm_address, 22222, st_params::num_segments + 1);
+void CurvatureCalculator::setupQualisys(std::string qtm_address) {
+    optiTrackClient = std::make_unique<QualisysClient>(qtm_address.c_str(), st_params::num_segments + 1);
 }
 
-void CurvatureCalculator::setupIntegratedSensor() {
-    serialInterface = std::make_unique<SerialInterface>(serialPort, 38400);
+void CurvatureCalculator::setupIntegratedSensor(std::string portname) {
+    serialInterface = std::make_unique<SerialInterface>(portname, 38400);
 }
 
 

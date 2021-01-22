@@ -11,7 +11,7 @@
  */
 
 int main() {
-    CurvatureCalculator cc{};
+    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
     VectorXd q, dq, ddq;
     Rate r{5};
     while (true) {
