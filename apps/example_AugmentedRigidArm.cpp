@@ -46,6 +46,7 @@ int main() {
         fmt::print("B:{}\n", ara.Jm.transpose() * ara.B_xi * ara.Jm);
         fmt::print("G:{}\n", (ara.Jm.transpose() * ara.G_xi).transpose());
         fmt::print("J:{}\n", ara.Jxi * ara.Jm);
+        fmt::print("H_tip:{}\n", ara.H_tip.matrix());
         r.sleep();
     }
 
