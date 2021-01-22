@@ -153,7 +153,7 @@ void CurvatureCalculator::calculateCurvature() {
         matrix = (abs_transforms[i].inverse() * abs_transforms[i + 1]).matrix();
         // see documentation in header file for how this is calculated
         phi = atan2(matrix(1, 3), matrix(0, 3));
-        theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2))/1000., L);
+        theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2)), L);
         if (st_params::parametrization == ParametrizationType::phi_theta) {
             q(2 * i) = phi;
             q(2 * i + 1) = theta;
