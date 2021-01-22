@@ -34,7 +34,12 @@ public:
         bend_labs
     };
 
-    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type = SensorType::qualisys);
+    /**
+     * @brief Construct a new Curvature Calculator object
+     * 
+     * @param address IP address of QTM PC when using Qualisys, portname of Arduino when using Bend Labs.
+     */
+    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address);
 
     ~CurvatureCalculator();
 
@@ -48,11 +53,9 @@ private:
      * @brief recorded data from motion tracking system. Saves absolute transforms for each frame.
      */
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> abs_transforms;
-    const char *qtm_address = "192.168.120.97";
     
     std::unique_ptr<SerialInterface> serialInterface;
     std::vector<float> bendLab_data;
-    std::string serialPort = "/dev/cu.usbmodem14201";
 
     const double L = 0.11; /** @brief backbone length in meters, this is assumed to be constant when bending. */
 
@@ -84,11 +87,11 @@ private:
     VectorXd dq;
     VectorXd ddq;
     
-    void setupQualisys();
+    void setupQualisys(std::string qtm_address);
 
     /**
      * @brief for future, if you want to use sensors embedded in arm.
      */
-    void setupIntegratedSensor();
+    void setupIntegratedSensor(std::string portname);
     
 };

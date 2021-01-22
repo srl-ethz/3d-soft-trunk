@@ -16,7 +16,7 @@ int main() {
     VectorXd q_ref = VectorXd::Zero(st_params::num_segments * 2);
     VectorXd dq_ref = VectorXd::Zero(st_params::num_segments * 2);
     VectorXd ddq_ref = VectorXd::Zero(st_params::num_segments * 2);
-    ControllerPCC cpcc{};
+    ControllerPCC cpcc{CurvatureCalculator::SensorType::qualisys};
     cpcc.set_ref(q_ref, dq_ref, ddq_ref);
 
     sleep(15);

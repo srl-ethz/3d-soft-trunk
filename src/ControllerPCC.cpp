@@ -54,7 +54,10 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
     // +X, +Y, -X, -Y
     std::vector<int> map = {0, 3, 2, 1, 4, 6, 7, 5, 11, 10, 8, 9};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
-    cc = std::make_unique<CurvatureCalculator>(sensor_type);
+    if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
+        cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
+    else if (sensor_type == CurvatureCalculator::SensorType::qualisys)
+        cc = std::make_unique<CurvatureCalculator>(sensor_type, qtm_address);
 
     control_thread = std::thread(&ControllerPCC::control_loop, this);
 }
