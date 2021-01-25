@@ -16,7 +16,7 @@ git clone --recursive git@gitlab.ethz.ch:srl/3d-soft-trunk.git
 
 ## install necessary packages for mobilerack-interface
 
-refer to mobilerack-interface/README.md
+**refer to [README of mobilerack-interface](mobilerack-interface/README.md)**
 
 ## install Drake
 
@@ -48,7 +48,7 @@ In its current implementation, you must set the `$PYTHONPATH` environment variab
 
 ```bash
 ## run this everytime you open a new terminal to run a python script using this library
-PYTHONPATH=$PYTHONPATH:/path/to/lib
+export PYTHONPATH=$PYTHONPATH:/path/to/lib
 ## Alternatively, append the line to ~/.bashrc if you don't want to run it every time.
 python3
 >> import mobilerack_pybind_module
