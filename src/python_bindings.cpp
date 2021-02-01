@@ -10,7 +10,11 @@ namespace py = pybind11;
 PYBIND11_MODULE(softtrunk_pybind_module, m){
     py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
     .def(py::init<>())
-    .def("update", &AugmentedRigidArm::update);
+    .def("update", &AugmentedRigidArm::update)
+    .def("get_H_tip", [](AugmentedRigidArm& ara){
+        Eigen::Matrix<double, 4, 4> H_tip = ara.H_tip.matrix();
+        return H_tip;
+    });
     
 
     py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
@@ -20,6 +24,11 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         VectorXd q; VectorXd dq; VectorXd ddq;
         cc.get_curvature(q, dq, ddq);
         return std::make_tuple(q, dq, ddq);
+    })
+    .def("get_frame", [](CurvatureCalculator& cc, int i){
+        Eigen::Matrix<double, 4, 4> H = Eigen::Matrix<double, 4, 4>::Identity();
+        H = cc.get_frame(i).matrix();
+        return H;
     });
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
