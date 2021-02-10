@@ -33,7 +33,7 @@ void AugmentedRigidArm::setup_drake_model() {
                     scene_graph.get_source_pose_port(multibody_plant->get_source_id().value()));
     builder.Connect(scene_graph.get_query_output_port(), multibody_plant->get_geometry_query_input_port());
 
-    drake::geometry::DrakeVisualizer::AddToBuilder(&builder, scene_graph);
+    drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, scene_graph);
 
     diagram = builder.Build();
     diagram_context = diagram->CreateDefaultContext();
