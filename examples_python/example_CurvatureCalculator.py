@@ -11,6 +11,7 @@ for i in range(10):
     q, dq, ddq = cc.get_curvature()
     H_base = cc.get_frame(0)
     H_tip = cc.get_frame(num_segments)
-    print(f"q: {q}")
+    timestamp = cc.get_timestamp()
+    print(f"t: {timestamp}\tq: {q}")
     print(f"pose of tip (rel. to base): {np.matmul(np.linalg.inv(H_base), H_tip)}")
     sleep(0.5)

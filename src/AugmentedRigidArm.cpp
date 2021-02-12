@@ -61,6 +61,7 @@ void AugmentedRigidArm::setup_drake_model() {
     Jm = MatrixXd::Zero(num_joints, 2 * st_params::num_segments);
     dJm = MatrixXd::Zero(num_joints, 2 * st_params::num_segments);
     Jxi = MatrixXd::Zero(3, num_joints);
+    H_list.resize(st_params::num_segments);
     update_drake_model();
 }
 
@@ -147,8 +148,23 @@ void AugmentedRigidArm::update_drake_model() {
                                                        multibody_plant->GetFrameByName(final_frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),
                                                        multibody_plant->world_frame(), &Jxi);
-    H_tip = multibody_plant->GetFrameByName(final_frame_name).CalcPose(plant_context,  multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
+    std::string frame_name;
+    for (int i = 0; i < st_params::num_segments; i++)
+    {
+        frame_name = fmt::format("mid-{}", i);
+        H_list[i] = multibody_plant->GetFrameByName(frame_name).CalcPose(plant_context,  multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
+    }
 }
+
+Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H(int segment){
+    assert(0 <= segment && segment < st_params::num_segments);
+    return H_list[segment];
+}
+
+Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H_tip(){
+    return get_H(st_params::num_segments - 1);
+}
+
 
 void AugmentedRigidArm::update_Jm(const VectorXd &q) {
     // brute force calculate Jacobian numerically

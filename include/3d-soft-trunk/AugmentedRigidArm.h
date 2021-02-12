@@ -59,6 +59,8 @@ private:
 
     void update_Jxi(const VectorXd &q);
 
+    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> H_list; /** @brief holds relative transforms between tip of each segment and base */
+
 public:
     AugmentedRigidArm();
 
@@ -85,6 +87,11 @@ public:
     /** @brief the gravity vector, i.e. the force at each joint when the arm is completely stationary at its current configuration. */
     MatrixXd G_xi;
 
-    /** @brief the pose of the rigid body at the tip of the Drake model (relative to base frame), i.e. tip position calculated with forward kinematics using the PCC approximation. */
-    Eigen::Transform<double, 3, Eigen::Affine> H_tip;
+    /** @brief the pose of the rigid body at the tip of segment i, of the Drake model (relative to base frame), i.e. tip position for segment i calculated with forward kinematics using the PCC approximation. 
+     * @param segment segment id. 0 for first segment, and so on
+    */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment);
+
+    /** @brief Convenience function that calls get_H for the tip segment. */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H_tip();
 };

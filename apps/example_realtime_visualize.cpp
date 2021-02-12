@@ -30,10 +30,10 @@ int main() {
 
         // log tip position data
         log_file << fmt::format("{}", timestamp);
-        log_file << fmt::format(", {}, {}, {}", ara.H_tip.translation()(0), ara.H_tip.translation()(1), ara.H_tip.translation()(2));
+        log_file << fmt::format(", {}, {}, {}", ara.get_H_tip().translation()(0), ara.get_H_tip().translation()(1), ara.get_H_tip().translation()(2));
         H_tip_groundtruth = cc.get_frame(0).inverse() * cc.get_frame(st_params::num_segments);
         log_file << fmt::format(", {}, {}, {}", H_tip_groundtruth.translation()(0), H_tip_groundtruth.translation()(1), H_tip_groundtruth.translation()(2));
-        log_file << fmt::format(", {}\n", (ara.H_tip.translation() - H_tip_groundtruth.translation()).norm());
+        log_file << fmt::format(", {}\n", (ara.get_H_tip().translation() - H_tip_groundtruth.translation()).norm());
 
         fmt::print("----------\n{}\n", q.transpose());
         r.sleep();
