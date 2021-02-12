@@ -11,11 +11,8 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
     .def(py::init<>())
     .def("update", &AugmentedRigidArm::update)
-    .def("get_H_tip", [](AugmentedRigidArm& ara){
-        Eigen::Matrix<double, 4, 4> H_tip = ara.H_tip.matrix();
-        return H_tip;
-    });
-    
+    .def("get_H", &AugmentedRigidArm::get_H)
+    .def("get_H_tip", &AugmentedRigidArm::get_H_tip);
 
     py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
     cc.def(py::init<CurvatureCalculator::SensorType, std::string>())
@@ -29,7 +26,8 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         Eigen::Matrix<double, 4, 4> H = Eigen::Matrix<double, 4, 4>::Identity();
         H = cc.get_frame(i).matrix();
         return H;
-    });
+    })
+    .def("get_timestamp", &CurvatureCalculator::get_timestamp);
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)
