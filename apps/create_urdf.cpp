@@ -8,17 +8,14 @@
 
 /**
  * @file create_urdf.cpp
- * @brief generates a URDF model of augmented rigid arm using parameters defined in SoftTrunk_common_defs.h. XACRO (and ROS) must be installed on the system.
- * Currently this must be run from the top of the SoftTrunk project (`./bin/create_urdf`).
- * @todo fix so it can be run from anywhere
+ * @brief generates a URDF model of augmented rigid arm using parameters defined in SoftTrunk_common.h. XACRO (and ROS) must be installed on the system.
  */
 int main() {
-    std::string xacro_filename = fmt::format("./urdf/{}.urdf.xacro", st_params::robot_name);
-    std::string urdf_filename = fmt::format("./urdf/{}.urdf", st_params::robot_name);
+    std::string xacro_filename = fmt::format("{}/urdf/{}.urdf.xacro", SOFTTRUNK_PROJECT_DIR, st_params::robot_name);
+    std::string urdf_filename = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params::robot_name);
 
-    assert(st_params::num_segments == st_params::lengths.size());
-    assert(st_params::num_segments == st_params::masses.size());
-    assert(st_params::rigidModel == RigidModelType::straw_bend);
+    assert(2 * st_params::num_segments - 1 == st_params::lengths.size());
+    assert(st_params::num_segments + 1 == st_params::diameters.size());
 
     fmt::print("generating XACRO file:\t{}\n", xacro_filename);
     std::ofstream xacro_file;
@@ -31,17 +28,25 @@ int main() {
                << "<xacro:include filename='macro_definitions.urdf.xacro' />\n"
                << "<xacro:empty_link name='base_link'/>\n";
 
-    // write out first PCC element
-    // this is written outside for loop because parent of first PCC element must be called base_link
-    xacro_file << fmt::format("<xacro:PCC id='0' parent='base_link' child='mid-0' length='{}' mass='{}'/>\n",
-                              st_params::lengths[0], st_params::masses[0])
-               << "<xacro:empty_link name='mid-0'/>\n";
-    // iterate over all the other PCC elements
-    for (int i = 1; i < st_params::num_segments; ++i) {
-        xacro_file
-                << fmt::format("<xacro:PCC id='{}' parent='mid-{}' child='mid-{}' length='{}' mass='{}'/>\n", i, i - 1,
-                               i, st_params::lengths[i], st_params::masses[i])
-                << fmt::format("<xacro:empty_link name='mid-{}'/>\n", i);
+    std::string parent = "base_link";
+    std::string child;
+    for (int i = 0; i < st_params::num_segments; i++)
+    {
+        // create sections that gradually taper
+        double segmentLength = st_params::lengths[2*i];
+        double sectionLength = segmentLength / st_params::sections_per_segment;
+        for (int j = 0; j < st_params::sections_per_segment; j++)
+        {
+            double sectionRadius = (st_params::diameters[i+1]/2 * j + st_params::diameters[i]/2 * (st_params::sections_per_segment-j))/st_params::sections_per_segment;
+            double mass = st_params::totalMass / (st_params::num_segments * st_params::sections_per_segment); /** @todo fix to use value calculated from area of cross-section */
+            child = fmt::format("seg{}_sec{}-{}_connect", i, j, j+1);
+            if (j == st_params::sections_per_segment - 1) // for last section, child connects to next part outside segment
+                child = fmt::format("seg{}-{}_connect", i, i+1);
+            xacro_file << fmt::format("<xacro:PCC id='seg{}_sec{}' parent='{}' child='{}' length='{}' mass='{}' radius='{}'/>\n", i, j, parent, child, sectionLength, 0.2, sectionRadius);
+            xacro_file << fmt::format("<xacro:empty_link name='{}'/>\n", child);
+            parent = child;
+        }
+        /** @todo incorporate length of connector part */
     }
     xacro_file << "</robot>";
 

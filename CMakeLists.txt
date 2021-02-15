@@ -73,6 +73,9 @@ target_link_libraries(AugmentedRigidArm drake::drake ${catkin_LIBRARIES})
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
 target_link_libraries(ControllerPCC AugmentedRigidArm CurvatureCalculator ValveController Threads::Threads MiniPID)
 
+add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
+target_link_libraries(SoftTrunkModel AugmentedRigidArm)
+
 ### set up pybind modules
 pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
 target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator)

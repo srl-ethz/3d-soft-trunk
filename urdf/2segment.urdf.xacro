@@ -1,0 +1,26 @@
+<?xml version='1.0'?>
+<!-- This file has been generated automatically from create_xacro.cpp, do not edit by hand -->
+<robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='2segment'>
+<xacro:include filename='macro_definitions.urdf.xacro' />
+<xacro:empty_link name='base_link'/>
+<xacro:PCC id='seg0_sec0' parent='base_link' child='seg0_sec0-1_connect' length='0.024' mass='0.2' radius='0.016'/>
+<xacro:empty_link name='seg0_sec0-1_connect'/>
+<xacro:PCC id='seg0_sec1' parent='seg0_sec0-1_connect' child='seg0_sec1-2_connect' length='0.024' mass='0.2' radius='0.0156'/>
+<xacro:empty_link name='seg0_sec1-2_connect'/>
+<xacro:PCC id='seg0_sec2' parent='seg0_sec1-2_connect' child='seg0_sec2-3_connect' length='0.024' mass='0.2' radius='0.0152'/>
+<xacro:empty_link name='seg0_sec2-3_connect'/>
+<xacro:PCC id='seg0_sec3' parent='seg0_sec2-3_connect' child='seg0_sec3-4_connect' length='0.024' mass='0.2' radius='0.014800000000000002'/>
+<xacro:empty_link name='seg0_sec3-4_connect'/>
+<xacro:PCC id='seg0_sec4' parent='seg0_sec3-4_connect' child='seg0-1_connect' length='0.024' mass='0.2' radius='0.014400000000000001'/>
+<xacro:empty_link name='seg0-1_connect'/>
+<xacro:PCC id='seg1_sec0' parent='seg0-1_connect' child='seg1_sec0-1_connect' length='0.024' mass='0.2' radius='0.014000000000000002'/>
+<xacro:empty_link name='seg1_sec0-1_connect'/>
+<xacro:PCC id='seg1_sec1' parent='seg1_sec0-1_connect' child='seg1_sec1-2_connect' length='0.024' mass='0.2' radius='0.0132'/>
+<xacro:empty_link name='seg1_sec1-2_connect'/>
+<xacro:PCC id='seg1_sec2' parent='seg1_sec1-2_connect' child='seg1_sec2-3_connect' length='0.024' mass='0.2' radius='0.0124'/>
+<xacro:empty_link name='seg1_sec2-3_connect'/>
+<xacro:PCC id='seg1_sec3' parent='seg1_sec2-3_connect' child='seg1_sec3-4_connect' length='0.024' mass='0.2' radius='0.0116'/>
+<xacro:empty_link name='seg1_sec3-4_connect'/>
+<xacro:PCC id='seg1_sec4' parent='seg1_sec3-4_connect' child='seg1-2_connect' length='0.024' mass='0.2' radius='0.0108'/>
+<xacro:empty_link name='seg1-2_connect'/>
+</robot>
