@@ -22,7 +22,7 @@ int main() {
     Eigen::Transform< double, 3, Eigen::Affine > H_tip_groundtruth; // pose of tip, relative to base (ground truth data from qualisys)
 
     unsigned long long int timestamp; // microsecond timestamp from Qualisys data
-    Rate r{30};
+    srl::Rate r{30};
     while (true) {
         cc.get_curvature(q, dq, ddq);
         timestamp = cc.get_timestamp();

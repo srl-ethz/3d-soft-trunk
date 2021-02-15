@@ -162,7 +162,7 @@ void ControllerPCC::actuate(VectorXd f) {
 }
 
 void ControllerPCC::control_loop() {
-    Rate r{1./dt};
+    srl::Rate r{1./dt};
     VectorXd f = VectorXd::Zero(st_params::num_segments * 2);
     while (true) {
         r.sleep();
