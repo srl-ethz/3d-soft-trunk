@@ -11,8 +11,12 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
     .def(py::init<>())
     .def("update", &AugmentedRigidArm::update)
-    .def("get_H", &AugmentedRigidArm::get_H)
-    .def("get_H_tip", &AugmentedRigidArm::get_H_tip);
+    .def("get_H", [](AugmentedRigidArm& ara, int i){
+        return ara.get_H(i).matrix();
+    })
+    .def("get_H_tip", [](AugmentedRigidArm& ara){
+        return ara.get_H_tip().matrix();
+    });
 
     py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
     cc.def(py::init<CurvatureCalculator::SensorType, std::string>())
