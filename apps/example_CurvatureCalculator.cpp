@@ -14,7 +14,7 @@ int main() {
     CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
     VectorXd q, dq, ddq;
     unsigned long long int timestamp;
-    Rate r{5};
+    srl::Rate r{5};
     while (true) {
         cc.get_curvature(q, dq, ddq);
         timestamp = cc.get_timestamp();

@@ -55,7 +55,7 @@ void CurvatureCalculator::calculator_loop() {
     VectorXd prev_q = VectorXd::Zero(q.size());
     VectorXd prev_dq = VectorXd::Zero(dq.size());
     double interval = 0.01;
-    Rate rate{1. / interval};
+    srl::Rate rate{1. / interval};
     run = true;
     unsigned long long int last_timestamp;
     while (run) {

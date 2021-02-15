@@ -19,7 +19,7 @@ int main() {
     ControllerPCC cpcc{CurvatureCalculator::SensorType::qualisys};
     cpcc.set_ref(q_ref, dq_ref, ddq_ref);
 
-    sleep(15);
+    srl::sleep(15);
     MatrixXd J;
     VectorXd q, dq, p_vectorized;
     cpcc.get_kinematic(q, dq, J);
