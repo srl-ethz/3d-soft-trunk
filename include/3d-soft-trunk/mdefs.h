@@ -7,29 +7,29 @@
 
 /* C language definitions for use with Mathematica output */
 
-#define Power(x, y)	(pow((ldouble)(x), (ldouble)(y)))
-#define Sqrt(x)		(sqrt((ldouble)(x)))
-#define Sqrtl(x)        (sqrt((ldouble)(x)))
+#define Power(x, y)	(pow((double)(x), (double)(y)))
+#define Sqrt(x)		(sqrt((double)(x)))
+#define Sqrtl(x)        (sqrt((double)(x)))
 
-#define Abs(x)		(fabs((ldouble)(x)))
+#define Abs(x)		(fabs((double)(x)))
 
-#define Exp(x)		(exp((ldouble)(x)))
-#define Log(x)		(log((ldouble)(x)))
+#define Exp(x)		(exp((double)(x)))
+#define Log(x)		(log((double)(x)))
 
-#define Sin(x)		(sin((ldouble)(x)))
-#define Cos(x)		(cos((ldouble)(x)))
-#define Tan(x)		(tan((ldouble)(x)))
+#define Sin(x)		(sin((double)(x)))
+#define Cos(x)		(cos((double)(x)))
+#define Tan(x)		(tan((double)(x)))
 
-#define ArcSin(x)       (asin((ldouble)(x)))
-#define ArcCos(x)       (acos((ldouble)(x)))
-#define ArcTan(x)       (atan((ldouble)(x)))
+#define ArcSin(x)       (asin((double)(x)))
+#define ArcCos(x)       (acos((double)(x)))
+#define ArcTan(x)       (atan((double)(x)))
 
-#define Sinh(x)          (sinh((ldouble)(x)))
-#define Cosh(x)          (cosh((ldouble)(x)))
-#define Tanh(x)          (tanh((ldouble)(x)))
+#define Sinh(x)          (sinh((double)(x)))
+#define Cosh(x)          (cosh((double)(x)))
+#define Tanh(x)          (tanh((double)(x)))
 
-#define Cot(x)          (1./tan((ldouble)(x)))
-#define Csc(x)          (1./sin((ldouble)(x)))
-#define Sec(x)          (1./cos((ldouble)(x)))
+#define Cot(x)          (1./tan((double)(x)))
+#define Csc(x)          (1./sin((double)(x)))
+#define Sec(x)          (1./cos((double)(x)))
 
 /** Could add definitions for Random(), SeedRandom(), etc. **/

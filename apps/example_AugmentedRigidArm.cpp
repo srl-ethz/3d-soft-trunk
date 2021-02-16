@@ -16,15 +16,11 @@
  */
 
 void q_update(double seconds, VectorXd& q) {
-    for (int i = 0; i < st_params::num_segments; i++) {
-        if (st_params::parametrization == ParametrizationType::phi_theta){
-            q(2*i + 0) = seconds + 1.1 * i;
-            q(2*i + 1) = 0.35 + 0.3 * sin(seconds);
-        }
-        else if (st_params::parametrization == ParametrizationType::longitudinal){
-            q(2 * i + 0) = sin(seconds * (1.5 + (double) i));
-            q(2 * i + 1) = cos(seconds * (2.0 + (double) i));
-        }
+    // generate nice-looking poses
+    for (int i = 0; i < st_params::num_segments * st_params::sections_per_segment ; i++) {
+        q(2 * i + 0) = 0.8 * sin(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+        q(2 * i + 1) = 0.4 * cos(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+
     }
 }
 
@@ -32,8 +28,8 @@ int main() {
     AugmentedRigidArm ara{};
 
     // calculate the state of arm at a particular value of q and print out the various parameters
-    VectorXd q = VectorXd::Zero(2 * st_params::num_segments);
-    VectorXd dq = VectorXd::Zero(2 * st_params::num_segments);
+    VectorXd q = VectorXd::Zero(2 * st_params::num_segments * st_params::sections_per_segment);
+    VectorXd dq = VectorXd::Zero(2 * st_params::num_segments * st_params::sections_per_segment);
 
     double delta_t = 0.03;
     Rate r{1. / delta_t};

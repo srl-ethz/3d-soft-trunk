@@ -10,6 +10,7 @@
 #include <drake/systems/framework/diagram.h>
 #include <drake/systems/framework/diagram_builder.h>
 
+#include "mdefs.h"
 #include "SoftTrunk_common.h"
 
 /**
