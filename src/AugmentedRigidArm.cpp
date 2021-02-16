@@ -67,18 +67,16 @@ void AugmentedRigidArm::calculate_m(const VectorXd &q, VectorXd &xi)
 {
     xi = VectorXd::Zero(joints_per_segment * st_params::num_segments);
     // intermediate variables useful for calculation
-    double p0 = 0;
-    double t0 = 0;
-    double p1;
-    double t1;
-    double l;
-    int joint_id_head;
+    // use phi, theta parametrization because it's simpler for calculation
+    double p0 = 0; // phi of previous section
+    double t0 = 0; // theta of previous section
+    double p1; // phi of current section
+    double t1; // theta of current section
+    double l; // length of current section
+    int joint_id_head; // index of first joint in section (5 joints per section) 
     for (int section_id = 0; section_id < st_params::num_segments * st_params::sections_per_segment; ++section_id)
     {
-        // use phi, theta parametrization because it's simpler for calculation
-        p1 = atan2(q(2 * section_id + 1), q(2 * section_id));
-        t1 = sqrt(pow(q(section_id * 2), 2) + pow(q(section_id * 2 + 1), 2));
-
+        longitudinal2phiTheta(q(2*section_id), q(2*section_id), p1, t1);
         joint_id_head = 5 * section_id;
         l = st_params::lengths[2 * section_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
@@ -131,22 +129,158 @@ void AugmentedRigidArm::update_drake_model()
     H_tip = multibody_plant->GetFrameByName(final_frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
 }
 
+/**
+ * @brief calculate partial differentiation of phi & theta w.r.t. Lx, Ly.
+ * [[d(phi)/d(Lx), d(phi)/d(Ly)],
+ *  [d(theta)/d(Lx), d(theta)/d(Ly)]]
+ * @param Lx Lx of longitudinal parametrization
+ * @param Ly Lx of longitudinal parametrization
+ * @param M result. Must be 2x2 matrix
+ */
+void calcPhiThetaDiff(double Lx, double Ly, MatrixXd& M){
+    assert(M.rows() == 2 && M.cols() == 2);
+    double tmp =  (pow(Lx,2) + pow(Ly,2));
+    M(0,0) = - Ly/tmp;
+    M(0,1) = Lx / tmp; 
+    M(1,0) = Lx / sqrt(tmp);
+    M(1,1) = Ly / sqrt(tmp);
+}
+
 void AugmentedRigidArm::update_Jm(const VectorXd &q)
 {
-    double t0 = 0;
     double p0 = 0;
-    double t1;
+    double t0 = 0;
     double p1;
+    double t1;
+    MatrixXd dxi_dpt = MatrixXd::Zero(5, 2); // d(xi)/d(phi, theta)
+    MatrixXd dpt_dL = MatrixXd::Zero(2, 2); // d(phi, theta)/d(Lx, Ly)
     for (int section_id = 0; section_id < st_params::num_segments * st_params::sections_per_segment; section_id ++)
     {
-        /** @todo implement partial differentiation scheme */
-        p1 = atan2(q(2 * section_id + 1), q(2 * section_id));
-        t1 = sqrt(pow(q(section_id * 2), 2) + pow(q(section_id * 2 + 1), 2));
+        // differentiation is calculated via phi-theta parametrization for easier formulation.
         int q_head = 2 * section_id;
         int xi_head = 5 * section_id;
-        // Jm(xi_head, q_head) = ; // d(X axis)/d( )
+        longitudinal2phiTheta(q(q_head), q(q_head+1), p1, t1);
+        if (section_id != 0)
+        {
+            // Calculated from Mathematica
+            // d(rot_x)/d(phi0)
+            dxi_dpt(0,1) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
+            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
+          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
+          (-(Cos(t1)*Sin(p0)*Sin(t0)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) - 2*Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - 
+            Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1) + Power(Sin(p0),2)*Sin(p1)*Sin(t1) - 
+            Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1)))/
+        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
+       (Cos(p0)*Cos(t1)*Sin(t0) - Power(Cos(p0),2)*Cos(p1)*Sin(t1) + Power(Cos(p0),2)*Cos(p1)*Cos(t0)*Sin(t1) + 
+          Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 2*Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + 
+          2*Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
+     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
+          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
+        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+            
+            // d(rot_x)/d(theta0)
+            dxi_dpt(0,1) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
+            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
+          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
+          (Cos(p0)*Cos(t0)*Cos(t1) - Cos(p1)*Sin(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t0)*Sin(t1) - 
+            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0)*Sin(t1)))/
+        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
+       (Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t0)*Sin(t1) - Sin(p1)*Sin(t0)*Sin(t1) + 
+          Power(Cos(p0),2)*Sin(p1)*Sin(t0)*Sin(t1))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
+     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
+          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
+        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+
+            // d(rot_y)/d(phi-1)
+            // dxi_dpt(1,0) = todo
+
+            // d(rot_y)/d(theta0)
+            // dxi_dpt(1,1) = todo
+
+            // d(rot_z)/d(phi0)
+            // dxi_dpt(2,0) = todo
+
+            // d(rot_z)/d(theta0)
+            // dxi_dpt(2,1) = todo
+
+            // d(prismatic)/d(phi0)
+            dxi_dpt(3,0) = 0;
+
+            // d(prismatic)/d(theta0)
+            // dxi_dpt(3,1) = todo
+
+            calcPhiThetaDiff(q(q_head - 2), q(q_head-1), dpt_dL);
+            Jm.block(xi_head, q_head-2, 5, 2) = dxi_dpt * dpt_dL;
+        }
+        // Calculated from Mathematica
+        // d(rot_x)/d(phi1)
+        dxi_dpt(0,0) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
+            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
+          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
+          (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1)) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - Cos(t0)*Sin(p1)*Sin(t1) - 
+            Power(Sin(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1)))/
+        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
+       (Power(Cos(p0),2)*Cos(p1)*Sin(t1) + Cos(p1)*Cos(t0)*Sin(t1) - Power(Cos(p0),2)*Cos(p1)*Cos(t0)*Sin(t1) + 
+          Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) - Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
+     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
+          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
+        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+        
+        // d(rot_x)/d(theta1)
+        dxi_dpt(0,1) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
+            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
+          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
+          (Cos(p1)*Cos(t0)*Cos(t1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2) - Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2) - 
+            Cos(p0)*Cos(t1)*Sin(p0)*Sin(p1) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0)*Sin(p1) - Cos(p0)*Sin(t0)*Sin(t1)))/
+        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
+       (-(Cos(p0)*Cos(p1)*Cos(t1)*Sin(p0)) + Cos(p0)*Cos(p1)*Cos(t0)*Cos(t1)*Sin(p0) + Power(Cos(p0),2)*Cos(t1)*Sin(p1) + 
+          Cos(t0)*Cos(t1)*Sin(p1) - Power(Cos(p0),2)*Cos(t0)*Cos(t1)*Sin(p1) - Sin(p0)*Sin(t0)*Sin(t1))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
+     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
+          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
+        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
+            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+        
+        // d(rot_y)/d(phi1)
+        dxi_dpt(1,0) = 0; //todo
+
+        // d(rot_y)/d(theta1)
+        dxi_dpt(1,1) = 0; //todo
+
+        // d(rot_z)/d(phi1)
+        dxi_dpt(2,0) = 0; //todo
+
+        // d(rot_z)/d(theta1)
+        dxi_dpt(2,1) = 0; //todo
+
+        // d(prismatic)/d(phi1)
+        dxi_dpt(3,0) = 0;
+        // d(prismatic)/d(theta1)
+        dxi_dpt(3,1) = 0; //todo
+        
+        calcPhiThetaDiff(q(q_head), q(q_head+1), dpt_dL);
+        Jm.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
+        p0 = p1;
+        t0 = t1;
     }
-    
 }
 
 void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq)
