@@ -9,13 +9,16 @@
  */
 class SoftTrunkModel{
 public:
+    SoftTrunkModel(){
+        ara = std::make_unique<AugmentedRigidArm>();
+    };
     /**
      * @brief get the matrices & vectors in the dynamic model for the current state.
      * B \ddot q + C \dot q + g + K q + D \dot q = A p
      */
     void getModel(MatrixXd& B, MatrixXd& C, VectorXd& g, MatrixXd& K, MatrixXd& D, MatrixXd& A);
 
-    void updateState(VectorXd q, VectorXd dq);
+    void updateState(const VectorXd& q, const VectorXd& dq);
 private:
     std::unique_ptr<AugmentedRigidArm> ara;
     /**
@@ -27,4 +30,4 @@ private:
      * @param secondMomentOfArea
      */
     void calculateCrossSectionProperties(double radius, double& chamberCentroidDist, double& siliconeArea, double& chamberArea, double& secondMomentOfArea);
-}
+};
