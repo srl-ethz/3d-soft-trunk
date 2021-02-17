@@ -76,7 +76,7 @@ void AugmentedRigidArm::calculate_m(const VectorXd &q, VectorXd &xi)
     int joint_id_head; // index of first joint in section (5 joints per section) 
     for (int section_id = 0; section_id < st_params::num_segments * st_params::sections_per_segment; ++section_id)
     {
-        longitudinal2phiTheta(q(2*section_id), q(2*section_id), p1, t1);
+        longitudinal2phiTheta(q(2*section_id), q(2*section_id + 1), p1, t1);
         joint_id_head = 5 * section_id;
         l = st_params::lengths[2 * section_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
