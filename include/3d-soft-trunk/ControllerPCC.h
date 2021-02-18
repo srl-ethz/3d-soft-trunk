@@ -5,8 +5,8 @@
 #pragma once
 
 #include "SoftTrunk_common.h"
-#include "AugmentedRigidArm.h"
 #include "CurvatureCalculator.h"
+#include "SoftTrunkModel.h"
 #include <mobilerack-interface/ValveController.h>
 #include <MiniPID.h>
 #include <mutex>
@@ -28,19 +28,13 @@ public:
             const VectorXd &dq_ref,
             const VectorXd &ddq_ref);
 
-    /** @brief get current kinematic parameters of the arm (pose and Jacobian) */
-    void get_kinematic(VectorXd &q, VectorXd dq, MatrixXd &J);
-    /** @brief get current dynamic parameters of the arm
-     * @param B inertia matrix
-     * @param C
-     * @param G gravity torque
-     */
-    void get_dynamic(MatrixXd &B, MatrixXd &C, MatrixXd &G);
+    /** @brief get current kinematic parameters of the arm */
+    void get_kinematic(VectorXd &q, VectorXd dq);
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
 
 private:
-    std::unique_ptr<AugmentedRigidArm> ara;
+    std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
 
@@ -48,8 +42,6 @@ private:
     std::string bendlabs_portname = "/dev/ttyUSB0";
 
     // parameters for dynamic controller
-    VectorXd K; /** @brief stiffness coefficient of silicone arm */
-    VectorXd D; /** @brief damping coefficient of silicone arm */
     VectorXd K_p; /** @brief P gain for pose FB */
     VectorXd K_d; /** @brief D gain for pose FB */
     double alpha = 2.16e-4; /** @brief used to convert generalized force tau to pressure P (P = tau / alpha). Not used for PID control. Uses model-based value, which is very close to experimental value 2.88e-4. */
@@ -96,13 +88,4 @@ private:
 
     VectorXd p_vectorized; /** @brief vector that expresses net pressure for X&Y directions, for each segment */
 
-    /**
-     * @brief calculate dynamic & kinematic parameters using augmented rigid model
-     */
-    void updateBCGJ(const VectorXd &q, const VectorXd &dq);
-
-    MatrixXd B; /** @brief inertia matrix */
-    MatrixXd C;
-    VectorXd G; /** @brief gravity vector */
-    MatrixXd J; /** @brief Jacobian for tip of arm */
 };
