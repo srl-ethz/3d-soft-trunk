@@ -44,10 +44,7 @@ void CurvatureCalculator::calculator_loop() {
         log_file.open(filename, std::fstream::out);
         log_file << "timestamp";
         for (int i = 0; i < st_params::num_segments; ++i) {
-            if (st_params::parametrization == ParametrizationType::phi_theta)
-                log_file << fmt::format(", phi_{}, theta_{}", i, i);
-            else if (st_params::parametrization == ParametrizationType::longitudinal)
-                log_file << fmt::format(", La_{}, Lb_{}", i, i);
+            log_file << fmt::format(", La_{}, Lb_{}", i, i);
         }
         log_file << "\n";
     }
@@ -137,7 +134,6 @@ double a2theta(double a, double L){
 void CurvatureCalculator::calculateCurvature() {
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
     {
-        assert(st_params::parametrization == ParametrizationType::longitudinal);
         for (int i = 0; i < 1; i++){
             /** @todo change 1 to st_params::num_segments */
             q(2*i+0) = bendLab_data[2*i+1] * PI / 180.;
@@ -153,13 +149,7 @@ void CurvatureCalculator::calculateCurvature() {
         // see documentation in header file for how this is calculated
         phi = atan2(matrix(1, 3), matrix(0, 3));
         theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2)), L);
-        if (st_params::parametrization == ParametrizationType::phi_theta) {
-            q(2 * i) = phi;
-            q(2 * i + 1) = theta;
-        } else if (st_params::parametrization == ParametrizationType::longitudinal) {
-            q(2 * i) = -cos(phi) * theta; // deltaLa (the difference in the length of La compared to neutral state)
-            q(2 * i + 1) = -sin(phi) * theta;
-        }
+        phiTheta2longitudinal(phi, theta, q(2*i), q(2*i+1));
     }
     // q -= initial_q; // implement better way to get rid of initial error...
 }

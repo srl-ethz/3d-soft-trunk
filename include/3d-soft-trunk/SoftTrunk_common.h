@@ -49,10 +49,8 @@ namespace st_params {
  * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.
  */
 void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
-    assert("false");
-    // todo
-    Lx = 0;
-    Ly = 0;
+    Lx = -cos(phi) * theta;
+    Ly = -sin(phi) * theta;
 }
 
 /**
