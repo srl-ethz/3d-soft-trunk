@@ -32,7 +32,7 @@ int main() {
     VectorXd dq = VectorXd::Zero(2 * st_params::num_segments * st_params::sections_per_segment);
 
     double delta_t = 0.03;
-    Rate r{1. / delta_t};
+    srl::Rate r{1. / delta_t};
     for (double t = 0; t<10; t+=delta_t) {
         q_update(t, q);
         ara.update(q, dq);

@@ -27,6 +27,7 @@ enum class ControllerType {
 
 /** @brief parameters that define the configuration of the Soft Trunk */
 namespace st_params {
+    /** @brief name of robot (and of urdf / xacro file), make it different for differently configured robots */
     const std::string robot_name = "2segment";
     /** @brief mass of entire robot, in kg */
     double totalMass = 0.3;
@@ -58,5 +59,7 @@ void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
  */
 void longitudinal2phiTheta(double Lx, double Ly, double& phi, double& theta){
     phi = atan2(Ly, Lx);
+    if (Lx == 0 && Ly == 0)
+        phi = 0;
     theta = sqrt(pow(Lx, 2) + pow(Ly, 2));
 }

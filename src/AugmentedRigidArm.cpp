@@ -144,6 +144,11 @@ void calcPhiThetaDiff(double Lx, double Ly, MatrixXd& M){
     M(0,1) = Lx / tmp; 
     M(1,0) = Lx / sqrt(tmp);
     M(1,1) = Ly / sqrt(tmp);
+    if (tmp == 0){
+      // phi is undefined when Lx and Ly are 0, so just set to zero
+      M.block(0,0,1,2).setZero();
+      M.block(1,0,1,2).setOnes();
+    }
 }
 
 void AugmentedRigidArm::update_Jm(const VectorXd &q)

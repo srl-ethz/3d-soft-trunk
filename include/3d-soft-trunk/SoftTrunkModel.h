@@ -10,22 +10,14 @@
  * B \ddot q + C \dot q + g + K q + D \dot q = A p
  * \f$
  * where q is the pose (in longitudinal parameters) with dimension of 2 * num_segments * sections_per_segment,
- * and p is input pressures with dimension of 2 * num_segments.
+ * and p is input pressures with dimension of 2 * num_segments. p[0] is chamber in +x direction, p[1] is chamber in -x,+y direction and p[2] is chamber in -x,-y direction
  */
 class SoftTrunkModel{
 public:
-    SoftTrunkModel(){
-        ara = std::make_unique<AugmentedRigidArm>();
-        double centroidDist;
-        double siliconeArea;
-        double chamberArea;
-        double secondMoment;
-        calculateCrossSectionProperties(17.5, centroidDist, siliconeArea, chamberArea, secondMoment);
-        fmt::print("centroid:{}, area of silicone:{}, area of single chamber:{}, secondMoment:{}", centroidDist, siliconeArea, chamberArea, secondMoment);
-    };
+    SoftTrunkModel();
 
     /**
-     * @brief update the model's state, and calculate the parameters of the model.
+     * @brief update the model's state, and calculate the parameters of the model. Currently has problems when both Lx and Ly are 0.
      */
     void updateState(const VectorXd& q, const VectorXd& dq);
 
@@ -62,4 +54,7 @@ private:
      */
     void calculateCrossSectionProperties(double radius, double& chamberCentroidDist, double& siliconeArea, double& chamberArea, double& secondMomentOfArea);
 
+    /** @brief shear modulus of Dragon Skin 10, in Pa
+     */
+    double shear_modulus = 0.085e6;
 };
