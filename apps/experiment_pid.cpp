@@ -18,7 +18,7 @@ int main(){
     ControllerPCC cpcc{CurvatureCalculator::SensorType::qualisys};
     cpcc.set_ref(q_ref, dq_ref, ddq_ref);
 
-    Rate r{5};
+    srl::Rate r{5};
     VectorXd q, dq, p_vectorized;
     while (true) {
         // the controller is updated at a much higher rate in a separate thread, this is just to show the output in realtime

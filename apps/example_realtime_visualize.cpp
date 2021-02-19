@@ -22,7 +22,7 @@ int main() {
     Eigen::Transform< double, 3, Eigen::Affine > H_tip_groundtruth;
 
     double dt = 1./30;
-    Rate r{1./dt};
+    srl::Rate r{1./dt};
     for (double t=0; true; t+=dt) {
         cc.get_curvature(q, dq, ddq);
         ara.update(q, dq);

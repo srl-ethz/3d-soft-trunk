@@ -13,7 +13,7 @@
 int main() {
     CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
     VectorXd q, dq, ddq;
-    Rate r{5};
+    srl::Rate r{5};
     while (true) {
         cc.get_curvature(q, dq, ddq);
         fmt::print("==========\nq:\t{}\ndq:\t{}\nddq:\t{}\n", q.transpose(), dq.transpose(), ddq.transpose());
