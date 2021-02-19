@@ -4,6 +4,7 @@ const double pi = 3.14159265;
 
 SoftTrunkModel::SoftTrunkModel()
 {
+    generateRobotURDF();
     ara = std::make_unique<AugmentedRigidArm>();
     double centroidDist;
     double siliconeArea;
@@ -78,4 +79,53 @@ void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &cham
     siliconeArea = 3 * (pow(r2, 2) * pi / 2 - chamberArea) + sqrt(3) / 4 * pow(l1, 2); // 3 * (area of silicone in chamber) + (triangle) - (tubes)
     // uses RotationMatrix[theta].{{Iy, 0},{0, Ix}}.RotationMatrix[theta]^T to calculate for rotated values of chamber & rectangles (at 2pi/3 and 4pi/3 rotations)
     secondMomentOfArea = I_triangle + I_rect_y + (I_rect_y / 2 + I_rect_x * 1.5) + I_chamber_y + (I_chamber_y / 2 + I_chamber_x * 1.5); /** @todo verify this */
+}
+
+void SoftTrunkModel::generateRobotURDF(){
+    std::string xacro_filename = fmt::format("{}/urdf/{}.urdf.xacro", SOFTTRUNK_PROJECT_DIR, st_params::robot_name);
+    std::string urdf_filename = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params::robot_name);
+
+    // sanity check of the parameters, just in case
+    assert(2 * st_params::num_segments - 1 == st_params::lengths.size());
+    assert(st_params::num_segments + 1 == st_params::diameters.size());
+
+    fmt::print("generating XACRO file:\t{}\n", xacro_filename);
+    std::ofstream xacro_file;
+
+    xacro_file.open(xacro_filename);
+
+    xacro_file << "<?xml version='1.0'?>\n"
+               << "<!-- This file has been generated automatically from SoftTrunkModel::generateRobotURDF(), do not edit by hand -->\n"
+               << fmt::format("<robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='{}'>\n", st_params::robot_name)
+               << "<xacro:include filename='macro_definitions.urdf.xacro' />\n"
+               << "<xacro:empty_link name='base_link'/>\n";
+
+    std::string parent = "base_link";
+    std::string child;
+    for (int i = 0; i < st_params::num_segments; i++)
+    {
+        // create sections that gradually taper
+        double segmentLength = st_params::lengths[2*i];
+        double sectionLength = segmentLength / st_params::sections_per_segment;
+        for (int j = 0; j < st_params::sections_per_segment; j++)
+        {
+            double sectionRadius = (st_params::diameters[i+1]/2 * j + st_params::diameters[i]/2 * (st_params::sections_per_segment-j))/st_params::sections_per_segment;
+            double mass = st_params::totalMass / (st_params::num_segments * st_params::sections_per_segment); /** @todo fix to use value calculated from area of cross-section */
+            child = fmt::format("seg{}_sec{}-{}_connect", i, j, j+1);
+            if (j == st_params::sections_per_segment - 1) // for last section, child connects to next part outside segment
+                child = fmt::format("seg{}-{}_connect", i, i+1);
+            xacro_file << fmt::format("<xacro:PCC id='seg{}_sec{}' parent='{}' child='{}' length='{}' mass='{}' radius='{}'/>\n", i, j, parent, child, sectionLength, 0.2, sectionRadius);
+            xacro_file << fmt::format("<xacro:empty_link name='{}'/>\n", child);
+            parent = child;
+        }
+        /** @todo incorporate length of connector part */
+    }
+    xacro_file << "</robot>";
+
+    xacro_file.close();
+
+    fmt::print("generating URDF file (XACRO must be installed):\t{}\n", urdf_filename);
+    if (0 != std::system(fmt::format("python3 {}/urdf/xacro2urdf.py {} {}", SOFTTRUNK_PROJECT_DIR, xacro_filename, urdf_filename).c_str()))
+        throw "error with xacro -> urdf conversion script, aborting program"; // if python program returns anything other than 0, it is error
+    fmt::print("URDF file generated.\n");
 }

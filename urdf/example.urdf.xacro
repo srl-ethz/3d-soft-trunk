@@ -1,5 +1,5 @@
 <?xml version='1.0'?>
-<!-- This file has been generated automatically from create_xacro.cpp, do not edit by hand -->
+<!-- This file has been generated automatically from SoftTrunkModel::generateRobotURDF(), do not edit by hand -->
 <robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='2segment'>
 <xacro:include filename='macro_definitions.urdf.xacro' />
 <xacro:empty_link name='base_link'/>
