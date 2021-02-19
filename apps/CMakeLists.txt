@@ -19,5 +19,5 @@ target_link_libraries(create_urdf fmt)
 add_executable(experiment_pid experiment_pid.cpp)
 target_link_libraries(experiment_pid ControllerPCC)
 
-# add_executable(experiment src/experiment.cpp)
-# target_link_libraries(experiment Manager -pthread)
+add_executable(naive_simulation naive_simulation.cpp)
+target_link_libraries(naive_simulation SoftTrunkModel)
