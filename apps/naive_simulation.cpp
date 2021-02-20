@@ -10,13 +10,8 @@ int main(){
     VectorXd dq = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
-    // initialize pose- set same random curvature to all sections in the same segment
-    for (int i = 0; i < st_params::num_segments; i++)
-    {
-        Vector2d rand = 0.7 / st_params::sections_per_segment * Vector2d::Random();
-        for (int j = 0; j < st_params::sections_per_segment; j++)
-            q.segment(2*i*st_params::sections_per_segment + 2*j, 2) = rand;
-    }
+    p[0] = 300 * 100;
+    p[3] = 300 * 100;
     fmt::print("{}",q);
     
     VectorXd ddq;
@@ -26,8 +21,11 @@ int main(){
     {
         stm.updateState(q, dq);
         ddq = stm.B.inverse() * (stm.A * p - stm.C * dq - (-stm.g) - stm.K * q  -stm.D * dq);
+        //fmt::print("B: {}\n", stm.B);
+        //fmt::print("Binv:{}\n", stm.B.inverse());
+        //fmt::print("ddq: {}\n", ddq);
         dq += dt * ddq;
         q += dt * dq;
         r.sleep();
-    }
+        }
 }

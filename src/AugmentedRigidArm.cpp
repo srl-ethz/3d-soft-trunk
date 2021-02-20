@@ -75,12 +75,15 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
     double p1; // phi of current section
     double t1; // theta of current section
     double l; // length of current section
-    int joint_id_head; // index of first joint in section (5 joints per section) 
+    int joint_id_head; // index of first joint in section (5 joints per section)
+    int segment_id;
     for (int section_id = 0; section_id < st_params::num_segments * (st_params::sections_per_segment + 1); ++section_id)
     {
+        segment_id = section_id / (st_params::sections_per_segment + 1);
         longitudinal2phiTheta(q_(2*section_id), q_(2*section_id + 1), p1, t1);
+        t1 = std::max(0.001, t1); /** @todo hack way to get rid of errors when close to straight. */
         joint_id_head = 5 * section_id;
-        l = st_params::lengths[2 * section_id] / st_params::sections_per_segment;
+        l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
         // this was calculated from Mathematica and not by hand
         xi_(joint_id_head) = -ArcSin((Cos(t1) * Sin(p0) * Sin(t0) - Cos(p0) * Cos(p1) * Sin(p0) * Sin(t1) + Cos(p0) * Cos(p1) * Cos(t0) * Sin(p0) * Sin(t1) +
@@ -140,6 +143,8 @@ void AugmentedRigidArm::update_drake_model()
  * @param M result. Must be 2x2 matrix
  */
 void calcPhiThetaDiff(double Lx, double Ly, MatrixXd& M){
+    if (-0.001 < Lx && Lx < 0.001 && -0.001 < Ly && Ly < 0.001)
+      Lx = 0.001; // hack way to get rid of errors when Lx & Ly are small
     assert(M.rows() == 2 && M.cols() == 2);
     double tmp =  (pow(Lx,2) + pow(Ly,2));
     M(0,0) = - Ly/tmp;
@@ -160,20 +165,19 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
     double p1;
     double t1;
     double l;
+    int segment_id;
     MatrixXd dxi_dpt = MatrixXd::Zero(5, 2); // d(xi)/d(phi, theta)
     MatrixXd dpt_dL = MatrixXd::Zero(2, 2); // d(phi, theta)/d(Lx, Ly)
     for (int section_id = 0; section_id < st_params::num_segments * (st_params::sections_per_segment + 1); section_id ++)
     {
+        segment_id = section_id / (st_params::sections_per_segment+1);
         // differentiation is calculated via phi-theta parametrization for easier formulation.
         int q_head = 2 * section_id;
         int xi_head = 5 * section_id;
-        l = st_params::lengths[2 * section_id] / st_params::sections_per_segment; /** @todo: fix this to consider connetion piece */
+        l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
-        if (p1 == 0)
-          p1 = 0.001;
-        if (t1 == 0)
-          t1 = 0.001;
+        t1 = std::max(0.00, t1);
         if (section_id != 0)
         {
             // Calculated from Mathematica
