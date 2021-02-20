@@ -48,7 +48,7 @@ void AugmentedRigidArm::setup_drake_model()
     fmt::print("model has {} joints\n", num_joints);
 
     // check that parameters make sense, just in case
-    assert(st_params::num_segments * 2 - 1 == st_params::lengths.size());
+    assert(st_params::num_segments * 2 == st_params::lengths.size());
     assert(st_params::num_segments + 1 == st_params::diameters.size());
     assert(num_joints == 5 * st_params::num_segments * (st_params::sections_per_segment + 1));
 
@@ -123,7 +123,7 @@ void AugmentedRigidArm::update_drake_model()
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     G_xi_ = multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
-    std::string final_frame_name = fmt::format("seg{}-{}_connect", st_params::num_segments - 1, st_params::num_segments);
+    std::string final_frame_name = fmt::format("seg{}_sec{}-{}_connect", st_params::num_segments - 1, st_params::sections_per_segment, st_params::sections_per_segment+1);
     multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
                                                        multibody_plant->GetFrameByName(final_frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),

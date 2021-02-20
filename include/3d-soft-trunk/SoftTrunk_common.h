@@ -33,7 +33,7 @@ namespace st_params {
     double totalMass = 0.3;
     /** @brief length of each part, in m 
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    std::array<double, 3> lengths = {0.12, 0.02, 0.12};
+    std::array<double, 4> lengths = {0.12, 0.02, 0.12, 0.02};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}

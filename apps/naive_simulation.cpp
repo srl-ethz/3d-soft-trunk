@@ -13,7 +13,7 @@ int main(){
     // initialize pose- set same random curvature to all sections in the same segment
     for (int i = 0; i < st_params::num_segments; i++)
     {
-        Vector2d rand = 1. / st_params::sections_per_segment * Vector2d::Random();
+        Vector2d rand = 0.7 / st_params::sections_per_segment * Vector2d::Random();
         for (int j = 0; j < st_params::sections_per_segment; j++)
             q.segment(2*i*st_params::sections_per_segment + 2*j, 2) = rand;
     }

@@ -88,7 +88,7 @@ void SoftTrunkModel::generateRobotURDF(){
     std::string urdf_filename = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params::robot_name);
 
     // sanity check of the parameters, just in case
-    assert(2 * st_params::num_segments - 1 == st_params::lengths.size());
+    assert(2 * st_params::num_segments == st_params::lengths.size());
     assert(st_params::num_segments + 1 == st_params::diameters.size());
 
     fmt::print("generating XACRO file:\t{}\n", xacro_filename);
@@ -108,16 +108,20 @@ void SoftTrunkModel::generateRobotURDF(){
     {
         // create sections that gradually taper
         double segmentLength = st_params::lengths[2*i];
-        double sectionLength = segmentLength / st_params::sections_per_segment;
+        double connectorLength = st_params::lengths[2*i+1];
+        double sectionLengthInSegment = segmentLength / st_params::sections_per_segment; // length of a PCC section within a segment
+        double sectionLength;
         for (int j = 0; j < st_params::sections_per_segment + 1; j++)
         {
             // there is an "extra" PCC section at the end of each segment, to represent the straight connector piece that will always be kept straight.
             double sectionRadius = (st_params::diameters[i+1]/2 * j + st_params::diameters[i]/2 * (st_params::sections_per_segment-j))/st_params::sections_per_segment;
             double mass = st_params::totalMass / (st_params::num_segments * (st_params::sections_per_segment + 1)); /** @todo fix to use value calculated from area of cross-section */
             child = fmt::format("seg{}_sec{}-{}_connect", i, j, j+1);
-            if (j == st_params::sections_per_segment - 1) // for last section, child connects to next part outside segment
-                child = fmt::format("seg{}-{}_connect", i, i+1);
-            xacro_file << fmt::format("<xacro:PCC id='seg{}_sec{}' parent='{}' child='{}' length='{}' mass='{}' radius='{}'/>\n", i, j, parent, child, sectionLength, 0.2, sectionRadius);
+            if (j != st_params::sections_per_segment)
+                sectionLength = sectionLengthInSegment;
+            else
+                sectionLength = connectorLength; // this is the connection piece which is for implementation represented as another PCC section.
+            xacro_file << fmt::format("<xacro:PCC id='seg{}_sec{}' parent='{}' child='{}' length='{}' mass='{}' radius='{}'/>\n", i, j, parent, child, sectionLength, mass, sectionRadius);
             xacro_file << fmt::format("<xacro:empty_link name='{}'/>\n", child);
             parent = child;
         }

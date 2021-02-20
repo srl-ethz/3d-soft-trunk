@@ -13,6 +13,8 @@
  *
  * creates an augmented rigid arm model, then gives it some values (q and dq, the soft robot's configurations) so it can update its internal variables, then prints them out.
  * also updates the drake visualization, so run drake-visualization to see the rigid body model update itself in real time
+ * 
+ * The URDF model of the robot must be created first, which is currently done by SoftTrunkModel, so running this first will result in an error.
  */
 
 void q_update(double seconds, VectorXd& q) {
