@@ -20,7 +20,7 @@ int main(){
     fmt::print("{}",q);
     
     VectorXd ddq;
-    double dt = 0.0005;
+    double dt = 0.001;
     srl::Rate r{1./dt};
     for (int i = 0; i < 10000; i++)
     {

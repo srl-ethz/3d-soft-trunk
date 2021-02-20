@@ -94,6 +94,30 @@ void SoftTrunkModel::generateRobotURDF(){
     fmt::print("generating XACRO file:\t{}\n", xacro_filename);
     std::ofstream xacro_file;
 
+    // calculate total volume, used when calculating mass for each section
+    double totalVolume = 0;
+    double sectionLength;
+    double sectionRadius;
+    double tmp1, tmp2, tmp3;
+    double siliconeArea;
+    for (int i = 0; i < st_params::num_segments; i++)
+    {
+        sectionLength = st_params::lengths[2*i] / st_params::sections_per_segment;
+        for (int j = 0; j < st_params::sections_per_segment; j++)
+        {
+            // calculate for the tapering PCC sections
+            sectionRadius = (st_params::diameters[i+1]/2 * j + st_params::diameters[i]/2 * (st_params::sections_per_segment-j))/st_params::sections_per_segment;
+            calculateCrossSectionProperties(sectionRadius, tmp1, siliconeArea, tmp2, tmp3);
+            totalVolume += siliconeArea * sectionLength;
+        }
+        // calculate for the connector piece
+        sectionLength = st_params::lengths[2*i+1];
+        sectionRadius = st_params::diameters[i+1]/2;
+        calculateCrossSectionProperties(sectionRadius, tmp1, siliconeArea, tmp2, tmp3);
+        totalVolume += siliconeArea * sectionLength;
+    }
+    fmt::print("estimated total volume is {} m^3, i.e. {} g\n", totalVolume, totalVolume*1e6*1.07); // Dragon Skin 10 is 1.07g/cc
+
     xacro_file.open(xacro_filename);
 
     xacro_file << "<?xml version='1.0'?>\n"
@@ -115,12 +139,13 @@ void SoftTrunkModel::generateRobotURDF(){
         {
             // there is an "extra" PCC section at the end of each segment, to represent the straight connector piece that will always be kept straight.
             double sectionRadius = (st_params::diameters[i+1]/2 * j + st_params::diameters[i]/2 * (st_params::sections_per_segment-j))/st_params::sections_per_segment;
-            double mass = st_params::totalMass / (st_params::num_segments * (st_params::sections_per_segment + 1)); /** @todo fix to use value calculated from area of cross-section */
+            calculateCrossSectionProperties(sectionRadius, tmp1, siliconeArea, tmp2, tmp3);
             child = fmt::format("seg{}_sec{}-{}_connect", i, j, j+1);
             if (j != st_params::sections_per_segment)
                 sectionLength = sectionLengthInSegment;
             else
                 sectionLength = connectorLength; // this is the connection piece which is for implementation represented as another PCC section.
+            double mass = st_params::totalMass * (siliconeArea*sectionLength) / totalVolume;
             xacro_file << fmt::format("<xacro:PCC id='seg{}_sec{}' parent='{}' child='{}' length='{}' mass='{}' radius='{}'/>\n", i, j, parent, child, sectionLength, mass, sectionRadius);
             xacro_file << fmt::format("<xacro:empty_link name='{}'/>\n", child);
             parent = child;
