@@ -177,7 +177,7 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
-        t1 = std::max(0.00, t1);
+        t1 = std::max(0.001, t1);
         if (section_id != 0)
         {
             // Calculated from Mathematica
@@ -286,9 +286,11 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
 
             // d(prismatic)/d(phi0)
             dxi_dpt(3,0) = 0;
+            dxi_dpt(4,0) = 0;
 
             // d(prismatic)/d(theta0)
             dxi_dpt(3,1) = 0;
+            dxi_dpt(4,1) = 0;
 
             calcPhiThetaDiff(q_(q_head - 2), q_(q_head-1), dpt_dL);
             Jm_.block(xi_head, q_head-2, 5, 2) = dxi_dpt * dpt_dL;
@@ -396,8 +398,10 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
             Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
         // d(prismatic)/d(phi1)
         dxi_dpt(3,0) = 0;
+        dxi_dpt(4,0) = 0;
         // d(prismatic)/d(theta1)
         dxi_dpt(3,1) = -0.5*(l*Cos(t1/2.))/t1 + (l*Sin(t1/2.))/Power(t1,2);
+        dxi_dpt(4,1) = dxi_dpt(3,1);
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
         Jm_.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
