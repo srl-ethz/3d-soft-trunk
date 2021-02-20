@@ -1,0 +1,4 @@
+*.urdf
+*.urdf.xacro
+!example.urdf
+!example.urdf.xacro

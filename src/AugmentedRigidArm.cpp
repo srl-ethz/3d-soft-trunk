@@ -167,11 +167,16 @@ void AugmentedRigidArm::update_Jm(const VectorXd &q)
         int xi_head = 5 * section_id;
         l = st_params::lengths[2 * section_id] / st_params::sections_per_segment;
         longitudinal2phiTheta(q(q_head), q(q_head+1), p1, t1);
+        /** @todo this is a hack way to get rid of computation errors when values are 0 */
+        if (p1 == 0)
+          p1 = 0.001;
+        if (t1 == 0)
+          t1 = 0.001;
         if (section_id != 0)
         {
             // Calculated from Mathematica
             // d(rot_x)/d(phi0)
-            dxi_dpt(0,1) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
+            dxi_dpt(0,0) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
             Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
           (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
             Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*

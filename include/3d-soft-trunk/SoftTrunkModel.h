@@ -46,7 +46,7 @@ public:
 private:
     std::unique_ptr<AugmentedRigidArm> ara;
     /**
-     * @brief calculate various properties of a cross section of the arm.
+     * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
      * @param radius radius of the chamber. This is the input from which the other values will be calculated.
      * @param chamberCentroidDist distance between center & centroid of chamber (i.e. moment arm of pressure force)
      * @param siliconeArea area of silicone cross section

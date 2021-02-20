@@ -6,12 +6,6 @@ SoftTrunkModel::SoftTrunkModel()
 {
     generateRobotURDF();
     ara = std::make_unique<AugmentedRigidArm>();
-    double centroidDist;
-    double siliconeArea;
-    double chamberArea;
-    double secondMoment;
-    calculateCrossSectionProperties(17.5, centroidDist, siliconeArea, chamberArea, secondMoment);
-    fmt::print("centroid:{}, area of silicone:{}, area of single chamber:{}, secondMoment:{}", centroidDist, siliconeArea, chamberArea, secondMoment);
 
     K = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
     D = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
@@ -36,8 +30,9 @@ SoftTrunkModel::SoftTrunkModel()
         fmt::print("r: {}, l:{}\n", radius, l);
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
 
-        K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus / l;
+        K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus * secondMomentOfArea / l;
         A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
+        D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 0.001; /** @todo this is a temporary value */
     }
 
 }
@@ -53,6 +48,7 @@ void SoftTrunkModel::updateState(const VectorXd &q, const VectorXd &dq)
 }
 void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &chamberCentroidDist, double &siliconeArea, double &chamberArea, double &secondMomentOfArea)
 {
+    radius *= 1000.; // computation is done in mm
     double r1 = radius - 2;                                                           /** the radius of the cavity */
     double r2 = radius;                                                               /** radius of the outer shell */
     double r3 = 1.7;                                                                  /** radius of the tubes */
@@ -79,6 +75,12 @@ void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &cham
     siliconeArea = 3 * (pow(r2, 2) * pi / 2 - chamberArea) + sqrt(3) / 4 * pow(l1, 2); // 3 * (area of silicone in chamber) + (triangle) - (tubes)
     // uses RotationMatrix[theta].{{Iy, 0},{0, Ix}}.RotationMatrix[theta]^T to calculate for rotated values of chamber & rectangles (at 2pi/3 and 4pi/3 rotations)
     secondMomentOfArea = I_triangle + I_rect_y + (I_rect_y / 2 + I_rect_x * 1.5) + I_chamber_y + (I_chamber_y / 2 + I_chamber_x * 1.5); /** @todo verify this */
+
+    // convert to meters
+    chamberCentroidDist /= 1000.;
+    siliconeArea /= pow(1000., 2);
+    chamberArea /= pow(1000., 2);
+    secondMomentOfArea /= pow(1000., 4);
 }
 
 void SoftTrunkModel::generateRobotURDF(){

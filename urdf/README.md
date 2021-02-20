@@ -1,4 +1,5 @@
 # URDF directory
+##  currently switching to method that automatically generates URDF every time, update this README too
 Holds URDF files that describe the robot.
 Uses [XACRO](http://wiki.ros.org/xacro)(a feature in ROS) for macros and such to make the URDF simpler.
 

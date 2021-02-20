@@ -40,7 +40,7 @@ namespace st_params {
      */
     std::array<double, 3> diameters = {0.032, 0.028, 0.02};
     const int num_segments = 2;
-    const int sections_per_segment = 5;
+    const int sections_per_segment = 3;
 
     const ArmConfigurationType armConfiguration = ArmConfigurationType::stalactite;
     const ControllerType controller = ControllerType::pid;
