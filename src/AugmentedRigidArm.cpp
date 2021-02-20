@@ -46,26 +46,28 @@ void AugmentedRigidArm::setup_drake_model()
 
     int num_joints = multibody_plant->num_joints() - 1; // @todo: but why??
     fmt::print("model has {} joints\n", num_joints);
-    joints_per_segment = num_joints / st_params::num_segments;
 
     // check that parameters make sense, just in case
     assert(st_params::num_segments * 2 - 1 == st_params::lengths.size());
     assert(st_params::num_segments + 1 == st_params::diameters.size());
-    assert(joints_per_segment == 5 * st_params::sections_per_segment);
+    assert(num_joints == 5 * st_params::num_segments * (st_params::sections_per_segment + 1));
 
     // initialize variables
-    xi = VectorXd::Zero(num_joints);
-    B_xi = MatrixXd::Zero(num_joints, num_joints);
-    G_xi = VectorXd::Zero(num_joints);
-    Jm = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * st_params::sections_per_segment);
-    dJm = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * st_params::sections_per_segment);
-    Jxi = MatrixXd::Zero(3, num_joints);
+    xi_ = VectorXd::Zero(num_joints);
+    B_xi_ = MatrixXd::Zero(num_joints, num_joints);
+    G_xi_ = VectorXd::Zero(num_joints);
+    Jm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
+    dJm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
+    Jxi_ = MatrixXd::Zero(3, num_joints);
+
+    map_normal2expanded = MatrixXd::Zero(2*st_params::num_segments*(st_params::sections_per_segment + 1), 2*st_params::num_segments*st_params::sections_per_segment);
+    for (int i = 0; i < st_params::num_segments; i++)
+      map_normal2expanded.block(2*i*(st_params::sections_per_segment + 1), 2*i*st_params::sections_per_segment, 2*st_params::sections_per_segment, 2*st_params::sections_per_segment) = MatrixXd::Identity(2*st_params::sections_per_segment, 2*st_params::sections_per_segment);
     update_drake_model();
 }
 
-void AugmentedRigidArm::calculate_m(const VectorXd &q, VectorXd &xi)
+void AugmentedRigidArm::calculate_m(VectorXd q_)
 {
-    xi = VectorXd::Zero(joints_per_segment * st_params::num_segments);
     // intermediate variables useful for calculation
     // use phi, theta parametrization because it's simpler for calculation
     double p0 = 0; // phi of previous section
@@ -74,21 +76,21 @@ void AugmentedRigidArm::calculate_m(const VectorXd &q, VectorXd &xi)
     double t1; // theta of current section
     double l; // length of current section
     int joint_id_head; // index of first joint in section (5 joints per section) 
-    for (int section_id = 0; section_id < st_params::num_segments * st_params::sections_per_segment; ++section_id)
+    for (int section_id = 0; section_id < st_params::num_segments * (st_params::sections_per_segment + 1); ++section_id)
     {
-        longitudinal2phiTheta(q(2*section_id), q(2*section_id + 1), p1, t1);
+        longitudinal2phiTheta(q_(2*section_id), q_(2*section_id + 1), p1, t1);
         joint_id_head = 5 * section_id;
         l = st_params::lengths[2 * section_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
         // this was calculated from Mathematica and not by hand
-        xi(joint_id_head) = -ArcSin((Cos(t1) * Sin(p0) * Sin(t0) - Cos(p0) * Cos(p1) * Sin(p0) * Sin(t1) + Cos(p0) * Cos(p1) * Cos(t0) * Sin(p0) * Sin(t1) +
+        xi_(joint_id_head) = -ArcSin((Cos(t1) * Sin(p0) * Sin(t0) - Cos(p0) * Cos(p1) * Sin(p0) * Sin(t1) + Cos(p0) * Cos(p1) * Cos(t0) * Sin(p0) * Sin(t1) +
                                      Power(Cos(p0), 2) * Sin(p1) * Sin(t1) + Cos(t0) * Sin(p1) * Sin(t1) - Power(Cos(p0), 2) * Cos(t0) * Sin(p1) * Sin(t1)) /
                                     Sqrt(1 - Power(Cos(p0) * Cos(t1) * Sin(t0) + Cos(p1) * Cos(t0) * Sin(t1) + Cos(p1) * Power(Sin(p0), 2) * Sin(t1) -
                                                        Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) - Cos(p0) * Sin(p0) * Sin(p1) * Sin(t1) + Cos(p0) * Cos(t0) * Sin(p0) * Sin(p1) * Sin(t1),
                                                    2)));
-        xi(joint_id_head + 1) = ArcSin(Cos(p0) * Cos(t1) * Sin(t0) + Cos(p1) * Cos(t0) * Sin(t1) + Cos(p1) * Power(Sin(p0), 2) * Sin(t1) - Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) -
+        xi_(joint_id_head + 1) = ArcSin(Cos(p0) * Cos(t1) * Sin(t0) + Cos(p1) * Cos(t0) * Sin(t1) + Cos(p1) * Power(Sin(p0), 2) * Sin(t1) - Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) -
                                        Cos(p0) * Sin(p0) * Sin(p1) * Sin(t1) + Cos(p0) * Cos(t0) * Sin(p0) * Sin(p1) * Sin(t1));
-        xi(joint_id_head + 2) = -ArcSin((-(Cos(p0) * Power(Cos(p1), 2) * Sin(p0)) + Cos(p0) * Power(Cos(p1), 2) * Cos(t0) * Sin(p0) - Cos(p0) * Cos(t1) * Sin(p0) +
+        xi_(joint_id_head + 2) = -ArcSin((-(Cos(p0) * Power(Cos(p1), 2) * Sin(p0)) + Cos(p0) * Power(Cos(p1), 2) * Cos(t0) * Sin(p0) - Cos(p0) * Cos(t1) * Sin(p0) +
                                          Cos(p0) * Power(Cos(p1), 2) * Cos(t1) * Sin(p0) + Cos(p0) * Cos(t0) * Cos(t1) * Sin(p0) - Cos(p0) * Power(Cos(p1), 2) * Cos(t0) * Cos(t1) * Sin(p0) -
                                          Cos(p1) * Cos(t0) * Sin(p1) + Cos(p1) * Cos(t0) * Cos(t1) * Sin(p1) - Cos(p1) * Power(Sin(p0), 2) * Sin(p1) +
                                          Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(p1) + Cos(p1) * Cos(t1) * Power(Sin(p0), 2) * Sin(p1) -
@@ -98,10 +100,10 @@ void AugmentedRigidArm::calculate_m(const VectorXd &q, VectorXd &xi)
                                                        2)));
 
         if (t1 == 0)
-            xi(joint_id_head + 3) = 0;
+            xi_(joint_id_head + 3) = 0;
         else
-            xi(joint_id_head + 3) = l / 2 - l * sin(t1 / 2) / t1;
-        xi(joint_id_head + 4) = xi(joint_id_head + 3);
+            xi_(joint_id_head + 3) = l / 2 - l * sin(t1 / 2) / t1;
+        xi_(joint_id_head + 4) = xi_(joint_id_head + 3);
         t0 = t1;
         p0 = p1;
     }
@@ -112,20 +114,20 @@ void AugmentedRigidArm::update_drake_model()
     // update drake model
     drake::systems::Context<double> &plant_context = diagram->GetMutableSubsystemContext(*multibody_plant,
                                                                                          diagram_context.get());
-    multibody_plant->SetPositions(&plant_context, xi);
+    multibody_plant->SetPositions(&plant_context, xi_);
 
     // update drake visualization
     diagram->Publish(*diagram_context);
 
     // update some dynamic & kinematic params
-    multibody_plant->CalcMassMatrix(plant_context, &B_xi);
-    G_xi = multibody_plant->CalcGravityGeneralizedForces(plant_context);
+    multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
+    G_xi_ = multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string final_frame_name = fmt::format("seg{}-{}_connect", st_params::num_segments - 1, st_params::num_segments);
     multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
                                                        multibody_plant->GetFrameByName(final_frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),
-                                                       multibody_plant->world_frame(), &Jxi);
+                                                       multibody_plant->world_frame(), &Jxi_);
     H_tip = multibody_plant->GetFrameByName(final_frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
 }
 
@@ -151,7 +153,7 @@ void calcPhiThetaDiff(double Lx, double Ly, MatrixXd& M){
     }
 }
 
-void AugmentedRigidArm::update_Jm(const VectorXd &q)
+void AugmentedRigidArm::update_Jm(VectorXd q_)
 {
     double p0 = 0;
     double t0 = 0;
@@ -160,13 +162,13 @@ void AugmentedRigidArm::update_Jm(const VectorXd &q)
     double l;
     MatrixXd dxi_dpt = MatrixXd::Zero(5, 2); // d(xi)/d(phi, theta)
     MatrixXd dpt_dL = MatrixXd::Zero(2, 2); // d(phi, theta)/d(Lx, Ly)
-    for (int section_id = 0; section_id < st_params::num_segments * st_params::sections_per_segment; section_id ++)
+    for (int section_id = 0; section_id < st_params::num_segments * (st_params::sections_per_segment + 1); section_id ++)
     {
         // differentiation is calculated via phi-theta parametrization for easier formulation.
         int q_head = 2 * section_id;
         int xi_head = 5 * section_id;
-        l = st_params::lengths[2 * section_id] / st_params::sections_per_segment;
-        longitudinal2phiTheta(q(q_head), q(q_head+1), p1, t1);
+        l = st_params::lengths[2 * section_id] / st_params::sections_per_segment; /** @todo: fix this to consider connetion piece */
+        longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
         if (p1 == 0)
           p1 = 0.001;
@@ -284,8 +286,8 @@ void AugmentedRigidArm::update_Jm(const VectorXd &q)
             // d(prismatic)/d(theta0)
             dxi_dpt(3,1) = 0;
 
-            calcPhiThetaDiff(q(q_head - 2), q(q_head-1), dpt_dL);
-            Jm.block(xi_head, q_head-2, 5, 2) = dxi_dpt * dpt_dL;
+            calcPhiThetaDiff(q_(q_head - 2), q_(q_head-1), dpt_dL);
+            Jm_.block(xi_head, q_head-2, 5, 2) = dxi_dpt * dpt_dL;
         }
         // Calculated from Mathematica
         // d(rot_x)/d(phi1)
@@ -393,8 +395,8 @@ void AugmentedRigidArm::update_Jm(const VectorXd &q)
         // d(prismatic)/d(theta1)
         dxi_dpt(3,1) = -0.5*(l*Cos(t1/2.))/t1 + (l*Sin(t1/2.))/Power(t1,2);
         
-        calcPhiThetaDiff(q(q_head), q(q_head+1), dpt_dL);
-        Jm.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
+        calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
+        Jm_.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
         p0 = p1;
         t0 = t1;
     }
@@ -417,13 +419,21 @@ void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq)
 
 void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
 {
-    assert(q.size() % st_params::num_segments == 0);
-    assert(dq.size() % st_params::num_segments == 0);
+    assert(q.size() == 2 * st_params::num_segments * st_params::sections_per_segment);
+    assert(dq.size() == q.size());
 
-    // first calculate m (augmented model parameters)
-    calculate_m(q, xi);
+    // calculate rigid model pose
+    calculate_m(map_normal2expanded * q);
+    // calculate dynamic parameters
     update_drake_model();
-    update_Jm(q);
+    // calculate Jacobian
+    update_Jm(map_normal2expanded * q);
+
+    // map to q space
+    B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
+    C = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * dJm_) * map_normal2expanded;
+    g = map_normal2expanded.transpose() * (Jm_.transpose() * G_xi_);
+    J = Jxi_ * Jm_ * map_normal2expanded;
     //    update_dJm(q, dq);
     //
 }

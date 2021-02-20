@@ -40,10 +40,10 @@ SoftTrunkModel::SoftTrunkModel()
 void SoftTrunkModel::updateState(const VectorXd &q, const VectorXd &dq)
 {
     ara->update(q, dq);
-    B = ara->Jm.transpose() * ara->B_xi * ara->Jm;
-    C = ara->Jm.transpose() * ara->B_xi * ara->dJm;
-    g = ara->Jm.transpose() * ara->G_xi;
-    J = ara->Jxi * ara->Jm;
+    B = ara->B;
+    C = ara->C;
+    g = ara->g;
+    J = ara->J;
     /** @todo do for K & D, then it should be done!! */
 }
 void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &chamberCentroidDist, double &siliconeArea, double &chamberArea, double &secondMomentOfArea)
@@ -109,10 +109,11 @@ void SoftTrunkModel::generateRobotURDF(){
         // create sections that gradually taper
         double segmentLength = st_params::lengths[2*i];
         double sectionLength = segmentLength / st_params::sections_per_segment;
-        for (int j = 0; j < st_params::sections_per_segment; j++)
+        for (int j = 0; j < st_params::sections_per_segment + 1; j++)
         {
+            // there is an "extra" PCC section at the end of each segment, to represent the straight connector piece that will always be kept straight.
             double sectionRadius = (st_params::diameters[i+1]/2 * j + st_params::diameters[i]/2 * (st_params::sections_per_segment-j))/st_params::sections_per_segment;
-            double mass = st_params::totalMass / (st_params::num_segments * st_params::sections_per_segment); /** @todo fix to use value calculated from area of cross-section */
+            double mass = st_params::totalMass / (st_params::num_segments * (st_params::sections_per_segment + 1)); /** @todo fix to use value calculated from area of cross-section */
             child = fmt::format("seg{}_sec{}-{}_connect", i, j, j+1);
             if (j == st_params::sections_per_segment - 1) // for last section, child connects to next part outside segment
                 child = fmt::format("seg{}-{}_connect", i, i+1);

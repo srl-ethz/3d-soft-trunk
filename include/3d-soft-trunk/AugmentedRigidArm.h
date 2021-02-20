@@ -16,7 +16,8 @@
 /**
  * @brief Represents the augmented rigid arm model.
  * @details The rigid arm model  approximates the soft arm. (see paper etc. for more info on how this is so)
- * This class can calculate the kinematics & dynamics of the augmented arm using RBDL.
+ * This class can calculate the kinematics & dynamics of the augmented arm using Drake.
+ * Values with an underscore at the end have extra 2 DoFs at the end of each segment, which represents the (always straight) connection pieces as another PCC section.
  */
 class AugmentedRigidArm {
 private:
@@ -41,24 +42,36 @@ private:
      */
     void setup_drake_model();
 
-    int joints_per_segment;
+    /** @brief calculate joint angles of rigid model, for a PCC configuration q_. */
+    void calculate_m(VectorXd q_);
 
-    /**
-     * @brief convert phi-theta bend to joint angles for a straw-bend joint.
-     */
-    VectorXd straw_bend_joint(double phi, double theta);
-
-    /** @brief calculate joint angles of rigid model, for a PCC configuration q. */
-    void calculate_m(const VectorXd &q, VectorXd &xi);
-
-    /** @brief update the Drake model using the current xi, and calculate dynamic parameters B_xi and G_xi. */
+    /** @brief update the Drake model using the current xi_, and calculate dynamic parameters B_xi_ and G_xi_. */
     void update_drake_model();
 
-    void update_Jm(const VectorXd &q);
+    void update_Jm(VectorXd q_);
 
-    void update_dJm(const VectorXd &q, const VectorXd &dq);
+    void update_dJm(const VectorXd &q_, const VectorXd &dq_);
 
-    void update_Jxi(const VectorXd &q);
+    // these internally used values have extra PCC section at end of each segment, whose values are always set to 0.
+
+    /** @brief current joint angles of the augmented rigid arm */
+    MatrixXd xi_;
+    /** @brief the Jacobian that maps from q_ to xi_ */
+    MatrixXd Jm_;
+    /** @brief time derivative of Jm_ */
+    MatrixXd dJm_;
+    /** @brief Jacobian of tip position vs xi_ */
+    MatrixXd Jxi_;
+    /** @brief inertia matrix */
+    MatrixXd B_xi_;
+    /** @brief gravity */
+    MatrixXd G_xi_;
+    /**
+     * @brief matrix that maps from the [2 Nsegments] DoF parameters to [2 (Nsegment+1)] DoF parameters used internally.
+     * e.g. q_ = map_normal2expanded * q
+     */
+    MatrixXd map_normal2expanded;
+
 
 public:
     AugmentedRigidArm();
@@ -69,22 +82,14 @@ public:
     /** @brief simulate the rigid body model in Drake. The prismatic joints are broken... */
     void simulate();
 
-    /** @brief current joint angles of the augmented rigid arm */
-    VectorXd xi;
-
-    /** @brief the Jacobian that maps from q to xi */
-    MatrixXd Jm;
-
-    /** @brief the time derivative of the Jacobian that maps from q to xi */
-    MatrixXd dJm;
-
-    MatrixXd Jxi;
-
-    /** @brief inertia matrix */
-    MatrixXd B_xi;
-
-    /** @brief the gravity vector, i.e. the force at each joint when the arm is completely stationary at its current configuration. */
-    MatrixXd G_xi;
+    /** @brief inertia matrix mapped to q */
+    MatrixXd B;
+    /** @brief coreolis & centrifugal matrix mapped to q */
+    MatrixXd C;
+    /** @brief gravity mapped to q */
+    MatrixXd g;
+    /** @brief Jacobian of tip position vs q */
+    MatrixXd J;
 
     /** @brief the pose of the rigid body at the tip of the Drake model (relative to base frame), i.e. tip position calculated with forward kinematics using the PCC approximation. */
     Eigen::Transform<double, 3, Eigen::Affine> H_tip;

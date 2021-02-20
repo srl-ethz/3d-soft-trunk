@@ -37,11 +37,11 @@ int main() {
         q_update(t, q);
         ara.update(q, dq);
         fmt::print("------------\n");
-        fmt::print("q:{}\nxi:{}\n", q.transpose(), ara.xi.transpose());
+        fmt::print("q:{}\n", q.transpose());
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
-        fmt::print("B:{}\n", ara.Jm.transpose() * ara.B_xi * ara.Jm);
-        fmt::print("G:{}\n", (ara.Jm.transpose() * ara.G_xi).transpose());
-        fmt::print("J:{}\n", ara.Jxi * ara.Jm);
+        fmt::print("B:{}\n", ara.B);
+        fmt::print("g:{}\n", ara.g);
+        fmt::print("J:{}\n", ara.J);
         fmt::print("H_tip:{}\n", ara.H_tip.matrix());
         r.sleep();
     }
