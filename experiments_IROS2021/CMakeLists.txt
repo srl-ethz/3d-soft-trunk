@@ -1,0 +1,2 @@
+add_executable(record_qtm_frames record_qtm_frames.cpp)
+target_link_libraries(record_qtm_frames QualisysClient)
