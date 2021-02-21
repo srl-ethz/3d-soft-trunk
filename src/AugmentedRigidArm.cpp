@@ -81,7 +81,7 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
     {
         segment_id = section_id / (st_params::sections_per_segment + 1);
         longitudinal2phiTheta(q_(2*section_id), q_(2*section_id + 1), p1, t1);
-        t1 = std::max(0.001, t1); /** @todo hack way to get rid of errors when close to straight. */
+        t1 = std::max(0.0001, t1); /** @todo hack way to get rid of errors when close to straight. */
         joint_id_head = 5 * section_id;
         l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
@@ -143,8 +143,8 @@ void AugmentedRigidArm::update_drake_model()
  * @param M result. Must be 2x2 matrix
  */
 void calcPhiThetaDiff(double Lx, double Ly, MatrixXd& M){
-    if (-0.001 < Lx && Lx < 0.001 && -0.001 < Ly && Ly < 0.001)
-      Lx = 0.001; // hack way to get rid of errors when Lx & Ly are small
+    if (-0.0001 < Lx && Lx < 0.0001 && -0.0001 < Ly && Ly < 0.0001)
+      Lx = 0.0001; // hack way to get rid of errors when Lx & Ly are small
     assert(M.rows() == 2 && M.cols() == 2);
     double tmp =  (pow(Lx,2) + pow(Ly,2));
     M(0,0) = - Ly/tmp;
@@ -177,7 +177,7 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
-        t1 = std::max(0.001, t1);
+        t1 = std::max(0.0001, t1);
         if (section_id != 0)
         {
             // Calculated from Mathematica
