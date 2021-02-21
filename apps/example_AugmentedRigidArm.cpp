@@ -44,7 +44,7 @@ int main() {
         fmt::print("B:{}\n", ara.B);
         fmt::print("g:{}\n", ara.g);
         fmt::print("J:{}\n", ara.J);
-        fmt::print("H_tip:{}\n", ara.H_tip.matrix());
+        fmt::print("H_tip:{}\n", ara.get_H_tip().matrix());
         r.sleep();
     }
 

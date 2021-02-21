@@ -43,7 +43,12 @@ public:
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$. */
     MatrixXd J;
 
-    Eigen::Transform<double, 3, Eigen::Affine> H_tip; 
+    /**
+     * @brief get relative pose from base to tip of segment (at the tip of curved sections, ignores connector part)
+     * @param segment_id 0 for first segment, and so on
+     */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
+
     
 private:
     std::unique_ptr<AugmentedRigidArm> ara;

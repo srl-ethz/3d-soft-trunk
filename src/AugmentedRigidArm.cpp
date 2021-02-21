@@ -455,6 +455,16 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     //
 }
 
+Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H(int segment){
+    assert(0 <= segment && segment < st_params::num_segments);
+    return H_list[segment];
+}
+
+Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H_tip(){
+    return get_H(st_params::num_segments - 1);
+}
+
+
 void AugmentedRigidArm::simulate()
 {
     drake::systems::Simulator<double> simulator(*diagram, std::move(diagram_context));

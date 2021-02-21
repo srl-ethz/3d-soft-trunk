@@ -72,8 +72,8 @@ private:
      */
     MatrixXd map_normal2expanded;
 
-
-    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> H_list; /** @brief holds relative transforms between tip of each segment and base */
+    /** @brief holds relative transforms between tip of each segment (tip of curving section, disregards the connector part) and base */
+    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> H_list;
 
 public:
     AugmentedRigidArm();

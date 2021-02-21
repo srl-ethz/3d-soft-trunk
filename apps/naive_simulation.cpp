@@ -49,7 +49,8 @@ int main(){
     for (double t = 0; t < 10; t+=dt)
     {
         stm.updateState(q, dq);
-        log_file << fmt::format("{}, {}, {}, {}\n", t, stm.H_tip.translation()(0), stm.H_tip.translation()(1), stm.H_tip.translation()(2));
+        VectorXd x_tip = stm.get_H(st_params::num_segments-1).translation();
+        log_file << fmt::format("{}, {}, {}, {}\n", t, x_tip(0), x_tip(1), x_tip(2));
         ddq = stm.B.inverse() * (stm.A * p - stm.C * dq - (-stm.g) - stm.K * q  -stm.D * dq);
 
         dq_mid = dq + ddq * dt / 2;

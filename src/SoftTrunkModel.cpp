@@ -44,9 +44,13 @@ void SoftTrunkModel::updateState(const VectorXd &q, const VectorXd &dq)
     C = ara->C;
     g = ara->g;
     J = ara->J;
-    H_tip = ara->H_tip;
     /** @todo do for K & D, then it should be done!! */
 }
+
+Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id){
+    return ara->get_H(segment_id);
+}
+
 void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &chamberCentroidDist, double &siliconeArea, double &chamberArea, double &secondMomentOfArea)
 {
     radius *= 1000.; // computation is done in mm
