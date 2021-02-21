@@ -1,7 +1,14 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
 #include <time.h>
 #include <stdlib.h> // for srand
+#include <fstream>
 
+/**
+ * @brief do forward simulation on the dynamic model using the Euler-Richardson algorithm for integration of ddq.
+ * Log the tip positions to log_sim.csv
+ * https://www.compadre.org/PICUP/resources/Numerical-Integration/
+ * http://hep.fcfm.buap.mx/cursos/2013/FCI/ejs_sip_ch03.pdf
+ */
 int main(){
     srand(time(NULL) * 2); // seed random number generator
     SoftTrunkModel stm = SoftTrunkModel();
@@ -12,7 +19,8 @@ int main(){
     // initialize pose- set same random curvature to all sections in the same segment
     for (int i = 0; i < st_params::num_segments; i++)
     {
-        Vector2d rand = 0.7 / st_params::sections_per_segment * Vector2d::Random();
+        // set to have about the same curvature as a whole regardless of scale
+        Vector2d rand = 1.3 / st_params::sections_per_segment / st_params::num_segments * Vector2d::Random();
         for (int j = 0; j < st_params::sections_per_segment; j++)
             q.segment(2*i*st_params::sections_per_segment + 2*j, 2) = rand;
     }
@@ -23,7 +31,13 @@ int main(){
     p[3] = 300 * 100;
 
     fmt::print("initial pose: {}\n", q.transpose());
-    fmt::print("initial pressure: {}\n", p.transpose()); 
+    fmt::print("initial pressure: {}\n", p.transpose());
+
+    std::fstream log_file;
+    std::string filename = fmt::format("{}/log_sim.csv", SOFTTRUNK_PROJECT_DIR);
+    fmt::print("outputting log to {}...\n", filename);
+    log_file.open(filename, std::fstream::out);
+    log_file << "timestamp, x, y, z\n";
     
     VectorXd ddq;
     VectorXd q_mid;
@@ -32,14 +46,12 @@ int main(){
 
     double dt = 0.002;
     srl::Rate r{1./dt};
-    for (int i = 0; i < 10000; i++)
+    for (double t = 0; t < 10; t+=dt)
     {
-        // https://www.compadre.org/PICUP/resources/Numerical-Integration/
-        // http://hep.fcfm.buap.mx/cursos/2013/FCI/ejs_sip_ch03.pdf
-        // Euler-Richardson Algorithm
         stm.updateState(q, dq);
+        log_file << fmt::format("{}, {}, {}, {}\n", t, stm.H_tip.translation()(0), stm.H_tip.translation()(1), stm.H_tip.translation()(2));
         ddq = stm.B.inverse() * (stm.A * p - stm.C * dq - (-stm.g) - stm.K * q  -stm.D * dq);
-        
+
         dq_mid = dq + ddq * dt / 2;
         q_mid = q + dq * dt / 2;
         stm.updateState(q_mid, dq_mid);
@@ -50,4 +62,5 @@ int main(){
 
         r.sleep();
         }
+    log_file.close();
 }

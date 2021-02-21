@@ -42,6 +42,8 @@ public:
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$. */
     MatrixXd J;
+
+    Eigen::Transform<double, 3, Eigen::Affine> H_tip; 
     
 private:
     std::unique_ptr<AugmentedRigidArm> ara;
