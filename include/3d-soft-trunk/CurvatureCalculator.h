@@ -34,8 +34,8 @@ public:
         bend_labs
     };
     enum class CalcMethod{
-        position,
-        orientation
+        position /** calculate curvature using relative xyz coordinates */,
+        orientation /** calculate curvature using orientation of z axis */
     };
 
     /**
@@ -48,6 +48,8 @@ public:
     ~CurvatureCalculator();
 
     void get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq);
+
+    unsigned long long int get_timestamp(); /** @brief get timestamp (in microsecs) from Qualisys  */
 
     /** @brief get a single frame data from qualisys, only usable when CurvatureCalculator is set to use Qualisys. */
     Eigen::Transform<double, 3, Eigen::Affine> get_frame(int id);
@@ -64,9 +66,9 @@ private:
     std::unique_ptr<SerialInterface> serialInterface;
     std::vector<float> bendLab_data;
 
-    const CalcMethod calcMethod = CalcMethod::position;
+    const CalcMethod calcMethod = CalcMethod::orientation;
 
-    const double L = 0.12; /** @brief backbone length in meters, this is assumed to be constant when bending. */
+    const double L = 0.12; /** @brief backbone length in meters, this is assumed to be constant when bending. Used when calcMethod is position. */
 
     unsigned long long int timestamp = 0;
     

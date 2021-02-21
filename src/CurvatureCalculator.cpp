@@ -106,6 +106,11 @@ void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq
     ddq = this->ddq;
 }
 
+unsigned long long int CurvatureCalculator::get_timestamp(){
+    std::lock_guard<std::mutex> lock(mtx);
+    return timestamp;
+}
+
 Eigen::Transform<double, 3, Eigen::Affine> CurvatureCalculator::get_frame(int id){
     std::lock_guard<std::mutex> lock(mtx);
     assert(0 <= id && id < abs_transforms.size());
@@ -147,8 +152,16 @@ void CurvatureCalculator::calculateCurvature() {
     for (int i = 0; i < st_params::num_segments; i++) {
         matrix = (abs_transforms[i].inverse() * abs_transforms[i + 1]).matrix();
         // see documentation in header file for how this is calculated
-        phi = atan2(matrix(1, 3), matrix(0, 3));
-        theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2)), L);
+        if (calcMethod == CalcMethod::orientation)
+        {
+            phi = atan2(matrix(1, 2), matrix(0, 2));
+            theta = acos(matrix(2,2));
+        }
+        else if (calcMethod == CalcMethod::position)
+        {
+            phi = atan2(matrix(1, 3), matrix(0, 3));
+            theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2)), L);
+        }
         phiTheta2longitudinal(phi, theta, q(2*i), q(2*i+1));
     }
     // q -= initial_q; // implement better way to get rid of initial error...

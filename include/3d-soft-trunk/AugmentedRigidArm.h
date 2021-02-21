@@ -73,6 +73,8 @@ private:
     MatrixXd map_normal2expanded;
 
 
+    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> H_list; /** @brief holds relative transforms between tip of each segment and base */
+
 public:
     AugmentedRigidArm();
 
@@ -91,6 +93,11 @@ public:
     /** @brief Jacobian of tip position vs q */
     MatrixXd J;
 
-    /** @brief the pose of the rigid body at the tip of the Drake model (relative to base frame), i.e. tip position calculated with forward kinematics using the PCC approximation. */
-    Eigen::Transform<double, 3, Eigen::Affine> H_tip;
+    /** @brief the pose of the rigid body at the tip of segment i, of the Drake model (relative to base frame), i.e. tip position for segment i calculated with forward kinematics using the PCC approximation. 
+     * @param segment segment id. 0 for first segment, and so on
+    */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment);
+
+    /** @brief Convenience function that calls get_H for the tip segment. */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H_tip();
 };

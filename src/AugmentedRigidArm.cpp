@@ -59,6 +59,7 @@ void AugmentedRigidArm::setup_drake_model()
     Jm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     dJm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     Jxi_ = MatrixXd::Zero(3, num_joints);
+    H_list.resize(st_params::num_segments);
 
     map_normal2expanded = MatrixXd::Zero(2*st_params::num_segments*(st_params::sections_per_segment + 1), 2*st_params::num_segments*st_params::sections_per_segment);
     for (int i = 0; i < st_params::num_segments; i++)
@@ -126,12 +127,20 @@ void AugmentedRigidArm::update_drake_model()
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     G_xi_ = multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
-    std::string final_frame_name = fmt::format("seg{}_sec{}-{}_connect", st_params::num_segments - 1, st_params::sections_per_segment, st_params::sections_per_segment+1);
-    multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
-                                                       multibody_plant->GetFrameByName(final_frame_name),
+    std::string frame_name;
+    // for end of each segment, calculate the FK position
+    for (int i = 0; i < st_params::num_segments; i++)
+    {
+      frame_name = fmt::format("seg{}_{}-{}_connect", i, st_params::sections_per_segment-1, st_params::sections_per_segment);
+      H_list[i] = multibody_plant->GetFrameByName(frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
+      if (i == st_params::num_segments - 1){
+        // for the final segment, calculate the Jacobian as well
+        multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
+                                                       multibody_plant->GetFrameByName(frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),
                                                        multibody_plant->world_frame(), &Jxi_);
-    H_tip = multibody_plant->GetFrameByName(final_frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
+      }
+    }
 }
 
 /**
