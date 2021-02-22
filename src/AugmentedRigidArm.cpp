@@ -54,7 +54,9 @@ void AugmentedRigidArm::setup_drake_model()
 
     // initialize variables
     xi_ = VectorXd::Zero(num_joints);
+    dxi_ = VectorXd::Zero(num_joints);
     B_xi_ = MatrixXd::Zero(num_joints, num_joints);
+    c_xi_ = VectorXd::Zero(num_joints);
     G_xi_ = VectorXd::Zero(num_joints);
     Jm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     dJm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
@@ -117,13 +119,15 @@ void AugmentedRigidArm::update_drake_model()
     drake::systems::Context<double> &plant_context = diagram->GetMutableSubsystemContext(*multibody_plant,
                                                                                          diagram_context.get());
     multibody_plant->SetPositions(&plant_context, xi_);
+    multibody_plant->SetVelocities(&plant_context, dxi_);
 
     // update drake visualization
     diagram->Publish(*diagram_context);
 
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
-    G_xi_ = multibody_plant->CalcGravityGeneralizedForces(plant_context);
+    multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
+    G_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
     // for end of each segment, calculate the FK position
@@ -440,14 +444,14 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
 
     // calculate rigid model pose
     calculate_m(map_normal2expanded * q);
-    // calculate dynamic parameters
-    update_drake_model();
     // calculate Jacobian
     update_Jm(map_normal2expanded * q);
-
+    dxi_ = Jm_ * map_normal2expanded * dq;
+    // calculate dynamic parameters
+    update_drake_model();
     // map to q space
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
-    C = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * dJm_) * map_normal2expanded;
+    c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * G_xi_);
     J = Jxi_ * Jm_ * map_normal2expanded;
     //    update_dJm(q, dq);

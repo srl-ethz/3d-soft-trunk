@@ -56,6 +56,7 @@ private:
 
     /** @brief current joint angles of the augmented rigid arm */
     MatrixXd xi_;
+    MatrixXd dxi_;
     /** @brief the Jacobian that maps from q_ to xi_ */
     MatrixXd Jm_;
     /** @brief time derivative of Jm_ */
@@ -64,6 +65,8 @@ private:
     MatrixXd Jxi_;
     /** @brief inertia matrix */
     MatrixXd B_xi_;
+    /** @brief Coriolis, centripital & gyroscopic effects */
+    VectorXd c_xi_;
     /** @brief gravity */
     MatrixXd G_xi_;
     /**
@@ -86,8 +89,8 @@ public:
 
     /** @brief inertia matrix mapped to q */
     MatrixXd B;
-    /** @brief coreolis & centrifugal matrix mapped to q */
-    MatrixXd C;
+    /** @brief coreolis & centrifugal forces mapped to q */
+    VectorXd c;
     /** @brief gravity mapped to q */
     MatrixXd g;
     /** @brief Jacobian of tip position vs q */

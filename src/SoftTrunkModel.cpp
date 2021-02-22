@@ -17,10 +17,10 @@ SoftTrunkModel::SoftTrunkModel()
     {
         int segment_id = section_id / st_params::sections_per_segment;
         int section_id_in_segment = section_id % st_params::sections_per_segment;
-        double r_top = st_params::diameters[segment_id];        // radius at base of segment
-        double r_bottom = st_params::diameters[segment_id + 1]; // radius at tip of segment
+        double r_top = st_params::diameters[segment_id]/2;        // radius at base of segment
+        double r_bottom = st_params::diameters[segment_id + 1]/2; // radius at tip of segment
         // radius at this section
-        double radius = (r_top * (st_params::sections_per_segment - section_id_in_segment) + r_bottom * section_id_in_segment) / (double)st_params::sections_per_segment / 2.;
+        double radius = (r_top * (st_params::sections_per_segment - section_id_in_segment) + r_bottom * section_id_in_segment) / (double)st_params::sections_per_segment;
         double chamberCentroidDist;
         double siliconeArea;
         double chamberArea;
@@ -41,10 +41,9 @@ void SoftTrunkModel::updateState(const VectorXd &q, const VectorXd &dq)
 {
     ara->update(q, dq);
     B = ara->B;
-    C = ara->C;
+    c = ara->c;
     g = ara->g;
     J = ara->J;
-    /** @todo do for K & D, then it should be done!! */
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id){

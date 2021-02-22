@@ -8,7 +8,7 @@
  * @brief dynamic analytical model of the Soft Trunk. Refer to Toshimitsu&Wong2021 for background theory.
  * The matrices returned describe the following model:
  * \f$
- * B \ddot q + C \dot q + g + K q + D \dot q = A p
+ * B \ddot q + c + g + K q + D \dot q = A p
  * \f$
  * where q is the pose (in longitudinal parameters) with dimension of 2 * num_segments * sections_per_segment,
  * and p is input pressures with dimension of 2 * num_segments. p[0] is chamber in +x direction, p[1] is chamber in -x,+y direction and p[2] is chamber in -x,-y direction
@@ -26,7 +26,7 @@ public:
     MatrixXd B;
 
     /** @brief coreolis & centrifugal force */
-    MatrixXd C;
+    VectorXd c;
 
     /** @brief gravity */
     VectorXd g;
