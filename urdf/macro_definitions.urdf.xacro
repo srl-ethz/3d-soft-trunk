@@ -5,9 +5,6 @@ this file defines the xacro macros that can be used to create PCC augmented mode
 -->
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
-  <material name="white">
-    <color rgba="1 1 1 1"/>
-  </material>
   <material name="green">
     <color rgba="0.2 1 0.2 0.8"/>
   </material>
@@ -31,13 +28,7 @@ this file defines the xacro macros that can be used to create PCC augmented mode
     </joint>
     <link name="${id}-ball-joint_link_1">
       <xacro:default_inertial/>
-      <visual>
-        <geometry>
-          <box size="${length/10} ${length/10} ${length/10}"/>
-        </geometry>
-        <material name="white"/>
-      </visual>
-    </link>
+   </link>
     <joint name="${id}-ball-joint_z_joint" type="revolute">
       <parent link="${id}-ball-joint_link_1"/>
       <child link="${child}"/>
@@ -77,7 +68,8 @@ this file defines the xacro macros that can be used to create PCC augmented mode
       </visual>
       <inertial>
         <mass value="${mass}"/>
-        <inertia ixx="0.0001" ixy="0.000" ixz="0.000" iyy="0.0001" iyz="0.000" izz="0.0001"/>
+        <!-- moment of inertia for a cylinder with radius and length -->
+        <inertia ixx="${mass * (3*radius**2 + length**2) / 12.}" ixy="0.000" ixz="0.000" iyy="${mass * (3*radius**2 + length**2) / 12.}" iyz="0.000" izz="${mass * radius*radius / 2.}"/>
       </inertial>
     </link>
     <joint name="${id}-b-${child}_joint" type="prismatic">
