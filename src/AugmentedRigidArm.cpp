@@ -83,6 +83,7 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         segment_id = section_id / (st_params::sections_per_segment + 1);
         longitudinal2phiTheta(q_(2*section_id), q_(2*section_id + 1), p1, t1);
         t1 = std::max(0.0001, t1); /** @todo hack way to get rid of errors when close to straight. */
+        t1 /= 2.; // had forgot to use t1/2 when using Mathematica
         joint_id_head = 5 * section_id;
         l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
@@ -103,10 +104,7 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
                                                            Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) - Cos(p0) * Sin(p0) * Sin(p1) * Sin(t1) + Cos(p0) * Cos(t0) * Sin(p0) * Sin(p1) * Sin(t1),
                                                        2)));
 
-        if (t1 == 0)
-            xi_(joint_id_head + 3) = 0;
-        else
-            xi_(joint_id_head + 3) = l / 2 - l * sin(t1 / 2) / t1;
+        xi_(joint_id_head + 3) = l / 2 - l * sin((2*t1) / 2) / (2*t1);
         xi_(joint_id_head + 4) = xi_(joint_id_head + 3);
         t0 = t1;
         p0 = p1;
@@ -187,6 +185,7 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
         t1 = std::max(0.0001, t1);
+        t1 /= 2.; // forgot to divide by 2 at Mathematica
         if (section_id != 0)
         {
             // Calculated from Mathematica
@@ -409,7 +408,7 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         dxi_dpt(3,0) = 0;
         dxi_dpt(4,0) = 0;
         // d(prismatic)/d(theta1)
-        dxi_dpt(3,1) = -0.5*(l*Cos(t1/2.))/t1 + (l*Sin(t1/2.))/Power(t1,2);
+        dxi_dpt(3,1) = -0.5*(l*Cos((2*t1)/2.))/(2*t1) + (l*Sin((2*t1)/2.))/Power((2*t1),2);
         dxi_dpt(4,1) = dxi_dpt(3,1);
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
