@@ -38,7 +38,7 @@ namespace st_params {
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
      */
-    std::array<double, 3> diameters = {0.032, 0.028, 0.02};
+    std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
     const int num_segments = 2;
     const int sections_per_segment = 3;
 

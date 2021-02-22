@@ -32,7 +32,7 @@ SoftTrunkModel::SoftTrunkModel()
 
         K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus * secondMomentOfArea / l;
         A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
-        D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 0.03; /** @todo this is a temporary value */
+        D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 0.019; /** @todo this is a temporary value */
     }
 
 }

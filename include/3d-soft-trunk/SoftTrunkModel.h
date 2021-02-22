@@ -64,7 +64,7 @@ private:
 
     /** @brief shear modulus of Dragon Skin 10, in Pa
      */
-    double shear_modulus = 0.085e6;
+    double shear_modulus = 0.47e6; /** @todo paper value is 0.085e6, why is this so different?? */
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.

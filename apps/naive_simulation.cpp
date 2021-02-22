@@ -20,15 +20,18 @@ int main(){
     for (int i = 0; i < st_params::num_segments; i++)
     {
         // set to have about the same curvature as a whole regardless of scale
-        Vector2d rand = 1.3 / st_params::sections_per_segment / st_params::num_segments * Vector2d::Random();
-        for (int j = 0; j < st_params::sections_per_segment; j++)
-            q.segment(2*i*st_params::sections_per_segment + 2*j, 2) = rand;
+        double rand = -2.093 / st_params::sections_per_segment / st_params::num_segments;
+        for (int j = 0; j < st_params::sections_per_segment; j++){
+            q(2*i*st_params::sections_per_segment + 2*j + 1) = rand;
+            q(2*i*st_params::sections_per_segment + 2*j ) = rand * 0.022 / 0.19;
+        }
+            
     }
 
     // set initial pressure
-    p[0] = 300 * 100;
-    p[2] = 200 * 100;
-    p[3] = 300 * 100;
+//    p[0] = 300 * 100;
+//    p[2] = 200 * 100;
+//    p[3] = 300 * 100;
 
     fmt::print("initial pose: {}\n", q.transpose());
     fmt::print("initial pressure: {}\n", p.transpose());
@@ -37,20 +40,29 @@ int main(){
     std::string filename = fmt::format("{}/log_sim.csv", SOFTTRUNK_PROJECT_DIR);
     fmt::print("outputting log to {}...\n", filename);
     log_file.open(filename, std::fstream::out);
-    log_file << "timestamp, x, y, z\n";
+    log_file << "timestamp";
+    for (int i=0; i<st_params::num_segments; i++)
+        log_file << fmt::format(", x_{}, y_{}, z_{}", i, i, i);
+    log_file << "\n";
     
     VectorXd ddq;
     VectorXd q_mid;
     VectorXd dq_mid;
     VectorXd ddq_mid;
 
-    double dt = 0.002;
+    double dt = 0.0008;
     srl::Rate r{1./dt};
-    for (double t = 0; t < 10; t+=dt)
+    for (double t = 0; t < 3; t+=dt)
     {
         stm.updateState(q, dq);
-        VectorXd x_tip = stm.get_H(st_params::num_segments-1).translation();
-        log_file << fmt::format("{}, {}, {}, {}\n", t, x_tip(0), x_tip(1), x_tip(2));
+
+        log_file << t;
+        for (int i=0; i < st_params::num_segments; i++){
+            VectorXd x_tip = stm.get_H(i).translation();
+            log_file << fmt::format(", {}, {}, {}", x_tip(0), x_tip(1), x_tip(2));
+        }
+        log_file << "\n";
+
         ddq = stm.B.inverse() * (stm.A * p - stm.C * dq - (-stm.g) - stm.K * q  -stm.D * dq);
 
         dq_mid = dq + ddq * dt / 2;
