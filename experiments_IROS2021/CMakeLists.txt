@@ -5,4 +5,4 @@ add_executable(cyclic_simulation cyclic_simulation.cpp)
 target_link_libraries(cyclic_simulation SoftTrunkModel)
 
 add_executable(characterization_actuation characterization_actuation.cpp)
-target_link_libraries(characterization_actuation ValveController SoftTrunkModel QualisysClient)
+target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)
