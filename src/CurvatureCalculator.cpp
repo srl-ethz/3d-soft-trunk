@@ -43,9 +43,11 @@ void CurvatureCalculator::calculator_loop() {
         fmt::print("logging to {}\n", filename);
         log_file.open(filename, std::fstream::out);
         log_file << "timestamp";
-        for (int i = 0; i < st_params::num_segments; ++i) {
+        // log both parametrizations
+        for (int i = 0; i < st_params::num_segments; ++i)
             log_file << fmt::format(", La_{}, Lb_{}", i, i);
-        }
+        for (int i = 0; i < st_params::num_segments; i++)
+            log_file << fmt::format(", phi_{}, theta_{}", i, i);
         log_file << "\n";
     }
 
@@ -83,9 +85,13 @@ void CurvatureCalculator::calculator_loop() {
         prev_dq = dq;
         if (log) {
             log_file << timestamp;
-            for (int i = 0; i < 2 * st_params::num_segments; ++i) {
+            for (int i = 0; i < 2 * st_params::num_segments; ++i)
                 log_file << fmt::format(", {}", q(i));
-            }
+            double phi, theta;
+            for (int i = 0; i < st_params::num_segments; i++){
+                longitudinal2phiTheta(q(2*i), q(2*i+1), phi, theta);
+                log_file << fmt::format(", {}, {}", phi, theta);
+            } 
             log_file << "\n";
         }
     }
