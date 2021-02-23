@@ -19,8 +19,8 @@ SoftTrunkModel::SoftTrunkModel()
         int section_id_in_segment = section_id % st_params::sections_per_segment;
         double r_top = st_params::diameters[segment_id]/2;        // radius at base of segment
         double r_bottom = st_params::diameters[segment_id + 1]/2; // radius at tip of segment
-        // radius at this section
-        double radius = (r_top * (st_params::sections_per_segment - section_id_in_segment) + r_bottom * section_id_in_segment) / (double)st_params::sections_per_segment;
+        // radius at the middle of this PCC section
+        double radius = (r_top * (st_params::sections_per_segment - (0.5+section_id_in_segment)) + r_bottom * (0.5+section_id_in_segment)) / (double)st_params::sections_per_segment;
         double chamberCentroidDist;
         double siliconeArea;
         double chamberArea;
@@ -29,10 +29,11 @@ SoftTrunkModel::SoftTrunkModel()
         fmt::print("section ID:{} = segment{} * N + {}\n", section_id, segment_id, section_id_in_segment);
         fmt::print("r: {}, l:{}\n", radius, l);
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
+        fmt::print("second moment: {}\n", secondMomentOfArea);
 
         K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus * secondMomentOfArea / l;
         A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
-        D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 0.019; /** @todo this is a temporary value */
+        D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 0.013 * (secondMomentOfArea/1e-7) / (l/0.04); /** @todo this is a temporary value */
     }
 
 }

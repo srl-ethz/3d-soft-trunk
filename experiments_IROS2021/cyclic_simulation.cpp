@@ -1,7 +1,7 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
-#include <time.h>
-#include <stdlib.h> // for srand
 #include <fstream>
+
+int sinusoid(double phase) { return 300 + 300 * sin(phase); }
 
 /**
  * @brief do forward simulation on the dynamic model using the Euler-Richardson algorithm for integration of ddq.
@@ -10,28 +10,12 @@
  * http://hep.fcfm.buap.mx/cursos/2013/FCI/ejs_sip_ch03.pdf
  */
 int main(){
-    srand(time(NULL) * 2); // seed random number generator
     SoftTrunkModel stm = SoftTrunkModel();
     VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd dq = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
     // initialize pose- set same random curvature to all sections in the same segment
-    for (int i = 0; i < st_params::num_segments; i++)
-    {
-        // set to have about the same curvature as a whole regardless of scale
-        double rand = -2.093 / st_params::sections_per_segment / st_params::num_segments;
-        for (int j = 0; j < st_params::sections_per_segment; j++){
-            q(2*i*st_params::sections_per_segment + 2*j + 1) = -rand;
-            q(2*i*st_params::sections_per_segment + 2*j ) = rand * 0.022 / 0.19;
-        }
-            
-    }
-
-    // set initial pressure
-//    p[0] = 300 * 100;
-//    p[2] = 200 * 100;
-//    p[3] = 300 * 100;
 
     fmt::print("initial pose: {}\n", q.transpose());
     fmt::print("initial pressure: {}\n", p.transpose());
@@ -54,6 +38,14 @@ int main(){
     srl::Rate r{1./dt};
     for (double t = 0; t < 3; t+=dt)
     {
+        double phase = t * 2;
+        p(0) = 000*100;//sinusoid(phase);
+        // p(1) = sinusoid(phase + 2*PI/3);
+        // p(2) = sinusoid(phase + 4*PI/3);
+        // p(3) = sinusoid(phase);
+        // p(4) = sinusoid(phase + 2*PI/3);
+        // p(5) = sinusoid(phase + 4*PI/3);
+
         stm.updateState(q, dq);
 
         log_file << t;

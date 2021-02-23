@@ -1,2 +1,5 @@
 add_executable(record_qtm_frames record_qtm_frames.cpp)
 target_link_libraries(record_qtm_frames QualisysClient)
+
+add_executable(cyclic_simulation cyclic_simulation.cpp)
+target_link_libraries(cyclic_simulation SoftTrunkModel)
