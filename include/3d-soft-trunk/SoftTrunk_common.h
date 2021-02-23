@@ -58,7 +58,7 @@ void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
  * @brief convert from longitudinal to phi-theta parametrization, for a single PCC section.
  */
 void longitudinal2phiTheta(double Lx, double Ly, double& phi, double& theta){
-    phi = atan2(Ly, Lx);
+    phi = atan2(-Ly, -Lx);
     if (Lx == 0 && Ly == 0)
         phi = 0;
     theta = sqrt(pow(Lx, 2) + pow(Ly, 2));

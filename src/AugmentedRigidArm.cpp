@@ -57,7 +57,7 @@ void AugmentedRigidArm::setup_drake_model()
     dxi_ = VectorXd::Zero(num_joints);
     B_xi_ = MatrixXd::Zero(num_joints, num_joints);
     c_xi_ = VectorXd::Zero(num_joints);
-    G_xi_ = VectorXd::Zero(num_joints);
+    g_xi_ = VectorXd::Zero(num_joints);
     Jm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     dJm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     Jxi_ = MatrixXd::Zero(3, num_joints);
@@ -127,7 +127,7 @@ void AugmentedRigidArm::update_drake_model()
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
-    G_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
+    g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
     // for end of each segment, calculate the FK position
@@ -162,11 +162,6 @@ void calcPhiThetaDiff(double Lx, double Ly, MatrixXd& M){
     M(0,1) = Lx / tmp; 
     M(1,0) = Lx / sqrt(tmp);
     M(1,1) = Ly / sqrt(tmp);
-    if (tmp == 0){
-      // phi is undefined when Lx and Ly are 0, so just set to zero
-      M.block(0,0,1,2).setZero();
-      M.block(1,0,1,2).setOnes();
-    }
 }
 
 void AugmentedRigidArm::update_Jm(VectorXd q_)
@@ -452,7 +447,7 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     // map to q space
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
-    g = map_normal2expanded.transpose() * (Jm_.transpose() * G_xi_);
+    g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
     J = Jxi_ * Jm_ * map_normal2expanded;
     //    update_dJm(q, dq);
     //

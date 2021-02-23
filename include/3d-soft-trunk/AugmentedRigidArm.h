@@ -68,7 +68,7 @@ private:
     /** @brief Coriolis, centripital & gyroscopic effects */
     VectorXd c_xi_;
     /** @brief gravity */
-    MatrixXd G_xi_;
+    MatrixXd g_xi_;
     /**
      * @brief matrix that maps from the [2 Nsegments] DoF parameters to [2 (Nsegment+1)] DoF parameters used internally.
      * e.g. q_ = map_normal2expanded * q
