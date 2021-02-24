@@ -63,8 +63,10 @@ private:
     void calculateCrossSectionProperties(double radius, double& chamberCentroidDist, double& siliconeArea, double& chamberArea, double& secondMomentOfArea);
 
     /** @brief shear modulus of Dragon Skin 10, in Pa
+     * literature value is 8500. Determined from characterization_actuation and characterize.py.
      */
-    double shear_modulus = 0.47e6; /** @todo paper value is 0.085e6, why is this so different?? */
+    double shear_modulus = 5029.;
+    double drag_coef = 19161.;
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.
