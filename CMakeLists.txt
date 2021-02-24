@@ -78,7 +78,7 @@ target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrun
 
 ### set up pybind modules
 pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
-target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator)
+target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator SoftTrunkModel)
 
 add_subdirectory(apps)
 add_subdirectory(experiments_IROS2021)
