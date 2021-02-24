@@ -1,13 +1,12 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
+#include <csv.h>
 #include <fstream>
 
 int sinusoid(double phase) { return 300 + 300 * sin(phase); }
 
 /**
  * @brief do forward simulation on the dynamic model using the Euler-Richardson algorithm for integration of ddq.
- * Log the tip positions to log_sim.csv
- * https://www.compadre.org/PICUP/resources/Numerical-Integration/
- * http://hep.fcfm.buap.mx/cursos/2013/FCI/ejs_sip_ch03.pdf
+ * linearly interpolate the given csv (log_pressure.csv), and simulate the model
  */
 int main(){
     SoftTrunkModel stm = SoftTrunkModel();
@@ -15,10 +14,11 @@ int main(){
     VectorXd dq = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
-    // initialize pose- set same random curvature to all sections in the same segment
+    // read and save the csv data
+    io::CSVReader<3> in(fmt::format("{}/log_pressure_rotate.csv", SOFTTRUNK_PROJECT_DIR));
+    in.read_header(io::ignore_extra_column, "time(sec)", "p_des[0]", "p_des[1]");
 
-    fmt::print("initial pose: {}\n", q.transpose());
-    fmt::print("initial pressure: {}\n", p.transpose());
+    // read the CSV, and save the datapoints
 
     std::fstream log_file;
     std::string filename = fmt::format("{}/log_sim.csv", SOFTTRUNK_PROJECT_DIR);
@@ -34,18 +34,21 @@ int main(){
     VectorXd dq_mid;
     VectorXd ddq_mid;
 
-    double dt = 0.0008;
+    double dt = 0.0002;
     srl::Rate r{1./dt};
+    double t, p0, p1;
     for (double t = 0; t < 3; t+=dt)
     {
-        double phase = t * 2;
-        p(0) = 000*100;//sinusoid(phase);
+        // set the pressure to that of the CSV at the current time
+        // p(0) = 000*100;//sinusoid(phase);
         // p(1) = sinusoid(phase + 2*PI/3);
         // p(2) = sinusoid(phase + 4*PI/3);
         // p(3) = sinusoid(phase);
         // p(4) = sinusoid(phase + 2*PI/3);
         // p(5) = sinusoid(phase + 4*PI/3);
 
+
+        /// run the simulation
         stm.updateState(q, dq);
 
         log_file << t;
