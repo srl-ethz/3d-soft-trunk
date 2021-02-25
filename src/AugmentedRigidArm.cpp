@@ -84,28 +84,21 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         segment_id = section_id / (st_params::sections_per_segment + 1);
         longitudinal2phiTheta(q_(2*section_id), q_(2*section_id + 1), p1, t1);
         t1 = std::max(0.0001, t1); /** @todo hack way to get rid of errors when close to straight. */
-        t1 /= 2.; // had forgot to use t1/2 when using Mathematica
         joint_id_head = 5 * section_id;
         l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
         // this was calculated from Mathematica and not by hand
-        xi_(joint_id_head) = -ArcSin((Cos(t1) * Sin(p0) * Sin(t0) - Cos(p0) * Cos(p1) * Sin(p0) * Sin(t1) + Cos(p0) * Cos(p1) * Cos(t0) * Sin(p0) * Sin(t1) +
-                                     Power(Cos(p0), 2) * Sin(p1) * Sin(t1) + Cos(t0) * Sin(p1) * Sin(t1) - Power(Cos(p0), 2) * Cos(t0) * Sin(p1) * Sin(t1)) /
-                                    Sqrt(1 - Power(Cos(p0) * Cos(t1) * Sin(t0) + Cos(p1) * Cos(t0) * Sin(t1) + Cos(p1) * Power(Sin(p0), 2) * Sin(t1) -
-                                                       Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) - Cos(p0) * Sin(p0) * Sin(p1) * Sin(t1) + Cos(p0) * Cos(t0) * Sin(p0) * Sin(p1) * Sin(t1),
-                                                   2)));
-        xi_(joint_id_head + 1) = ArcSin(Cos(p0) * Cos(t1) * Sin(t0) + Cos(p1) * Cos(t0) * Sin(t1) + Cos(p1) * Power(Sin(p0), 2) * Sin(t1) - Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) -
-                                       Cos(p0) * Sin(p0) * Sin(p1) * Sin(t1) + Cos(p0) * Cos(t0) * Sin(p0) * Sin(p1) * Sin(t1));
-        xi_(joint_id_head + 2) = -ArcSin((-(Cos(p0) * Power(Cos(p1), 2) * Sin(p0)) + Cos(p0) * Power(Cos(p1), 2) * Cos(t0) * Sin(p0) - Cos(p0) * Cos(t1) * Sin(p0) +
-                                         Cos(p0) * Power(Cos(p1), 2) * Cos(t1) * Sin(p0) + Cos(p0) * Cos(t0) * Cos(t1) * Sin(p0) - Cos(p0) * Power(Cos(p1), 2) * Cos(t0) * Cos(t1) * Sin(p0) -
-                                         Cos(p1) * Cos(t0) * Sin(p1) + Cos(p1) * Cos(t0) * Cos(t1) * Sin(p1) - Cos(p1) * Power(Sin(p0), 2) * Sin(p1) +
-                                         Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(p1) + Cos(p1) * Cos(t1) * Power(Sin(p0), 2) * Sin(p1) -
-                                         Cos(p1) * Cos(t0) * Cos(t1) * Power(Sin(p0), 2) * Sin(p1) - Cos(p0) * Sin(p1) * Sin(t0) * Sin(t1)) /
-                                        Sqrt(1 - Power(Cos(p0) * Cos(t1) * Sin(t0) + Cos(p1) * Cos(t0) * Sin(t1) + Cos(p1) * Power(Sin(p0), 2) * Sin(t1) -
-                                                           Cos(p1) * Cos(t0) * Power(Sin(p0), 2) * Sin(t1) - Cos(p0) * Sin(p0) * Sin(p1) * Sin(t1) + Cos(p0) * Cos(t0) * Sin(p0) * Sin(p1) * Sin(t1),
-                                                       2)));
+        xi_(joint_id_head) = -ArcSin((Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))/
+     Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2)));
+        
+        xi_(joint_id_head + 1) = ArcSin(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.));
+        
+        xi_(joint_id_head + 2) = -ArcSin((-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+       Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+       Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/
+     Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2)));
 
-        xi_(joint_id_head + 3) = l / 2 - l * sin((2*t1) / 2) / (2*t1);
+        xi_(joint_id_head + 3) = l / 2 - l * sin((t1) / 2) / t1;
         xi_(joint_id_head + 4) = xi_(joint_id_head + 3);
         t0 = t1;
         p0 = p1;
@@ -142,7 +135,6 @@ void AugmentedRigidArm::update_drake_model()
                                                        multibody_plant->world_frame(), &Jxi_);
       }
     }
-    fmt::print("rigid link jacobian: \n{}\n", Jxi_);
 }
 
 /**
@@ -184,112 +176,73 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
         t1 = std::max(0.0001, t1);
-        t1 /= 2.; // forgot to divide by 2 at Mathematica
         if (section_id != 0)
         {
             // Calculated from Mathematica
             // d(rot_x)/d(phi0)
-            dxi_dpt(0,0) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
-            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
-          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (-(Cos(t1)*Sin(p0)*Sin(t0)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) - 2*Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - 
-            Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1) + Power(Sin(p0),2)*Sin(p1)*Sin(t1) - 
-            Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (Cos(p0)*Cos(t1)*Sin(t0) - Power(Cos(p0),2)*Cos(p1)*Sin(t1) + Power(Cos(p0),2)*Cos(p1)*Cos(t0)*Sin(t1) + 
-          Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 2*Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + 
-          2*Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
-          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+            dxi_dpt(0,0) = -((((Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))*
+          (Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          (-(Cos(t1/2.)*Sin(p0)*Sin(t0/2.)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) - 2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) - Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.) + 
+            Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.) - Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.)))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + (Cos(p0)*Cos(t1/2.)*Sin(t0/2.) - Power(Cos(p0),2)*Cos(p1)*Sin(t1/2.) + Power(Cos(p0),2)*Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - 
+          2*Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + 2*Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - 
+          Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
             
             // d(rot_x)/d(theta0)
-            dxi_dpt(0,1) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
-            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
-          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (Cos(p0)*Cos(t0)*Cos(t1) - Cos(p1)*Sin(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t0)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t0)*Sin(t1) - Sin(p1)*Sin(t0)*Sin(t1) + 
-          Power(Cos(p0),2)*Sin(p1)*Sin(t0)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
-          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+            dxi_dpt(0,1) = -((((Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))*
+          (Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          ((Cos(p0)*Cos(t0/2.)*Cos(t1/2.))/2. - (Cos(p1)*Sin(t0/2.)*Sin(t1/2.))/2. + (Cos(p1)*Power(Sin(p0),2)*Sin(t0/2.)*Sin(t1/2.))/2. - (Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/2.))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + ((Cos(t0/2.)*Cos(t1/2.)*Sin(p0))/2. - (Cos(p0)*Cos(p1)*Sin(p0)*Sin(t0/2.)*Sin(t1/2.))/2. - (Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/2. + (Power(Cos(p0),2)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/2.)/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - 
+          Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
 
             // d(rot_y)/d(phi0)
-            dxi_dpt(1,0) = (-(Cos(t1)*Sin(p0)*Sin(t0)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) - 2*Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - 
-     Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1) + Power(Sin(p0),2)*Sin(p1)*Sin(t1) - 
-     Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1))/
-   Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-       Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2));
+            dxi_dpt(1,0) = (-(Cos(t1/2.)*Sin(p0)*Sin(t0/2.)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) - 2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) - Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.) + Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.) - 
+     Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.))/
+   Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2));
 
             // d(rot_y)/d(theta0)
-            dxi_dpt(1,1) = (Cos(p0)*Cos(t0)*Cos(t1) - Cos(p1)*Sin(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t0)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0)*Sin(t1))/
-   Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-       Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2));
+            dxi_dpt(1,1) = ((Cos(p0)*Cos(t0/2.)*Cos(t1/2.))/2. - (Cos(p1)*Sin(t0/2.)*Sin(t1/2.))/2. + (Cos(p1)*Power(Sin(p0),2)*Sin(t0/2.)*Sin(t1/2.))/2. - (Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/2.)/
+   Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2));
 
             // d(rot_z)/d(phi0)
-            dxi_dpt(2,0) = -((((Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (-(Cos(t1)*Sin(p0)*Sin(t0)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) - 2*Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - 
-            Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1) + Power(Sin(p0),2)*Sin(p1)*Sin(t1) - 
-            Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1))*(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - 
-            Cos(p0)*Cos(t1)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - 
-            Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - 
-            Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-            Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (-(Power(Cos(p0),2)*Power(Cos(p1),2)) + Power(Cos(p0),2)*Power(Cos(p1),2)*Cos(t0) - Power(Cos(p0),2)*Cos(t1) + 
-          Power(Cos(p0),2)*Power(Cos(p1),2)*Cos(t1) + Power(Cos(p0),2)*Cos(t0)*Cos(t1) - Power(Cos(p0),2)*Power(Cos(p1),2)*Cos(t0)*Cos(t1) + 
-          Power(Cos(p1),2)*Power(Sin(p0),2) - Power(Cos(p1),2)*Cos(t0)*Power(Sin(p0),2) + Cos(t1)*Power(Sin(p0),2) - 
-          Power(Cos(p1),2)*Cos(t1)*Power(Sin(p0),2) - Cos(t0)*Cos(t1)*Power(Sin(p0),2) + Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Power(Sin(p0),2) - 
-          2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(p1) + 2*Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(p1) + 2*Cos(p0)*Cos(p1)*Cos(t1)*Sin(p0)*Sin(p1) - 
-          2*Cos(p0)*Cos(p1)*Cos(t0)*Cos(t1)*Sin(p0)*Sin(p1) + Sin(p0)*Sin(p1)*Sin(t0)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-          Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-          Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-          Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-          Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+            dxi_dpt(2,0) = ((((Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          (-(Cos(t1/2.)*Sin(p0)*Sin(t0/2.)) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) - 2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) - Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.) + 
+            Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.) - Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.))*(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + 
+            Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+            Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.)))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + (-(Power(Cos(p0),2)*Power(Cos(p1),2)) + Power(Cos(p0),2)*Power(Cos(p1),2)*Cos(t0/2.) - Power(Cos(p0),2)*Cos(t1/2.) + Power(Cos(p0),2)*Power(Cos(p1),2)*Cos(t1/2.) + Power(Cos(p0),2)*Cos(t0/2.)*Cos(t1/2.) - 
+          Power(Cos(p0),2)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.) + Power(Cos(p1),2)*Power(Sin(p0),2) - Power(Cos(p1),2)*Cos(t0/2.)*Power(Sin(p0),2) + Cos(t1/2.)*Power(Sin(p0),2) - Power(Cos(p1),2)*Cos(t1/2.)*Power(Sin(p0),2) - 
+          Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2) + Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2) - 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(p1) + 2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(p1) + 2*Cos(p0)*Cos(p1)*Cos(t1/2.)*Sin(p0)*Sin(p1) - 
+          2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0)*Sin(p1) + Sin(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+          Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+          Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
 
             // d(rot_z)/d(theta0)
-            dxi_dpt(2,1) = -((((Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-            Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-            Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-            Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1))*
-          (Cos(p0)*Cos(t0)*Cos(t1) - Cos(p1)*Sin(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t0)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)*Sin(t0)) - Cos(p0)*Cos(t1)*Sin(p0)*Sin(t0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0)*Sin(t0) + 
-          Cos(p1)*Sin(p1)*Sin(t0) - Cos(p1)*Cos(t1)*Sin(p1)*Sin(t0) - Cos(p1)*Power(Sin(p0),2)*Sin(p1)*Sin(t0) + 
-          Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1)*Sin(t0) - Cos(p0)*Cos(t0)*Sin(p1)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-          Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-          Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-          Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-          Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+            dxi_dpt(2,1) = -((((Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          (-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+            Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+            Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))*
+          ((Cos(p0)*Cos(t0/2.)*Cos(t1/2.))/2. - (Cos(p1)*Sin(t0/2.)*Sin(t1/2.))/2. + (Cos(p1)*Power(Sin(p0),2)*Sin(t0/2.)*Sin(t1/2.))/2. - (Cos(p0)*Sin(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/2.))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + (-0.5*(Cos(p0)*Power(Cos(p1),2)*Sin(p0)*Sin(t0/2.)) - (Cos(p0)*Cos(t1/2.)*Sin(p0)*Sin(t0/2.))/2. + (Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0)*Sin(t0/2.))/2. + (Cos(p1)*Sin(p1)*Sin(t0/2.))/2. - 
+          (Cos(p1)*Cos(t1/2.)*Sin(p1)*Sin(t0/2.))/2. - (Cos(p1)*Power(Sin(p0),2)*Sin(p1)*Sin(t0/2.))/2. + (Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t0/2.))/2. - (Cos(p0)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))/2.)/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+          Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+          Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
 
             // d(prismatic)/d(phi0)
             dxi_dpt(3,0) = 0;
@@ -304,115 +257,76 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         }
         // Calculated from Mathematica
         // d(rot_x)/d(phi1)
-        dxi_dpt(0,0) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
-            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
-          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1)) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - Cos(t0)*Sin(p1)*Sin(t1) - 
-            Power(Sin(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (Power(Cos(p0),2)*Cos(p1)*Sin(t1) + Cos(p1)*Cos(t0)*Sin(t1) - Power(Cos(p0),2)*Cos(p1)*Cos(t0)*Sin(t1) + 
-          Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) - Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
-          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+        dxi_dpt(0,0) = -((((Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))*
+          (Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.)) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) - Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.)))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + (Power(Cos(p0),2)*Cos(p1)*Sin(t1/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) - Power(Cos(p0),2)*Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) - Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - 
+          Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
         
         // d(rot_x)/d(theta1)
-        dxi_dpt(0,1) = -((((Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + Power(Cos(p0),2)*Sin(p1)*Sin(t1) + 
-            Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1))*
-          (Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (Cos(p1)*Cos(t0)*Cos(t1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2) - Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2) - 
-            Cos(p0)*Cos(t1)*Sin(p0)*Sin(p1) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0)*Sin(p1) - Cos(p0)*Sin(t0)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (-(Cos(p0)*Cos(p1)*Cos(t1)*Sin(p0)) + Cos(p0)*Cos(p1)*Cos(t0)*Cos(t1)*Sin(p0) + Power(Cos(p0),2)*Cos(t1)*Sin(p1) + 
-          Cos(t0)*Cos(t1)*Sin(p1) - Power(Cos(p0),2)*Cos(t0)*Cos(t1)*Sin(p1) - Sin(p0)*Sin(t0)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(Cos(t1)*Sin(p0)*Sin(t0) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) + 
-          Power(Cos(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Sin(p1)*Sin(t1) - Power(Cos(p0),2)*Cos(t0)*Sin(p1)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+        dxi_dpt(0,1) = -((((Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))*
+          (Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          ((Cos(p1)*Cos(t0/2.)*Cos(t1/2.))/2. + (Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2))/2. - (Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2))/2. - (Cos(p0)*Cos(t1/2.)*Sin(p0)*Sin(p1))/2. + (Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0)*Sin(p1))/2. - 
+            (Cos(p0)*Sin(t0/2.)*Sin(t1/2.))/2.))/Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + 
+            Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2),1.5) + (-0.5*(Cos(p0)*Cos(p1)*Cos(t1/2.)*Sin(p0)) + (Cos(p0)*Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0))/2. + (Power(Cos(p0),2)*Cos(t1/2.)*Sin(p1))/2. + (Cos(t0/2.)*Cos(t1/2.)*Sin(p1))/2. - 
+          (Power(Cos(p0),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1))/2. - (Sin(p0)*Sin(t0/2.)*Sin(t1/2.))/2.)/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(Cos(t1/2.)*Sin(p0)*Sin(t0/2.) - Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) + Power(Cos(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - 
+          Power(Cos(p0),2)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
         
         // d(rot_y)/d(phi1)
-        dxi_dpt(1,0) = (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1)) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - Cos(t0)*Sin(p1)*Sin(t1) - Power(Sin(p0),2)*Sin(p1)*Sin(t1) + 
-     Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1))/
-   Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-       Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2));
+        dxi_dpt(1,0) = (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.)) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) - Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.))/
+   Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2));
 
         // d(rot_y)/d(theta1)
-        dxi_dpt(1,1) = (Cos(p1)*Cos(t0)*Cos(t1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2) - Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2) - Cos(p0)*Cos(t1)*Sin(p0)*Sin(p1) + 
-     Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0)*Sin(p1) - Cos(p0)*Sin(t0)*Sin(t1))/
-   Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-       Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2));
+        dxi_dpt(1,1) = ((Cos(p1)*Cos(t0/2.)*Cos(t1/2.))/2. + (Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2))/2. - (Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2))/2. - (Cos(p0)*Cos(t1/2.)*Sin(p0)*Sin(p1))/2. + (Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0)*Sin(p1))/2. - 
+     (Cos(p0)*Sin(t0/2.)*Sin(t1/2.))/2.)/Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + 
+       Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2));
 
         // d(rot_z)/d(phi1)
-        dxi_dpt(2,0) = -((((Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1)) + Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(t1) - Cos(t0)*Sin(p1)*Sin(t1) - 
-            Power(Sin(p0),2)*Sin(p1)*Sin(t1) + Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1))*
-          (-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-            Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-            Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-            Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (-(Power(Cos(p1),2)*Cos(t0)) + Power(Cos(p1),2)*Cos(t0)*Cos(t1) - Power(Cos(p1),2)*Power(Sin(p0),2) + 
-          Power(Cos(p1),2)*Cos(t0)*Power(Sin(p0),2) + Power(Cos(p1),2)*Cos(t1)*Power(Sin(p0),2) - 
-          Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Power(Sin(p0),2) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(p1) - 2*Cos(p0)*Cos(p1)*Cos(t0)*Sin(p0)*Sin(p1) - 
-          2*Cos(p0)*Cos(p1)*Cos(t1)*Sin(p0)*Sin(p1) + 2*Cos(p0)*Cos(p1)*Cos(t0)*Cos(t1)*Sin(p0)*Sin(p1) + Cos(t0)*Power(Sin(p1),2) - 
-          Cos(t0)*Cos(t1)*Power(Sin(p1),2) + Power(Sin(p0),2)*Power(Sin(p1),2) - Cos(t0)*Power(Sin(p0),2)*Power(Sin(p1),2) - 
-          Cos(t1)*Power(Sin(p0),2)*Power(Sin(p1),2) + Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Power(Sin(p1),2) - Cos(p0)*Cos(p1)*Sin(t0)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-          Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-          Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-          Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-          Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+        dxi_dpt(2,0) = -((((Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          (-(Cos(p0)*Cos(p1)*Sin(p0)*Sin(t1/2.)) + Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.) - Cos(t0/2.)*Sin(p1)*Sin(t1/2.) - Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.) + Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.))*
+          (-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+            Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+            Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.)))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + (-(Power(Cos(p1),2)*Cos(t0/2.)) + Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.) - Power(Cos(p1),2)*Power(Sin(p0),2) + Power(Cos(p1),2)*Cos(t0/2.)*Power(Sin(p0),2) + Power(Cos(p1),2)*Cos(t1/2.)*Power(Sin(p0),2) - 
+          Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2) + 2*Cos(p0)*Cos(p1)*Sin(p0)*Sin(p1) - 2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Sin(p0)*Sin(p1) - 2*Cos(p0)*Cos(p1)*Cos(t1/2.)*Sin(p0)*Sin(p1) + 2*Cos(p0)*Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0)*Sin(p1) + 
+          Cos(t0/2.)*Power(Sin(p1),2) - Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p1),2) + Power(Sin(p0),2)*Power(Sin(p1),2) - Cos(t0/2.)*Power(Sin(p0),2)*Power(Sin(p1),2) - Cos(t1/2.)*Power(Sin(p0),2)*Power(Sin(p1),2) + 
+          Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Power(Sin(p1),2) - Cos(p0)*Cos(p1)*Sin(t0/2.)*Sin(t1/2.))/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+          Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+          Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
 
         // d(rot_z)/d(theta1)
-        dxi_dpt(2,1) = -((((Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1))*
-          (Cos(p1)*Cos(t0)*Cos(t1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2) - Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2) - 
-            Cos(p0)*Cos(t1)*Sin(p0)*Sin(p1) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0)*Sin(p1) - Cos(p0)*Sin(t0)*Sin(t1))*
-          (-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-            Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-            Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-            Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1)))/
-        Power(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2),1.5) + 
-       (-(Cos(p0)*Cos(t1)*Sin(p1)*Sin(t0)) + Cos(p0)*Sin(p0)*Sin(t1) - Cos(p0)*Power(Cos(p1),2)*Sin(p0)*Sin(t1) - 
-          Cos(p0)*Cos(t0)*Sin(p0)*Sin(t1) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0)*Sin(t1) - Cos(p1)*Cos(t0)*Sin(p1)*Sin(t1) - 
-          Cos(p1)*Power(Sin(p0),2)*Sin(p1)*Sin(t1) + Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1)*Sin(t1))/
-        Sqrt(1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2)))/
-     Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Sin(p0) - Cos(p0)*Cos(t1)*Sin(p0) + 
-          Cos(p0)*Power(Cos(p1),2)*Cos(t1)*Sin(p0) + Cos(p0)*Cos(t0)*Cos(t1)*Sin(p0) - Cos(p0)*Power(Cos(p1),2)*Cos(t0)*Cos(t1)*Sin(p0) - 
-          Cos(p1)*Cos(t0)*Sin(p1) + Cos(p1)*Cos(t0)*Cos(t1)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + 
-          Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - 
-          Cos(p1)*Cos(t0)*Cos(t1)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0)*Sin(t1),2)/
-        (1 - Power(Cos(p0)*Cos(t1)*Sin(t0) + Cos(p1)*Cos(t0)*Sin(t1) + Cos(p1)*Power(Sin(p0),2)*Sin(t1) - 
-            Cos(p1)*Cos(t0)*Power(Sin(p0),2)*Sin(t1) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1) + Cos(p0)*Cos(t0)*Sin(p0)*Sin(p1)*Sin(t1),2))));
+        dxi_dpt(2,1) = -((((Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.))*
+          ((Cos(p1)*Cos(t0/2.)*Cos(t1/2.))/2. + (Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2))/2. - (Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2))/2. - (Cos(p0)*Cos(t1/2.)*Sin(p0)*Sin(p1))/2. + (Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0)*Sin(p1))/2. - 
+            (Cos(p0)*Sin(t0/2.)*Sin(t1/2.))/2.)*(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+            Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+            Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.)))/
+        Power(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2),1.5) + (-0.5*(Cos(p0)*Cos(t1/2.)*Sin(p1)*Sin(t0/2.)) + (Cos(p0)*Sin(p0)*Sin(t1/2.))/2. - (Cos(p0)*Power(Cos(p1),2)*Sin(p0)*Sin(t1/2.))/2. - (Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.))/2. + 
+          (Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0)*Sin(t1/2.))/2. - (Cos(p1)*Cos(t0/2.)*Sin(p1)*Sin(t1/2.))/2. - (Cos(p1)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.))/2. + (Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1)*Sin(t1/2.))/2.)/
+        Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),
+           2)))/Sqrt(1 - Power(-(Cos(p0)*Power(Cos(p1),2)*Sin(p0)) + Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Sin(p0) - Cos(p0)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Power(Cos(p1),2)*Cos(t1/2.)*Sin(p0) + Cos(p0)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - 
+          Cos(p0)*Power(Cos(p1),2)*Cos(t0/2.)*Cos(t1/2.)*Sin(p0) - Cos(p1)*Cos(t0/2.)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Sin(p1) - Cos(p1)*Power(Sin(p0),2)*Sin(p1) + Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(p1) + 
+          Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.),2)/
+        (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
         // d(prismatic)/d(phi1)
         dxi_dpt(3,0) = 0;
         dxi_dpt(4,0) = 0;
         // d(prismatic)/d(theta1)
-        dxi_dpt(3,1) = -0.5*(l*Cos((2*t1)/2.))/(2*t1) + (l*Sin((2*t1)/2.))/Power((2*t1),2);
+        dxi_dpt(3,1) = -0.5*(l*Cos(t1/2.))/t1 + (l*Sin(t1/2.))/Power(t1,2);
         dxi_dpt(4,1) = dxi_dpt(3,1);
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
-        fmt::print("q0={}, q1={}, dpt/dL=\n{}\n", q_(q_head), q_(q_head+1), dpt_dL);
-        fmt::print("dxi_dpt=\n{}\n", dxi_dpt);
         Jm_.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
         p0 = p1;
         t0 = t1;
@@ -443,7 +357,6 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     calculate_m(map_normal2expanded * q);
     // calculate Jacobian
     update_Jm(map_normal2expanded * q);
-    fmt::print("Jm:{}\n", Jm_);
     dxi_ = Jm_ * map_normal2expanded * dq;
     // calculate dynamic parameters
     update_drake_model();
@@ -454,7 +367,6 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     J = Jxi_ * Jm_ * map_normal2expanded;
     //    update_dJm(q, dq);
     //
-    fmt::print("J:\n{}\n", J);
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H(int segment){
