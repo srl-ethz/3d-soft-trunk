@@ -65,8 +65,8 @@ private:
     /** @brief shear modulus of Dragon Skin 10, in Pa
      * literature value is 8500. Determined from characterization_actuation and characterize.py.
      */
-    double shear_modulus = 5029.;
-    double drag_coef = 19161.;
+    double shear_modulus = 73419.;
+    double drag_coef = 34138.;
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.

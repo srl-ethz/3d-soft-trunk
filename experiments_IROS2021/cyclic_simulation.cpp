@@ -15,10 +15,24 @@ int main(){
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
     // read and save the csv data
-    io::CSVReader<3> in(fmt::format("{}/log_pressure_rotate.csv", SOFTTRUNK_PROJECT_DIR));
-    in.read_header(io::ignore_extra_column, "time(sec)", "p_des[0]", "p_des[1]");
+    io::CSVReader<7> in(fmt::format("{}/log_pressure_rotate.csv", SOFTTRUNK_PROJECT_DIR));
+    in.read_header(io::ignore_extra_column, "time(sec)", "p_meas[0]", "p_meas[1]", "p_meas[2]", "p_meas[3]", "p_meas[4]", "p_meas[5]");
 
-    // read the CSV, and save the datapoints
+    // read the CSV, and save the datapoints to a vector
+    std::vector<double> log_t;
+    std::array<std::vector<double>, 3*st_params::num_segments> log_p;
+    {
+        double t, p0, p1, p2, p3, p4, p5;
+        while (in.read_row(t, p0, p1, p2, p3, p4, p5)){
+            log_t.push_back(t);
+            log_p[0].push_back(p0);
+            log_p[1].push_back(p1);
+            log_p[2].push_back(p2);
+            log_p[3].push_back(p3);
+            log_p[4].push_back(p4);
+            log_p[5].push_back(p5);
+        }
+    }
 
     std::fstream log_file;
     std::string filename = fmt::format("{}/log_sim.csv", SOFTTRUNK_PROJECT_DIR);
@@ -34,19 +48,21 @@ int main(){
     VectorXd dq_mid;
     VectorXd ddq_mid;
 
-    double dt = 0.0002;
+    double dt = 0.0001;
     srl::Rate r{1./dt};
     double t, p0, p1;
-    for (double t = 0; t < 3; t+=dt)
+    int log_index = 0; // index of log currently being referred to for pressure data
+    for (double t = log_t[0]; t < log_t[log_t.size()-1]; t+=dt)
     {
-        // set the pressure to that of the CSV at the current time
-        // p(0) = 000*100;//sinusoid(phase);
-        // p(1) = sinusoid(phase + 2*PI/3);
-        // p(2) = sinusoid(phase + 4*PI/3);
-        // p(3) = sinusoid(phase);
-        // p(4) = sinusoid(phase + 2*PI/3);
-        // p(5) = sinusoid(phase + 4*PI/3);
-
+        if (log_t[log_index] < t)
+            log_index ++; // move to next point in log
+        p(0) = log_p[0][log_index];
+        p(1) = log_p[1][log_index];
+        p(2) = log_p[2][log_index];
+        p(3) = log_p[3][log_index];
+        p(4) = log_p[4][log_index];
+        p(5) = log_p[5][log_index];
+        p *= 100.; // mbar to Pa
 
         /// run the simulation
         stm.updateState(q, dq);
