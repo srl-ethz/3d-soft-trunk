@@ -9,3 +9,6 @@ target_link_libraries(characterization_actuation ValveController SoftTrunkModel 
 
 add_executable(sensor_visualize sensor_visualize.cpp)
 target_link_libraries(sensor_visualize SoftTrunkModel SerialInterface)
+
+add_executable(solve_tip_force solve_tip_force.cpp)
+target_link_libraries(solve_tip_force SoftTrunkModel SerialInterface drake::drake)
