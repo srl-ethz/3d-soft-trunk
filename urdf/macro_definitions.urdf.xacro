@@ -8,6 +8,10 @@ this file defines the xacro macros that can be used to create PCC augmented mode
   <material name="green">
     <color rgba="0.2 1 0.2 0.8"/>
   </material>
+  <material name="white">
+    <color rgba="0.5 0.5 0.5 1"/>
+  </material>
+
   <xacro:property name="PI" value="3.1415" />
   <xacro:macro name="ball-joint" params="id parent child">
     <!--creates a (pseudo) ball joint, called from the PCC macro..-->
@@ -65,6 +69,14 @@ this file defines the xacro macros that can be used to create PCC augmented mode
         </geometry>
         <!-- <origin xyz="0 0 ${length/2}"/> -->
         <material name="green"/>
+      </visual>
+      <visual>
+        <!-- this marks the +x direction (i.e. the direction where the first chamber should be) -->
+        <geometry>
+          <box size="${radius/5.} ${radius/5.} ${radius/5.}"/>
+        </geometry>
+        <origin xyz="${radius} 0 0"/>
+        <material name="white"/>
       </visual>
       <inertial>
         <mass value="${mass}"/>

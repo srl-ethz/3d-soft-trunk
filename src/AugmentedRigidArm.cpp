@@ -25,8 +25,7 @@ void AugmentedRigidArm::setup_drake_model()
 
     // weld base link to world frame
     drake::math::RigidTransform<double> world_to_base{};
-    if (st_params::armConfiguration == ArmConfigurationType::stalactite)
-        world_to_base.set_rotation(drake::math::RollPitchYaw(PI, 0., 0.));
+    world_to_base.set_rotation(drake::math::RollPitchYaw(0., st_params::armAngle*PI/180., 0.));
     multibody_plant->WeldFrames(multibody_plant->world_frame(), multibody_plant->GetFrameByName("base_link"),
                                 world_to_base);
     multibody_plant->Finalize();
@@ -143,6 +142,7 @@ void AugmentedRigidArm::update_drake_model()
                                                        multibody_plant->world_frame(), &Jxi_);
       }
     }
+    fmt::print("rigid link jacobian: \n{}\n", Jxi_);
 }
 
 /**
@@ -411,6 +411,8 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         dxi_dpt(4,1) = dxi_dpt(3,1);
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
+        fmt::print("q0={}, q1={}, dpt/dL=\n{}\n", q_(q_head), q_(q_head+1), dpt_dL);
+        fmt::print("dxi_dpt=\n{}\n", dxi_dpt);
         Jm_.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
         p0 = p1;
         t0 = t1;
@@ -441,6 +443,7 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     calculate_m(map_normal2expanded * q);
     // calculate Jacobian
     update_Jm(map_normal2expanded * q);
+    fmt::print("Jm:{}\n", Jm_);
     dxi_ = Jm_ * map_normal2expanded * dq;
     // calculate dynamic parameters
     update_drake_model();
@@ -451,6 +454,7 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     J = Jxi_ * Jm_ * map_normal2expanded;
     //    update_dJm(q, dq);
     //
+    fmt::print("J:\n{}\n", J);
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H(int segment){

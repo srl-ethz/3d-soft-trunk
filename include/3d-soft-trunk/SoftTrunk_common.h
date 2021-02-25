@@ -15,11 +15,6 @@
 
 using namespace Eigen;
 
-/** @brief placement of arm */
-enum class ArmConfigurationType {
-    stalactite /** hanging from ceiling- stick "tight" to the ceiling */,
-    stalagmite /** placed on floor- rise "might"ily from the floor */
-};
 enum class ControllerType {
     dynamic,
     pid /** for PID control, error is directly converted to pressure (i.e. alpha not used) */
@@ -30,7 +25,7 @@ namespace st_params {
     /** @brief name of robot (and of urdf / xacro file), make it different for differently configured robots */
     const std::string robot_name = "2segment";
     /** @brief mass of entire robot, in kg. The model sets the mass of each section based on this and the estimated volume. */
-    double totalMass = 0.3;
+    double totalMass = 0.2828;
     /** @brief length of each part, in m 
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
     std::array<double, 4> lengths = {0.12, 0.02, 0.12, 0.02};
@@ -42,7 +37,8 @@ namespace st_params {
     const int num_segments = 2;
     const int sections_per_segment = 3;
 
-    const ArmConfigurationType armConfiguration = ArmConfigurationType::stalactite;
+    /** @brief angle of arm rel. to upright */
+    const double armAngle = 180;
     const ControllerType controller = ControllerType::pid;
 }
 
