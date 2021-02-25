@@ -6,3 +6,6 @@ target_link_libraries(cyclic_simulation SoftTrunkModel Threads::Threads)
 
 add_executable(characterization_actuation characterization_actuation.cpp)
 target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)
+
+add_executable(sensor_visualize sensor_visualize.cpp)
+target_link_libraries(sensor_visualize SoftTrunkModel SerialInterface)
