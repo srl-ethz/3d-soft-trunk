@@ -8,6 +8,8 @@ import sys
 python3 characterize.py log_curvature.csv log_pressure.csv
 
 before running this, set shear_modulus and drag_coef in to 1.
+
+apparently the gravity is not being calculated properly for the upper segment (probably because pcc does not hold), so only the value for the lowermost segment would make sense...
 """
 segments = 2
 sections_per_segment = 3
@@ -89,7 +91,7 @@ stm = SoftTrunkModel()
 # the problem is formulated to be
 # myu qPrime_expanded + xi dqPrime_expanded = e_expanded
 # these vectors contain all the measurements to be used in the characterization
-qPrime_expanded = np.zeros(2*segments*sections_per_segment * samples)
+qPrime_expanded = np.zeros(2*sections_per_segment * samples)
 dqPrime_expanded = np.zeros(qPrime_expanded.shape)
 e_expanded = np.zeros(qPrime_expanded.shape)
 
@@ -123,9 +125,10 @@ for t in np.linspace(curvature_domain[0], curvature_domain[1], samples):
     e = np.matmul(A, p) - np.matmul(B, ddq) - c - g
 
     # add to the expanded vectors
-    qPrime_expanded[2*segments*sections_per_segment * sample_i : 2*segments*sections_per_segment * (sample_i+1)] = q * K.diagonal()
-    dqPrime_expanded[2*segments*sections_per_segment * sample_i : 2*segments*sections_per_segment * (sample_i+1)] = dq * D.diagonal()
-    e_expanded[2*segments*sections_per_segment * sample_i : 2*segments*sections_per_segment * (sample_i+1)] = e
+    # currently it is hardcoded to consider just the second (lower) segment...
+    qPrime_expanded[2*sections_per_segment * sample_i : 2*sections_per_segment * (sample_i+1)] = q[2*sections_per_segment:] * K.diagonal()[2*sections_per_segment:]
+    dqPrime_expanded[2*sections_per_segment * sample_i : 2*sections_per_segment * (sample_i+1)] = dq[2*sections_per_segment:] * D.diagonal()[2*sections_per_segment:]
+    e_expanded[2*sections_per_segment * sample_i : 2*sections_per_segment * (sample_i+1)] = e[2*sections_per_segment:]
     sample_i += 1
 
 qPrime_combined = np.zeros((qPrime_expanded.size, 2))
