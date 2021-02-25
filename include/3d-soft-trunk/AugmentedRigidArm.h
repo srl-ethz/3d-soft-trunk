@@ -18,6 +18,7 @@
  * @details The rigid arm model  approximates the soft arm. (see paper etc. for more info on how this is so)
  * This class can calculate the kinematics & dynamics of the augmented arm using Drake.
  * Values with an underscore at the end have extra 2 DoFs at the end of each segment, which represents the (always straight) connection pieces as another PCC section.
+ * known issue: the values could get wrong when extremely close to straight configuration.
  */
 class AugmentedRigidArm {
 private:

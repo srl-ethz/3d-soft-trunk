@@ -66,8 +66,8 @@ private:
      * literature value is 85000. Determined from characterization_actuation and characterize.py.
      * Value for top segment is fake right now.
      */
-    std::array<double, st_params::num_segments> shear_modulus = {40000., 73419};
-    std::array<double, st_params::num_segments> drag_coef = {14138., 34138};
+    std::array<double, st_params::num_segments> shear_modulus = {50000., 73419};
+    std::array<double, st_params::num_segments> drag_coef = {34138., 34138};
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.

@@ -1,7 +1,9 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
-#include "mobilerack-interface/SerialInterface.h"
+#include <mobilerack-interface/SerialInterface.h>
 
-
+/**
+ * @brief just visualize the sensors assuming that for a single segment, it is constant curvature. 
+ */
 int main(){
     SoftTrunkModel stm{};
     SerialInterface si{"/dev/ttyACM0", 38400};
@@ -33,11 +35,6 @@ int main(){
             int segment_id = i / st_params::sections_per_segment; // switch order
             q(2*i) = (bendLab_data[2*segment_id] - bendLab_offset[2*segment_id]) * PI / 180. / st_params::sections_per_segment;
             q(2*i+1) = (bendLab_data[2*segment_id+1] - bendLab_offset[2*segment_id+1]) * PI / 180. / st_params::sections_per_segment;
-            if (segment_id == 1){
-                // manually fix the sensor mapping, for now.
-                q(2*i) *= -1;
-                q(2*i+1) *= -1;
-            }
         }
         stm.updateState(q, dq);
         r.sleep();
