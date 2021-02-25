@@ -7,7 +7,9 @@
 #include <Wire.h>
 #include "SparkFun_Displacement_Sensor_Arduino_Library.h" // Click here to get the library: http://librarymanager/All#SparkFun_Displacement_Sensor
 
-ADS myFlexSensor; //Create instance of the ADS class
+ADS myFlexSensor1; //Create instance of the ADS class
+ADS myFlexSensor2; //Create instance of the ADS class
+
 float data_float[6];
 int num_data = sizeof(data_float) / sizeof(data_float[0]);
 
@@ -62,25 +64,33 @@ void setup()
   }
 
   Wire.begin();
-  if (myFlexSensor.begin() == false)
+  if (myFlexSensor1.begin(19) == false)
+  {
+    // No sensor detected. Check wiring. Freezing...
+    delay(1);
+  }
+  if (myFlexSensor2.begin(45) == false)
   {
     // No sensor detected. Check wiring. Freezing...
     delay(1);
   }
   // set sample rate to 100Hz, make sure it corresponds to the calulation in signal_filter() function.
-  myFlexSensor.setSampleRate(ADS_100_HZ);
+  myFlexSensor1.setSampleRate(ADS_100_HZ);
+  myFlexSensor2.setSampleRate(ADS_100_HZ);
 }
 
 void loop()
 {
   // only check data when new data is available
-  if (myFlexSensor.available())
+  if (myFlexSensor1.available() == true && myFlexSensor2.available() == true)
   {
-    data_float[0] = myFlexSensor.getX();
-    data_float[1] = myFlexSensor.getY();
+    data_float[0] = myFlexSensor1.getX();
+    data_float[1] = myFlexSensor1.getY();
+    data_float[2] = myFlexSensor2.getX();
+    data_float[3] = myFlexSensor2.getY();
     // process data to remove noise as much as possible
-    signal_filter(data_float);
-    deadzone_filter(data_float);
+//    signal_filter(data_float);
+//    deadzone_filter(data_float);
 
     Serial.print("a");
     for (int i=0; i < num_data; i++){
