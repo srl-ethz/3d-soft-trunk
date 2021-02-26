@@ -77,7 +77,7 @@ int main(){
         VectorXd x_result = result.GetSolution(x);
         fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), s.transpose(), x_result.segment(12, 3).transpose());
 
-        VectorXd f_est = stm.J * (stm.J.transpose()*stm.J).inverse() * (/*stm.g +*/ stm.K*q - stm.A*p);
+        VectorXd f_est = stm.J * (stm.J.transpose()*stm.J).inverse() * (stm.g + stm.K*q - stm.A*p);
         fmt::print("simpler solution: f={}\n", f_est);
 
         stm.updateState(x_result.segment(0,12), dq);
