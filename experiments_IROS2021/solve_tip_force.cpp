@@ -6,6 +6,15 @@
 #include <drake/solvers/equality_constrained_qp_solver.h>
 #include <drake/solvers/mathematical_program.h>
 
+VectorXd getSensor(SerialInterface& si, VectorXd bendLab_offset){
+    std::vector<float> bendLab_data;
+    VectorXd s = VectorXd::Zero(4);
+    si.getData(bendLab_data);
+    for (int i = 0; i < 4; i++){
+        s(i) = (bendLab_data[i] - bendLab_offset[i]) * PI / 180;
+    }
+    return s;
+}
 int main(){
     SoftTrunkModel stm{};
     SerialInterface si{"/dev/ttyACM0", 38400};
@@ -44,14 +53,49 @@ int main(){
     drake::solvers::MathematicalProgramResult result;
     fmt::print("Mq:\n{}\nMf:\n{}\n", Mq, Mf);
 
+
+    fmt::print("3 seconds to get into position...\n");
+    srl::sleep(3);
+
+    fmt::print("optimizing assuming zero external force...\n");
+    VectorXd q_initial = VectorXd::Zero(12);
+    VectorXd bendLab_initial = VectorXd::Zero(4);
+    for (int i = 0; i < N; i++)
+    {
+        bendLab_initial += getSensor(si, bendLab_offset);
+        srl::sleep(0.02);
+    }
+    bendLab_initial /= N;
+    for (int i = 0; i < st_params::num_segments*st_params::sections_per_segment; i++)
+    {
+        int segment_i = i / st_params::sections_per_segment;
+        q_initial(2*i) = bendLab_initial(2*segment_i) / st_params::sections_per_segment;
+        q_initial(2*i+1) = bendLab_initial(2*segment_i+1) / st_params::sections_per_segment;
+    }
+    stm.updateState(q_initial, dq);
+    VectorXd e0 =stm.g - stm.A*p;
+    MatrixXd Q0 = stm.K.transpose()*stm.K; 
+    Q0 *= 2;
+    VectorXd b0 = 2*e0.transpose()*stm.K;
+
+    drake::solvers::VectorDecisionVariable<12> x0 = prog.NewContinuousVariables<12>();
+    prog.AddQuadraticCost(Q0, b0, x0);
+    prog.AddLinearEqualityConstraint(S, bendLab_initial, x0); // constraint is to make it make sense with the sensor measurements
+    result = solver.Solve(prog);
+    VectorXd x_result = result.GetSolution(x0);
+    fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), s.transpose(), x_result.transpose());
+    stm.updateState(x_result, dq);
+
+    fmt::print("updated initial position:\n");
+    srl::sleep(1);
+
+    VectorXd f_offset = stm.A*p - stm.g - stm.K*x_result;
+    fmt::print("offset force calculated:{}\n", f_offset.transpose());
+
     srl::Rate r{2};
     while (true)
     {
-        si.getData(bendLab_data);
-        for (int i = 0; i < 4; i++){
-            s(i) = (bendLab_data[i] - bendLab_offset[i]) * PI / 180;
-        }
-           
+        s = getSensor(si, bendLab_offset);
         
         for (int i = 0; i < st_params::num_segments*st_params::sections_per_segment; i++)
         {
@@ -63,7 +107,7 @@ int main(){
         }
         stm.updateState(q, dq);
 
-        VectorXd e = stm.g - stm.A*p;
+        VectorXd e = stm.g - stm.A*p + f_offset;
 
         double ratio = 0.01;
         MatrixXd Q = Mq.transpose()*stm.K.transpose()*stm.K*Mq + Mf.transpose()*stm.J*stm.J.transpose()*Mf - 2*Mq.transpose()*stm.K.transpose()*stm.J.transpose()*Mf + ratio*Mf.transpose()*Mf; 
