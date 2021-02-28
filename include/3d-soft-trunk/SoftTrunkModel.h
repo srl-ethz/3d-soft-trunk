@@ -49,9 +49,9 @@ public:
      */
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
-    
-private:
     std::unique_ptr<AugmentedRigidArm> ara;
+private:
+    
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
      * @param radius radius of the chamber. This is the input from which the other values will be calculated.
@@ -66,7 +66,7 @@ private:
      * literature value is 85000. Determined from characterization_actuation and characterize.py.
      * Value for top segment is fake right now.
      */
-    std::array<double, st_params::num_segments> shear_modulus = {39747., 66559.}; /** the results from characterization was 29747 for top but that's probably underestimated due to gravity */
+    std::array<double, st_params::num_segments> shear_modulus = {59747., 66559.}; /** the results from characterization was 29747 for top but that's probably underestimated due to gravity */
     std::array<double, st_params::num_segments> drag_coef = {19156., 32485.};
 
     /**

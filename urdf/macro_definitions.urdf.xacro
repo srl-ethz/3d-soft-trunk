@@ -98,4 +98,12 @@ this file defines the xacro macros that can be used to create PCC augmented mode
       <xacro:default_inertial/>
     </link>
   </xacro:macro>
+
+  <xacro:macro name="rigid_rotation" params="rotX rotY rotZ parent child">
+    <joint name="${parent}_${child}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <origin rpy="${rotX} ${rotY} ${rotZ}"/>
+    </joint>
+  </xacro:macro>
 </robot>

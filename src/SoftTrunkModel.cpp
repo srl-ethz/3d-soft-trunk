@@ -129,7 +129,9 @@ void SoftTrunkModel::generateRobotURDF(){
                << "<!-- This file has been generated automatically from SoftTrunkModel::generateRobotURDF(), do not edit by hand -->\n"
                << fmt::format("<robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='{}'>\n", st_params::robot_name)
                << "<xacro:include filename='macro_definitions.urdf.xacro' />\n"
-               << "<xacro:empty_link name='base_link'/>\n";
+               << "<xacro:empty_link name='base_link'/>\n"
+               << fmt::format("<xacro:rigid_rotation rotX='0' rotY='{}' rotZ='0' parent='base_link' child='softTrunk_base'/>", st_params::armAngle*pi/180)
+               << "<xacro:empty_link name='softTrunk_base'/>\n";
 
     std::string parent = "base_link";
     std::string child;

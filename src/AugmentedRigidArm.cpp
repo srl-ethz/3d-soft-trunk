@@ -43,7 +43,7 @@ void AugmentedRigidArm::setup_drake_model()
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    int num_joints = multibody_plant->num_joints() - 1; // @todo: but why??
+    int num_joints = multibody_plant->num_joints() - 2; // subtract one mystery joint, and one fixed joint at the base
     fmt::print("model has {} joints\n", num_joints);
 
     // check that parameters make sense, just in case

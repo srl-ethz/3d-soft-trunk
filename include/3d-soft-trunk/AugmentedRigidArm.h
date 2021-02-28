@@ -55,8 +55,7 @@ private:
 
     // these internally used values have extra PCC section at end of each segment, whose values are always set to 0.
 
-    /** @brief current joint angles of the augmented rigid arm */
-    MatrixXd xi_;
+    
     MatrixXd dxi_;
     /** @brief the Jacobian that maps from q_ to xi_ */
     MatrixXd Jm_;
@@ -96,6 +95,11 @@ public:
     MatrixXd g;
     /** @brief Jacobian of tip position vs q */
     MatrixXd J;
+
+    /** @brief current joint angles of the augmented rigid arm
+     * @todo this is exposed because I want it in solve_tip_force for visualization, figure out more elegant solution....
+     */
+    MatrixXd xi_;
 
     /** @brief the pose of the rigid body at the tip of segment i, of the Drake model (relative to base frame), i.e. tip position for segment i calculated with forward kinematics using the PCC approximation. 
      * @param segment segment id. 0 for first segment, and so on

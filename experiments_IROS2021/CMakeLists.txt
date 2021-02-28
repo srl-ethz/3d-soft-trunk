@@ -10,5 +10,13 @@ target_link_libraries(characterization_actuation ValveController SoftTrunkModel 
 add_executable(sensor_visualize sensor_visualize.cpp)
 target_link_libraries(sensor_visualize SoftTrunkModel SerialInterface)
 
-add_executable(solve_tip_force solve_tip_force.cpp)
-target_link_libraries(solve_tip_force SoftTrunkModel SerialInterface drake::drake)
+# I'm sorry this is a HACK!
+find_package(roscpp)
+
+if(${roscpp_FOUND})
+    add_executable(solve_tip_force solve_tip_force.cpp)
+    target_link_libraries(solve_tip_force SoftTrunkModel SerialInterface drake::drake ${roscpp_LIBRARIES})
+    target_include_directories(solve_tip_force PRIVATE ${roscpp_INCLUDE_DIRS})    
+endif(${roscpp_FOUND})
+
+# add_dependencies(solve_tip_force ${catkin_EXPORTED_TARGETS})

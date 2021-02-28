@@ -1,6 +1,9 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
 #include <mobilerack-interface/SerialInterface.h>
 
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
+
 // https://drake.mit.edu/doxygen_cxx/group__solvers.html
 // https://github.com/RobotLocomotion/drake/blob/master/solvers/test/quadratic_program_examples.cc
 #include <drake/solvers/equality_constrained_qp_solver.h>
@@ -15,9 +18,31 @@ VectorXd getSensor(SerialInterface& si, VectorXd bendLab_offset){
     }
     return s;
 }
-int main(){
+int main(int argc, char** argv){
+    ros::init(argc, argv, "solve_force_tip");
+    ros::NodeHandle nh;
+    ros::Publisher joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
+    /** @todo use this hacky visualization for now, but somehow include this visualization feture to other classes as well! (while making it compilable without ros as well...) */
+
     SoftTrunkModel stm{};
     SerialInterface si{"/dev/ttyACM0", 38400};
+
+    sensor_msgs::JointState joint_state;
+    joint_state.name.resize(5*st_params::num_segments*(st_params::sections_per_segment+1));
+    joint_state.position.resize(joint_state.name.size());
+    for (int i = 0; i < st_params::num_segments*(st_params::sections_per_segment+1); i++)
+    {
+        int segment_id = i / (st_params::sections_per_segment+1);
+        int section_id = i % (st_params::sections_per_segment+1);
+
+        std::string pcc_name = fmt::format("seg{}_sec{}", segment_id, section_id);
+        joint_state.name[5*i+0] = fmt::format("{}-ball-ball-joint_x_joint", pcc_name);
+        joint_state.name[5*i+1] = fmt::format("{}-ball-ball-joint_y_joint", pcc_name);
+        joint_state.name[5*i+2] = fmt::format("{}-ball-ball-joint_z_joint", pcc_name);
+        joint_state.name[5*i+3] = fmt::format("{}-a-b_joint", pcc_name);
+        joint_state.name[5*i+4] = fmt::format("{}-b-seg{}_sec{}-{}_connect_joint", pcc_name, segment_id, section_id, section_id+1);
+    }
+    fmt::print("joints:{}\n", joint_state.name);
 
     VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd dq = VectorXd::Zero(q.size());
@@ -93,7 +118,7 @@ int main(){
     fmt::print("offset force calculated:{}\n", f_offset.transpose());
 
     srl::Rate r{2};
-    while (true)
+    while (ros::ok())
     {
         s = getSensor(si, bendLab_offset);
         
@@ -125,6 +150,12 @@ int main(){
         fmt::print("simpler solution: f={}\n", f_est);
 
         stm.updateState(x_result.segment(0,12), dq);
+        for (int i = 0; i < joint_state.name.size(); i++)
+        {
+            joint_state.position[i] = stm.ara->xi_(i);
+        }
+        joint_state.header.stamp = ros::Time::now();
+        joint_pub.publish(joint_state);
 
         r.sleep();
     }
