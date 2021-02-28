@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
+#include <visualization_msgs/Marker.h>
 
 // https://drake.mit.edu/doxygen_cxx/group__solvers.html
 // https://github.com/RobotLocomotion/drake/blob/master/solvers/test/quadratic_program_examples.cc
@@ -22,6 +23,8 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "solve_force_tip");
     ros::NodeHandle nh;
     ros::Publisher joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
+    ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
     /** @todo use this hacky visualization for now, but somehow include this visualization feture to other classes as well! (while making it compilable without ros as well...) */
 
     SoftTrunkModel stm{};
@@ -43,6 +46,17 @@ int main(int argc, char** argv){
         joint_state.name[5*i+4] = fmt::format("{}-b-seg{}_sec{}-{}_connect_joint", pcc_name, segment_id, section_id, section_id+1);
     }
     fmt::print("joints:{}\n", joint_state.name);
+
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "seg1_sec3-4_connect";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.points.resize(2);
+    marker.points[0].x = 0; marker.points[0].y=0; marker.points[0].z = 0;
+    marker.scale.x = 0.005; marker.scale.y = 0.01;
+    marker.color.a = 1;
+    marker.color.r = 1;
 
     VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd dq = VectorXd::Zero(q.size());
@@ -146,8 +160,10 @@ int main(int argc, char** argv){
         VectorXd x_result = result.GetSolution(x);
         fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), s.transpose(), x_result.segment(12, 3).transpose());
 
-        VectorXd f_est = stm.J * (stm.J.transpose()*stm.J).inverse() * (stm.g + stm.K*q - stm.A*p);
-        fmt::print("simpler solution: f={}\n", f_est);
+        VectorXd local_f_est = stm.ara->get_H_tip().matrix().block(0,0,3,3).inverse() * x_result.segment(12,3);
+        marker.header.stamp = ros::Time();
+        marker.points[1].x = local_f_est(0)/3; marker.points[1].y = local_f_est(1)/3; marker.points[1].z = local_f_est(2)/3;
+        marker_pub.publish(marker);
 
         stm.updateState(x_result.segment(0,12), dq);
         for (int i = 0; i < joint_state.name.size(); i++)
@@ -157,9 +173,8 @@ int main(int argc, char** argv){
         joint_state.header.stamp = ros::Time::now();
         joint_pub.publish(joint_state);
 
-        r.sleep();
+        // r.sleep();
     }
     
-
     return 1;
 }
