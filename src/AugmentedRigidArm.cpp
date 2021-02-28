@@ -126,7 +126,7 @@ void AugmentedRigidArm::update_drake_model()
     for (int i = 0; i < st_params::num_segments; i++)
     {
       frame_name = fmt::format("seg{}_sec{}-{}_connect", i, st_params::sections_per_segment-1, st_params::sections_per_segment);
-      H_list[i] = multibody_plant->GetFrameByName(frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("base_link")).GetAsMatrix4();
+      H_list[i] = multibody_plant->GetFrameByName(frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("softTrunk_base")).GetAsMatrix4();
       if (i == st_params::num_segments - 1){
         // for the final segment, calculate the Jacobian as well
         multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
