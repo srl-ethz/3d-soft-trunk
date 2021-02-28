@@ -133,7 +133,7 @@ void SoftTrunkModel::generateRobotURDF(){
                << fmt::format("<xacro:rigid_rotation rotX='0' rotY='{}' rotZ='0' parent='base_link' child='softTrunk_base'/>", st_params::armAngle*pi/180)
                << "<xacro:empty_link name='softTrunk_base'/>\n";
 
-    std::string parent = "base_link";
+    std::string parent = "softTrunk_base";
     std::string child;
     for (int i = 0; i < st_params::num_segments; i++)
     {
