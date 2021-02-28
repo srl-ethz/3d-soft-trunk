@@ -57,6 +57,9 @@ int main(int argc, char** argv){
     marker.scale.x = 0.005; marker.scale.y = 0.01;
     marker.color.a = 1;
     marker.color.r = 1;
+    Matrix3d rot_world_to_st;  // hack-ish way to account for base rotation....
+    double angle = st_params::armAngle*PI/180.;
+    rot_world_to_st << cos(angle), 0 , sin(angle) , 0, 1, 0, -sin(angle), 0, cos(angle);
 
     VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd dq = VectorXd::Zero(q.size());
@@ -160,7 +163,7 @@ int main(int argc, char** argv){
         VectorXd x_result = result.GetSolution(x);
         fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), s.transpose(), x_result.segment(12, 3).transpose());
 
-        VectorXd local_f_est = stm.ara->get_H_tip().matrix().block(0,0,3,3).inverse() * x_result.segment(12,3);
+        VectorXd local_f_est = stm.ara->get_H_tip().matrix().block(0,0,3,3).inverse() * rot_world_to_st.inverse() * x_result.segment(12,3);
         marker.header.stamp = ros::Time();
         marker.points[1].x = local_f_est(0)/3; marker.points[1].y = local_f_est(1)/3; marker.points[1].z = local_f_est(2)/3;
         marker_pub.publish(marker);
