@@ -12,7 +12,7 @@ before running this, set shear_modulus and drag_coef in to 1.
 apparently the gravity is not being calculated properly for the upper segment (probably because pcc does not hold), so only the value for the lowermost segment would make sense...
 Recommend characterizing only one segment at a time
 """
-segments = 2
+segments = 1
 sections_per_segment = 3
 
 # first, cook the curvature data (polynomial fit)

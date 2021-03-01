@@ -24,11 +24,13 @@ enum class ControllerType {
 namespace st_params {
     /** @brief name of robot (and of urdf / xacro file), make it different for differently configured robots */
     const std::string robot_name = "2segment";
-    /** @brief mass of entire robot, in kg. The model sets the mass of each section based on this and the estimated volume. */
-    double totalMass = 0.2828;
+    /** @brief mass of entire robot, in kg. The model sets the mass of each section based on this and the estimated volume.
+     * top segment 160g, middle connector 20g, bottom segment 82g, gripper 23g
+     */
+    double totalMass = 0.160 + 0.2 + 0.82 + 0.23;
     /** @brief length of each part, in m 
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    std::array<double, 4> lengths = {0.12, 0.02, 0.12, 0.02};
+    std::array<double, 4> lengths = {0.12, 0.02, 0.12, 0.03};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
