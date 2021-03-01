@@ -27,7 +27,7 @@ namespace st_params {
     /** @brief mass of entire robot, in kg. The model sets the mass of each section based on this and the estimated volume.
      * top segment 160g, middle connector 20g, bottom segment 82g, gripper 23g
      */
-    double totalMass = 0.160 + 0.2 + 0.82 + 0.23;
+    double totalMass = (160 + 20 + 82 + 23)/1000.;
     /** @brief length of each part, in m 
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
     std::array<double, 4> lengths = {0.12, 0.02, 0.12, 0.03};
