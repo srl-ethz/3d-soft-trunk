@@ -55,7 +55,7 @@ sim_pos1_interp = [[], [], []]
 err0_interp = []
 err1_interp = []
 
-for t in np.arange(start_time, end_time, step=0.5):
+for t in np.arange(start_time, end_time, step=0.2):
     t_interp.append(t)
     real_pos0_t = np.zeros(3)
     real_pos1_t = np.zeros(3)
@@ -83,12 +83,36 @@ for t in np.arange(start_time, end_time, step=0.5):
 
 for i in range(3):
     xyz = ["x", "y", "z"]
-    plt.plot(t_interp, real_pos1_interp[i], label=f"real0_{xyz[i]}")
+    plt.plot(t_interp, real_pos1_interp[i], label=f"real1_{xyz[i]}")
 
-    plt.plot(t_interp, sim_pos1_interp[i], label=f"sim0_{xyz[i]}")
+    plt.plot(t_interp, sim_pos1_interp[i], label=f"sim1_{xyz[i]}")
 
 plt.plot(t_interp, err1_interp, label="err0")
 
-
+print(f"average error for top segment: {np.average(err0_interp)}\tbottom segment: {np.average(err1_interp)}")
 plt.legend()
 plt.show()
+
+with open("compare_real_sim.csv", "w") as csvfile:
+    csvWriter = csv.writer(csvfile, delimiter=",")
+    firstRow = ["time(sec)"]
+    xyz = ["x", "y", "z"]
+    for segment_i in range(2):
+        for xyz_i in range(3):
+            firstRow.append(f"real_seg{segment_i}_{xyz[xyz_i]}")
+            firstRow.append(f"sim_seg{segment_i}_{xyz[xyz_i]}")
+
+        firstRow.append(f"err_seg{segment_i}")
+    csvWriter.writerow(firstRow)
+    
+    for i in range(len(t_interp)):
+        data = [t_interp[i]]
+        for xyz_i in range(3):
+            data.append(real_pos0_interp[xyz_i][i])
+            data.append(sim_pos0_interp[xyz_i][i])
+        data.append(err0_interp[i])
+        for xyz_i in range(3):
+            data.append(real_pos1_interp[xyz_i][i])
+            data.append(sim_pos1_interp[xyz_i][i])
+        data.append(err1_interp[i])
+        csvWriter.writerow(data)
