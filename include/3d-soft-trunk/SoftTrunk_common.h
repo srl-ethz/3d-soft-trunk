@@ -31,7 +31,7 @@ namespace st_params {
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
+    std::array<double, 4> lengths = {0.125, 0.02, 0.12, 0.02};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}

@@ -50,7 +50,7 @@ int main(){
     VectorXd dq_mid;
     VectorXd ddq_mid;
 
-    double dt = 0.0001;
+    double dt = 0.00007;
     srl::Rate r{1./dt};
     for (double t = 0; t < 3; t+=dt)
     {

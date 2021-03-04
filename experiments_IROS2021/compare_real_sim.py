@@ -55,7 +55,7 @@ sim_pos1_interp = [[], [], []]
 err0_interp = []
 err1_interp = []
 
-for t in np.arange(start_time, end_time, step=0.2):
+for t in np.arange(start_time, end_time, step=0.1):
     t_interp.append(t)
     real_pos0_t = np.zeros(3)
     real_pos1_t = np.zeros(3)
@@ -63,9 +63,16 @@ for t in np.arange(start_time, end_time, step=0.2):
     sim_pos1_t = np.zeros(3)
     for i in range(3):
         real_pos0_t[i] = np.interp(t, real_t, real_pos0[i])
+        # fix any initial offset here...
+        if i == 2:
+            real_pos0_t[i] += 0.008
         real_pos0_interp[i].append(real_pos0_t[i])
 
         real_pos1_t[i] = np.interp(t, real_t, real_pos1[i])
+        if i == 2:
+            real_pos1_t[i] += 0.008
+        if i == 1:
+            real_pos1_t[i] += 0.012
         real_pos1_interp[i].append(real_pos1_t[i])
 
         sim_pos0_t[i] = np.interp(t, sim_t, sim_pos0[i])
