@@ -15,7 +15,7 @@ find_package(roscpp)
 
 if(${roscpp_FOUND})
     add_executable(solve_tip_force solve_tip_force.cpp)
-    target_link_libraries(solve_tip_force SoftTrunkModel SerialInterface drake::drake ${roscpp_LIBRARIES})
+    target_link_libraries(solve_tip_force SoftTrunkModel SerialInterface ValveController drake::drake ${roscpp_LIBRARIES})
     target_include_directories(solve_tip_force PRIVATE ${roscpp_INCLUDE_DIRS})    
 endif(${roscpp_FOUND})
 

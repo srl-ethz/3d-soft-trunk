@@ -1,5 +1,6 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
 #include <mobilerack-interface/SerialInterface.h>
+#include <mobilerack-interface/ValveController.h>
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
@@ -29,6 +30,7 @@ int main(int argc, char** argv){
 
     SoftTrunkModel stm{};
     SerialInterface si{"/dev/ttyACM0", 38400};
+    ValveController vc{"192.168.0.100", {11, 10, 9, 13, 12, 14, 15}, 600};
 
     sensor_msgs::JointState joint_state;
     joint_state.name.resize(5*st_params::num_segments*(st_params::sections_per_segment+1));
@@ -93,8 +95,25 @@ int main(int argc, char** argv){
     drake::solvers::MathematicalProgram prog;
     drake::solvers::EqualityConstrainedQPSolver solver;
     drake::solvers::MathematicalProgramResult result;
-    fmt::print("Mq:\n{}\nMf:\n{}\n", Mq, Mf);
+    // fmt::print("Mq:\n{}\nMf:\n{}\n", Mq, Mf);
 
+
+    // vc.setSinglePressure(0, 400);
+    // pose B
+    // vc.setSinglePressure(0, 300);
+    // vc.setSinglePressure(1, 250);
+    // pose C
+    // vc.setSinglePressure(0, 300);
+    // vc.setSinglePressure(1, 250);
+    // vc.setSinglePressure(3, 300);
+    // vc.setSinglePressure(4, 300);
+
+    // pose D
+    // vertical
+    vc.setSinglePressure(0, 100);
+    vc.setSinglePressure(5, 100);
+    vc.setSinglePressure(4, 300);
+    
 
     fmt::print("3 seconds to get into position...\n");
     srl::sleep(3);
@@ -125,17 +144,20 @@ int main(int argc, char** argv){
     prog.AddLinearEqualityConstraint(S, bendLab_initial, x0); // constraint is to make it make sense with the sensor measurements
     result = solver.Solve(prog);
     VectorXd x_result = result.GetSolution(x0);
-    fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), s.transpose(), x_result.transpose());
+    fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), bendLab_initial.transpose(), x_result.transpose());
     stm.updateState(x_result, dq);
 
     fmt::print("updated initial position:\n");
-    srl::sleep(1);
 
     VectorXd f_offset = stm.A*p - stm.g - stm.K*x_result;
     fmt::print("offset force calculated:{}\n", f_offset.transpose());
 
-    srl::Rate r{2};
-    while (ros::ok())
+    srl::sleep(3);
+    vc.setSinglePressure(2, 400);
+    srl::sleep(3);
+
+    Vector3d f_accum = Vector3d::Zero();
+    for (int count=0; count<10; count++)
     {
         s = getSensor(si, bendLab_offset);
         
@@ -161,11 +183,12 @@ int main(int argc, char** argv){
         prog.AddLinearEqualityConstraint(S, s, x.segment<12>(0)); // constraint is to make it make sense with the sensor measurements
         result = solver.Solve(prog);
         VectorXd x_result = result.GetSolution(x);
-        fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), s.transpose(), x_result.segment(12, 3).transpose());
+        fmt::print("result: {}\nsensor: {}\tforce: {}\t{}\t{}\n", result.is_success(), s.transpose(), x_result(12), x_result(13), x_result(14));
+        f_accum += x_result.segment(12, 3);
 
         VectorXd local_f_est = stm.ara->get_H_tip().matrix().block(0,0,3,3).inverse() * rot_world_to_st.inverse() * x_result.segment(12,3);
         marker.header.stamp = ros::Time();
-        marker.points[1].x = local_f_est(0)/3; marker.points[1].y = local_f_est(1)/3; marker.points[1].z = local_f_est(2)/3;
+        marker.points[1].x = local_f_est(0)/1.; marker.points[1].y = local_f_est(1)/1.; marker.points[1].z = local_f_est(2)/1.;
         marker_pub.publish(marker);
 
         stm.updateState(x_result.segment(0,12), dq);
@@ -176,8 +199,10 @@ int main(int argc, char** argv){
         joint_state.header.stamp = ros::Time::now();
         joint_pub.publish(joint_state);
 
-        // r.sleep();
     }
-    
+    f_accum /= 10;
+    fmt::print("f_accum: {}\t{}\t{}\n", f_accum(0), f_accum(1), f_accum(2));
+    vc.setSinglePressure(2, 0);
+    srl::sleep(1);
     return 1;
 }

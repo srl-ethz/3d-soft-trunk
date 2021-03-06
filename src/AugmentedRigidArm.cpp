@@ -128,7 +128,8 @@ void AugmentedRigidArm::update_drake_model()
       frame_name = fmt::format("seg{}_sec{}-{}_connect", i, st_params::sections_per_segment-1, st_params::sections_per_segment);
       H_list[i] = multibody_plant->GetFrameByName(frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("softTrunk_base")).GetAsMatrix4();
       if (i == st_params::num_segments - 1){
-        // for the final segment, calculate the Jacobian as well
+        // for the final segment, calculate the Jacobian for tip as well
+        frame_name = fmt::format("seg{}_sec{}-{}_connect", i, st_params::sections_per_segment, st_params::sections_per_segment+1);
         multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
                                                        multibody_plant->GetFrameByName(frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),
