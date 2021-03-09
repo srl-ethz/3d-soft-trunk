@@ -30,16 +30,15 @@ int main() {
     AugmentedRigidArm ara{};
 
     // calculate the state of arm at a particular value of q and print out the various parameters
-    VectorXd q = VectorXd::Zero(2 * st_params::num_segments * st_params::sections_per_segment);
-    VectorXd dq = VectorXd::Zero(2 * st_params::num_segments * st_params::sections_per_segment);
+    Pose pose;
 
     double delta_t = 0.03;
     srl::Rate r{1. / delta_t};
     for (double t = 0; t<10; t+=delta_t) {
-        q_update(t, q);
-        ara.update(q, dq);
+        q_update(t, pose.q);
+        ara.update(pose);
         fmt::print("------------\n");
-        fmt::print("q:{}\n", q.transpose());
+        fmt::print("q:{}\n", pose.q.transpose());
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
         fmt::print("B:{}\n", ara.B);
         fmt::print("g:{}\n", ara.g);
