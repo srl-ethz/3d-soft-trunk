@@ -20,7 +20,7 @@ public:
     /**
      * @brief update the model's state, and calculate the parameters of the model. Currently has problems when both Lx and Ly are 0.
      */
-    void updateState(const VectorXd& q, const VectorXd& dq);
+    void updateState(const Pose &pose);
 
     /** @brief inertia matrix */
     MatrixXd B;
