@@ -17,8 +17,10 @@ using namespace Eigen;
 
 enum class ControllerType {
     dynamic,
-    pid /** for PID control, error is directly converted to pressure (i.e. alpha not used) */
+    pid, /** for PID control, error is directly converted to pressure (i.e. alpha not used) */
 };
+
+
 
 /** @brief parameters that define the configuration of the Soft Trunk */
 namespace st_params {
@@ -31,7 +33,7 @@ namespace st_params {
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    std::array<double, 4> lengths = {0.125, 0.02, 0.12, 0.02};
+    std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
@@ -39,11 +41,18 @@ namespace st_params {
     std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
     const int num_segments = 2;
     const int sections_per_segment = 3;
-
+    const int q_size = 2*num_segments*sections_per_segment;
     /** @brief angle of arm rel. to upright */
     const double armAngle = 180;
     const ControllerType controller = ControllerType::pid;
 }
+
+class Pose{
+public:
+    VectorXd q = VectorXd::Zero(st_params::q_size);
+    VectorXd dq = VectorXd::Zero(st_params::q_size);
+    VectorXd ddq = VectorXd::Zero(st_params::q_size);
+};
 
 /**
  * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.
