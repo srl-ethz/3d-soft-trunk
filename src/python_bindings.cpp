@@ -23,9 +23,9 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     cc.def(py::init<CurvatureCalculator::SensorType, std::string>())
     .def("get_curvature", [](CurvatureCalculator& cc){
         // return as tuple rather than by reference
-        VectorXd q; VectorXd dq; VectorXd ddq;
-        cc.get_curvature(q, dq, ddq);
-        return std::make_tuple(q, dq, ddq);
+        Pose pose;
+        cc.get_curvature(pose);
+        return std::make_tuple(pose.q, pose.dq, pose.ddq);
     })
     .def("get_frame", [](CurvatureCalculator& cc, int i){
         Eigen::Matrix<double, 4, 4> H = Eigen::Matrix<double, 4, 4>::Identity();
