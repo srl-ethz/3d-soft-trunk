@@ -8,16 +8,15 @@
  * @brief run a PID controller
  */
 int main(){
-    VectorXd q_ref = VectorXd::Zero(st_params::num_segments * 2);
-    VectorXd dq_ref = VectorXd::Zero(st_params::num_segments * 2);
-    VectorXd ddq_ref = VectorXd::Zero(st_params::num_segments * 2);
+
+    Pose pose_ref;
+
     for (int i = 0; i < st_params::num_segments; i++) {
-        q_ref(2 * i) = 0.15;
-        q_ref(2 * i + 1) = 0.15;
+        pose_ref.q(2 * i) = 0.15;
+        pose_ref.q(2 * i + 1) = 0.15;
     }
     ControllerPCC cpcc{CurvatureCalculator::SensorType::qualisys};
-    cpcc.set_ref(q_ref, dq_ref, ddq_ref);
-
+    cpcc.set_ref(pose_ref);
     srl::Rate r{5};
     VectorXd q, dq, p_vectorized;
     while (true) {
