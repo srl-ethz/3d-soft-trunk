@@ -10,8 +10,7 @@ int sinusoid(double phase) { return 300 + 300 * sin(phase); }
  */
 int main(){
     SoftTrunkModel stm = SoftTrunkModel();
-    VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
-    VectorXd dq = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
+    Pose pose;
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
     // read and save the csv data
@@ -43,10 +42,7 @@ int main(){
         log_file << fmt::format(", x_{}, y_{}, z_{}", i, i, i);
     log_file << "\n";
     
-    VectorXd ddq;
-    VectorXd q_mid;
-    VectorXd dq_mid;
-    VectorXd ddq_mid;
+    Pose pose_mid;
 
     double dt = 0.00007;
     srl::Rate r{1./dt};
@@ -65,7 +61,7 @@ int main(){
         p *= 100.; // mbar to Pa
 
         /// run the simulation
-        stm.updateState(q, dq);
+        stm.updateState(pose);
 
         log_file << t;
         for (int i=0; i < st_params::num_segments; i++){
@@ -74,15 +70,15 @@ int main(){
         }
         log_file << "\n";
 
-        ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * q  -stm.D * dq);
+        pose.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * pose.q  -stm.D * pose.dq);
 
-        dq_mid = dq + ddq * dt / 2;
-        q_mid = q + dq * dt / 2;
-        stm.updateState(q_mid, dq_mid);
-        ddq_mid = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * q_mid  -stm.D * dq_mid);
+        pose_mid.dq = pose.dq + pose.ddq * dt / 2;
+        pose_mid.q = pose.q + pose.dq * dt / 2;
+        stm.updateState(pose_mid);
+        pose_mid.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * pose_mid.q  -stm.D * pose_mid.dq);
         
-        dq = dq + ddq_mid * dt;
-        q = q + dq_mid * dt;
+        pose.dq = pose.dq + pose_mid.ddq * dt;
+        pose.q = pose.q + pose_mid.dq * dt;
 
         r.sleep();
         }
