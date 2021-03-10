@@ -30,14 +30,14 @@ public:
     /**
      * @brief simulate a control step
      * @param p pressure input vector, size 3*st_params::num_segments. viewed as constant for the input time
-     * @param pose pose which is forward-simulated
+     * @param state state which is forward-simulated
      * returns true if simulation succeeds
      */
-    bool simulate(const VectorXd &p, Pose &pose);
+    bool simulate(const VectorXd &p, srl::State &state);
 
 
     /**
-     * @brief starts logging pose and time data for every control step
+     * @brief starts logging state and time data for every control step
      * @param filename filename of output csv, placed in 3d-soft-trunk directory. {filename}.csv
      */
     void start_log(std::string filename);
@@ -51,19 +51,19 @@ private:
      * @param simtime time over which is integrated
      * returns true if integration delivers useable value
      */
-    bool Beeman(const VectorXd &p, Pose &pose);
+    bool Beeman(const VectorXd &p, srl::State &state);
 
     /**
      * @brief numerically forward-integrate using euler-richardson approximation
      * @param simtime time over which is integrated
      * returns true if integration delivers useable value
      */
-    bool Euler(const VectorXd &p, Pose &pose);
+    bool Euler(const VectorXd &p, srl::State &state);
 
 
 
-    Pose pose_prev; //for Beeman
-    Pose pose_mid;  //For Euler-Richardson
+    srl::State state_prev; //for Beeman
+    srl::State state_mid;  //For Euler-Richardson
 
 
     SoftTrunkModel &stm;
