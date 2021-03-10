@@ -8,7 +8,7 @@ Simulator::Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const dou
 
 
 
-bool Simulator::simulate(const VectorXd &p, Pose &pose){
+bool Simulator::simulate(const VectorXd &p, srl::State &state){
 
     
 
@@ -19,15 +19,15 @@ bool Simulator::simulate(const VectorXd &p, Pose &pose){
             log_file << fmt::format(", {}, {}, {}", x_tip(0), x_tip(1), x_tip(2));
         }
         for (int i=0; i < st_params::q_size; i++)               //log q
-            log_file << fmt::format(", {}", pose.q(i));
+            log_file << fmt::format(", {}", state.q(i));
         log_file << "\n";
     }
 
     for (int i=0; i < steps; i++){
         if (sim_type == Simulator::SimType::euler) {
-            if (!Euler(p, pose)) return false;
+            if (!Euler(p, state)) return false;
         } else if (sim_type == Simulator::SimType::beeman) {
-            if(!Beeman(p, pose)) return false;
+            if(!Beeman(p, state)) return false;
         }
     }
 
@@ -38,37 +38,37 @@ bool Simulator::simulate(const VectorXd &p, Pose &pose){
 
 
 
-bool Simulator::Euler(const VectorXd &p, Pose &pose){
-    stm.updateState(pose);
+bool Simulator::Euler(const VectorXd &p, State &state){
+    stm.updateState(state);
 
-    pose.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * pose.q  -stm.D * pose.dq); //get ddq
+    state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq); //get ddq
 
-    pose_mid.dq = pose.dq + pose.ddq * simtime / 2; //half step forward approximation
-    pose_mid.q = pose.q + pose.dq * simtime / 2;
+    state_mid.dq = state.dq + state.ddq * simtime / 2; //half step forward approximation
+    state_mid.q = state.q + state.dq * simtime / 2;
 
-    stm.updateState(pose_mid);
-    pose_mid.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * pose_mid.q  -stm.D * pose_mid.dq); 
+    stm.updateState(state_mid);
+    state_mid.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state_mid.q  -stm.D * state_mid.dq); 
        
-    pose.dq = pose.dq + pose_mid.dq * simtime;
-    pose.q = pose.q + pose_mid.dq * simtime;
+    state.dq = state.dq + state_mid.dq * simtime;
+    state.q = state.q + state_mid.dq * simtime;
 
     t+=simtime;
-    return !(abs(pose.ddq[0])>pow(10.0,10.0) or abs(pose.dq[0])>pow(10.0,10.0) or abs(pose.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
+    return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
 }
 
 
-bool Simulator::Beeman(const VectorXd &p, Pose &pose){
-    stm.updateState(pose);
+bool Simulator::Beeman(const VectorXd &p, srl::State &state){
+    stm.updateState(state);
 
-    pose.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * pose.q  -stm.D * pose.dq);
+    state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq);
 
-    pose.q = pose.q + pose.dq*simtime + (simtime*simtime*(4*pose.ddq - pose_prev.ddq) / 6);
-    pose.dq = pose.dq + simtime*(2*(2*pose.ddq - pose_prev.ddq) + 5*pose.ddq - pose_prev.ddq)/6;  //2*ddq(n) - ddq(n-1) is approximately ddq(n+1)
+    state.q = state.q + state.dq*simtime + (simtime*simtime*(4*state.ddq - state_prev.ddq) / 6);
+    state.dq = state.dq + simtime*(2*(2*state.ddq - state_prev.ddq) + 5*state.ddq - state_prev.ddq)/6;  //2*ddq(n) - ddq(n-1) is approximately ddq(n+1)
 
-    pose_prev.ddq = pose.ddq;
+    state_prev.ddq = state.ddq;
 
     t+=simtime;
-    return !(abs(pose.ddq[0])>pow(10.0,10.0) or abs(pose.dq[0])>pow(10.0,10.0) or abs(pose.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
+    return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
 }
 
 
