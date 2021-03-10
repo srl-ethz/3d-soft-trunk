@@ -135,7 +135,7 @@ void ControllerPCC::control_loop() {
 
         // calculate output
         if (st_params::controller == ControllerType::dynamic)
-            f = stm->g + stm->C * dq_ref + stm->B * ddq_ref +
+            f = stm->g + stm->c * dq_ref + stm->B * ddq_ref +
                 stm->K.asDiagonal() * q_ref + K_p.asDiagonal() * (q_ref - q) + stm->D.asDiagonal() * dq_ref +
                 K_d.asDiagonal() * (dq_ref - dq);
         else if (st_params::controller == ControllerType::pid) {
