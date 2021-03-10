@@ -47,7 +47,7 @@ public:
 
     ~CurvatureCalculator();
 
-    void get_curvature(Pose &pose);
+    void get_curvature(srl::State &pose);
 
     unsigned long long int get_timestamp(); /** @brief get timestamp (in microsecs) from Qualisys  */
 
@@ -94,7 +94,7 @@ private:
     std::mutex mtx;
 
     /** @brief PCC configuration of each segment of soft arm. depends on st_params::parametrization */
-    Pose pose;
+    srl::State state;
     
     void setupQualisys(std::string qtm_address);
 

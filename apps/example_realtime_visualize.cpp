@@ -18,15 +18,15 @@ int main() {
 
     CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
     AugmentedRigidArm ara{};
-    Pose pose;
+    srl::State state;
     Eigen::Transform< double, 3, Eigen::Affine > H_tip_groundtruth; // pose of tip, relative to base (ground truth data from qualisys)
 
     unsigned long long int timestamp; // microsecond timestamp from Qualisys data
     srl::Rate r{30};
     while (true) {
-        cc.get_curvature(pose);
+        cc.get_curvature(state);
         timestamp = cc.get_timestamp();
-        ara.update(pose);
+        ara.update(state);
 
         // log tip position data
         log_file << fmt::format("{}", timestamp);
@@ -35,7 +35,7 @@ int main() {
         log_file << fmt::format(", {}, {}, {}", H_tip_groundtruth.translation()(0), H_tip_groundtruth.translation()(1), H_tip_groundtruth.translation()(2));
         log_file << fmt::format(", {}\n", (ara.get_H_tip().translation() - H_tip_groundtruth.translation()).norm());
 
-        fmt::print("----------\n{}\n", pose.q.transpose());
+        fmt::print("----------\n{}\n", state.q.transpose());
         r.sleep();
     }
     return 1;

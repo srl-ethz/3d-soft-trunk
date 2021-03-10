@@ -17,11 +17,11 @@
  * The URDF model of the robot must be created first, which is currently done by SoftTrunkModel, so running this first will result in an error.
  */
 
-void q_update(double seconds, VectorXd& q) {
+void q_update(double seconds, srl::State& state) {
     // generate nice-looking poses
     for (int i = 0; i < st_params::num_segments * st_params::sections_per_segment ; i++) {
-        q(2 * i + 0) = 0.8 * sin(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
-        q(2 * i + 1) = 0.4 * cos(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+        state.q(2 * i + 0) = 0.8 * sin(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+        state.q(2 * i + 1) = 0.4 * cos(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
 
     }
 }
@@ -30,15 +30,15 @@ int main() {
     AugmentedRigidArm ara{};
 
     // calculate the state of arm at a particular value of q and print out the various parameters
-    Pose pose;
+    srl::State state;
 
     double delta_t = 0.03;
     srl::Rate r{1. / delta_t};
     for (double t = 0; t<10; t+=delta_t) {
-        q_update(t, pose.q);
-        ara.update(pose);
+        q_update(t, state);
+        ara.update(state);
         fmt::print("------------\n");
-        fmt::print("q:{}\n", pose.q.transpose());
+        fmt::print("q:{}\n", state.q.transpose());
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
         fmt::print("B:{}\n", ara.B);
         fmt::print("g:{}\n", ara.g);

@@ -38,9 +38,9 @@ SoftTrunkModel::SoftTrunkModel()
 
 }
 
-void SoftTrunkModel::updateState(const Pose &pose)
+void SoftTrunkModel::updateState(const srl::State &state)
 {
-    ara->update(pose);
+    ara->update(state);
     B = ara->B;
     c = ara->c;
     g = ara->g;
