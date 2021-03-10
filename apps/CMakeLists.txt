@@ -19,6 +19,3 @@ target_link_libraries(example_Simulator SoftTrunkModel Simulator)
 
 add_executable(experiment_pid experiment_pid.cpp)
 target_link_libraries(experiment_pid ControllerPCC)
-
-add_executable(naive_simulation naive_simulation.cpp)
-target_link_libraries(naive_simulation SoftTrunkModel)
