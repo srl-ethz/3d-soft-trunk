@@ -8,7 +8,7 @@ int main(){
     SoftTrunkModel stm{};
     SerialInterface si{"/dev/ttyACM0", 38400};
 
-    Pose pose;
+    srl::State state;
     std::vector<float> bendLab_data;
     VectorXd bendLab_offset = VectorXd::Zero(4); // use the first N measurements as offset
     int N = 10;
@@ -32,10 +32,10 @@ int main(){
             // copy data from bendlab to Soft Trunk pose
             // divide curvauture equally across PCC sections
             int segment_id = i / st_params::sections_per_segment; // switch order
-            pose.q(2*i) = (bendLab_data[2*segment_id] - bendLab_offset[2*segment_id]) * PI / 180. / st_params::sections_per_segment;
-            pose.q(2*i+1) = (bendLab_data[2*segment_id+1] - bendLab_offset[2*segment_id+1]) * PI / 180. / st_params::sections_per_segment;
+            state.q(2*i) = (bendLab_data[2*segment_id] - bendLab_offset[2*segment_id]) * PI / 180. / st_params::sections_per_segment;
+            state.q(2*i+1) = (bendLab_data[2*segment_id+1] - bendLab_offset[2*segment_id+1]) * PI / 180. / st_params::sections_per_segment;
         }
-        stm.updateState(pose);
+        stm.updateState(state);
         r.sleep();
     }
     

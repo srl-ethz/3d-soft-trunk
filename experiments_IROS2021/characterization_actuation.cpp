@@ -92,15 +92,6 @@ int physicalRobot() {
     return 1;
 }
 
-int simulatedRobot(){
-    SoftTrunkModel stm{};
-
-    Pose pose;
-    Pose pose_mid;
-
-    double dt = 0.0002;
-}
-
 
 int main(){
     physicalRobot();
