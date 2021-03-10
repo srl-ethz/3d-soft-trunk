@@ -125,9 +125,9 @@ void ControllerPCC::control_loop() {
 
         // calculate output
         if (st_params::controller == ControllerType::dynamic)
-            f = stm->g + stm->C * pose_ref.dq + stm->B * pose_ref.ddq +
-                stm->K.asDiagonal() * pose_ref.q + K_p.asDiagonal() * (pose_ref.q - pose.q) + stm->D.asDiagonal() * pose_ref.dq +
-                K_d.asDiagonal() * (pose_ref.dq - pose.dq);
+            f = stm->g + stm->c * dq_ref + stm->B * ddq_ref +
+                stm->K.asDiagonal() * q_ref + K_p.asDiagonal() * (q_ref - q) + stm->D.asDiagonal() * dq_ref +
+                K_d.asDiagonal() * (dq_ref - dq);
         else if (st_params::controller == ControllerType::pid) {
             for (int i = 0; i < 2 * st_params::num_segments; ++i)
                 f[i] = miniPIDs[i].getOutput(pose.q[i], pose_ref.q[i]);
