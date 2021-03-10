@@ -18,27 +18,27 @@ public:
     
     /**
      * @brief construct the simulator
-     * @param softtrunk passed SoftTrunkModel, the Simulator uses this to calculate approximations
-     * @param pose_passed initial pose given to the Simulator, the variable passed to the Simulator is updated as reference, no returning needed
+     * @param softtrunk passed SoftTrunkModel, the Simulator uses this to calculate approximation
      * @param sim_type type of approximation to use, currently either the Euler-Richardson (SimType::euler) or the Beeman (SimType::beeman) approximation
+     * @param dt time of control input step, p is regarded as constant for this time
+     * @param steps resolution of integration, higher value is more computationally expensive but delivers more accurate results
      */
 
-    Simulator(SoftTrunkModel &softtrunk, Pose &pose_passed, Simulator::SimType sim_type);
+    Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const double &dt, const int &steps);
 
 
     /**
      * @brief simulate a control step
      * @param p pressure input vector, size 3*st_params::num_segments. viewed as constant for the input time
-     * @param dt control step time
-     * @param steps resolution of simulation within the step, simulation will perform this amount of numerical integrations. minimum 1
+     * @param pose pose which is forward-simulated
+     * returns true if simulation succeeds
      */
-    bool simulate(const VectorXd &p, const double &dt, const int &steps);
+    bool simulate(const VectorXd &p, Pose &pose);
 
 
     /**
      * @brief starts logging pose and time data for every control step
      * @param filename filename of output csv, placed in 3d-soft-trunk directory. {filename}.csv
-     * 
      */
     void start_log(std::string filename);
 
@@ -49,23 +49,28 @@ private:
     /**
      * @brief numerically forward-integrate using beeman approximation
      * @param simtime time over which is integrated
+     * returns true if integration delivers useable value
      */
-    bool Beeman(const VectorXd &p, const double &simtime);
+    bool Beeman(const VectorXd &p, Pose &pose);
 
     /**
      * @brief numerically forward-integrate using euler-richardson approximation
      * @param simtime time over which is integrated
+     * returns true if integration delivers useable value
      */
-    bool Euler(const VectorXd &p, const double &simtime);
+    bool Euler(const VectorXd &p, Pose &pose);
 
 
 
-    Pose &pose;
     Pose pose_prev; //for Beeman
     Pose pose_mid;  //For Euler-Richardson
 
+
     SoftTrunkModel &stm;
     SimType sim_type;
+    const int &steps;
+    const double &dt;
+    const double simtime;
     double t;
 
     std::fstream log_file;
