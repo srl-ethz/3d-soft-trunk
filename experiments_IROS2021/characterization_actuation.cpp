@@ -66,7 +66,7 @@ int physicalRobot() {
     srl::sleep(1);
     unsigned long long int timestamp = cc.get_timestamp();
     fmt::print("time: {}\n", timestamp/1000);
-    vc.syncTimeStamp(timestamp/1000);
+    //vc.syncTimeStamp(timestamp/1000); //commented out temporarily to allow to build without experimental mobilerack branch
 
     for (int i = 0; i < 6; i++)
     {
