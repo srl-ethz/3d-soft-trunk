@@ -24,10 +24,10 @@ public:
 
     /** @brief set the reference pose (trajectory) of the arm
      */
-    void set_ref(const Pose &pose_ref);
+    void set_ref(const srl::State &pose_ref);
 
     /** @brief get current kinematic parameters of the arm */
-    void get_kinematic(Pose &pose);
+    void get_kinematic(srl::State &pose);
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
 
@@ -79,8 +79,8 @@ private:
     void control_loop();
 
     // arm configuration
-    Pose pose;
-    Pose pose_ref;
+    srl::State state;
+    srl::State state_ref;
     VectorXd q_all_ref;
 
 

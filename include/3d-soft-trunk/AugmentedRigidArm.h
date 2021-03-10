@@ -82,7 +82,7 @@ public:
     AugmentedRigidArm();
 
     /** @brief update the member variables based on current PCC value */
-    void update(const Pose &pose);
+    void update(const srl::State &state);
 
     /** @brief simulate the rigid body model in Drake. The prismatic joints are broken... */
     void simulate();

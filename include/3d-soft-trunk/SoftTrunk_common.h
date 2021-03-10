@@ -47,12 +47,22 @@ namespace st_params {
     const ControllerType controller = ControllerType::pid;
 }
 
-class Pose{
-public:
-    VectorXd q = VectorXd::Zero(st_params::q_size);
-    VectorXd dq = VectorXd::Zero(st_params::q_size);
-    VectorXd ddq = VectorXd::Zero(st_params::q_size);
-};
+namespace srl{
+    /**
+     * @brief represents the position \f$q\f$, velocity \f$\dot q\f$, and acceleration \f$\ddot q\f$ for the soft arm.
+     */
+    class State{
+    public:
+        Matrix<double, st_params::q_size, 1> q;
+        Matrix<double, st_params::q_size, 1> dq;
+        Matrix<double, st_params::q_size, 1> ddq;
+        State(){
+            q.setZero();
+            dq.setZero();
+            ddq.setZero();
+        }
+    };
+}
 
 /**
  * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.

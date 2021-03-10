@@ -64,7 +64,6 @@ int main(int argc, char** argv){
     rot_world_to_st << cos(angle), 0 , sin(angle) , 0, 1, 0, -sin(angle), 0, cos(angle);
 
     VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
-    VectorXd dq = VectorXd::Zero(q.size());
     VectorXd p = VectorXd::Zero(6);
     VectorXd s = VectorXd::Zero(4);
 
@@ -133,7 +132,10 @@ int main(int argc, char** argv){
         q_initial(2*i) = bendLab_initial(2*segment_i) / st_params::sections_per_segment;
         q_initial(2*i+1) = bendLab_initial(2*segment_i+1) / st_params::sections_per_segment;
     }
-    stm.updateState(q_initial, dq);
+    // use a somewhat hacky way to update the state, not fully integrated with the new srl::State, but it's just for now.
+    srl::State state;
+    state.q = q_initial;
+    stm.updateState(state);
     VectorXd e0 =stm.g - stm.A*p;
     MatrixXd Q0 = stm.K.transpose()*stm.K; 
     Q0 *= 2;
@@ -145,7 +147,8 @@ int main(int argc, char** argv){
     result = solver.Solve(prog);
     VectorXd x_result = result.GetSolution(x0);
     fmt::print("result: {}\nsensor: {}\tforce: {}\n", result.is_success(), bendLab_initial.transpose(), x_result.transpose());
-    stm.updateState(x_result, dq);
+    state.q = x_result;
+    stm.updateState(state);
 
     fmt::print("updated initial position:\n");
 
@@ -169,7 +172,8 @@ int main(int argc, char** argv){
             q(2*i) = s(2*segment_id) / st_params::sections_per_segment;
             q(2*i+1) = s(2*segment_id+1) / st_params::sections_per_segment;
         }
-        stm.updateState(q, dq);
+        state.q = q;
+        stm.updateState(state);
 
         VectorXd e = stm.g - stm.A*p + f_offset;
 
@@ -191,7 +195,8 @@ int main(int argc, char** argv){
         marker.points[1].x = local_f_est(0)/1.; marker.points[1].y = local_f_est(1)/1.; marker.points[1].z = local_f_est(2)/1.;
         marker_pub.publish(marker);
 
-        stm.updateState(x_result.segment(0,12), dq);
+        state.q = x_result.segment(0,12);
+        stm.updateState(state);
         for (int i = 0; i < joint_state.name.size(); i++)
         {
             joint_state.position[i] = stm.ara->xi_(i);
