@@ -38,7 +38,7 @@ bool Simulator::simulate(const VectorXd &p, srl::State &state){
 
 
 
-bool Simulator::Euler(const VectorXd &p, State &state){
+bool Simulator::Euler(const VectorXd &p, stl::State &state){
     stm.updateState(state);
 
     state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq); //get ddq
