@@ -92,20 +92,6 @@ int physicalRobot() {
     return 1;
 }
 
-int simulatedRobot(){
-    SoftTrunkModel stm{};
-
-    VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
-    VectorXd dq = VectorXd::Zero(q.size());
-
-    VectorXd ddq;
-    VectorXd q_mid;
-    VectorXd dq_mid;
-    VectorXd ddq_mid;
-
-    double dt = 0.0002;
-}
-
 
 int main(){
     physicalRobot();

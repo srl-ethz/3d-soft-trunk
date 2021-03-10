@@ -349,16 +349,16 @@ void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq)
     //    dJm = (Jxi_delta - Jxi_current) / epsilon;
 }
 
-void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
+void AugmentedRigidArm::update(const srl::State &state)
 {
-    assert(q.size() == 2 * st_params::num_segments * st_params::sections_per_segment);
-    assert(dq.size() == q.size());
+    assert(state.q.size() == 2 * st_params::num_segments * st_params::sections_per_segment);
+    assert(state.dq.size() == state.q.size());
 
     // calculate rigid model pose
-    calculate_m(map_normal2expanded * q);
+    calculate_m(map_normal2expanded * state.q);
     // calculate Jacobian
-    update_Jm(map_normal2expanded * q);
-    dxi_ = Jm_ * map_normal2expanded * dq;
+    update_Jm(map_normal2expanded * state.q);
+    dxi_ = Jm_ * map_normal2expanded * state.dq;
     // calculate dynamic parameters
     update_drake_model();
     // map to q space
@@ -366,7 +366,7 @@ void AugmentedRigidArm::update(const VectorXd &q, const VectorXd &dq)
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
     J = Jxi_ * Jm_ * map_normal2expanded;
-    //    update_dJm(q, dq);
+    //    update_dJm(state.q,state.dq);
     //
 }
 

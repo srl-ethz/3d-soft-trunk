@@ -3,9 +3,12 @@
 int main(){
     SoftTrunkModel stm = SoftTrunkModel();
     // currently there's some errors when soft trunk is completely straight, so create some offset
-    VectorXd q = 0.01* VectorXd::Ones(2*st_params::num_segments*st_params::sections_per_segment);
-    VectorXd dq = 0.01 * VectorXd::Ones(2*st_params::num_segments*st_params::sections_per_segment);
-    stm.updateState(q, dq);
+    srl::State state;
+    state.q.setOnes();
+    state.q *= 0.01;
+    state.dq.setOnes();
+    state.dq *= 0.01;
+    stm.updateState(state);
     fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
     return 1;
 }

@@ -32,12 +32,8 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
     K_d = VectorXd::Zero(2*st_params::num_segments);
     K_d << 1, 1, 1, 1, 1, 1;
 
-    q = VectorXd::Zero(2 * st_params::num_segments);
-    dq = VectorXd::Zero(2 * st_params::num_segments);
-    ddq = VectorXd::Zero(2 * st_params::num_segments);
-    q_ref = VectorXd::Zero(2 * st_params::num_segments);
-    dq_ref = VectorXd::Zero(2 * st_params::num_segments);
-    ddq_ref = VectorXd::Zero(2 * st_params::num_segments);
+    srl::State state;
+    srl::State state_ref;
 
     p_vectorized = VectorXd::Zero(2 * st_params::num_segments);
 
@@ -53,23 +49,18 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
     control_thread = std::thread(&ControllerPCC::control_loop, this);
 }
 
-void ControllerPCC::set_ref(const VectorXd &q_ref,
-                            const VectorXd &dq_ref,
-                            const VectorXd &ddq_ref) {
+void ControllerPCC::set_ref(const srl::State &state_ref) {
     std::lock_guard<std::mutex> lock(mtx);
-    assert(q_ref.size() == st_params::num_segments * 2);
-    assert(dq_ref.size() == st_params::num_segments * 2);
+    assert(state_ref.q.size() == st_params::num_segments * 2);
+    assert(state_ref.dq.size() == st_params::num_segments * 2);
     // assign to member variables
-    this->q_ref = q_ref;
-    this->dq_ref = dq_ref;
-    this->ddq_ref = ddq_ref;
+    this->state_ref = state_ref;
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }
-void ControllerPCC::get_kinematic(VectorXd &q, VectorXd dq) {
+void ControllerPCC::get_kinematic(srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
-    q = this->q;
-    dq = this->dq;
+    state = this->state;
 }
 void ControllerPCC::get_pressure(VectorXd& p_vectorized){
     std::lock_guard<std::mutex> lock(mtx);
@@ -121,26 +112,25 @@ void ControllerPCC::control_loop() {
         if (!is_initial_ref_received)
             continue;
 
-        // first get the current pose
+        // first get the current state
         if (use_feedforward or simulate) {
             // don't use the actual values, since it's doing feedforward control.
-            q = q_ref;
-            dq = dq_ref;
+            state = state_ref;
         } else {
             // get the current configuration from CurvatureCalculator.
-            cc->get_curvature(q, dq, ddq);
+            cc->get_curvature(state);
         }
 
-        stm->updateState(q, dq);
+        stm->updateState(state);
 
         // calculate output
         if (st_params::controller == ControllerType::dynamic)
-            f = stm->g + stm->c * dq_ref + stm->B * ddq_ref +
-                stm->K.asDiagonal() * q_ref + K_p.asDiagonal() * (q_ref - q) + stm->D.asDiagonal() * dq_ref +
-                K_d.asDiagonal() * (dq_ref - dq);
+            f = stm->g + stm->c + stm->B * state_ref.ddq +
+                stm->K.asDiagonal() * state_ref.q + K_p.asDiagonal() * (state_ref.q - state.q) + stm->D.asDiagonal() * state_ref.dq +
+                K_d.asDiagonal() * (state_ref.dq - state.dq);
         else if (st_params::controller == ControllerType::pid) {
             for (int i = 0; i < 2 * st_params::num_segments; ++i)
-                f[i] = miniPIDs[i].getOutput(q[i], q_ref[i]);
+                f[i] = miniPIDs[i].getOutput(state.q[i], state_ref.q[i]);
         }
 
         // actuate robot

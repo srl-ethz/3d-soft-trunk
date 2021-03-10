@@ -11,6 +11,7 @@
 #include <MiniPID.h>
 #include <mutex>
 
+
 /**
  * @brief Implements the PCC controller as described in paper.
  * @details It receives pointers to instances of AugmentedRigidArm and SoftArm, so it can access instances of those classes to retrieve information about them that can be used in the Manager class to control the Soft Trunk.
@@ -23,15 +24,14 @@ public:
 
     /** @brief set the reference pose (trajectory) of the arm
      */
-    void set_ref(
-            const VectorXd &q_ref,
-            const VectorXd &dq_ref,
-            const VectorXd &ddq_ref);
+    void set_ref(const srl::State &pose_ref);
 
     /** @brief get current kinematic parameters of the arm */
-    void get_kinematic(VectorXd &q, VectorXd dq);
+    void get_kinematic(srl::State &pose);
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
+
+
 
 private:
     std::unique_ptr<SoftTrunkModel> stm;
@@ -79,12 +79,10 @@ private:
     void control_loop();
 
     // arm configuration
-    VectorXd q;
-    VectorXd dq;
-    VectorXd ddq;
-    VectorXd q_ref;
-    VectorXd dq_ref;
-    VectorXd ddq_ref;
+    srl::State state;
+    srl::State state_ref;
+    VectorXd q_all_ref;
+
 
     VectorXd p_vectorized; /** @brief vector that expresses net pressure for X&Y directions, for each segment */
 

@@ -1,13 +1,14 @@
-from softtrunk_pybind_module import AugmentedRigidArm
+from softtrunk_pybind_module import AugmentedRigidArm, State
 from time import sleep
 
 ara = AugmentedRigidArm()
-q = [0] * 6
-dq = [0] * 6
+state = State()
+q = state.q
 
 for i in range(10):
     q[0] += 0.1
-    ara.update(q, dq)
+    state.q = q
+    ara.update(state)
     print(f"first segment pose is :{ara.get_H(0)}")
     print(f"tip pose is :{ara.get_H_tip()}")
     sleep(0.5)

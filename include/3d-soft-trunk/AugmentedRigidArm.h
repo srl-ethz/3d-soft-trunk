@@ -51,7 +51,7 @@ private:
 
     void update_Jm(VectorXd q_);
 
-    void update_dJm(const VectorXd &q_, const VectorXd &dq_);
+    void update_dJm(const VectorXd& q_, const VectorXd &dq_);
 
     // these internally used values have extra PCC section at end of each segment, whose values are always set to 0.
 
@@ -82,7 +82,7 @@ public:
     AugmentedRigidArm();
 
     /** @brief update the member variables based on current PCC value */
-    void update(const VectorXd &q, const VectorXd &dq);
+    void update(const srl::State &state);
 
     /** @brief simulate the rigid body model in Drake. The prismatic joints are broken... */
     void simulate();
