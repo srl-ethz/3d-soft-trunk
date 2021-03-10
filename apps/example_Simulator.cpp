@@ -9,7 +9,7 @@ int main(){
     SoftTrunkModel stm = SoftTrunkModel();
     srl::State state;
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
-    double dt = 0.0001;
+    double control_step = 0.0001;
 
     for (int i = 0; i < st_params::num_segments; i++) {
         // set to have about the same curvature as a whole regardless of scale
@@ -21,9 +21,9 @@ int main(){
             
     }
 
-    Simulator sim = Simulator(stm, Simulator::SimType::beeman, dt, 10);
+    Simulator sim = Simulator(stm, Simulator::SimType::beeman, control_step, 10);
     sim.start_log("example_filename");
-    for (double t=0; t < 0.5; t+=dt){
+    for (double t=0; t < 0.5; t+=control_step){
         if (!sim.simulate(p, state)){
             std::cout << "Sim crashed! Returning...\n";
             break;

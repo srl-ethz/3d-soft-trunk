@@ -20,18 +20,18 @@ public:
      * @brief construct the simulator
      * @param softtrunk passed SoftTrunkModel, the Simulator uses this to calculate approximation
      * @param sim_type type of approximation to use, currently either the Euler-Richardson (SimType::euler) or the Beeman (SimType::beeman) approximation
-     * @param dt time of control input step, p is regarded as constant for this time
-     * @param steps resolution of integration, higher value is more computationally expensive but delivers more accurate results
+     * @param control_step length of control input step in seconds, pressure input p is regarded as constant for this time
+     * @param steps resolution of integration, higher value is more computationally expensive but delivers more accurate results. Simulation timestep is control_step/steps.
      */
 
-    Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const double &dt, const int &steps);
+    Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const double &control_step, const int &steps);
 
 
     /**
      * @brief simulate a control step
      * @param p pressure input vector, size 3*st_params::num_segments. viewed as constant for the input time
      * @param state state which is forward-simulated
-     * returns true if simulation succeeds
+     * @returns true if simulation succeeds
      */
     bool simulate(const VectorXd &p, srl::State &state);
 
@@ -48,15 +48,13 @@ public:
 private:
     /**
      * @brief numerically forward-integrate using beeman approximation
-     * @param simtime time over which is integrated
-     * returns true if integration delivers useable value
+     * @returns true if integration delivers useable value
      */
     bool Beeman(const VectorXd &p, srl::State &state);
 
     /**
      * @brief numerically forward-integrate using euler-richardson approximation
-     * @param simtime time over which is integrated
-     * returns true if integration delivers useable value
+     * @returns true if integration delivers useable value
      */
     bool Euler(const VectorXd &p, srl::State &state);
 
@@ -69,8 +67,8 @@ private:
     SoftTrunkModel &stm;
     SimType sim_type;
     const int &steps;
-    const double &dt;
-    const double simtime;
+    const double &control_step;
+    const double sim_step;
     double t;
 
     std::fstream log_file;

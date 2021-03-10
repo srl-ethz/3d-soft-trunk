@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/Simulator.h"
 
 
-Simulator::Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const double &dt, const int &steps) : stm(stm), sim_type(sim_type), steps(steps), dt(dt), simtime(dt/steps){
+Simulator::Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const double &control_step, const int &steps) : stm(stm), sim_type(sim_type), steps(steps), control_step(control_step), sim_step(control_step/steps){
     t = 0;
     assert(steps>=1);
 }
@@ -43,16 +43,16 @@ bool Simulator::Euler(const VectorXd &p, srl::State &state){
 
     state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq); //get ddq
 
-    state_mid.dq = state.dq + state.ddq * simtime / 2; //half step forward approximation
-    state_mid.q = state.q + state.dq * simtime / 2;
+    state_mid.dq = state.dq + state.ddq * sim_step / 2; //half step forward approximation
+    state_mid.q = state.q + state.dq * sim_step / 2;
 
     stm.updateState(state_mid);
     state_mid.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state_mid.q  -stm.D * state_mid.dq); 
        
-    state.dq = state.dq + state_mid.dq * simtime;
-    state.q = state.q + state_mid.dq * simtime;
+    state.dq = state.dq + state_mid.dq * sim_step;
+    state.q = state.q + state_mid.dq * sim_step;
 
-    t+=simtime;
+    t+=sim_step;
     return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
 }
 
@@ -62,12 +62,12 @@ bool Simulator::Beeman(const VectorXd &p, srl::State &state){
 
     state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq);
 
-    state.q = state.q + state.dq*simtime + (simtime*simtime*(4*state.ddq - state_prev.ddq) / 6);
-    state.dq = state.dq + simtime*(2*(2*state.ddq - state_prev.ddq) + 5*state.ddq - state_prev.ddq)/6;  //2*ddq(n) - ddq(n-1) is approximately ddq(n+1)
+    state.q = state.q + state.dq*sim_step + (sim_step*sim_step*(4*state.ddq - state_prev.ddq) / 6);
+    state.dq = state.dq + sim_step*(2*(2*state.ddq - state_prev.ddq) + 5*state.ddq - state_prev.ddq)/6;  //2*ddq(n) - ddq(n-1) is approximately ddq(n+1)
 
     state_prev.ddq = state.ddq;
 
-    t+=simtime;
+    t+=sim_step;
     return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
 }
 
