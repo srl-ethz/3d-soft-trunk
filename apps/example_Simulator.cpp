@@ -1,12 +1,15 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
 #include <3d-soft-trunk/Simulator.h>
 
+//todo: write a quick file which iterates to determine after which dt the sim starts crashing
+
 int main(){
 
 
     SoftTrunkModel stm = SoftTrunkModel();
     Pose pose;
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
+    double dt = 0.0001;
 
     for (int i = 0; i < st_params::num_segments; i++) {
         // set to have about the same curvature as a whole regardless of scale
@@ -18,9 +21,14 @@ int main(){
             
     }
 
-    Simulator sim = Simulator(stm, pose, Simulator::SimType::beeman);
+    Simulator sim = Simulator(stm, Simulator::SimType::beeman, dt, 10);
     sim.start_log("example_filename");
-    sim.simulate(p, 0.0005, 10);
+    for (double t=0; t < 0.5; t+=dt){
+        if (!sim.simulate(p,pose)){
+            std::cout << "Sim crashed! Returning...\n";
+            break;
+        }
+    }
     sim.end_log();
     
 
