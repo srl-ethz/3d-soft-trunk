@@ -12,6 +12,9 @@ target_link_libraries(example_realtime_visualize AugmentedRigidArm CurvatureCalc
 add_executable(example_SoftTrunkModel example_SoftTrunkModel.cpp)
 target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
 
+add_executable(example_Simulator example_Simulator.cpp)
+target_link_libraries(example_Simulator SoftTrunkModel Simulator)
+
 ### other programs (experiments etc.)
 
 add_executable(experiment_pid experiment_pid.cpp)
