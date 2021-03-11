@@ -5,7 +5,7 @@
   add RobotModel and set Fixed Frame to base_link
   -->
     <!-- Generate/Load robot description file -->
-    <param name="robot_description" command="cat ./3segment_4chamber.urdf" />
+    <param name="robot_description" command="cat ./2segment.urdf" />
 
     <!-- Robot state publisher subscribe to joint states and publish "tf" transforms -->
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>

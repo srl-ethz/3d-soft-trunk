@@ -12,13 +12,13 @@
 
 int main() {
     CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
-    VectorXd q, dq, ddq;
+    srl::State state;
     unsigned long long int timestamp;
     srl::Rate r{5};
     while (true) {
-        cc.get_curvature(q, dq, ddq);
+        cc.get_curvature(state);
         timestamp = cc.get_timestamp();
-        fmt::print("==========\nt:{}\tq:\t{}\ndq:\t{}\nddq:\t{}\n", timestamp, q.transpose(), dq.transpose(), ddq.transpose());
+        fmt::print("==========\nt:{}\tq:\t{}\ndq:\t{}\nddq:\t{}\n", timestamp, state.q.transpose(), state.dq.transpose(), state.ddq.transpose());
         r.sleep();
     }
     return 1;

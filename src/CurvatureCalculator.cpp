@@ -5,9 +5,7 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
     // initialize size of arrays that record transforms
     abs_transforms.resize(st_params::num_segments + 1);
 
-    q = VectorXd::Zero(st_params::num_segments * 2);
-    dq = VectorXd::Zero(st_params::num_segments * 2);
-    ddq = VectorXd::Zero(st_params::num_segments * 2);
+    srl::State state;
 
     if (sensor_type == CurvatureCalculator::SensorType::qualisys){
         fmt::print("Using Qualisys to measure curvature...\n");
@@ -43,17 +41,15 @@ void CurvatureCalculator::calculator_loop() {
         fmt::print("logging to {}\n", filename);
         log_file.open(filename, std::fstream::out);
         log_file << "timestamp";
-        for (int i = 0; i < st_params::num_segments; ++i) {
-            if (st_params::parametrization == ParametrizationType::phi_theta)
-                log_file << fmt::format(", phi_{}, theta_{}", i, i);
-            else if (st_params::parametrization == ParametrizationType::longitudinal)
-                log_file << fmt::format(", La_{}, Lb_{}", i, i);
-        }
+        // log both parametrizations
+        for (int i = 0; i < st_params::num_segments; ++i)
+            log_file << fmt::format(", La_{}, Lb_{}", i, i);
+        for (int i = 0; i < st_params::num_segments; i++)
+            log_file << fmt::format(", phi_{}, theta_{}", i, i);
         log_file << "\n";
     }
 
-    VectorXd prev_q = VectorXd::Zero(q.size());
-    VectorXd prev_dq = VectorXd::Zero(dq.size());
+    srl::State state_prev;
     double interval = 0.01;
     srl::Rate rate{1. / interval};
     run = true;
@@ -79,16 +75,20 @@ void CurvatureCalculator::calculator_loop() {
         calculateCurvature();
         /** todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises? */
 //        presmooth_dq = (q - prev_q) / interval;
-        dq = (q - prev_q) / interval;;// (1 - 0.2) * presmooth_dq + 0.2 * dq;
+        state.dq = (state.q - state_prev.q) / interval;;// (1 - 0.2) * presmooth_dq + 0.2 * dq;
 //        presmooth_ddq = (dq - prev_dq) / interval;
-        ddq = (dq - prev_dq) / interval;;//(1 - 0.2) * presmooth_ddq e+ 0.2 * ddq;
-        prev_q = q;
-        prev_dq = dq;
+        state.ddq = (state.dq - state_prev.dq) / interval;;//(1 - 0.2) * presmooth_ddq e+ 0.2 * ddq;
+        state_prev.q = state.q;
+        state_prev.dq = state.dq;
         if (log) {
             log_file << timestamp;
-            for (int i = 0; i < 2 * st_params::num_segments; ++i) {
-                log_file << fmt::format(", {}", q(i));
-            }
+            for (int i = 0; i < 2 * st_params::num_segments; ++i)
+                log_file << fmt::format(", {}", state.q(i));
+            double phi, theta;
+            for (int i = 0; i < st_params::num_segments; i++){
+                longitudinal2phiTheta(state.q(2*i), state.q(2*i+1), phi, theta);
+                log_file << fmt::format(", {}, {}", phi, theta);
+            } 
             log_file << "\n";
         }
     }
@@ -102,11 +102,9 @@ double sign(double val) {
     else return -1.0;
 }
 
-void CurvatureCalculator::get_curvature(VectorXd &q, VectorXd &dq, VectorXd &ddq) {
+void CurvatureCalculator::get_curvature(srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
-    q = this->q;
-    dq = this->dq;
-    ddq = this->ddq;
+    state = this->state;
 }
 
 unsigned long long int CurvatureCalculator::get_timestamp(){
@@ -142,11 +140,10 @@ double a2theta(double a, double L){
 void CurvatureCalculator::calculateCurvature() {
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
     {
-        assert(st_params::parametrization == ParametrizationType::longitudinal);
         for (int i = 0; i < 1; i++){
             /** @todo change 1 to st_params::num_segments */
-            q(2*i+0) = bendLab_data[2*i+1] * PI / 180.;
-            q(2*i+1) = bendLab_data[2*i+0] * PI / 180.;
+            state.q(2*i+0) = bendLab_data[2*i+1] * PI / 180.;
+            state.q(2*i+1) = bendLab_data[2*i+0] * PI / 180.;
         }
         return;
     }
@@ -166,13 +163,7 @@ void CurvatureCalculator::calculateCurvature() {
             phi = atan2(matrix(1, 3), matrix(0, 3));
             theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2)), L);
         }
-        if (st_params::parametrization == ParametrizationType::phi_theta) {
-            q(2 * i) = phi;
-            q(2 * i + 1) = theta;
-        } else if (st_params::parametrization == ParametrizationType::longitudinal) {
-            q(2 * i) = -cos(phi) * theta; // deltaLa (the difference in the length of La compared to neutral state)
-            q(2 * i + 1) = -sin(phi) * theta;
-        }
+        phiTheta2longitudinal(phi, theta, state.q(2*i), state.q(2*i+1));
     }
     // q -= initial_q; // implement better way to get rid of initial error...
 }

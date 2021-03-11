@@ -64,15 +64,15 @@ void setup()
   }
 
   Wire.begin();
-  if (myFlexSensor1.begin(19) == false)
+  if (myFlexSensor1.begin(45) == false)
   {
     // No sensor detected. Check wiring. Freezing...
-    delay(1);
+    Serial.println("cannot connect to sensor");
   }
-  if (myFlexSensor2.begin(45) == false)
+  if (myFlexSensor2.begin(19) == false)
   {
     // No sensor detected. Check wiring. Freezing...
-    delay(1);
+    Serial.println("cannot connect to sensor");
   }
   // set sample rate to 100Hz, make sure it corresponds to the calulation in signal_filter() function.
   myFlexSensor1.setSampleRate(ADS_100_HZ);
@@ -82,23 +82,28 @@ void setup()
 void loop()
 {
   // only check data when new data is available
-  if (myFlexSensor1.available() == true && myFlexSensor2.available() == true)
+  // here, fix the mapping of the sensor to the model.
+  if (myFlexSensor1.available())
   {
-    data_float[0] = myFlexSensor1.getX();
-    data_float[1] = myFlexSensor1.getY();
-    data_float[2] = myFlexSensor2.getX();
-    data_float[3] = myFlexSensor2.getY();
-    // process data to remove noise as much as possible
+    data_float[0] = -myFlexSensor1.getY();
+    data_float[1] = myFlexSensor1.getX();
+  }
+  if (myFlexSensor2.available())
+  {
+    data_float[2] = myFlexSensor2.getY();
+    data_float[3] = -myFlexSensor2.getX();
+  }
+  
+  // process data to remove noise as much as possible
 //    signal_filter(data_float);
 //    deadzone_filter(data_float);
 
-    Serial.print("a");
-    for (int i=0; i < num_data; i++){
-      Serial.print(data_float[i]);
-      if (i != num_data-1)
-        Serial.print(",");
-    }
-    Serial.println();
+  Serial.print("a");
+  for (int i=0; i < num_data; i++){
+    Serial.print(data_float[i]);
+    if (i != num_data-1)
+      Serial.print(",");
   }
-  delay(1);
+  Serial.println();
+  delay(10);
 }

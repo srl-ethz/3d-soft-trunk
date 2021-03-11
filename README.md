@@ -18,6 +18,11 @@ git clone --recursive git@gitlab.ethz.ch:srl/3d-soft-trunk.git
 
 **refer to [README of mobilerack-interface](mobilerack-interface/README.md)**
 
+also install these packages:
+```bash
+pip3 install xacro # used to convert robot model files from XACRO to URDF
+```
+
 ## install Drake
 
 refer to [Drake documentation- binary installation](https://drake.mit.edu/from_binary.html) and [Drake sample CMake project](https://github.com/RobotLocomotion/drake-external-examples/tree/master/drake_cmake_installed).

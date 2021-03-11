@@ -4,10 +4,18 @@
 
 #include <3d-soft-trunk/AugmentedRigidArm.h>
 #include <3d-soft-trunk/CurvatureCalculator.h>
+#include <3d-soft-trunk/SoftTrunkModel.h>
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(softtrunk_pybind_module, m){
+    /** @todo would be better if elements could be set like `state.q[0] = 0.1` in Python */
+    py::class_<srl::State>(m, "State", "individual elements in array can be read but not set, see example codes")
+    .def(py::init<>())
+    .def_property("q", [](srl::State& s){return s.q;}, [](srl::State& s, const VectorXd& q){s.q=q;})
+    .def_property("dq", [](srl::State& s){return s.dq;}, [](srl::State& s, const VectorXd& dq){s.dq=dq;})
+    .def_property("ddq", [](srl::State& s){return s.ddq;}, [](srl::State& s, const VectorXd& ddq){s.ddq=ddq;});
+
     py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
     .def(py::init<>())
     .def("update", &AugmentedRigidArm::update)
@@ -22,9 +30,9 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     cc.def(py::init<CurvatureCalculator::SensorType, std::string>())
     .def("get_curvature", [](CurvatureCalculator& cc){
         // return as tuple rather than by reference
-        VectorXd q; VectorXd dq; VectorXd ddq;
-        cc.get_curvature(q, dq, ddq);
-        return std::make_tuple(q, dq, ddq);
+        srl::State state;
+        cc.get_curvature(state);
+        return std::make_tuple(state.q, state.dq, state.ddq);
     })
     .def("get_frame", [](CurvatureCalculator& cc, int i){
         Eigen::Matrix<double, 4, 4> H = Eigen::Matrix<double, 4, 4>::Identity();
@@ -32,6 +40,13 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         return H;
     })
     .def("get_timestamp", &CurvatureCalculator::get_timestamp);
+    
+    py::class_<SoftTrunkModel> stm(m, "SoftTrunkModel");
+    stm.def(py::init<>())
+    .def("updateState", &SoftTrunkModel::updateState)
+    .def("getModel", [](SoftTrunkModel& stm){
+        return std::make_tuple(stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
+    });
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)

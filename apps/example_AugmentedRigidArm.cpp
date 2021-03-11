@@ -13,18 +13,16 @@
  *
  * creates an augmented rigid arm model, then gives it some values (q and dq, the soft robot's configurations) so it can update its internal variables, then prints them out.
  * also updates the drake visualization, so run drake-visualization to see the rigid body model update itself in real time
+ * 
+ * The URDF model of the robot must be created first, which is currently done by SoftTrunkModel, so running this first will result in an error.
  */
 
-void q_update(double seconds, VectorXd& q) {
-    for (int i = 0; i < st_params::num_segments; i++) {
-        if (st_params::parametrization == ParametrizationType::phi_theta){
-            q(2*i + 0) = seconds + 1.1 * i;
-            q(2*i + 1) = 0.35 + 0.3 * sin(seconds);
-        }
-        else if (st_params::parametrization == ParametrizationType::longitudinal){
-            q(2 * i + 0) = sin(seconds * (1.5 + (double) i));
-            q(2 * i + 1) = cos(seconds * (2.0 + (double) i));
-        }
+void q_update(double seconds, srl::State& state) {
+    // generate nice-looking poses
+    for (int i = 0; i < st_params::num_segments * st_params::sections_per_segment ; i++) {
+        state.q(2 * i + 0) = 0.8 * sin(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+        state.q(2 * i + 1) = 0.4 * cos(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+
     }
 }
 
@@ -32,20 +30,19 @@ int main() {
     AugmentedRigidArm ara{};
 
     // calculate the state of arm at a particular value of q and print out the various parameters
-    VectorXd q = VectorXd::Zero(2 * st_params::num_segments);
-    VectorXd dq = VectorXd::Zero(2 * st_params::num_segments);
+    srl::State state;
 
     double delta_t = 0.03;
     srl::Rate r{1. / delta_t};
     for (double t = 0; t<10; t+=delta_t) {
-        q_update(t, q);
-        ara.update(q, dq);
+        q_update(t, state);
+        ara.update(state);
         fmt::print("------------\n");
-        fmt::print("q:{}\nxi:{}\n", q.transpose(), ara.xi.transpose());
+        fmt::print("q:{}\n", state.q.transpose());
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
-        fmt::print("B:{}\n", ara.Jm.transpose() * ara.B_xi * ara.Jm);
-        fmt::print("G:{}\n", (ara.Jm.transpose() * ara.G_xi).transpose());
-        fmt::print("J:{}\n", ara.Jxi * ara.Jm);
+        fmt::print("B:{}\n", ara.B);
+        fmt::print("g:{}\n", ara.g);
+        fmt::print("J:{}\n", ara.J);
         fmt::print("H_tip:{}\n", ara.get_H_tip().matrix());
         r.sleep();
     }
