@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/Simulator.h"
 
 
-Simulator::Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const double &control_step, const int &steps) : stm(stm), sim_type(sim_type), steps(steps), control_step(control_step), sim_step(control_step/steps){
+Simulator::Simulator(SoftTrunkModel &stm, const double &control_step, const int &steps) : stm(stm), steps(steps), control_step(control_step), sim_step(control_step/steps){
     t = 0;
     assert(steps>=1);
 }
@@ -9,10 +9,12 @@ Simulator::Simulator(SoftTrunkModel &stm, Simulator::SimType sim_type, const dou
 
 
 bool Simulator::simulate(const VectorXd &p, srl::State &state){
-
     
+    for (int i=0; i < steps; i++){
+        if (!Beeman(p,state)) return false;
+    }
 
-    if (logging){
+    if (logging){                                               //log once per control timestep
         log_file << t;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
             VectorXd x_tip = stm.get_H(i).translation();
@@ -21,51 +23,39 @@ bool Simulator::simulate(const VectorXd &p, srl::State &state){
         for (int i=0; i < st_params::q_size; i++)               //log q
             log_file << fmt::format(", {}", state.q(i));
         log_file << "\n";
+        
     }
 
-    for (int i=0; i < steps; i++){
-        if (sim_type == Simulator::SimType::euler) {
-            if (!Euler(p, state)) return false;
-        } else if (sim_type == Simulator::SimType::beeman) {
-            if(!Beeman(p, state)) return false;
-        }
-    }
+    
 
     return true;
-
 };
 
 
 
 
-bool Simulator::Euler(const VectorXd &p, srl::State &state){
-    stm.updateState(state);
-
-    state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq); //get ddq
-
-    state_mid.dq = state.dq + state.ddq * sim_step / 2; //half step forward approximation
-    state_mid.q = state.q + state.dq * sim_step / 2;
-
-    stm.updateState(state_mid);
-    state_mid.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state_mid.q  -stm.D * state_mid.dq); 
-       
-    state.dq = state.dq + state_mid.dq * sim_step;
-    state.q = state.q + state_mid.dq * sim_step;
-
-    t+=sim_step;
-    return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
-}
-
-
 bool Simulator::Beeman(const VectorXd &p, srl::State &state){
+    
     stm.updateState(state);
+    state_prev.ddq = state.ddq;
+    if(sim_step>0.00001){                                                                            //normal case, assume matrixes to be constant and compute with high resolution
+        
+        VectorXd b_inv_rest = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q);      //set up constant terms to not constantly recalculate
+        MatrixXd b_inv_d = -stm.B.inverse() * stm.D;
+        VectorXd ddq_prev;
 
-    state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q  -stm.D * state.dq);
+        for (int i=0; i < int (sim_step/0.00001); i++){                                              //forward integrate dq with high resolution
+            ddq_prev = state.ddq;
+            state.ddq = b_inv_rest + b_inv_d*state.dq;
+            state.dq += 0.00001*(2*(2*state.ddq - ddq_prev) + 5*state.ddq - ddq_prev)/6;  
+        }
+
+    } else {                                                                                        //if incredibly high resolution is chosen, use that instead
+        state.ddq = stm.B.inverse() * (stm.A * p - stm.c - stm.g - stm.K * state.q + stm.D * state.dq);
+        state.dq += sim_step*(2*(2*state.ddq - state_prev.ddq) + 5*state.ddq - state_prev.ddq)/6;
+    }
 
     state.q = state.q + state.dq*sim_step + (sim_step*sim_step*(4*state.ddq - state_prev.ddq) / 6);
-    state.dq = state.dq + sim_step*(2*(2*state.ddq - state_prev.ddq) + 5*state.ddq - state_prev.ddq)/6;  //2*ddq(n) - ddq(n-1) is approximately ddq(n+1)
-
-    state_prev.ddq = state.ddq;
 
     t+=sim_step;
     return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
