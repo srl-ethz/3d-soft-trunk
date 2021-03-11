@@ -8,7 +8,7 @@ int main(){
     SoftTrunkModel stm = SoftTrunkModel();
     srl::State state;
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
-    double control_step = 0.005;
+    double control_step = 0.01;
     double time = 4.0;
     
     for (int i = 0; i < st_params::num_segments; i++) {
@@ -24,7 +24,7 @@ int main(){
 
     Simulator sim = Simulator(stm, control_step, 1);
 
-    sim.start_log("sim_timestep20ms");
+    sim.start_log("sim_timestep10ms");
 
     auto start = std::chrono::steady_clock::now();
 
