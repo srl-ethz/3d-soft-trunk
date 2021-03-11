@@ -5,7 +5,7 @@
 #include <fstream>
 
 /**
- * @brief dynamic analytical model of the Soft Trunk. Refer to Toshimitsu&Wong2021 for background theory.
+ * @brief dynamic analytical model of the Soft Trunk. Refer to IROS2021 paper (toshimitsu et al., 2021) for background theory.
  * The matrices returned describe the following model:
  * \f$
  * B \ddot q + c + g + K q + D \dot q = A p
@@ -63,10 +63,9 @@ private:
     void calculateCrossSectionProperties(double radius, double& chamberCentroidDist, double& siliconeArea, double& chamberArea, double& secondMomentOfArea);
 
     /** @brief shear modulus of Dragon Skin 10, in Pa
-     * literature value is 85000. Determined from characterization_actuation and characterize.py.
-     * Value for top segment is fake right now.
+     * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      */
-    std::array<double, st_params::num_segments> shear_modulus = {43000., 57000}; /** the results from characterization was 29747 for top but that's probably underestimated due to gravity */
+    std::array<double, st_params::num_segments> shear_modulus = {43000., 57000};
     std::array<double, st_params::num_segments> drag_coef = {61000., 8000.};
 
     /**

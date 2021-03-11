@@ -4,9 +4,6 @@ target_link_libraries(record_qtm_frames QualisysClient)
 add_executable(cyclic_simulation cyclic_simulation.cpp)
 target_link_libraries(cyclic_simulation SoftTrunkModel Threads::Threads)
 
-add_executable(characterization_actuation characterization_actuation.cpp)
-target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)
-
 add_executable(sensor_visualize sensor_visualize.cpp)
 target_link_libraries(sensor_visualize SoftTrunkModel SerialInterface)
 
@@ -18,5 +15,3 @@ if(${roscpp_FOUND})
     target_link_libraries(solve_tip_force SoftTrunkModel SerialInterface ValveController drake::drake ${roscpp_LIBRARIES})
     target_include_directories(solve_tip_force PRIVATE ${roscpp_INCLUDE_DIRS})    
 endif(${roscpp_FOUND})
-
-# add_dependencies(solve_tip_force ${catkin_EXPORTED_TARGETS})

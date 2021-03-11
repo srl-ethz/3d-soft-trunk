@@ -2,6 +2,7 @@
 
 <!--
 this file defines the xacro macros that can be used to create PCC augmented models
+rigid model as described in IROS2021 paper (toshimitsu et al., 2021)
 -->
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
