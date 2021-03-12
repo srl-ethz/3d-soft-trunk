@@ -1,9 +1,6 @@
 add_executable(record_qtm_frames record_qtm_frames.cpp)
 target_link_libraries(record_qtm_frames QualisysClient)
 
-add_executable(cyclic_simulation cyclic_simulation.cpp)
-target_link_libraries(cyclic_simulation SoftTrunkModel Threads::Threads)
-
 add_executable(sensor_visualize sensor_visualize.cpp)
 target_link_libraries(sensor_visualize SoftTrunkModel SerialInterface)
 

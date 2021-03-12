@@ -22,3 +22,6 @@ target_link_libraries(experiment_pid ControllerPCC)
 
 add_executable(characterization_actuation characterization_actuation.cpp)
 target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)
+
+add_executable(simulate_logged_pressure simulate_logged_pressure.cpp)
+target_link_libraries(simulate_logged_pressure Simulator SoftTrunkModel Threads::Threads)
