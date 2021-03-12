@@ -22,17 +22,14 @@ int main(){
     }
     
 
-    Simulator sim = Simulator(stm, control_step, 1);
+    Simulator sim = Simulator(stm, control_step, 1, state);
 
     sim.start_log("sim_timestep10ms");
 
     auto start = std::chrono::steady_clock::now();
 
     for (double t=0; t < time; t+=control_step){
-        if (!sim.simulate(p, state)){
-            std::cout << "Sim crashed! Returning...\n";
-            break;
-        }
+        sim.simulate(p);
     }
 
     sim.end_log();

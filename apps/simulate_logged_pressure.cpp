@@ -11,13 +11,12 @@
  * ```bash
  * ./bin/simulate_logged_pressure your_log_pressure.csv
  * ```
- * linearly interpolate the given csv, and simulate the model
  */
 int main(int argc, char *argv[]){
     double step = 0.01;
     SoftTrunkModel stm = SoftTrunkModel();
-    Simulator sim = Simulator(stm, step, 1);
     srl::State state;
+    Simulator sim = Simulator(stm, step, 1, state);
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
     // read and save the csv data
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]){
         }
     }
 
-    // srl::Rate r{1./dt};
+    srl::Rate r{1./step};
     int log_index = 0; // index of log currently being referred to for pressure data
     sim.start_log("log_sim");
     for (double t = log_t[0]; t < log_t[log_t.size()-1]; t+=step)
@@ -62,8 +61,8 @@ int main(int argc, char *argv[]){
         p *= 100.; // mbar to Pa
 
         // run the simulation
-        sim.simulate(p, state);
-//        r.sleep();
+        sim.simulate(p);
+        r.sleep();
     }
     sim.end_log();
 }

@@ -17,19 +17,19 @@ public:
      * @param softtrunk passed SoftTrunkModel, the Simulator uses this to calculate approximation
      * @param contrl_step time of control input step, p is regarded as constant for this time
      * @param steps resolution of integration, higher value is more computationally expensive but delivers more accurate results. use value higher than 1 if you want simulation resolution to be higher than control step input
+     * @param initialState initial state of the simulation.
      * @details control_step as low as ~0.007 with steps=1 will run at realtime
      */
 
-    Simulator(SoftTrunkModel &stm, const double &control_step, const int &steps);
+    Simulator(SoftTrunkModel &stm, double control_step, int steps, const srl::State& initialState);
 
 
     /**
      * @brief simulate a control step
      * @param p pressure input vector, size 3*st_params::num_segments. viewed as constant for the input time
-     * @param state state which is forward-simulated
-     * returns true if simulation succeeds
+     * raise std::runtimeerror if simulation overflows
      */
-    bool simulate(const VectorXd &p, srl::State &state);
+    void simulate(const VectorXd &p);
 
 
     /**
@@ -45,15 +45,15 @@ private:
     /**
      * @brief numerically forward-integrate using beeman approximation
      * @param p input pressure
-     * @param state state to be integrated
      * returns true if integration delivers useable value
      */
-    bool Beeman(const VectorXd &p, srl::State &state);
+    bool Beeman(const VectorXd &p);
+    srl::State state;
     srl::State state_prev; //for Beeman
 
     SoftTrunkModel &stm;
-    const int &steps;
-    const double &control_step;
+    int steps;
+    const double control_step;
     const double sim_step;
     double t;
 
