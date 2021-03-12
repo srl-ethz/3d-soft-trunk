@@ -61,7 +61,9 @@ FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIRS})
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads)
+find_package(Threads REQUIRED)
+
+find_package(roscpp) # this is optionally required for VisualizerROS
 
 ### libraries
 ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
@@ -79,6 +81,12 @@ target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrun
 add_library(Simulator SHARED src/Simulator.cpp)
 target_link_libraries(Simulator SoftTrunkModel)
 
+
+if(${roscpp_FOUND})
+    add_library(VisualizerROS src/VisualizerROS.cpp)
+    target_link_libraries(VisualizerROS SoftTrunkModel ${roscpp_LIBRARIES})
+    target_include_directories(VisualizerROS PRIVATE ${roscpp_INCLUDE_DIRS})    
+endif(${roscpp_FOUND})
 
 ### set up pybind modules
 pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
