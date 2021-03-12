@@ -15,6 +15,13 @@ target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
 add_executable(example_Simulator example_Simulator.cpp)
 target_link_libraries(example_Simulator SoftTrunkModel Simulator)
 
+if(${roscpp_FOUND})
+    add_executable(example_VisualizerROS example_VisualizerROS.cpp)
+    target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)
+    target_include_directories(example_VisualizerROS PRIVATE ${roscpp_INCLUDE_DIRS})    
+endif(${roscpp_FOUND})
+
+
 ### other programs (experiments etc.)
 
 add_executable(experiment_pid experiment_pid.cpp)

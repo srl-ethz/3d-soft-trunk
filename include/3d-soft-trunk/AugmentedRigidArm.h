@@ -77,6 +77,8 @@ private:
 
     /** @brief holds relative transforms between tip of each segment (tip of curving section, disregards the connector part) and base */
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> H_list;
+    /** @brief pose of the base, relative to world */
+    Eigen::Transform<double, 3, Eigen::Affine> H_base;
 
 public:
     AugmentedRigidArm();
@@ -108,4 +110,9 @@ public:
 
     /** @brief Convenience function that calls get_H for the tip segment. */
     Eigen::Transform<double, 3, Eigen::Affine> get_H_tip();
+
+    /**
+     * @brief Get the pose of the base, relative to the world frame
+     */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 };

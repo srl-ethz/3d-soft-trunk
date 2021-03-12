@@ -135,6 +135,7 @@ void AugmentedRigidArm::update_drake_model()
                                                        multibody_plant->world_frame(), &Jxi_);
       }
     }
+    H_base = multibody_plant->GetFrameByName("softTrunk_base").CalcPoseInWorld(plant_context).GetAsMatrix4();
 }
 
 /**
@@ -378,6 +379,9 @@ Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H_tip(){
     return get_H(st_params::num_segments - 1);
 }
 
+Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H_base(){
+    return H_base;
+}
 
 void AugmentedRigidArm::simulate()
 {
