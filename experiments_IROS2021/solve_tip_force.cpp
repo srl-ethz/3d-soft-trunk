@@ -1,10 +1,7 @@
 #include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/VisualizerROS.h>
 #include <mobilerack-interface/SerialInterface.h>
 #include <mobilerack-interface/ValveController.h>
-
-#include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
-#include <visualization_msgs/Marker.h>
 
 // https://drake.mit.edu/doxygen_cxx/group__solvers.html
 // https://github.com/RobotLocomotion/drake/blob/master/solvers/test/quadratic_program_examples.cc
@@ -21,47 +18,15 @@ VectorXd getSensor(SerialInterface& si, VectorXd bendLab_offset){
     return s;
 }
 int main(int argc, char** argv){
+    /** @todo untested after updating to use VisualizerROS (since mobile rack is currently unusable), remove this comment when it is confirmed to work */
     ros::init(argc, argv, "solve_force_tip");
-    ros::NodeHandle nh;
-    ros::Publisher joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
-    ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
-
-    /** @todo use this hacky visualization for now, but somehow include this visualization feture to other classes as well! (while making it compilable without ros as well...) */
 
     SoftTrunkModel stm{};
     SerialInterface si{"/dev/ttyACM0", 38400};
     ValveController vc{"192.168.0.100", {11, 10, 9, 13, 12, 14, 15}, 600};
-
-    sensor_msgs::JointState joint_state;
-    joint_state.name.resize(5*st_params::num_segments*(st_params::sections_per_segment+1));
-    joint_state.position.resize(joint_state.name.size());
-    for (int i = 0; i < st_params::num_segments*(st_params::sections_per_segment+1); i++)
-    {
-        int segment_id = i / (st_params::sections_per_segment+1);
-        int section_id = i % (st_params::sections_per_segment+1);
-
-        std::string pcc_name = fmt::format("seg{}_sec{}", segment_id, section_id);
-        joint_state.name[5*i+0] = fmt::format("{}-ball-ball-joint_x_joint", pcc_name);
-        joint_state.name[5*i+1] = fmt::format("{}-ball-ball-joint_y_joint", pcc_name);
-        joint_state.name[5*i+2] = fmt::format("{}-ball-ball-joint_z_joint", pcc_name);
-        joint_state.name[5*i+3] = fmt::format("{}-a-b_joint", pcc_name);
-        joint_state.name[5*i+4] = fmt::format("{}-b-seg{}_sec{}-{}_connect_joint", pcc_name, segment_id, section_id, section_id+1);
-    }
-    fmt::print("joints:{}\n", joint_state.name);
-
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "seg1_sec3-4_connect";
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::ARROW;
-    marker.action = visualization_msgs::Marker::ADD;
-    marker.points.resize(2);
-    marker.points[0].x = 0; marker.points[0].y=0; marker.points[0].z = 0;
-    marker.scale.x = 0.005; marker.scale.y = 0.01;
-    marker.color.a = 1;
-    marker.color.r = 1;
-    Matrix3d rot_world_to_st;  // hack-ish way to account for base rotation....
-    double angle = st_params::armAngle*PI/180.;
-    rot_world_to_st << cos(angle), 0 , sin(angle) , 0, 1, 0, -sin(angle), 0, cos(angle);
+    VisualizerROS vis{stm};
+    Vector3d rgb;
+    rgb << 1, 0, 0;
 
     VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
     VectorXd p = VectorXd::Zero(6);
@@ -97,6 +62,7 @@ int main(int argc, char** argv){
     // fmt::print("Mq:\n{}\nMf:\n{}\n", Mq, Mf);
 
 
+    // set the soft trunk pose here
     // vc.setSinglePressure(0, 400);
     // pose B
     // vc.setSinglePressure(0, 300);
@@ -114,10 +80,10 @@ int main(int argc, char** argv){
     vc.setSinglePressure(4, 300);
     
 
-    fmt::print("3 seconds to get into position...\n");
+    fmt::print("make sure robot is stable in 3 seconds...\n");
     srl::sleep(3);
 
-    fmt::print("optimizing assuming zero external force...\n");
+    fmt::print("calculating \"tare weight measurement\" assuming zero external force...\n");
     VectorXd q_initial = VectorXd::Zero(12);
     VectorXd bendLab_initial = VectorXd::Zero(4);
     for (int i = 0; i < N; i++)
@@ -159,8 +125,7 @@ int main(int argc, char** argv){
     vc.setSinglePressure(2, 400);
     srl::sleep(3);
 
-    Vector3d f_accum = Vector3d::Zero();
-    for (int count=0; count<10; count++)
+    while(ros::ok())
     {
         s = getSensor(si, bendLab_offset);
         
@@ -188,26 +153,12 @@ int main(int argc, char** argv){
         result = solver.Solve(prog);
         VectorXd x_result = result.GetSolution(x);
         fmt::print("result: {}\nsensor: {}\tforce: {}\t{}\t{}\n", result.is_success(), s.transpose(), x_result(12), x_result(13), x_result(14));
-        f_accum += x_result.segment(12, 3);
-
-        VectorXd local_f_est = stm.ara->get_H_tip().matrix().block(0,0,3,3).inverse() * rot_world_to_st.inverse() * x_result.segment(12,3);
-        marker.header.stamp = ros::Time();
-        marker.points[1].x = local_f_est(0)/1.; marker.points[1].y = local_f_est(1)/1.; marker.points[1].z = local_f_est(2)/1.;
-        marker_pub.publish(marker);
 
         state.q = x_result.segment(0,12);
         stm.updateState(state);
-        for (int i = 0; i < joint_state.name.size(); i++)
-        {
-            joint_state.position[i] = stm.ara->xi_(i);
-        }
-        joint_state.header.stamp = ros::Time::now();
-        joint_pub.publish(joint_state);
 
+        vis.publishState();
+        vis.publishArrow(st_params::num_segments-1, x_result.segment(12, 3), rgb, true);
     }
-    f_accum /= 10;
-    fmt::print("f_accum: {}\t{}\t{}\n", f_accum(0), f_accum(1), f_accum(2));
-    vc.setSinglePressure(2, 0);
-    srl::sleep(1);
     return 1;
 }
