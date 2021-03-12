@@ -1,17 +1,17 @@
 #include "3d-soft-trunk/Simulator.h"
 
 
-Simulator::Simulator(SoftTrunkModel &stm, const double &control_step, const int &steps) : stm(stm), steps(steps), control_step(control_step), sim_step(control_step/steps){
+Simulator::Simulator(SoftTrunkModel &stm, double control_step, int steps, const srl::State& initialState) : stm(stm), steps(steps), control_step(control_step), sim_step(control_step/steps), state(initialState){
+    fmt::print("Simulator object created with steps: {}\tcontrol_step: {}\tsim_step:{}\n", steps, control_step, sim_step);
     t = 0;
     assert(steps>=1);
 }
 
 
 
-bool Simulator::simulate(const VectorXd &p, srl::State &state){
-    
+void Simulator::simulate(const VectorXd &p){
     for (int i=0; i < steps; i++){
-        if (!Beeman(p,state)) return false;
+        if (!Beeman(p)) throw std::runtime_error("simulated value has overflown");
     }
 
     if (logging){                                               //log once per control timestep
@@ -25,16 +25,14 @@ bool Simulator::simulate(const VectorXd &p, srl::State &state){
         log_file << "\n";
         
     }
+}
 
-    
-
-    return true;
-};
-
-
+void Simulator::get_state(srl::State& state){
+    state = this->state;
+}
 
 
-bool Simulator::Beeman(const VectorXd &p, srl::State &state){
+bool Simulator::Beeman(const VectorXd &p){
     
     stm.updateState(state);
     state_prev.ddq = state.ddq;

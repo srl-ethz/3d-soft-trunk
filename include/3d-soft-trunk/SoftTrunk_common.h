@@ -29,16 +29,16 @@ namespace st_params {
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * top segment 160g, middle connector 20g, bottom segment 82g, gripper 23g
      */
-    std::array<double, 4> masses = {0.160, 0.020, 0.082, 0.023};
+    const std::array<double, 4> masses = {0.160, 0.020, 0.082, 0.023};
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
+    const std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
      */
-    std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
+    const std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
     const int num_segments = 2;
     const int sections_per_segment = 3;
     const int q_size = 2*num_segments*sections_per_segment;
@@ -67,7 +67,7 @@ namespace srl{
 /**
  * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.
  */
-void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
+inline void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
     Lx = -cos(phi) * theta;
     Ly = -sin(phi) * theta;
 }
@@ -75,7 +75,7 @@ void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
 /**
  * @brief convert from longitudinal to phi-theta parametrization, for a single PCC section.
  */
-void longitudinal2phiTheta(double Lx, double Ly, double& phi, double& theta){
+inline void longitudinal2phiTheta(double Lx, double Ly, double& phi, double& theta){
     phi = atan2(-Ly, -Lx);
     if (Lx == 0 && Ly == 0)
         phi = 0;

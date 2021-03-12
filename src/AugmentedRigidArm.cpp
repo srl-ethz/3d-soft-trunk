@@ -44,7 +44,6 @@ void AugmentedRigidArm::setup_drake_model()
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
     int num_joints = multibody_plant->num_joints() - 2; // subtract one mystery joint, and one fixed joint at the base
-    fmt::print("model has {} joints\n", num_joints);
 
     // check that parameters make sense, just in case
     assert(st_params::num_segments * 2 == st_params::lengths.size());
@@ -136,6 +135,7 @@ void AugmentedRigidArm::update_drake_model()
                                                        multibody_plant->world_frame(), &Jxi_);
       }
     }
+    H_base = multibody_plant->GetFrameByName("softTrunk_base").CalcPoseInWorld(plant_context).GetAsMatrix4();
 }
 
 /**
@@ -379,6 +379,9 @@ Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H_tip(){
     return get_H(st_params::num_segments - 1);
 }
 
+Eigen::Transform<double, 3, Eigen::Affine> AugmentedRigidArm::get_H_base(){
+    return H_base;
+}
 
 void AugmentedRigidArm::simulate()
 {

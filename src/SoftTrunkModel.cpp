@@ -26,10 +26,7 @@ SoftTrunkModel::SoftTrunkModel()
         double chamberArea;
         double secondMomentOfArea;
         double l = st_params::lengths[2 * segment_id] / st_params::sections_per_segment; // length of section
-        fmt::print("section ID:{} = segment{} * N + {}\n", section_id, segment_id, section_id_in_segment);
-        fmt::print("r: {}, l:{}\n", radius, l);
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
-        fmt::print("second moment: {}\n", secondMomentOfArea);
 
         K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus[segment_id] * secondMomentOfArea / l;
         A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
