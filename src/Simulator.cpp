@@ -25,9 +25,11 @@ void Simulator::simulate(const VectorXd &p){
         log_file << "\n";
         
     }
-};
+}
 
-
+void Simulator::get_state(srl::State& state){
+    state = this->state;
+}
 
 
 bool Simulator::Beeman(const VectorXd &p){

@@ -31,6 +31,12 @@ public:
      */
     void simulate(const VectorXd &p);
 
+    /**
+     * @brief Get the current state of the simulation
+     * @param state current state.
+     */
+    void get_state(srl::State& state);
+
 
     /**
      * @brief starts logging state and time data for every control step

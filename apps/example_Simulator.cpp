@@ -30,6 +30,7 @@ int main(){
 
     for (double t=0; t < time; t+=control_step){
         sim.simulate(p);
+        sim.get_state(state);
     }
 
     sim.end_log();
