@@ -5,6 +5,7 @@
 #include <3d-soft-trunk/AugmentedRigidArm.h>
 #include <3d-soft-trunk/CurvatureCalculator.h>
 #include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/Simulator.h>
 
 namespace py = pybind11;
 
@@ -47,6 +48,17 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     .def("getModel", [](SoftTrunkModel& stm){
         return std::make_tuple(stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
     });
+
+    py::class_<Simulator>(m, "Simulator")
+    .def(py::init<SoftTrunkModel&, double, int, srl::State&>())
+    .def("simulate", &Simulator::simulate)
+    .def("getState", [](Simulator& sim){
+        srl::State state;
+        sim.get_state(state);
+        return state;
+    })
+    .def("start_log", &Simulator::start_log)
+    .def("end_log", &Simulator::end_log);
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)

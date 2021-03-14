@@ -90,7 +90,7 @@ endif(${roscpp_FOUND})
 
 ### set up pybind modules
 pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
-target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator SoftTrunkModel)
+target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator SoftTrunkModel Simulator)
 
 add_subdirectory(apps)
 add_subdirectory(experiments_IROS2021)
