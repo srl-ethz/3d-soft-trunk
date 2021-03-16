@@ -11,7 +11,7 @@ namespace py = pybind11;
  */
 PYBIND11_MODULE(softtrunk_ROS_pybind_module, m){
     py::class_<VisualizerROS>(m, "VisualizerROS")
-    .def(py::init<SoftTrunkModel>())
+    .def(py::init<SoftTrunkModel&>())
     .def("publishState", &VisualizerROS::publishState)
     .def("publishArrow", &VisualizerROS::publishArrow);
 }
