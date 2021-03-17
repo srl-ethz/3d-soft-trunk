@@ -2,6 +2,8 @@ image: robotlocomotion/drake:latest
 before_script:
   - apt-get update --yes
   - apt-get install --yes build-essential cmake libmodbus-dev libserialport-dev
+  - DEBIAN_FRONTEND=noninteractive apt-get install --yes python3-dev python3-numpy
+#  - DEBIAN_FRONTEND=noninteractive apt-get install --yes libopencv-dev
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 build:

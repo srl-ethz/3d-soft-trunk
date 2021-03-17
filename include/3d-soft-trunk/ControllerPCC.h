@@ -38,7 +38,6 @@ private:
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
 
-    std::string qtm_address = "192.168.0.0";
     std::string bendlabs_portname = "/dev/ttyUSB0";
 
     // parameters for dynamic controller

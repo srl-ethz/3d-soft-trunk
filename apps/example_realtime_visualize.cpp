@@ -16,7 +16,7 @@ int main() {
     log_file.open(filename, std::fstream::out);
     log_file << "t[microsec], x_fk, y_fk, z_fk, x_gt, y_gt, z_gt, distance\n";
 
-    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
+    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys};
     AugmentedRigidArm ara{};
     srl::State state;
     Eigen::Transform< double, 3, Eigen::Affine > H_tip_groundtruth; // pose of tip, relative to base (ground truth data from qualisys)
