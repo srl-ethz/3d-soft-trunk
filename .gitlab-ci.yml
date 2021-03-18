@@ -3,7 +3,7 @@ before_script:
   - apt-get install -y wget
   - wget https://drake-packages.csail.mit.edu/drake/nightly/drake-latest-focal.tar.gz
   - tar -xvzf drake-latest-focal.tar.gz -C /opt
-  - DEBIAN_FRONTEND=noninteractive /opt/drake/share/drake/setup/install_prereqs
+  - yes | /opt/drake/share/drake/setup/install_prereqs
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 build:
