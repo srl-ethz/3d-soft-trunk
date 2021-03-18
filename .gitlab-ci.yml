@@ -1,9 +1,9 @@
 image: yasu31/srl:mobilerack-env
 before_script:
-  - sudo apt-get install -y wget
+  - apt-get install -y wget
   - wget https://drake-packages.csail.mit.edu/drake/nightly/drake-latest-focal.tar.gz
-  - sudo tar -xvzf drake-latest-focal.tar.gz -C /opt
-  - sudo /opt/drake/share/drake/setup/install_prereqs
+  - tar -xvzf drake-latest-focal.tar.gz -C /opt
+  - /opt/drake/share/drake/setup/install_prereqs
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 build:
