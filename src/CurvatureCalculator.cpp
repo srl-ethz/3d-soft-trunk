@@ -9,7 +9,7 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 
     if (sensor_type == CurvatureCalculator::SensorType::qualisys){
         fmt::print("Using Qualisys to measure curvature...\n");
-        setupQualisys(address);
+        setupQualisys();
     }
     else if (sensor_type == CurvatureCalculator::SensorType::bend_labs){
         fmt::print("Using Bend Labs sensor to measure curvature...\n");
@@ -25,8 +25,8 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 //    fmt::print("initial q measured:{}. This value is considered the offset and will be subtracted from future measurements.\n", initial_q);
 }
 
-void CurvatureCalculator::setupQualisys(std::string qtm_address) {
-    optiTrackClient = std::make_unique<QualisysClient>(qtm_address.c_str(), st_params::num_segments + 1);
+void CurvatureCalculator::setupQualisys() {
+    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1);
 }
 
 void CurvatureCalculator::setupIntegratedSensor(std::string portname) {

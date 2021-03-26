@@ -2,7 +2,7 @@ from softtrunk_pybind_module import CurvatureCalculator
 from time import sleep
 import numpy as np
 
-cc = CurvatureCalculator(CurvatureCalculator.SensorType.qualisys, "192.168.0.0")
+cc = CurvatureCalculator(CurvatureCalculator.SensorType.qualisys, "")
 
 num_segments = 3
 
