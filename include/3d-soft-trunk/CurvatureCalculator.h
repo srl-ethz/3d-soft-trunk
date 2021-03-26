@@ -41,9 +41,9 @@ public:
     /**
      * @brief Construct a new Curvature Calculator object
      * 
-     * @param address IP address of QTM PC when using Qualisys, portname of Arduino when using Bend Labs.
+     * @param address portname of Arduino when using Bend Labs. (value ignored when using Qualisys as sensor)
      */
-    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address);
+    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address = "/dev/ttyACM0");
 
     ~CurvatureCalculator();
 
@@ -96,7 +96,7 @@ private:
     /** @brief PCC configuration of each segment of soft arm. depends on st_params::parametrization */
     srl::State state;
     
-    void setupQualisys(std::string qtm_address);
+    void setupQualisys();
 
     /**
      * @brief for future, if you want to use sensors embedded in arm.

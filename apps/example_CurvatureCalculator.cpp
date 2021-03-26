@@ -11,7 +11,7 @@
  */
 
 int main() {
-    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.0"};
+    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys};
     srl::State state;
     unsigned long long int timestamp;
     srl::Rate r{5};

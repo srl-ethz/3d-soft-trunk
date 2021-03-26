@@ -6,7 +6,7 @@
  * @brief gets frames from QTM and records the tip of each segment (rel. to base) and saves log with timestamps 
  */
 int main(){
-    QualisysClient qc{"172.20.16.1", st_params::num_segments + 1};
+    QualisysClient qc{st_params::num_segments + 1};
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> frames;
     unsigned long long int timestamp;
 
