@@ -13,6 +13,9 @@ state.q = q # this method works
 print(state.q)
 
 stm.updateState(state)
-B, c, g, K, D, A, J = stm.getModel()
 
+B, c, g, K, D, A, J = stm.getModel()
 print(f"B:{B}\nc:{c}\ng:{g}\nK:{K}\nD:{D}\nA:{A}\nJ:{J}")
+
+H = stm.get_H(0)
+print(f"pose of tip of first segment (relative to base):\n{H}")
