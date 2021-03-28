@@ -47,6 +47,9 @@ void SoftTrunkModel::updateState(const srl::State &state)
 Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id){
     return ara->get_H(segment_id);
 }
+Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H_base(){
+    return ara->get_H_base();
+}
 
 void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &chamberCentroidDist, double &siliconeArea, double &chamberArea, double &secondMomentOfArea)
 {
