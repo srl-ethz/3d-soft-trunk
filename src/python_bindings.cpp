@@ -47,6 +47,12 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     .def("updateState", &SoftTrunkModel::updateState)
     .def("getModel", [](SoftTrunkModel& stm){
         return std::make_tuple(stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
+    })
+    .def("get_H", [](SoftTrunkModel& stm, int i){
+        return stm.get_H(i).matrix();
+    })
+    .def("get_H_base", [](SoftTrunkModel& stm){
+        return stm.get_H_base().matrix();
     });
 
     py::class_<Simulator>(m, "Simulator")

@@ -26,7 +26,7 @@ public:
 
     /**
      * @brief simulate a control step
-     * @param p pressure input vector, size 3*st_params::num_segments. viewed as constant for the input time
+     * @param p pressure input vector, units in Pascals (100 Pa = 1 mbar). Size 3*st_params::num_segments. set to be constant for the whole timestep
      * raise std::runtimeerror if simulation overflows
      */
     void simulate(const VectorXd &p);
