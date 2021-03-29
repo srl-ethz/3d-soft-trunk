@@ -11,4 +11,5 @@ for i in range(10):
     ara.update(state)
     print(f"first segment pose is :{ara.get_H(0)}")
     print(f"tip pose is :{ara.get_H_tip()}")
+    print(f"base pose is : {ara.get_H_base()}")
     sleep(0.5)

@@ -25,6 +25,9 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     })
     .def("get_H_tip", [](AugmentedRigidArm& ara){
         return ara.get_H_tip().matrix();
+    })
+    .def("get_H_base", [](AugmentedRigidArm& ara){
+        return ara.get_H_base().matrix();
     });
 
     py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
