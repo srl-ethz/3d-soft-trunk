@@ -40,7 +40,7 @@ public:
     /** @brief map from pressure to generalized force */
     MatrixXd A;
     
-    /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$. */
+    /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
     MatrixXd J;
 
     /**
@@ -48,6 +48,8 @@ public:
      * @param segment_id 0 for first segment, and so on
      */
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
+
+    Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 
     std::unique_ptr<AugmentedRigidArm> ara;
 private:

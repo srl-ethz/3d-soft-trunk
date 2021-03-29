@@ -53,6 +53,9 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     })
     .def("get_H", [](SoftTrunkModel& stm, int i){
         return stm.get_H(i).matrix();
+    })
+    .def("get_H_base", [](SoftTrunkModel& stm){
+        return stm.get_H_base().matrix();
     });
 
     py::class_<Simulator>(m, "Simulator")
