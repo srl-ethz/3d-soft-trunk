@@ -21,6 +21,7 @@ if(${roscpp_FOUND})
 endif(${roscpp_FOUND})
 
 
+
 ### other programs (experiments etc.)
 
 add_executable(experiment_pid experiment_pid.cpp)
@@ -31,3 +32,9 @@ target_link_libraries(characterization_actuation ValveController SoftTrunkModel 
 
 add_executable(simulate_logged_pressure simulate_logged_pressure.cpp)
 target_link_libraries(simulate_logged_pressure Simulator SoftTrunkModel Threads::Threads)
+
+add_executable(record_movement record_movement.cpp)
+target_link_libraries(record_movement SerialInterface ControllerPCC Simulator)
+
+add_executable(play_movement play_movement.cpp)
+target_link_libraries(play_movement SerialInterface ControllerPCC Simulator)
