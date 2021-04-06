@@ -27,10 +27,10 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
         }
     }
     K_p = VectorXd::Zero(2*st_params::num_segments);
-    K_p << 1, 1, 1, 1, 1, 1;
+    //K_p << 1, 1, 1, 1, 1, 1;
 
     K_d = VectorXd::Zero(2*st_params::num_segments);
-    K_d << 1, 1, 1, 1, 1, 1;
+    //K_d << 1, 1, 1, 1, 1, 1;
 
     srl::State state;
     srl::State state_ref;

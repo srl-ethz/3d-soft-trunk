@@ -40,7 +40,7 @@ namespace st_params {
      */
     const std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
     const int num_segments = 2;
-    const int sections_per_segment = 3;
+    const int sections_per_segment = 1;
     const int q_size = 2*num_segments*sections_per_segment;
     /** @brief angle of arm rel. to upright */
     const double armAngle = 180;
