@@ -9,6 +9,7 @@
 
 ADS myFlexSensor1; //Create instance of the ADS class
 ADS myFlexSensor2; //Create instance of the ADS class
+ADS myFlexSensor3;
 
 float data_float[6];
 int num_data = sizeof(data_float) / sizeof(data_float[0]);
@@ -64,19 +65,28 @@ void setup()
   }
 
   Wire.begin();
-  if (myFlexSensor1.begin(45) == false)
+  if (myFlexSensor1.begin(10) == false)
   {
     // No sensor detected. Check wiring. Freezing...
-    Serial.println("cannot connect to sensor");
+    Serial.println("cannot connect to sensor 1");
+    delay(1000);
   }
-  if (myFlexSensor2.begin(19) == false)
+  if (myFlexSensor2.begin(20) == false)
   {
     // No sensor detected. Check wiring. Freezing...
-    Serial.println("cannot connect to sensor");
+    Serial.println("cannot connect to sensor 2");
+    delay(1000);
+  }
+  if (myFlexSensor3.begin(30) == false)
+  {
+    // No sensor detected. Check wiring. Freezing...
+    Serial.println("cannot connect to sensor 3");
+    delay(1000);
   }
   // set sample rate to 100Hz, make sure it corresponds to the calulation in signal_filter() function.
   myFlexSensor1.setSampleRate(ADS_100_HZ);
   myFlexSensor2.setSampleRate(ADS_100_HZ);
+  myFlexSensor3.setSampleRate(ADS_100_HZ);
 }
 
 void loop()
@@ -92,6 +102,11 @@ void loop()
   {
     data_float[2] = myFlexSensor2.getY();
     data_float[3] = -myFlexSensor2.getX();
+  }
+  if (myFlexSensor3.available())
+  {
+    data_float[4] = myFlexSensor3.getY();
+    data_float[5] = -myFlexSensor3.getX();
   }
   
   // process data to remove noise as much as possible
