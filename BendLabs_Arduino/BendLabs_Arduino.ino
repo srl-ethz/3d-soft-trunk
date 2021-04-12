@@ -2,14 +2,15 @@
  * Read 2-axis bend sensor and output to serial, to be read by SerialInterface.
  * Uses the SparkFun library (copy / git clone to Arduio/libraries directory)
  * https://github.com/sparkfun/SparkFun_Displacement_Sensor_Arduino_Library
+ * Click here to get the library: http://librarymanager/All#SparkFun_Displacement_Sensor
 */
 
 #include <Wire.h>
-#include "SparkFun_Displacement_Sensor_Arduino_Library.h" // Click here to get the library: http://librarymanager/All#SparkFun_Displacement_Sensor
+#include "SparkFun_Displacement_Sensor_Arduino_Library.h"
 
-ADS myFlexSensor1; //Create instance of the ADS class
-ADS myFlexSensor2; //Create instance of the ADS class
-ADS myFlexSensor3;
+ADS myFlexSensor1; // most distal segment (tip)
+ADS myFlexSensor2;
+ADS myFlexSensor3; // most proximal segment (base)
 
 float data_float[6];
 int num_data = sizeof(data_float) / sizeof(data_float[0]);
@@ -57,7 +58,7 @@ void deadzone_filter(float * sample)
 
 void setup()
 {
-  Serial.begin(38400);
+  Serial.begin(115200);
 
   for (int i = 0; i < num_data; i++)
   {
@@ -95,25 +96,24 @@ void loop()
   // here, fix the mapping of the sensor to the model.
   if (myFlexSensor1.available())
   {
-    data_float[0] = -myFlexSensor1.getY();
-    data_float[1] = myFlexSensor1.getX();
+    data_float[0] = myFlexSensor1.getX();
+    data_float[1] = myFlexSensor1.getY();
   }
   if (myFlexSensor2.available())
   {
-    data_float[2] = myFlexSensor2.getY();
-    data_float[3] = -myFlexSensor2.getX();
+    data_float[2] = myFlexSensor2.getX();
+    data_float[3] = myFlexSensor2.getY();
   }
   if (myFlexSensor3.available())
   {
-    data_float[4] = myFlexSensor3.getY();
-    data_float[5] = -myFlexSensor3.getX();
+    data_float[4] = myFlexSensor3.getX();
+    data_float[5] = myFlexSensor3.getY();
   }
   
   // process data to remove noise as much as possible
 //    signal_filter(data_float);
 //    deadzone_filter(data_float);
 
-  Serial.print("a");
   for (int i=0; i < num_data; i++){
     Serial.print(data_float[i]);
     if (i != num_data-1)
