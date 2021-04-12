@@ -13,6 +13,7 @@ int main(){
     VectorXd bendLab_offset = VectorXd::Zero(6); // use the first N measurements as offset
     int N = 10;
     fmt::print("taking {} measurements to calibrate baseline. Keep arm straight and don't move it...\n", N);
+    srl::sleep(0.5); // wait for sensor value to settle down initially
     for (int i = 0; i < N; i++)
     {
         si.getData(bendLab_data);
