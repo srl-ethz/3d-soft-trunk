@@ -67,8 +67,8 @@ private:
     /** @brief shear modulus of Dragon Skin 10, in Pa
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      */
-    std::array<double, st_params::num_segments> shear_modulus = {43000., 57000};
-    std::array<double, st_params::num_segments> drag_coef = {61000., 8000.};
+    std::array<double, st_params::num_segments> shear_modulus = {43000., 43000., 57000};
+    std::array<double, st_params::num_segments> drag_coef = {61000., 61000., 8000.};
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.

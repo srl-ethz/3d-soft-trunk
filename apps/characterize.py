@@ -12,7 +12,7 @@ before running this, set shear_modulus and drag_coef in SoftTrunkModel.h to 1.
 edit as necessary to fix xyz frame mismatch, chamber ID mismath between real and model.
 """
 segments = 1
-sections_per_segment = 3
+sections_per_segment = 1
 
 # first, calculate polynomial fit for the curvature data so that velocity and acceleration can be calculated
 # experiment with curvature_poly_deg, curvature_domain so that the fitted curves make sense
