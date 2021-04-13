@@ -24,7 +24,7 @@ enum class ControllerType {
 
 /** @brief parameters that define the configuration of the Soft Trunk */
 namespace st_params {
-    /** @brief name of robot (and of urdf / xacro file), make it different for differently configured robots */
+    /** @brief name of robot (and of urdf / xacro file) */
     const std::string robot_name = "3segment";
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
@@ -41,7 +41,7 @@ namespace st_params {
      */
     const std::array<double, 4> diameters = {0.042, 0.035, 0.028, 0.0198};
     const int num_segments = 3;
-    const int sections_per_segment = 2;
+    const int sections_per_segment = 1;
     const int q_size = 2*num_segments*sections_per_segment;
     /** @brief angle of arm rel. to upright */
     const double armAngle = 180;
