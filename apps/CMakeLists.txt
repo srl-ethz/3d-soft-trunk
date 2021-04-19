@@ -15,6 +15,10 @@ target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
 add_executable(example_Simulator example_Simulator.cpp)
 target_link_libraries(example_Simulator SoftTrunkModel Simulator)
 
+add_executable(OSC OSC.cpp)
+target_link_libraries(OSC SoftTrunkModel Simulator ControllerPCC)
+
+
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)
     target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)
