@@ -18,6 +18,7 @@ using namespace Eigen;
 enum class ControllerType {
     dynamic,
     pid, /** for PID control, error is directly converted to pressure (i.e. alpha not used) */
+    gravcomp, //attempts to hold current position, make arm compliant
 };
 
 

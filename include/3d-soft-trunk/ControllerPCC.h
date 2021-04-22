@@ -26,28 +26,44 @@ public:
      */
     void set_ref(const srl::State &pose_ref);
 
-    /** @brief get current kinematic parameters of the arm */
-    void get_kinematic(srl::State &pose);
+    /** @brief get current kinematic state of the arm */
+    void get_state(srl::State &pose);
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
 
 
-
 private:
+
+    /**
+     * actuate the arm using generalized forces
+     * @param f generalized force expressed in st_params::parametrization space
+     */
+    void actuate(VectorXd f);
+
+    /**
+     * @brief convert pseudopressures to real pressures
+     * WARNING: Does not perform any unit conversion, so give it pseudopressures in mbar (or convert to mbar after 2 -> 3 conversion) 
+     * @param pressure_pseudo 2d input pressure
+     * @return VectorXd of 3d output pressure
+     */
+    VectorXd pseudo2real(VectorXd& pressure_pseudo);
+
+
+    /**
+     * @brief give a pressure vector which will compensate for gravity + state related forces (includes velocity based ones)
+     * @param state state for which should be equalized
+     * @return VectorXd of pressures, unit mbar
+     */
+    VectorXd gravity_compensate(srl::State state);
+
     std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
 
     std::string bendlabs_portname = "/dev/ttyUSB0";
 
-    // parameters for dynamic controller
-    VectorXd K_p; /** @brief P gain for pose FB */
-    VectorXd K_d; /** @brief D gain for pose FB */
-    double alpha = 2.16e-4; /** @brief used to convert generalized force tau to pressure P (P = tau / alpha). Not used for PID control. Uses model-based value, which is very close to experimental value 2.88e-4. */
-    double beta; // ????
-
     // parameters for PID controller
-    std::array<double, 3> Ku = {800, 500, 400}; /** @brief ultimate gain for each segment, used in Ziegler-Nichols method */
+    std::array<double, 3> Ku = {3000, 2500, 2000}; /** @brief ultimate gain for each segment, used in Ziegler-Nichols method */
     std::array<double, 3> Tu = {0.7, 0.7, 0.7}; /** @brief oscillation period for each segment, used in Ziegler-Nichols method */
     std::vector<MiniPID> miniPIDs;
 
@@ -56,21 +72,17 @@ private:
      * for DragonSkin 10, set to 150.
      * (not throughly examined- a larger or smaller value may be better)
      */
-    const int p_offset = 150;
-    const int p_max = 400; // 400 for DS 10, 1200 for DS 30
-
-    bool use_feedforward = false;
-    bool simulate = false;
+    const int p_offset = 50;
+    const int p_max = 600; // 400 for DS 10, 1200 for DS 30
 
     const double dt = 1./30.;
 
     bool is_initial_ref_received = false;
 
-    /**
-     * actuate the arm using generalized forces
-     * @param f generalized force expressed in st_params::parametrization space
-     */
-    void actuate(VectorXd f);
+    // mapping between 2D pseudopressures and 3 chambers
+    MatrixXd chambermap = MatrixXd::Zero(2,3);
+
+    std::array<double, 3> segment_weight = {1.2, 1, 1}; //weightings for respective segments in gravity compensate
 
     std::thread control_thread;
     std::mutex mtx;
@@ -80,9 +92,7 @@ private:
     // arm configuration
     srl::State state;
     srl::State state_ref;
-    VectorXd q_all_ref;
 
 
-    VectorXd p_vectorized; /** @brief vector that expresses net pressure for X&Y directions, for each segment */
-
+    VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
 };
