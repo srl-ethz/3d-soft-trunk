@@ -31,6 +31,12 @@ public:
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
 
+    /**
+    *@brief relinearize the LQR controller around current state
+    *@details this function takes a while, so call it into a seperate thread so it doesn't lock up the controller
+    */
+    void updateLQR(srl::State state);
+
 
 private:
 
@@ -93,6 +99,12 @@ private:
     srl::State state;
     srl::State state_ref;
 
+    void solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q,
+                               const MatrixXd &R, MatrixXd &K);
+
+    
+
+    MatrixXd K;
 
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
 };

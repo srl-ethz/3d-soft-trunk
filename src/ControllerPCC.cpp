@@ -20,6 +20,7 @@ MiniPID ZieglerNichols(double Ku, double period, double control_period) {
 }
 
 ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
+    
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
         for (int j = 0; j < st_params::num_segments; ++j){
@@ -28,10 +29,13 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
         }
     }
 
+    if (st_params::controller == ControllerType::lqr) {
+        updateLQR(state);
+    }
+
     chambermap << 1, -0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2; 
 
-    srl::State state;
-    srl::State state_ref;
+    
 
 
     stm = std::make_unique<SoftTrunkModel>();
@@ -124,9 +128,58 @@ void ControllerPCC::control_loop() {
         case ControllerType::gravcomp:
             p = gravity_compensate(state);
             break;
+        
+        case ControllerType::lqr:
+            VectorXd fullstate = VectorXd::Zero(2*st_params::q_size);
+            fullstate << state.dq, state.q;
+            p = K*fullstate/100 + gravity_compensate(state);
         }
-
         // actuate robot
         actuate(p);
     }
+}
+
+void ControllerPCC::updateLQR(srl::State state){ 
+    assert(st_params::controller == ControllerType::lqr);
+    stm->updateState(state);
+    //make and update x' = Ax+Bu matrices
+    MatrixXd lqrA = MatrixXd::Zero(2*st_params::q_size, 2*st_params::q_size);
+    MatrixXd lqrB = MatrixXd::Zero(2*st_params::q_size, 3*st_params::num_segments);
+    MatrixXd R = 0.005*MatrixXd::Identity(3*st_params::num_segments, 3*st_params::num_segments);
+    MatrixXd Q = 400000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
+
+    lqrA << - stm->B.inverse()*stm->K, -stm->B.inverse()*stm->D, MatrixXd::Identity(st_params::q_size, st_params::q_size), MatrixXd::Zero(st_params::q_size,st_params::q_size);
+    lqrB << stm->B.inverse()*stm->A, MatrixXd::Zero(st_params::q_size, 3*st_params::num_segments);
+    solveRiccatiArimotoPotter(lqrA, lqrB, Q, R, K);
+}
+
+void ControllerPCC::solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q, //this function stolen from https://github.com/TakaHoribe/Riccati_Solver
+                               const MatrixXd &R, Eigen::MatrixXd &K) {
+
+  const uint dim_x = A.rows();
+  const uint dim_u = B.cols();
+
+  // set Hamilton matrix
+  Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
+  Ham << A, -B * R.inverse() * B.transpose(), -Q, -A.transpose();
+
+  // calc eigenvalues and eigenvectors
+  Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
+
+  // extract stable eigenvectors into 'eigvec'
+  Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
+  int j = 0;
+  for (int i = 0; i < 2 * dim_x; ++i) {
+    if (Eigs.eigenvalues()[i].real() < 0.) {
+      eigvec.col(j) = Eigs.eigenvectors().block(0, i, 2 * dim_x, 1);
+      ++j;
+    }
+  }
+
+  // calc P with stable eigen vector matrix
+  Eigen::MatrixXcd Vs_1, Vs_2;
+  Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
+  Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
+  MatrixXd P  = (Vs_2 * Vs_1.inverse()).real();
+  K = R.inverse()*B.transpose()*P;
 }
