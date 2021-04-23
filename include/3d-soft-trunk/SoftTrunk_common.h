@@ -47,7 +47,7 @@ namespace st_params {
     const int q_size = 2*num_segments*sections_per_segment;
     /** @brief angle of arm rel. to upright */
     const double armAngle = 180;
-    const ControllerType controller = ControllerType::pid;
+    const ControllerType controller = ControllerType::lqr;
 }
 
 namespace srl{

@@ -29,10 +29,6 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
         }
     }
 
-    if (st_params::controller == ControllerType::lqr) {
-        updateLQR(state);
-    }
-
     chambermap << 1, -0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2; 
 
     
@@ -52,10 +48,10 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
 
 void ControllerPCC::set_ref(const srl::State &state_ref) {
     std::lock_guard<std::mutex> lock(mtx);
-    assert(state_ref.q.size() == st_params::num_segments * 2);
-    assert(state_ref.dq.size() == st_params::num_segments * 2);
     // assign to member variables
     this->state_ref = state_ref;
+    if (st_params::controller == ControllerType::lqr)
+        updateLQR(state_ref);
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }
@@ -131,8 +127,13 @@ void ControllerPCC::control_loop() {
         
         case ControllerType::lqr:
             VectorXd fullstate = VectorXd::Zero(2*st_params::q_size);
-            fullstate << state.dq, state.q;
-            p = K*fullstate/100 + gravity_compensate(state);
+            fullstate << state.q, state.dq;
+            VectorXd fullstate_ref = VectorXd::Zero(2*st_params::q_size);
+            fullstate_ref << state_ref.q, state_ref.dq;
+            f = K*(fullstate_ref - fullstate)/100;
+            p = pseudo2real(f)  + gravity_compensate(state);
+            /** @todo this may cause unwanted antagonistic actuation */
+            break;
         }
         // actuate robot
         actuate(p);
@@ -142,15 +143,23 @@ void ControllerPCC::control_loop() {
 void ControllerPCC::updateLQR(srl::State state){ 
     assert(st_params::controller == ControllerType::lqr);
     stm->updateState(state);
-    //make and update x' = Ax+Bu matrices
+    // make and update x' = Ax+Bu matrices
+    // x = [q, dq]
+    // formulate using pseudopressures
     MatrixXd lqrA = MatrixXd::Zero(2*st_params::q_size, 2*st_params::q_size);
-    MatrixXd lqrB = MatrixXd::Zero(2*st_params::q_size, 3*st_params::num_segments);
-    MatrixXd R = 0.005*MatrixXd::Identity(3*st_params::num_segments, 3*st_params::num_segments);
-    MatrixXd Q = 400000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
+    MatrixXd lqrB = MatrixXd::Zero(2*st_params::q_size, 2*st_params::num_segments);
+    MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params::num_segments, 2*st_params::num_segments);
+    MatrixXd Q = 700000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
+    Q.block(st_params::q_size, st_params::q_size, st_params::q_size, st_params::q_size) *= 0.01; // reduce cost for velocity
+    MatrixXd Binv = stm->B.inverse();
 
-    lqrA << - stm->B.inverse()*stm->K, -stm->B.inverse()*stm->D, MatrixXd::Identity(st_params::q_size, st_params::q_size), MatrixXd::Zero(st_params::q_size,st_params::q_size);
-    lqrB << stm->B.inverse()*stm->A, MatrixXd::Zero(st_params::q_size, 3*st_params::num_segments);
+    lqrA << MatrixXd::Zero(st_params::q_size,st_params::q_size), MatrixXd::Identity(st_params::q_size, st_params::q_size), - Binv * stm->K, -Binv * stm->D;
+    lqrB << MatrixXd::Zero(st_params::q_size, 2*st_params::num_segments), Binv*stm->A_pseudo;
+    // for debugging
+    fmt::print("lqrA\n{}\nlqrB\n{}\n", lqrA, lqrB);
+    fmt::print("Q\n{}\nR\n{}\n", Q, R);
     solveRiccatiArimotoPotter(lqrA, lqrB, Q, R, K);
+    fmt::print("K\n{}\n", K);
 }
 
 void ControllerPCC::solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q, //this function stolen from https://github.com/TakaHoribe/Riccati_Solver

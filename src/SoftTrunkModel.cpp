@@ -10,6 +10,7 @@ SoftTrunkModel::SoftTrunkModel()
     K = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
     D = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
     A = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 3 * st_params::num_segments);
+    A_pseudo = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2*st_params::num_segments);
 
     MatrixXd chamberMatrix = MatrixXd::Zero(2, 3); // describes the direction of each chamber
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
@@ -31,6 +32,7 @@ SoftTrunkModel::SoftTrunkModel()
         K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus[segment_id] * secondMomentOfArea / l;
         A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
         D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * drag_coef[segment_id] / l; /** this is "heuristic" */
+        A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
     }
 
 }

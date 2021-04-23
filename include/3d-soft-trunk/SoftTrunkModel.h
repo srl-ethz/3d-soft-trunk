@@ -39,6 +39,12 @@ public:
 
     /** @brief map from pressure to generalized force */
     MatrixXd A;
+
+    /** @brief map from pseudopressure to generalized force.
+     * The concept of pseudopressure creates a virtual chamber aligned with X and Y axes that can also output negative pressure values.
+     * Calculating using pseudopressure may make it easier for some controllers.
+    */
+    MatrixXd A_pseudo;
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
     MatrixXd J;
