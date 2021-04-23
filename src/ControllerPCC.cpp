@@ -29,11 +29,6 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
         }
     }
 
-    chambermap << 1, -0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2; 
-
-    
-
-
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
     std::vector<int> map = {0, 1, 2, 8, 6, 5, 7, 3, 4};
@@ -64,28 +59,11 @@ void ControllerPCC::get_pressure(VectorXd& p){
     p = this->p;
 }
 
-VectorXd ControllerPCC::pseudo2real(VectorXd& pressure_pseudo){
-    VectorXd output = VectorXd::Zero(3*st_params::num_segments);
-    for (int i = 0; i < st_params::num_segments; i++){
-        output.segment(3*i, 3) = chambermap.transpose()*(chambermap*chambermap.transpose()).inverse()*pressure_pseudo.segment(2*i, 2); //use Moore-Penrose to invert back onto real chambers
-        double min_p = output.segment(3*i, 3).minCoeff();
-        if (min_p < 0)
-            output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
-    }
-    return output;
-}
+
 
 VectorXd ControllerPCC::gravity_compensate(srl::State state){
-    /** @todo maybe add A_pseudo to SoftTrunkModel and use that + pseudo2real for simpler processing */
-    VectorXd gravcomp = VectorXd::Zero(3 * st_params::num_segments);
     assert(st_params::sections_per_segment == 1);
-    for (int i = 0; i < st_params::num_segments; i++){                  //calculate hold pressure for each PCC section by inverting stm.A blocks
-        MatrixXd A_section = stm->A.block(2*i, 3*i, 2, 3); // section of A which corresponds to this segment
-        gravcomp.segment(3*i,3) = A_section.transpose()*(A_section*A_section.transpose()).inverse()*(stm->g + segment_weight[i]*stm->K*state.q).segment(2*i, 2);
-        double min_p = gravcomp.segment(3*i, 3).minCoeff();
-        if (min_p < 0)
-            gravcomp.segment(3*i, 3) -= min_p * Vector3d::Ones();
-    }
+    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
     return gravcomp/100; //to mbar
 }
 
@@ -119,20 +97,18 @@ void ControllerPCC::control_loop() {
         case ControllerType::pid:
             for (int i = 0; i < 2 * st_params::num_segments; ++i)
                 f[i] = miniPIDs[i].getOutput(state.q[i], state_ref.q[i]);
-            p = pseudo2real(f) + gravity_compensate(state);
+            p = stm->pseudo2real(f + gravity_compensate(state));
             break;
         case ControllerType::gravcomp:
-            p = gravity_compensate(state);
+            p = stm->pseudo2real(gravity_compensate(state));
             break;
-        
         case ControllerType::lqr:
             VectorXd fullstate = VectorXd::Zero(2*st_params::q_size);
             fullstate << state.q, state.dq;
             VectorXd fullstate_ref = VectorXd::Zero(2*st_params::q_size);
             fullstate_ref << state_ref.q, state_ref.dq;
             f = K*(fullstate_ref - fullstate)/100;
-            p = pseudo2real(f)  + gravity_compensate(state);
-            /** @todo this may cause unwanted antagonistic actuation */
+            p = stm->pseudo2real(f + gravity_compensate(state));
             break;
         }
         // actuate robot

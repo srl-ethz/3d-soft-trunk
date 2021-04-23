@@ -47,18 +47,9 @@ private:
     void actuate(VectorXd f);
 
     /**
-     * @brief convert pseudopressures to real pressures
-     * WARNING: Does not perform any unit conversion, so give it pseudopressures in mbar (or convert to mbar after 2 -> 3 conversion) 
-     * @param pressure_pseudo 2d input pressure
-     * @return VectorXd of 3d output pressure
-     */
-    VectorXd pseudo2real(VectorXd& pressure_pseudo);
-
-
-    /**
-     * @brief give a pressure vector which will compensate for gravity + state related forces (includes velocity based ones)
+     * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)
      * @param state state for which should be equalized
-     * @return VectorXd of pressures, unit mbar
+     * @return VectorXd of pseudopressures, unit mbar
      */
     VectorXd gravity_compensate(srl::State state);
 
@@ -84,11 +75,6 @@ private:
     const double dt = 1./30.;
 
     bool is_initial_ref_received = false;
-
-    // mapping between 2D pseudopressures and 3 chambers
-    MatrixXd chambermap = MatrixXd::Zero(2,3);
-
-    std::array<double, 3> segment_weight = {1.2, 1, 1}; //weightings for respective segments in gravity compensate
 
     std::thread control_thread;
     std::mutex mtx;
