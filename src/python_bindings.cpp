@@ -6,6 +6,7 @@
 #include <3d-soft-trunk/CurvatureCalculator.h>
 #include <3d-soft-trunk/SoftTrunkModel.h>
 #include <3d-soft-trunk/Simulator.h>
+#include <3d-soft-trunk/ControllerPCC.h>
 
 namespace py = pybind11;
 
@@ -68,6 +69,16 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     })
     .def("start_log", &Simulator::start_log)
     .def("end_log", &Simulator::end_log);
+
+    py::class_<ControllerPCC>(m, "Controller")
+    .def(py::init<CurvatureCalculator::SensorType>())
+    .def("set_ref", &ControllerPCC::set_ref)
+    .def("get_state", [](ControllerPCC& cpcc){
+        srl::State state;
+        cpcc.get_state(state);
+        return state;
+    })
+    .def("get_pressure", &ControllerPCC::set_ref);
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)
