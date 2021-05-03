@@ -17,34 +17,37 @@ using namespace Eigen;
 
 enum class ControllerType {
     dynamic,
-    pid, /** for PID control, error is directly converted to pressure (i.e. alpha not used) */
+    pid,        // for PID control, error is directly converted to pressure (i.e. alpha not used)
+    gravcomp,   //attempts to hold current position, make arm compliant
+    lqr,        //LQR controller, directly to pressure
 };
 
 
 
 /** @brief parameters that define the configuration of the Soft Trunk */
 namespace st_params {
-    /** @brief name of robot (and of urdf / xacro file), make it different for differently configured robots */
-    const std::string robot_name = "2segment";
+    /** @brief name of robot (and of urdf / xacro file) */
+    const std::string robot_name = "3segment";
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
-     * top segment 160g, middle connector 20g, bottom segment 82g, gripper 23g
+     * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
+     * fake value for segment 3
      */
-    const std::array<double, 4> masses = {0.160, 0.020, 0.082, 0.023};
+    const std::array<double, 6> masses = {0.19, 0.02, 0.160, 0.020, 0.082, 0.023};
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    const std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
+    const std::array<double, 6> lengths = {0.125, 0.02, 0.125, 0.02, 0.125, 0.02};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
      */
-    const std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
-    const int num_segments = 2;
+    const std::array<double, 4> diameters = {0.042, 0.035, 0.028, 0.0198};
+    const int num_segments = 3;
     const int sections_per_segment = 1;
     const int q_size = 2*num_segments*sections_per_segment;
     /** @brief angle of arm rel. to upright */
     const double armAngle = 180;
-    const ControllerType controller = ControllerType::pid;
+    const ControllerType controller = ControllerType::lqr;
 }
 
 namespace srl{
