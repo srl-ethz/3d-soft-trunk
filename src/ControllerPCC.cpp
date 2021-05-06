@@ -31,7 +31,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {0, 1, 2, 8, 6, 5, 7, 3, 4};
+    std::vector<int> map = {6, 2, 4, 5, 1, 0};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
@@ -45,8 +45,10 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
     std::lock_guard<std::mutex> lock(mtx);
     // assign to member variables
     this->state_ref = state_ref;
-    if (st_params::controller == ControllerType::lqr)
+    if (st_params::controller == ControllerType::lqr){
         updateLQR(state_ref);
+        u0 = gravity_compensate(state_ref);
+    }
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }
@@ -108,7 +110,7 @@ void ControllerPCC::control_loop() {
             VectorXd fullstate_ref = VectorXd::Zero(2*st_params::q_size);
             fullstate_ref << state_ref.q, state_ref.dq;
             f = K*(fullstate_ref - fullstate)/100;
-            p = stm->pseudo2real(f + gravity_compensate(state));
+            p = stm->pseudo2real(f + u0);
             break;
         }
         // actuate robot
@@ -125,8 +127,8 @@ void ControllerPCC::updateLQR(srl::State state){
     MatrixXd lqrA = MatrixXd::Zero(2*st_params::q_size, 2*st_params::q_size);
     MatrixXd lqrB = MatrixXd::Zero(2*st_params::q_size, 2*st_params::num_segments);
     MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params::num_segments, 2*st_params::num_segments);
-    MatrixXd Q = 700000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
-    Q.block(st_params::q_size, st_params::q_size, st_params::q_size, st_params::q_size) *= 0.01; // reduce cost for velocity
+    MatrixXd Q = 100000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
+    Q.block(st_params::q_size, st_params::q_size, st_params::q_size, st_params::q_size) *= 0.001; // reduce cost for velocity
     MatrixXd Binv = stm->B.inverse();
 
     lqrA << MatrixXd::Zero(st_params::q_size,st_params::q_size), MatrixXd::Identity(st_params::q_size, st_params::q_size), - Binv * stm->K, -Binv * stm->D;

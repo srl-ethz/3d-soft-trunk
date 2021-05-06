@@ -70,7 +70,7 @@ private:
      * (not throughly examined- a larger or smaller value may be better)
      */
     const int p_offset = 50;
-    const int p_max = 600; // 400 for DS 10, 1200 for DS 30
+    const int p_max = 800; // 400 for DS 10, 1200 for DS 30
 
     const double dt = 1./30.;
 
@@ -90,7 +90,8 @@ private:
 
     
 
-    MatrixXd K;
+    MatrixXd K; /** gain matrix for LQR */
+    VectorXd u0; /** input offset for LQR */
 
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
 };
