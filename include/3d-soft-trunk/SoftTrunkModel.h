@@ -39,6 +39,12 @@ public:
 
     /** @brief map from pressure to generalized force */
     MatrixXd A;
+
+    /** @brief map from pseudopressure to generalized force.
+     * The concept of pseudopressure creates a virtual chamber aligned with X and Y axes that can also output negative pressure values.
+     * Calculating using pseudopressure may make it easier for some controllers.
+    */
+    MatrixXd A_pseudo;
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
     MatrixXd J;
@@ -52,6 +58,15 @@ public:
     Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 
     std::unique_ptr<AugmentedRigidArm> ara;
+    
+    /**
+     * @brief convert pseudopressures to real pressures
+     * WARNING: Does not perform any unit conversion, so give it pseudopressures in mbar (or convert to mbar after 2 -> 3 conversion) 
+     * @param pressure_pseudo 2d input pressure
+     * @return VectorXd of 3d output pressure
+     */
+    VectorXd pseudo2real(VectorXd pressure_pseudo);
+
 private:
     
     /**
@@ -66,12 +81,17 @@ private:
 
     /** @brief shear modulus of Dragon Skin 10, in Pa
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
+     * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::array<double, st_params::num_segments> shear_modulus = {43000., 43000., 57000};
-    std::array<double, st_params::num_segments> drag_coef = {61000., 61000., 8000.};
+    std::array<double, st_params::num_segments> shear_modulus = {33000., 47000};
+    std::array<double, st_params::num_segments> drag_coef = {61000., 8000.};
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.
      */
     void generateRobotURDF();
+
+    /** @brief mapping between 2D pseudopressures and 3 chambers */
+    MatrixXd chamberMatrix = MatrixXd::Zero(2, 3); // describes the direction of each chamber
+
 };

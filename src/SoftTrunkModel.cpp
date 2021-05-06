@@ -10,8 +10,8 @@ SoftTrunkModel::SoftTrunkModel()
     K = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
     D = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
     A = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 3 * st_params::num_segments);
+    A_pseudo = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2*st_params::num_segments);
 
-    MatrixXd chamberMatrix = MatrixXd::Zero(2, 3); // describes the direction of each chamber
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
     for (int section_id = 0; section_id < st_params::sections_per_segment * st_params::num_segments; section_id++)
     {
@@ -31,6 +31,7 @@ SoftTrunkModel::SoftTrunkModel()
         K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * shear_modulus[segment_id] * secondMomentOfArea / l;
         A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
         D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * drag_coef[segment_id] / l; /** this is "heuristic" */
+        A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
     }
 
 }
@@ -49,6 +50,19 @@ Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id)
 }
 Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H_base(){
     return ara->get_H_base();
+}
+
+VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
+    assert(pressure_pseudo.size() == 2 * st_params::num_segments);
+    VectorXd output = VectorXd::Zero(3*st_params::num_segments);
+    MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse();
+    for (int i = 0; i < st_params::num_segments; i++){
+        output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //use Moore-Penrose to invert back onto real chambers
+        double min_p = output.segment(3*i, 3).minCoeff();
+        if (min_p < 0)
+            output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
+    }
+    return output;
 }
 
 void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &chamberCentroidDist, double &siliconeArea, double &chamberArea, double &secondMomentOfArea)
