@@ -29,6 +29,9 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
         }
     }
 
+    K_p = VectorXd::Ones(st_params::q_size);
+    K_d = VectorXd::Ones(st_params::q_size);
+
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
     std::vector<int> map = {6, 2, 4, 5, 1, 0};
@@ -93,8 +96,9 @@ void ControllerPCC::control_loop() {
         switch (st_params::controller)
         {
         case ControllerType::dynamic:
-            assert(false);
-            // not implemented yet for new model
+            f = stm->A_pseudo.inverse() * (stm->g + stm->K*state_ref.q + stm->c + stm->D*state_ref.dq 
+                    + K_p.asDiagonal()*(state_ref.q - state.q) + K_d.asDiagonal()*(state_ref.dq - state.dq)); 
+            p = stm->pseudo2real(f/100);
             break;
         case ControllerType::pid:
             for (int i = 0; i < 2 * st_params::num_segments; ++i)

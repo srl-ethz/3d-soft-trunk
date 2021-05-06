@@ -72,6 +72,9 @@ private:
     const int p_offset = 50;
     const int p_max = 800; // 400 for DS 10, 1200 for DS 30
 
+    VectorXd K_p;
+    VectorXd K_d;
+
     const double dt = 1./30.;
 
     bool is_initial_ref_received = false;
