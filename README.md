@@ -22,6 +22,7 @@ git clone --recursive git@gitlab.ethz.ch:srl/3d-soft-trunk.git
 
 also install these packages:
 ```bash
+sudo apt install python3-pip
 pip3 install xacro # used to convert robot model files from XACRO to URDF
 ```
 
@@ -29,11 +30,11 @@ pip3 install xacro # used to convert robot model files from XACRO to URDF
 
 refer to [Drake documentation- binary installation](https://drake.mit.edu/from_binary.html) and [Drake sample CMake project](https://github.com/RobotLocomotion/drake-external-examples/tree/master/drake_cmake_installed).
 
-For Ubuntu 18.04, basic steps are:
+For Ubuntu 20.04, basic steps are:
 ```bash
-curl -O https://drake-packages.csail.mit.edu/drake/nightly/drake-latest-bionic.tar.gz
+curl -O https://drake-packages.csail.mit.edu/drake/nightly/drake-latest-focal.tar.gz
 ## decompress and place drake files into /opt/drake
-sudo tar -xvzf drake-latest-bionic.tar.gz -C /opt
+sudo tar -xvzf drake-latest-focal.tar.gz -C /opt
 ## install prerequisites
 sudo /opt/drake/share/drake/setup/install_prereqs
 ```
