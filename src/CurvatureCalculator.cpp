@@ -26,7 +26,8 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 }
 
 void CurvatureCalculator::setupQualisys() {
-    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1);
+    std::vector<int> emptyCameraList = {};
+    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1, emptyCameraList, true);
 }
 
 void CurvatureCalculator::setupIntegratedSensor(std::string portname) {
@@ -54,6 +55,7 @@ void CurvatureCalculator::calculator_loop() {
     srl::Rate rate{1. / interval};
     run = true;
     unsigned long long int last_timestamp;
+    double interval_measured; // actual measured interval between timesteps
     while (run) {
         rate.sleep();
         std::lock_guard<std::mutex> lock(mtx);
@@ -62,22 +64,31 @@ void CurvatureCalculator::calculator_loop() {
         if (sensor_type == CurvatureCalculator::SensorType::qualisys){
             // first, update the internal data for transforms of each frame
             optiTrackClient->getData(abs_transforms, timestamp);
+
+            // if ANY of the frames has not been received, disregard the entire data.
+            bool all_frames_received = true;
+            for (int i=0; i<st_params::num_segments+1; i++){
+                if (std::isnan(abs_transforms[i](0,0)))
+                    all_frames_received = false;
+            }
+            if (!all_frames_received)
+                continue;
+
             // ignore if current timestep is same as previous
             if (last_timestamp == timestamp)
                 continue;
+            interval_measured = (timestamp - last_timestamp) / 1.0e6;
             last_timestamp = timestamp;
         }
         else if (sensor_type == CurvatureCalculator::SensorType::bend_labs){
             timestamp += 1; /** @todo somehow get timestamp for bend lab too */
             serialInterface->getData(bendLab_data);
+            interval_measured = interval;
         }
 
         calculateCurvature();
-        /** todo: is there a smarter algorithm to calculate time derivative, that can smooth out noises? */
-//        presmooth_dq = (q - prev_q) / interval;
-        state.dq = (state.q - state_prev.q) / interval;;// (1 - 0.2) * presmooth_dq + 0.2 * dq;
-//        presmooth_ddq = (dq - prev_dq) / interval;
-        state.ddq = (state.dq - state_prev.dq) / interval;;//(1 - 0.2) * presmooth_ddq e+ 0.2 * ddq;
+        state.dq = (state.q - state_prev.q) / interval_measured;
+        state.ddq = (state.dq - state_prev.dq) / interval_measured;
         state_prev.q = state.q;
         state_prev.dq = state.dq;
         if (log) {
