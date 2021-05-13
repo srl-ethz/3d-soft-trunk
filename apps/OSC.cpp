@@ -18,7 +18,9 @@ int main(){
     char c;
 
     SoftTrunkModel stm = SoftTrunkModel();
-    state.q = -0.2*VectorXd::Ones(st_params::q_size);
+    /*for (int i = 0; i < st_params::num_segments; i++){
+        state.q(2*i+1) = -0.1;
+    }*/
 
     Simulator sim = Simulator(stm, control_step, steps, state);
     stm.updateState(state);
@@ -39,14 +41,14 @@ int main(){
     /*Vector3d norm = stm.J.col(0).cross(stm.J.col(1)).normalized();
     Vector3d x_des_adjusted = x_des - (x_des - x).dot(norm)*norm;*/
 
-    MatrixXd B_op = stm.J*stm.B.inverse()*stm.J.transpose();
+    MatrixXd B_op = (stm.J*stm.B.inverse()*stm.J.transpose()).inverse();
     MatrixXd g_op = B_op*stm.J*stm.B.inverse()*stm.g;
     MatrixXd J_inv = stm.B.inverse()*stm.J.transpose()*B_op;
 
     
 
     VectorXd f = B_op*ddx_ref + g_op;
-    VectorXd tau_null = VectorXd::Zero(st_params::q_size);
+    VectorXd tau_null = -0.1*state.q;
     VectorXd tau_ref = stm.J.transpose()*f + stm.K * state.q + stm.D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm.J.transpose()*J_inv.transpose())*tau_null;
     
     
@@ -59,18 +61,17 @@ int main(){
         x = stm.ara->get_H_base().rotation()*stm.ara->get_H_tip().translation();
         dx = stm.J*state.dq;
         ddx_ref = kp*(x_des - x) + kd*(dx_des - dx);
-        B_op = stm.J*stm.B.inverse()*stm.J.transpose();
+        B_op = (stm.J*stm.B.inverse()*stm.J.transpose()).inverse();
         g_op = B_op*stm.J*stm.B.inverse()*stm.g;
         J_inv = stm.B.inverse()*stm.J.transpose()*B_op;
         f = B_op*ddx_ref + g_op;
+        tau_null = -0.1*state.q;
         tau_ref = stm.J.transpose()*f + stm.K * state.q + stm.D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm.J.transpose()*J_inv.transpose())*tau_null;
         p_pseudo = stm.A_pseudo.inverse()*tau_ref;
 
         p = stm.pseudo2real(p_pseudo);
-        sim.get_state(state);
         std::cout << "\n----------\n Pressures: \n" << p.transpose() << "\n----------\n dq:" << state.dq.transpose();
         sim.simulate(p);
-        std::cin >> c;
     }
 
     
