@@ -72,13 +72,13 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
 
     py::class_<ControllerPCC>(m, "Controller")
     .def(py::init<CurvatureCalculator::SensorType>())
-    .def("set_ref", &ControllerPCC::set_ref)
+    .def("set_ref", py::overload_cast<const srl::State&>(&ControllerPCC::set_ref))
     .def("get_state", [](ControllerPCC& cpcc){
         srl::State state;
         cpcc.get_state(state);
         return state;
     })
-    .def("get_pressure", &ControllerPCC::set_ref);
+    .def("get_pressure", &ControllerPCC::get_pressure);
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)
