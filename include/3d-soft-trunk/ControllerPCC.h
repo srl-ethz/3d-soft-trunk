@@ -25,6 +25,7 @@ public:
     /** @brief set the reference pose (trajectory) of the arm
      */
     void set_ref(const srl::State &pose_ref);
+    void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref);
 
     /** @brief get current kinematic state of the arm */
     void get_state(srl::State &pose);
@@ -70,7 +71,7 @@ private:
      * (not throughly examined- a larger or smaller value may be better)
      */
     const int p_offset = 50;
-    const int p_max = 800; // 400 for DS 10, 1200 for DS 30
+    const int p_max = 600; // 400 for DS 10, 1200 for DS 30
 
     VectorXd K_p;
     VectorXd K_d;
@@ -84,17 +85,30 @@ private:
 
     void control_loop();
 
-    // arm configuration
+    // arm configuration+target positions
     srl::State state;
     srl::State state_ref;
+    Vector3d x;
+    Vector3d x_ref;
+    Vector3d dx;
+    Vector3d dx_ref;
 
+    //LQR variables are here
     void solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q,
                                const MatrixXd &R, MatrixXd &K);
-
-    
-
     MatrixXd K; /** gain matrix for LQR */
     VectorXd u0; /** input offset for LQR */
+    VectorXd fullstate = VectorXd::Zero(2*st_params::q_size);;     //state.q and state.dq in 1 vector for LQR
+    VectorXd fullstate_ref = VectorXd::Zero(2*st_params::q_size); 
+
+    //OSC variables are here
+    MatrixXd B_op;      //dynamics (OSC formulation)
+    MatrixXd g_op;      //gravity (OSC formulation)
+    MatrixXd J_inv;     //J_inv (OSC formulation)
+    VectorXd f;         //forces on end effector
+    VectorXd tau_ref;   //reference joint torques
+    VectorXd tau_null;  //optional side objective
+    Vector3d ddx_ref;   //reference end effector acceleration
 
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
 };

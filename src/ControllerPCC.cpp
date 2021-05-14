@@ -55,6 +55,15 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }
+
+void ControllerPCC::set_ref(const Vector3d &x_ref, const Vector3d &dx_ref){
+    std::lock_guard<std::mutex> lock(mtx);
+    this->x_ref = x_ref;
+    this->dx_ref = dx_ref;
+    if (!is_initial_ref_received)
+        is_initial_ref_received = true;
+}
+
 void ControllerPCC::get_state(srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
     state = this->state;
@@ -109,12 +118,25 @@ void ControllerPCC::control_loop() {
             p = stm->pseudo2real(gravity_compensate(state));
             break;
         case ControllerType::lqr:
-            VectorXd fullstate = VectorXd::Zero(2*st_params::q_size);
             fullstate << state.q, state.dq;
-            VectorXd fullstate_ref = VectorXd::Zero(2*st_params::q_size);
             fullstate_ref << state_ref.q, state_ref.dq;
             f = K*(fullstate_ref - fullstate)/100;
             p = stm->pseudo2real(f + u0);
+            break;
+        case ControllerType::osc:
+            x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
+            dx = stm->J*state.dq;
+            ddx_ref = 50*(x_ref - x) + 2*sqrt(50)*(dx_ref - dx);            //values are critically damped approach
+            
+            B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
+            g_op = B_op*stm->J*stm->B.inverse()*stm->g;
+            J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
+            
+            f = B_op*ddx_ref + g_op;
+            tau_null = -0.1*state.q;
+            tau_ref = stm->J.transpose()*f + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+
+            p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
             break;
         }
         // actuate robot

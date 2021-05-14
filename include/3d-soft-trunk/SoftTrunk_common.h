@@ -20,6 +20,7 @@ enum class ControllerType {
     pid,        // for PID control, error is directly converted to pressure (i.e. alpha not used)
     gravcomp,   //attempts to hold current position, make arm compliant
     lqr,        //LQR controller, directly to pressure
+    osc,        //OSC controller, coordinates are task space
 };
 
 
@@ -47,7 +48,7 @@ namespace st_params {
     const int q_size = 2*num_segments*sections_per_segment;
     /** @brief angle of arm rel. to upright */
     const double armAngle = 180;
-    const ControllerType controller = ControllerType::lqr;
+    const ControllerType controller = ControllerType::osc;
 }
 
 namespace srl{
