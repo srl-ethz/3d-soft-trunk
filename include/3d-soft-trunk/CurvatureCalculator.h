@@ -43,7 +43,9 @@ public:
      * 
      * @param address portname of Arduino when using Bend Labs. (value ignored when using Qualisys as sensor)
      */
-    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address = "/dev/ttyACM0");
+    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address = "/dev/ttyACM0", int extra_frames = 0);
+
+
 
     ~CurvatureCalculator();
 
@@ -102,5 +104,9 @@ private:
      * @brief for future, if you want to use sensors embedded in arm.
      */
     void setupIntegratedSensor(std::string portname);
+
+
+    /** @brief extra qualisys frames to be tracked*/
+    int extra_frames;
     
 };
