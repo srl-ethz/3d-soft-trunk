@@ -34,7 +34,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {6, 2, 4, 5, 1, 0};
+    std::vector<int> map = {1,2,5,3,6,4};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
@@ -73,7 +73,15 @@ void ControllerPCC::get_pressure(VectorXd& p){
     p = this->p;
 }
 
+Eigen::Transform<double, 3, Eigen::Affine> ControllerPCC::get_H(int segment_id){
+    std::lock_guard<std::mutex> lock(mtx);
+    return stm->get_H(segment_id);
+};
 
+void ControllerPCC::print_ddx(){
+    std::lock_guard<std::mutex> lock(mtx);
+    fmt::print("ddx: {}\n", this->ddx_ref.transpose());
+}
 
 VectorXd ControllerPCC::gravity_compensate(srl::State state){
     assert(st_params::sections_per_segment == 1);
@@ -127,16 +135,16 @@ void ControllerPCC::control_loop() {
             x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
             dx = stm->J*state.dq;
             ddx_ref = 50*(x_ref - x) + 2*sqrt(50)*(dx_ref - dx);            //values are critically damped approach
-            
+            ddx_ref*=1.3;
             B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
             g_op = B_op*stm->J*stm->B.inverse()*stm->g;
             J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
             
-            f = B_op*ddx_ref + g_op;
-            tau_null = -0.1*state.q;
-            tau_ref = stm->J.transpose()*f + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+            f = B_op*ddx_ref;// + g_op;
+            tau_null = -0.1*state.q*0;
+            tau_ref = stm->J.transpose()*f /*+ stm->K * state.q*/ + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
-            p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
+            p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100 + stm->pseudo2real(gravity_compensate(state));
             break;
         }
         // actuate robot

@@ -39,6 +39,16 @@ public:
     void updateLQR(srl::State state);
 
 
+
+    void print_ddx();
+
+    /**
+    *@brief return segment tip transformation
+    */
+    Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
+
+    std::unique_ptr<SoftTrunkModel> stm;
+
 private:
 
     /**
@@ -54,7 +64,7 @@ private:
      */
     VectorXd gravity_compensate(srl::State state);
 
-    std::unique_ptr<SoftTrunkModel> stm;
+    
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
 
