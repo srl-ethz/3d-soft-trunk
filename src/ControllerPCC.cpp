@@ -78,10 +78,6 @@ Eigen::Transform<double, 3, Eigen::Affine> ControllerPCC::get_H(int segment_id){
     return stm->get_H(segment_id);
 };
 
-void ControllerPCC::print_ddx(){
-    std::lock_guard<std::mutex> lock(mtx);
-    fmt::print("ddx: {}\n", this->ddx_ref.transpose());
-}
 
 VectorXd ControllerPCC::gravity_compensate(srl::State state){
     assert(st_params::sections_per_segment == 1);
@@ -92,6 +88,29 @@ VectorXd ControllerPCC::gravity_compensate(srl::State state){
 void ControllerPCC::actuate(VectorXd f) { //actuates valves according to mapping from header
     for (int i = 0; i < 3*st_params::num_segments; i++){
         vc->setSinglePressure(i, f(i));
+    }
+}
+
+void ControllerPCC::toggle_log(){
+    if(!logging) {
+        logging = true;
+        initial_timestamp = cc->get_timestamp();
+        this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
+        fmt::print("Starting log to {}\n", this->filename);
+        log_file.open(this->filename, std::fstream::out);
+        log_file << "timestamp";
+
+        //write header
+        log_file << fmt::format(", x, y, z");
+
+        for (int i=0; i < st_params::q_size; i++)
+            log_file << fmt::format(", q_{}", i);
+
+        log_file << "\n";
+    } else {
+        logging = false;
+        fmt::print("Ending log to {}\n", this->filename);
+        log_file.close();
     }
 }
 
@@ -147,6 +166,17 @@ void ControllerPCC::control_loop() {
             p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100 + stm->pseudo2real(gravity_compensate(state));
             break;
         }
+
+        if (logging) {
+            log_file << (cc->get_timestamp() - initial_timestamp)/ 1.0e6;
+            
+            log_file << fmt::format(", {}, {}, {}", x(0), x(1), x(2));
+            
+            for (int i=0; i < st_params::q_size; i++)               //log q
+                log_file << fmt::format(", {}", state.q(i));
+            log_file << "\n";
+        }
+
         // actuate robot
         actuate(p);
     }

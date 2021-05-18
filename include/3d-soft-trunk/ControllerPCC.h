@@ -39,8 +39,10 @@ public:
     void updateLQR(srl::State state);
 
 
-
-    void print_ddx();
+    /**
+     * @brief toggles logging of x,q to a csv file
+     */
+    void toggle_log();
 
     /**
     *@brief return segment tip transformation
@@ -51,7 +53,7 @@ public:
     double kp = 50;
     double kd = 2*sqrt(50);
     Vector3d x;
-    
+
 private:
 
     /**
@@ -124,4 +126,8 @@ private:
     Vector3d ddx_ref;   //reference end effector acceleration
 
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
+    bool logging = false;
+    unsigned long long int initial_timestamp;
+    std::fstream log_file;
+    std::string filename = "ControllerPCC_log";
 };

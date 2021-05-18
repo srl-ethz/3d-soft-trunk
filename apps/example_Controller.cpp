@@ -62,13 +62,14 @@ int main(){
     std::thread print_thread(printer);
     
     while (true) {
+        /*
         circle << cos(coef*t), 0, sin(coef*t);
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), 0, cos(coef*t);
         dx_ref = amplitude * coef * circle;
 
         cpcc.set_ref(x_ref, dx_ref);
-        
+        */
         t+=dt;
         srl::sleep(dt);
     }
