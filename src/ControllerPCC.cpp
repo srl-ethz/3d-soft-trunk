@@ -134,7 +134,7 @@ void ControllerPCC::control_loop() {
         case ControllerType::osc:
             x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
             dx = stm->J*state.dq;
-            ddx_ref = 50*(x_ref - x) + 2*sqrt(50)*(dx_ref - dx);            //values are critically damped approach
+            ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
             ddx_ref*=1.3;
             B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
             g_op = B_op*stm->J*stm->B.inverse()*stm->g;

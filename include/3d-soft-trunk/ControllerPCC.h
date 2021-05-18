@@ -48,7 +48,10 @@ public:
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
     std::unique_ptr<SoftTrunkModel> stm;
-
+    double kp = 50;
+    double kd = 2*sqrt(50);
+    Vector3d x;
+    
 private:
 
     /**
@@ -98,7 +101,7 @@ private:
     // arm configuration+target positions
     srl::State state;
     srl::State state_ref;
-    Vector3d x;
+    
     Vector3d x_ref;
     Vector3d dx;
     Vector3d dx_ref;
