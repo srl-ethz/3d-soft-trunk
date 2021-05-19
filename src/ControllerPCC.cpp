@@ -20,6 +20,7 @@ MiniPID ZieglerNichols(double Ku, double period, double control_period) {
 }
 
 ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
+    filename = "ControllerPCC_log";
     
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
@@ -28,13 +29,17 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
             miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for Y direction
         }
     }
-
+    //dynamic controller
     K_p = VectorXd::Ones(st_params::q_size);
     K_d = VectorXd::Ones(st_params::q_size);
 
+    //OSC controller
+    kp = 43.9;
+    kd = 8.6;
+
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,2,5,3,6,4};
+    std::vector<int> map = {5,3,1,0,2,4};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
@@ -78,6 +83,18 @@ Eigen::Transform<double, 3, Eigen::Affine> ControllerPCC::get_H(int segment_id){
     return stm->get_H(segment_id);
 };
 
+VectorXd ControllerPCC::gravity_compensate3(srl::State state){
+    assert(st_params::sections_per_segment == 1);
+    VectorXd gravcomp = VectorXd::Zero(3*st_params::num_segments);
+    for (int i = 0; i < st_params::num_segments; i++){
+        MatrixXd A_inverse_block = stm->A.block(2*i, 3*i, 2, 3).transpose()*(stm->A.block(2*i, 3*i, 2, 3)*stm->A.block(2*i, 3*i, 2, 3).transpose()).inverse();
+        gravcomp.segment(3*i,3) = A_inverse_block * (stm->g + stm->K*state.q).segment(2*i,2);
+        if (gravcomp.segment(3*i,3).minCoeff() < 0)
+            gravcomp.segment(3*i, 3) -= gravcomp.segment(3*i,3).minCoeff() * Vector3d::Ones();
+    }
+    return gravcomp/100;
+}
+
 
 VectorXd ControllerPCC::gravity_compensate(srl::State state){
     assert(st_params::sections_per_segment == 1);
@@ -86,6 +103,7 @@ VectorXd ControllerPCC::gravity_compensate(srl::State state){
 }
 
 void ControllerPCC::actuate(VectorXd f) { //actuates valves according to mapping from header
+    f += 0*VectorXd::Ones(3*st_params::num_segments);
     for (int i = 0; i < 3*st_params::num_segments; i++){
         vc->setSinglePressure(i, f(i));
     }
@@ -154,7 +172,6 @@ void ControllerPCC::control_loop() {
             x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
             dx = stm->J*state.dq;
             ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
-            ddx_ref*=1.3;
             B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
             g_op = B_op*stm->J*stm->B.inverse()*stm->g;
             J_inv = stm->B.inverse()*stm->J.transpose()*B_op;

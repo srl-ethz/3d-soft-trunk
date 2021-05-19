@@ -45,7 +45,7 @@ int main(){
 
     Vector3d x_ref_center;
     Vector3d x_ref;
-    x_ref_center << 0,0.1,-0.2;
+    x_ref_center << 0,-0.15,-0.2;
     x_ref = x_ref_center;
     Vector3d dx_ref = Vector3d::Zero();
     
@@ -53,25 +53,26 @@ int main(){
     double dt = 0.2;
     Vector3d circle;
 
-    double amplitude = 0.05;
-    double coef = 2 * 3.1415 / 4;
+    double amplitude = 0.15;
+    double coef = 2 * 3.1415 / 16;
 
     getchar();
     cpcc.set_ref(x_ref, dx_ref);
     std::thread gain_thread(gain);
     std::thread print_thread(printer);
-    
-    while (true) {
-        /*
-        circle << cos(coef*t), 0, sin(coef*t);
+    cpcc.toggle_log();
+    while (t<10) {
+        
+        /*circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
-        circle << -sin(coef*t), 0, cos(coef*t);
-        dx_ref = amplitude * coef * circle;
+        circle << -sin(coef*t), cos(coef*t), 0;
+        dx_ref = amplitude * coef * circle;*/
 
-        cpcc.set_ref(x_ref, dx_ref);
-        */
+        //cpcc.set_ref(x_ref, dx_ref);
+        
         t+=dt;
         srl::sleep(dt);
     }
-
+    cpcc.toggle_log();
+    return 1;
 }

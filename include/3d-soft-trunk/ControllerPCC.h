@@ -50,8 +50,8 @@ public:
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
     std::unique_ptr<SoftTrunkModel> stm;
-    double kp = 50;
-    double kd = 2*sqrt(50);
+    double kp = 43.9*1.3;
+    double kd = 8.6*1.3;
     Vector3d x;
 
 private:
@@ -68,7 +68,7 @@ private:
      * @return VectorXd of pseudopressures, unit mbar
      */
     VectorXd gravity_compensate(srl::State state);
-
+    VectorXd gravity_compensate3(srl::State state);
     
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
@@ -129,5 +129,5 @@ private:
     bool logging = false;
     unsigned long long int initial_timestamp;
     std::fstream log_file;
-    std::string filename = "ControllerPCC_log";
+    std::string filename;
 };
