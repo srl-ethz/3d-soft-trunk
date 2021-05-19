@@ -27,7 +27,7 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 
 void CurvatureCalculator::setupQualisys() {
     std::vector<int> emptyCameraList = {};
-    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1 + extra_frames, emptyCameraList);
+    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1 + extra_frames, emptyCameraList, true);
 }
 
 void CurvatureCalculator::setupIntegratedSensor(std::string portname) {

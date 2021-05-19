@@ -95,7 +95,6 @@ VectorXd ControllerPCC::gravity_compensate3(srl::State state){
     return gravcomp/100;
 }
 
-
 VectorXd ControllerPCC::gravity_compensate(srl::State state){
     assert(st_params::sections_per_segment == 1);
     VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
@@ -107,6 +106,10 @@ void ControllerPCC::actuate(VectorXd f) { //actuates valves according to mapping
     for (int i = 0; i < 3*st_params::num_segments; i++){
         vc->setSinglePressure(i, f(i));
     }
+}
+
+bool ControllerPCC::singularity(MatrixXd &J) {
+    
 }
 
 void ControllerPCC::toggle_log(){
