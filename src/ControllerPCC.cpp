@@ -22,6 +22,8 @@ MiniPID ZieglerNichols(double Ku, double period, double control_period) {
 ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
     filename = "ControllerPCC_log";
     
+    extra_frames = 1;
+
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
         for (int j = 0; j < st_params::num_segments; ++j){
@@ -43,8 +45,10 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
-    else if (sensor_type == CurvatureCalculator::SensorType::qualisys)
-        cc = std::make_unique<CurvatureCalculator>(sensor_type);
+    else if (sensor_type == CurvatureCalculator::SensorType::qualisys) {
+        cc = std::make_unique<CurvatureCalculator>(sensor_type), extra_frames;
+        base_transform = cc->get_frame(0);
+    }
 
     control_thread = std::thread(&ControllerPCC::control_loop, this);
 }
@@ -109,7 +113,15 @@ void ControllerPCC::actuate(VectorXd f) { //actuates valves according to mapping
 }
 
 bool ControllerPCC::singularity(MatrixXd &J) {
-    
+    return false;
+}
+
+std::vector<Eigen::Transform<double, 3, Eigen::Affine>> ControllerPCC::get_objects(){
+    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> objects;
+    for (int i = 0; i < extra_frames; i++) {
+        objects[i] = cc->get_frame(st_params::num_segments + i);
+    }
+    return objects;
 }
 
 void ControllerPCC::toggle_log(){

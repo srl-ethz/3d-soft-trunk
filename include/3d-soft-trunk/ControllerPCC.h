@@ -49,6 +49,11 @@ public:
     */
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
+    /**
+     * @brief return transformations of objects in qualisys (objects =/= soft arm)
+     */
+    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> get_objects();
+
     std::unique_ptr<SoftTrunkModel> stm;
     double kp = 43.9*1.3;
     double kd = 8.6*1.3;
@@ -88,6 +93,7 @@ private:
     const int p_offset = 50;
     const int p_max = 600; // 400 for DS 10, 1200 for DS 30
 
+    //check if J is in a singularity
     bool singularity(MatrixXd &J);
 
     VectorXd K_p;
@@ -128,8 +134,15 @@ private:
     Vector3d ddx_ref;   //reference end effector acceleration
 
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
+
+    //logging variables
     bool logging = false;
     unsigned long long int initial_timestamp;
     std::fstream log_file;
     std::string filename;
+
+    //qualisys variables
+    Eigen::Transform<double, 3, Eigen::Affine> base_transform;
+    int extra_frames = 0;
+    
 };

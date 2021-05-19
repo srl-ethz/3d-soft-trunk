@@ -35,6 +35,7 @@ void printer(){
     srl::Rate r{1};
     while(true){
         fmt::print("x = {}\n", cpcc.x.transpose());
+        fmt::print("extra object: {}\n", cpcc.get_objects()[1].translation());
         r.sleep();
     }
 }
