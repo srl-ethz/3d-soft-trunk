@@ -93,8 +93,8 @@ private:
     const int p_offset = 50;
     const int p_max = 600; // 400 for DS 10, 1200 for DS 30
 
-    //check if J is in a singularity
-    bool singularity(MatrixXd &J);
+    //check if J is in a singularity, returns order of singularity
+    int singularity(MatrixXd &J);
 
     VectorXd K_p;
     VectorXd K_d;
