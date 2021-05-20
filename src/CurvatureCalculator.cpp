@@ -1,9 +1,9 @@
 #include "3d-soft-trunk/CurvatureCalculator.h"
 
 
-CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address): sensor_type(sensor_type) {
+CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames): sensor_type(sensor_type), extra_frames(extra_frames) {
     // initialize size of arrays that record transforms
-    abs_transforms.resize(st_params::num_segments + 1);
+    abs_transforms.resize(st_params::num_segments + 1 + extra_frames);
 
     srl::State state;
 
@@ -27,7 +27,7 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 
 void CurvatureCalculator::setupQualisys() {
     std::vector<int> emptyCameraList = {};
-    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1, emptyCameraList, true);
+    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1 + extra_frames, emptyCameraList, true);
 }
 
 void CurvatureCalculator::setupIntegratedSensor(std::string portname) {

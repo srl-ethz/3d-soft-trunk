@@ -12,13 +12,18 @@
  */
 MiniPID ZieglerNichols(double Ku, double period, double control_period) {
     // https://en.wikipedia.org/wiki/Ziegler–Nichols_method
+    // use P-only control for now
     double Kp = 0.2 * Ku;
-    double Ki = 0.4 * Ku / period * control_period;
-    double Kd = 0.066 * Ku * period / control_period;
+    double Ki = 0;//.4 * Ku / period * control_period;
+    double Kd = 0;//.066 * Ku * period / control_period;
     return MiniPID(Kp, Ki, Kd);
 }
 
 ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
+    filename = "ControllerPCC_log";
+    
+    extra_frames = 1;
+
     // set up PID controllers
     if (st_params::controller == ControllerType::pid) {
         for (int j = 0; j < st_params::num_segments; ++j){
@@ -26,114 +31,265 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
             miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for Y direction
         }
     }
-    K_p = VectorXd::Zero(2*st_params::num_segments);
-    K_p << 1, 1, 1, 1, 1, 1;
+    //dynamic controller
+    K_p = VectorXd::Ones(st_params::q_size);
+    K_d = VectorXd::Ones(st_params::q_size);
 
-    K_d = VectorXd::Zero(2*st_params::num_segments);
-    K_d << 1, 1, 1, 1, 1, 1;
-
-    srl::State state;
-    srl::State state_ref;
-
-    p_vectorized = VectorXd::Zero(2 * st_params::num_segments);
+    //OSC controller
+    kp = 43.9;
+    kd = 8.6;
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {0, 3, 2, 1, 4, 6, 7, 5, 11, 10, 8, 9};
+    std::vector<int> map = {1,2,5,3,6,4};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
-    else if (sensor_type == CurvatureCalculator::SensorType::qualisys)
-        cc = std::make_unique<CurvatureCalculator>(sensor_type);
+    else if (sensor_type == CurvatureCalculator::SensorType::qualisys) {
+        cc = std::make_unique<CurvatureCalculator>(sensor_type, "" , extra_frames);
+        base_transform = cc->get_frame(0);
+    }
 
     control_thread = std::thread(&ControllerPCC::control_loop, this);
 }
 
 void ControllerPCC::set_ref(const srl::State &state_ref) {
     std::lock_guard<std::mutex> lock(mtx);
-    assert(state_ref.q.size() == st_params::num_segments * 2);
-    assert(state_ref.dq.size() == st_params::num_segments * 2);
     // assign to member variables
     this->state_ref = state_ref;
+    if (st_params::controller == ControllerType::lqr){
+        //updateLQR(state_ref); c           //commented out for now since LQR isn't being used and it increases compilation time
+        u0 = gravity_compensate(state_ref);
+    }
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }
-void ControllerPCC::get_kinematic(srl::State &state) {
+
+void ControllerPCC::set_ref(const Vector3d &x_ref, const Vector3d &dx_ref){
+    std::lock_guard<std::mutex> lock(mtx);
+    this->x_ref = x_ref;
+    this->dx_ref = dx_ref;
+    if (!is_initial_ref_received)
+        is_initial_ref_received = true;
+}
+
+void ControllerPCC::get_state(srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
     state = this->state;
 }
-void ControllerPCC::get_pressure(VectorXd& p_vectorized){
+void ControllerPCC::get_pressure(VectorXd& p){
     std::lock_guard<std::mutex> lock(mtx);
-    p_vectorized = this->p_vectorized;
+    p = this->p;
 }
 
+Eigen::Transform<double, 3, Eigen::Affine> ControllerPCC::get_H(int segment_id){
+    std::lock_guard<std::mutex> lock(mtx);
+    return stm->get_H(segment_id);
+};
 
-void ControllerPCC::actuate(VectorXd f) {
-    VectorXd p_vectorized_segment = VectorXd::Zero(2); // part of p_vectorized, for each segment
-    VectorXd p_actual = VectorXd::Zero(4); /** @brief actual pressure output to each chamber */
-    Matrix2d mat; /** @brief mapping matrix from f to p_vectorized_segment */
-    double theta, phi;
-    for (int segment = 0; segment < st_params::num_segments; ++segment) {
-        // first calculate p_vectorized_segment for each segment
-        p_vectorized_segment = f.segment(2 * segment, 2);
-        if (st_params::controller == ControllerType::dynamic)
-            p_vectorized_segment /= alpha; // convert force to pressure
-        p_vectorized.segment(2 * segment, 2) = p_vectorized_segment; // save to p_vectorized
+VectorXd ControllerPCC::gravity_compensate3(srl::State state){
+    assert(st_params::sections_per_segment == 1);
+    VectorXd gravcomp = VectorXd::Zero(3*st_params::num_segments);
+    for (int i = 0; i < st_params::num_segments; i++){
+        MatrixXd A_inverse_block = stm->A.block(2*i, 3*i, 2, 3).transpose()*(stm->A.block(2*i, 3*i, 2, 3)*stm->A.block(2*i, 3*i, 2, 3).transpose()).inverse();
+        gravcomp.segment(3*i,3) = A_inverse_block * (stm->g + stm->K*state.q).segment(2*i,2);
+        if (gravcomp.segment(3*i,3).minCoeff() < 0)
+            gravcomp.segment(3*i, 3) -= gravcomp.segment(3*i,3).minCoeff() * Vector3d::Ones();
+    }
+    return gravcomp/100;
+}
 
-        for (int i = 0; i < 2; ++i) {
-            // convert vectorized pressure to actual pressure
-            // do for N-S pair and E-W pair
-            p_actual[i + 0] = p_offset + p_vectorized_segment[i] / 2;
-            p_actual[i + 2] = p_offset - p_vectorized_segment[i] / 2;
-            double minimum = std::min(p_actual[i + 0], p_actual[i + 2]);
-            if (minimum < 0) {
-                p_actual[i + 0] -= minimum;
-                p_actual[i + 2] -= minimum;
-            }
-            // do sanity checks
-            // p_actual[i+0] - p_actual[i+2] should equal p_vectorized_segment[i]
-            // no element of p_actual should be below 0
-            assert(p_actual[i + 0] >= 0);
-            assert(p_actual[i + 2] >= 0);
-            // assert(p_actual[i + 0] - p_actual[i + 2] == p_vectorized_segment[i]);
-            /** @todo do fuzzier evaluation */
+VectorXd ControllerPCC::gravity_compensate(srl::State state){
+    assert(st_params::sections_per_segment == 1);
+    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q + stm->D * state.dq);
+    return gravcomp/100; //to mbar
+}
+
+void ControllerPCC::actuate(VectorXd f) { //actuates valves according to mapping from header
+    f += 0*VectorXd::Ones(3*st_params::num_segments);
+    for (int i = 0; i < 3*st_params::num_segments; i++){
+        vc->setSinglePressure(i, f(i));
+    }
+}
+
+int ControllerPCC::singularity(MatrixXd &J) {
+    int order = 0;
+    fmt::print("{}\n", stm->J);
+    std::vector<Eigen::Vector3d> plane_normals(st_params::num_segments);         //normals to planes create by jacobian
+    for (int i = 0; i < st_params::num_segments; i++) {
+        Vector3d j1 = J.col(2*i).normalized();   //Eigen hates fun so we have to do this
+        Vector3d j2 = J.col(2*i+1).normalized();
+        plane_normals[i] = j1.cross(j2);
+    }
+    fmt::print("making progress \n\n");
+    for (int i = 0; i < st_params::num_segments - 1; i++) {
+        for (int j = 0; j < st_params::num_segments - 1 - i; j++){
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.995) order+=1; //if the planes are more or less the same, we are near a singularity
         }
-        for (int i = 0; i < 4; ++i)
-            vc->setSinglePressure(4 * segment + i, p_actual[i]);
+    }
+    return order;
+}
+
+std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
+    std::vector<Eigen::Vector3d> objects(extra_frames); 
+    for (int i = 0; i < extra_frames; i++) {
+        objects[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
+        objects[i] = objects[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
+        objects[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*objects[i]; //rotate to match the internal coordinates
+    }
+    
+    return objects;
+}
+
+void ControllerPCC::toggle_log(){
+    if(!logging) {
+        logging = true;
+        initial_timestamp = cc->get_timestamp();
+        this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
+        fmt::print("Starting log to {}\n", this->filename);
+        log_file.open(this->filename, std::fstream::out);
+        log_file << "timestamp";
+
+        //write header
+        log_file << fmt::format(", x, y, z");
+
+        for (int i=0; i < st_params::q_size; i++)
+            log_file << fmt::format(", q_{}", i);
+
+        log_file << "\n";
+    } else {
+        logging = false;
+        fmt::print("Ending log to {}\n", this->filename);
+        log_file.close();
     }
 }
 
 void ControllerPCC::control_loop() {
     srl::Rate r{1./dt};
-    VectorXd f = VectorXd::Zero(st_params::num_segments * 2);
+    VectorXd f = VectorXd::Zero(st_params::num_segments * 2); //2d pseudopressures
     while (true) {
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
-        if (!is_initial_ref_received)
-            continue;
 
-        // first get the current state
-        if (use_feedforward or simulate) {
-            // don't use the actual values, since it's doing feedforward control.
-            state = state_ref;
-        } else {
-            // get the current configuration from CurvatureCalculator.
-            cc->get_curvature(state);
-        }
-
+        // first get the current state from CurvatureCalculator.
+        cc->get_curvature(state);
         stm->updateState(state);
 
+        /*if (singularity(stm->J)){
+            fmt::print("I am currently inside of a singularity, HELP!\n");
+        }*/
+
+        if (!is_initial_ref_received) //only control after receiving a reference position
+            continue;
+        
         // calculate output
-        if (st_params::controller == ControllerType::dynamic)
-            f = stm->g + stm->c + stm->B * state_ref.ddq +
-                stm->K.asDiagonal() * state_ref.q + K_p.asDiagonal() * (state_ref.q - state.q) + stm->D.asDiagonal() * state_ref.dq +
-                K_d.asDiagonal() * (state_ref.dq - state.dq);
-        else if (st_params::controller == ControllerType::pid) {
+        switch (st_params::controller)
+        {
+        case ControllerType::dynamic:
+            f = stm->A_pseudo.inverse() * (stm->g + stm->K*state_ref.q + stm->c + stm->D*state_ref.dq 
+                    + K_p.asDiagonal()*(state_ref.q - state.q) + K_d.asDiagonal()*(state_ref.dq - state.dq)); 
+            p = stm->pseudo2real(f/100);
+            break;
+        case ControllerType::pid:
             for (int i = 0; i < 2 * st_params::num_segments; ++i)
                 f[i] = miniPIDs[i].getOutput(state.q[i], state_ref.q[i]);
+            p = stm->pseudo2real(f + gravity_compensate(state));
+            break;
+        case ControllerType::gravcomp:
+            p = stm->pseudo2real(gravity_compensate(state));
+            break;
+        case ControllerType::lqr:
+            fullstate << state.q, state.dq;
+            fullstate_ref << state_ref.q, state_ref.dq;
+            f = K*(fullstate_ref - fullstate)/100;
+            p = stm->pseudo2real(f + u0);
+            break;
+        case ControllerType::osc:
+            x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
+            dx = stm->J*state.dq;
+            ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
+            B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
+            g_op = B_op*stm->J*stm->B.inverse()*stm->g;
+            J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
+            
+            f = B_op*ddx_ref;// + g_op;
+            tau_null = -0.1*state.q*0;
+            tau_ref = stm->J.transpose()*f /*+ stm->K * state.q*/ + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+
+            p = /*stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100 +*/ stm->pseudo2real(gravity_compensate(state));
+            break;
+        }
+
+        if (logging) {
+            log_file << (cc->get_timestamp() - initial_timestamp)/ 1.0e6;
+            
+            log_file << fmt::format(", {}, {}, {}", x(0), x(1), x(2));
+            
+            for (int i=0; i < st_params::q_size; i++)               //log q
+                log_file << fmt::format(", {}", state.q(i));
+            log_file << "\n";
         }
 
         // actuate robot
-        actuate(f);
+        actuate(p);
     }
 }
+
+
+//commented out for now since LQR isn't being used and it lengthens compiling time by alot
+/*
+void ControllerPCC::updateLQR(srl::State state){ 
+    assert(st_params::controller == ControllerType::lqr);
+    stm->updateState(state);
+    // make and update x' = Ax+Bu matrices
+    // x = [q, dq]
+    // formulate using pseudopressures
+    MatrixXd lqrA = MatrixXd::Zero(2*st_params::q_size, 2*st_params::q_size);
+    MatrixXd lqrB = MatrixXd::Zero(2*st_params::q_size, 2*st_params::num_segments);
+    MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params::num_segments, 2*st_params::num_segments);
+    MatrixXd Q = 100000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
+    Q.block(st_params::q_size, st_params::q_size, st_params::q_size, st_params::q_size) *= 0.001; // reduce cost for velocity
+    MatrixXd Binv = stm->B.inverse();
+
+    lqrA << MatrixXd::Zero(st_params::q_size,st_params::q_size), MatrixXd::Identity(st_params::q_size, st_params::q_size), - Binv * stm->K, -Binv * stm->D;
+    lqrB << MatrixXd::Zero(st_params::q_size, 2*st_params::num_segments), Binv*stm->A_pseudo;
+    // for debugging
+    fmt::print("lqrA\n{}\nlqrB\n{}\n", lqrA, lqrB);
+    fmt::print("Q\n{}\nR\n{}\n", Q, R);
+    solveRiccatiArimotoPotter(lqrA, lqrB, Q, R, K);
+    fmt::print("K\n{}\n", K);
+}
+
+
+
+void ControllerPCC::solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q, //this function stolen from https://github.com/TakaHoribe/Riccati_Solver
+                               const MatrixXd &R, Eigen::MatrixXd &K) {
+
+  const uint dim_x = A.rows();
+  const uint dim_u = B.cols();
+
+  // set Hamilton matrix
+  Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
+  Ham << A, -B * R.inverse() * B.transpose(), -Q, -A.transpose();
+
+  // calc eigenvalues and eigenvectors
+  Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
+
+  // extract stable eigenvectors into 'eigvec'
+  Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
+  int j = 0;
+  for (int i = 0; i < 2 * dim_x; ++i) {
+    if (Eigs.eigenvalues()[i].real() < 0.) {
+      eigvec.col(j) = Eigs.eigenvectors().block(0, i, 2 * dim_x, 1);
+      ++j;
+    }
+  }
+
+  // calc P with stable eigen vector matrix
+  Eigen::MatrixXcd Vs_1, Vs_2;
+  Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
+  Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
+  MatrixXd P  = (Vs_2 * Vs_1.inverse()).real();
+  K = R.inverse()*B.transpose()*P;
+}
+*/
