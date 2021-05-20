@@ -101,7 +101,7 @@ VectorXd ControllerPCC::gravity_compensate3(srl::State state){
 
 VectorXd ControllerPCC::gravity_compensate(srl::State state){
     assert(st_params::sections_per_segment == 1);
-    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
+    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q + stm->D * state.dq);
     return gravcomp/100; //to mbar
 }
 
@@ -175,9 +175,9 @@ void ControllerPCC::control_loop() {
         cc->get_curvature(state);
         stm->updateState(state);
 
-        if (singularity(stm->J)){
+        /*if (singularity(stm->J)){
             fmt::print("I am currently inside of a singularity, HELP!\n");
-        }
+        }*/
 
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
@@ -216,7 +216,7 @@ void ControllerPCC::control_loop() {
             tau_null = -0.1*state.q*0;
             tau_ref = stm->J.transpose()*f /*+ stm->K * state.q*/ + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
-            p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100 + stm->pseudo2real(gravity_compensate(state));
+            p = /*stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100 +*/ stm->pseudo2real(gravity_compensate(state));
             break;
         }
 

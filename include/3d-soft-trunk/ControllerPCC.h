@@ -52,7 +52,9 @@ public:
     /**
      * @brief return transformations of objects in qualisys (objects =/= soft arm)
      */
-    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> get_objects();
+    std::vector<Eigen::Vector3d> get_objects();
+
+    
 
     std::unique_ptr<SoftTrunkModel> stm;
     double kp = 43.9*1.3;
@@ -74,6 +76,9 @@ private:
      */
     VectorXd gravity_compensate(srl::State state);
     VectorXd gravity_compensate3(srl::State state);
+
+    //check if J is in a singularity, returns order of singularity
+    int singularity(MatrixXd &J);
     
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
@@ -93,8 +98,7 @@ private:
     const int p_offset = 50;
     const int p_max = 600; // 400 for DS 10, 1200 for DS 30
 
-    //check if J is in a singularity, returns order of singularity
-    int singularity(MatrixXd &J);
+    
 
     VectorXd K_p;
     VectorXd K_d;

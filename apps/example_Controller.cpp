@@ -35,7 +35,7 @@ void printer(){
     srl::Rate r{1};
     while(true){
         fmt::print("x = {}\n", cpcc.x.transpose());
-        fmt::print("extra object: {}\n", cpcc.get_objects()[1].translation());
+        fmt::print("extra object: {}\n", cpcc.get_objects()[0].transpose());
         r.sleep();
     }
 }
@@ -56,20 +56,22 @@ int main(){
 
     double amplitude = 0.15;
     double coef = 2 * 3.1415 / 16;
-
+    
     getchar();
     cpcc.set_ref(x_ref, dx_ref);
-    std::thread gain_thread(gain);
     std::thread print_thread(printer);
+    //std::thread gain_thread(gain);
+    
     cpcc.toggle_log();
-    while (t<10) {
+    while (true) {
         
         /*circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
         dx_ref = amplitude * coef * circle;*/
-
-        //cpcc.set_ref(x_ref, dx_ref);
+        getchar();
+        x_ref = cpcc.get_objects()[0];
+        cpcc.set_ref(x_ref, dx_ref);
         
         t+=dt;
         srl::sleep(dt);
