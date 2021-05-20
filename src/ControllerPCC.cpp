@@ -41,12 +41,12 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type) {
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {5,3,1,0,2,4};
+    std::vector<int> map = {1,2,5,3,6,4};
     vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
     else if (sensor_type == CurvatureCalculator::SensorType::qualisys) {
-        cc = std::make_unique<CurvatureCalculator>(sensor_type), extra_frames;
+        cc = std::make_unique<CurvatureCalculator>(sensor_type, "" , extra_frames);
         base_transform = cc->get_frame(0);
     }
 
@@ -114,25 +114,30 @@ void ControllerPCC::actuate(VectorXd f) { //actuates valves according to mapping
 
 int ControllerPCC::singularity(MatrixXd &J) {
     int order = 0;
-    std::vector<Eigen::Vector3d> plane_normals;         //normals to planes create by jacobian
+    fmt::print("{}\n", stm->J);
+    std::vector<Eigen::Vector3d> plane_normals(st_params::num_segments);         //normals to planes create by jacobian
     for (int i = 0; i < st_params::num_segments; i++) {
         Vector3d j1 = J.col(2*i).normalized();   //Eigen hates fun so we have to do this
         Vector3d j2 = J.col(2*i+1).normalized();
         plane_normals[i] = j1.cross(j2);
     }
+    fmt::print("making progress \n\n");
     for (int i = 0; i < st_params::num_segments - 1; i++) {
         for (int j = 0; j < st_params::num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.95) order+=1; //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.995) order+=1; //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;
 }
 
-std::vector<Eigen::Transform<double, 3, Eigen::Affine>> ControllerPCC::get_objects(){
-    std::vector<Eigen::Transform<double, 3, Eigen::Affine>> objects;
+std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
+    std::vector<Eigen::Vector3d> objects(extra_frames); 
     for (int i = 0; i < extra_frames; i++) {
-        objects[i] = cc->get_frame(st_params::num_segments + i);
+        objects[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
+        objects[i] = objects[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
+        objects[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*objects[i]; //rotate to match the internal coordinates
     }
+    
     return objects;
 }
 
@@ -169,6 +174,10 @@ void ControllerPCC::control_loop() {
         // first get the current state from CurvatureCalculator.
         cc->get_curvature(state);
         stm->updateState(state);
+
+        if (singularity(stm->J)){
+            fmt::print("I am currently inside of a singularity, HELP!\n");
+        }
 
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
