@@ -1,15 +1,9 @@
-//
-// Created by yasu on 25/12/2020.
-//
 
-#include "3d-soft-trunk/ControllerPCC.h"
+#include "3d-soft-trunk/OSC.h"
 
-/**
- * @brief run a PID controller. Set new reference pose every time you press ENTER,
- */
-ControllerPCC cpcc(CurvatureCalculator::SensorType::qualisys);
+OSC osc(CurvatureCalculator::SensorType::qualisys);
 
-void gain(){ //change gain with keyboard to avoid recompiling, a/y change kp and o/l change kd
+/*void gain(){ //change gain with keyboard to avoid recompiling, a/y change kp and o/l change kd
     char c;
     while(true) {
         c = getchar();
@@ -30,12 +24,12 @@ void gain(){ //change gain with keyboard to avoid recompiling, a/y change kp and
         fmt::print("kp = {}, kd = {}\n", cpcc.kp, cpcc.kd);
     }
 }
-
+*/
 void printer(){
     srl::Rate r{1};
     while(true){
-        fmt::print("x = {}\n", cpcc.x.transpose());
-        fmt::print("extra object: {}\n", cpcc.get_objects()[0].transpose());
+        //fmt::print("x = {}\n", cpcc.x.transpose());
+        fmt::print("extra object: {}\n", osc.get_objects()[0].transpose());
         r.sleep();
     }
 }
@@ -58,11 +52,11 @@ int main(){
     double coef = 2 * 3.1415 / 16;
     
     getchar();
-    cpcc.set_ref(x_ref, dx_ref);
+    osc.set_ref(x_ref, dx_ref);
     std::thread print_thread(printer);
     //std::thread gain_thread(gain);
     
-    cpcc.toggle_log();
+    osc.toggle_log();
     while (true) {
         
         /*circle << cos(coef*t), sin(coef*t), 0;
@@ -70,12 +64,12 @@ int main(){
         circle << -sin(coef*t), cos(coef*t), 0;
         dx_ref = amplitude * coef * circle;*/
         getchar();
-        x_ref = cpcc.get_objects()[0];
-        cpcc.set_ref(x_ref, dx_ref);
+        x_ref = osc.get_objects()[0];
+        osc.set_ref(x_ref, dx_ref);
         
         t+=dt;
         srl::sleep(dt);
     }
-    cpcc.toggle_log();
+    osc.toggle_log();
     return 1;
 }

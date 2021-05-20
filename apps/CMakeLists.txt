@@ -15,8 +15,6 @@ target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
 add_executable(example_Simulator example_Simulator.cpp)
 target_link_libraries(example_Simulator SoftTrunkModel Simulator)
 
-add_executable(OSC OSC.cpp)
-target_link_libraries(OSC SoftTrunkModel Simulator ControllerPCC)
 
 
 if(${roscpp_FOUND})
@@ -29,7 +27,7 @@ endif(${roscpp_FOUND})
 ### other programs (experiments etc.)
 
 add_executable(example_Controller example_Controller.cpp)
-target_link_libraries(example_Controller ControllerPCC)
+target_link_libraries(example_Controller ControllerPCC OSC)
 
 add_executable(characterization_actuation characterization_actuation.cpp)
 target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)

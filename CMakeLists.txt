@@ -76,10 +76,13 @@ add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
 target_link_libraries(SoftTrunkModel AugmentedRigidArm)
 
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
-target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads MiniPID)
+target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel)
 
 add_library(Simulator SHARED src/Simulator.cpp)
 target_link_libraries(Simulator SoftTrunkModel)
+
+add_library(OSC SHARED src/OSC.cpp)
+target_link_libraries(OSC ControllerPCC CurvatureCalculator ValveController SoftTrunkModel)
 
 
 if(${roscpp_FOUND})
