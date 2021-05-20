@@ -58,7 +58,7 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
     // assign to member variables
     this->state_ref = state_ref;
     if (st_params::controller == ControllerType::lqr){
-        updateLQR(state_ref);
+        //updateLQR(state_ref); c           //commented out for now since LQR isn't being used and it increases compilation time
         u0 = gravity_compensate(state_ref);
     }
     if (!is_initial_ref_received)
@@ -235,6 +235,9 @@ void ControllerPCC::control_loop() {
     }
 }
 
+
+//commented out for now since LQR isn't being used and it lengthens compiling time by alot
+/*
 void ControllerPCC::updateLQR(srl::State state){ 
     assert(st_params::controller == ControllerType::lqr);
     stm->updateState(state);
@@ -256,6 +259,8 @@ void ControllerPCC::updateLQR(srl::State state){
     solveRiccatiArimotoPotter(lqrA, lqrB, Q, R, K);
     fmt::print("K\n{}\n", K);
 }
+
+
 
 void ControllerPCC::solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q, //this function stolen from https://github.com/TakaHoribe/Riccati_Solver
                                const MatrixXd &R, Eigen::MatrixXd &K) {
@@ -287,3 +292,4 @@ void ControllerPCC::solveRiccatiArimotoPotter(const MatrixXd &A, const MatrixXd 
   MatrixXd P  = (Vs_2 * Vs_1.inverse()).real();
   K = R.inverse()*B.transpose()*P;
 }
+*/

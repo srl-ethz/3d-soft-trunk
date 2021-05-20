@@ -56,7 +56,6 @@ public:
 
     
 
-    std::unique_ptr<SoftTrunkModel> stm;
     double kp = 43.9*1.3;
     double kd = 8.6*1.3;
     Vector3d x;
@@ -82,6 +81,8 @@ private:
     
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
+    std::unique_ptr<SoftTrunkModel> stm;
+
 
     std::string bendlabs_portname = "/dev/ttyUSB0";
 
