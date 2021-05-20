@@ -17,8 +17,9 @@ void OSC::control_loop() {
 
         //update the internal visualization
         cc->get_curvature(state);
+        fmt::print("State: {}\n", state.q.transpose());
         stm->updateState(state);
-
+        fmt::print("Gravity: {}\n", stm->g);
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         
@@ -32,9 +33,9 @@ void OSC::control_loop() {
          
         f = B_op*ddx_ref;// + g_op;
         tau_null = -0.1*state.q*0;
-        tau_ref = stm->J.transpose()*f /*+ stm->K * state.q*/ + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = stm->J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
-        p = /*stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100 +*/ stm->pseudo2real(gravity_compensate(state));
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;// + stm->pseudo2real(gravity_compensate(state));
         
         if (logging) {
             log_file << (cc->get_timestamp() - initial_timestamp)/ 1.0e6;
