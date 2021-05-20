@@ -3,8 +3,12 @@
 OSC::OSC(CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(sensor_type){
     filename = "OSC_logger";
 
+    //set the gains
     kp = 43.9;
     kd = 8.6;
+
+    //OSC needs a higher refresh rate than other controllers
+    dt = 1./100;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }

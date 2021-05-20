@@ -58,14 +58,19 @@ protected:
 
     /**
      * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)
+     * @details gravity_compensate3 uses the stm->A matrix instead of the stm->A_pseudo, should functionally be the same
      * @param state state for which should be equalized
      * @return VectorXd of pseudopressures, unit mbar
      */
     VectorXd gravity_compensate(srl::State state);
     VectorXd gravity_compensate3(srl::State state);
 
-    //check if J is in a singularity, returns order of singularity
-    
+    /** @brief check if J is in a singularity
+    *   @return order of the singularity is in, also acts as bool
+    */
+    int singularity(const MatrixXd &J);
+
+
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<CurvatureCalculator> cc;
     std::unique_ptr<SoftTrunkModel> stm;
