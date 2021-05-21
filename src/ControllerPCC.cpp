@@ -6,7 +6,7 @@
 
 
 
-ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation) extra_frames(objects){
+ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation), extra_frames(objects){
 
     filename = "defaultController_log";
 
