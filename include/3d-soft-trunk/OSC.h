@@ -14,6 +14,12 @@ private:
     
     void control_loop();
 
+    /** @brief checks if the given jacobian is in a singularity
+     *  @return order of singularity
+     *  @details you can also use this as a bool
+     */ 
+    int singularity(const MatrixXd &J);
+
     /** @brief gains for OSC*/
     double kp;
     double kd;

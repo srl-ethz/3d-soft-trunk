@@ -37,17 +37,8 @@ void PID::control_loop(){
         
         for (int i = 0; i < 2 * st_params::num_segments; ++i)
             f[i] = miniPIDs[i].getOutput(state.q[i], state_ref.q[i]);
+        
         p = stm->pseudo2real(f + gravity_compensate(state));
-
-        if (logging) {
-            log_file << (cc->get_timestamp() - initial_timestamp)/ 1.0e6;
-            
-            log_file << fmt::format(", {}, {}, {}", x(0), x(1), x(2));
-            
-            for (int i=0; i < st_params::q_size; i++)               //log q
-                log_file << fmt::format(", {}", state.q(i));
-            log_file << "\n";
-        }
 
         actuate(p);
     }

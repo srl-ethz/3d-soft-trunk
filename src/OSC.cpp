@@ -21,9 +21,8 @@ void OSC::control_loop() {
 
         //update the internal visualization
         cc->get_curvature(state);
-        fmt::print("State: {}\n", state.q.transpose());
         stm->updateState(state);
-        fmt::print("Gravity: {}\n", stm->g);
+        
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         
@@ -32,7 +31,7 @@ void OSC::control_loop() {
         dx = stm->J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
         B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
-        g_op = B_op*stm->J*stm->B.inverse()*stm->g;
+        //g_op = B_op*stm->J*stm->B.inverse()*stm->g;
         J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
          
         f = B_op*ddx_ref;// + g_op;
@@ -41,16 +40,23 @@ void OSC::control_loop() {
 
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;// + stm->pseudo2real(gravity_compensate(state));
         
-        if (logging) {
-            log_file << (cc->get_timestamp() - initial_timestamp)/ 1.0e6;
-            
-            log_file << fmt::format(", {}, {}, {}", x(0), x(1), x(2));
-            
-            for (int i=0; i < st_params::q_size; i++)               //log q
-                log_file << fmt::format(", {}", state.q(i));
-            log_file << "\n";
-        }
-    actuate(p);
-
+        actuate(p);
     }
+}
+
+int OSC::singularity(const MatrixXd &J) {
+    int order = 0;
+    std::vector<Eigen::Vector3d> plane_normals(st_params::num_segments);            //normals to planes create by jacobian
+    for (int i = 0; i < st_params::num_segments; i++) {
+        Vector3d j1 = J.col(2*i).normalized();   //Eigen hates fun so we have to do this
+        Vector3d j2 = J.col(2*i+1).normalized();
+        plane_normals[i] = j1.cross(j2);
+    }
+
+    for (int i = 0; i < st_params::num_segments - 1; i++) {                         //check for singularities
+        for (int j = 0; j < st_params::num_segments - 1 - i; j++){
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.9) order+=1;  //if the planes are more or less the same, we are near a singularity
+        }
+    }
+    return order;
 }

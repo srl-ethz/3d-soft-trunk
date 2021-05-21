@@ -19,7 +19,7 @@
  */
 class ControllerPCC {
 public:
-    ControllerPCC(CurvatureCalculator::SensorType sensor_type);
+    ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation = false);
 
     /** @brief set the reference pose (trajectory) of the arm
      */
@@ -27,14 +27,21 @@ public:
     void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref);
 
     /** @brief get current kinematic state of the arm */
-    void get_state(srl::State &pose);
+    void get_state(srl::State &state);
+
+    /** @brief set position of arm, only use for simulations! */
+    void set_state(const srl::State &state);
+
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
 
     /**
-     * @brief toggles logging of x,q to a csv file
+     * @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere
      */
     void toggle_log();
+
+    /** @brief change log filename to string */
+    void set_log_filename(const std::string &s);
 
     /**
     *@brief return segment tip transformation
@@ -46,15 +53,20 @@ public:
      */
     std::vector<Eigen::Vector3d> get_objects();
 
+    /** @brief forward simulate the stm by dt while inputting pressure p
+    *   @return if the simulation was successful (true) or overflowed (false) */
+    bool simulate(const VectorXd &p);
 
+    /** @brief sets the frequency of the simulator */
+    void set_frequency(const double &hz);
 
 protected:
 
-    /**
+    /**int
      * actuate the arm using generalized forces
-     * @param f generalized force expressed in st_params::parametrization space
+     * @param p pressure vector, 3 pressures per segment
      */
-    void actuate(VectorXd f);
+    void actuate(const VectorXd &p);
 
     /**
      * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)
@@ -62,8 +74,8 @@ protected:
      * @param state state for which should be equalized
      * @return VectorXd of pseudopressures, unit mbar
      */
-    VectorXd gravity_compensate(srl::State state);
-    VectorXd gravity_compensate3(srl::State state);
+    VectorXd gravity_compensate(const srl::State state);
+    VectorXd gravity_compensate3(const srl::State state);
 
     /** @brief check if J is in a singularity
     *   @return order of the singularity is in, also acts as bool
@@ -90,6 +102,7 @@ protected:
     
 
     double dt = 1./30.;
+    double t;
 
     bool is_initial_ref_received = false;
 
@@ -101,6 +114,7 @@ protected:
     // arm configuration+target positions
     srl::State state;
     srl::State state_ref;
+    srl::State state_prev; //for simulation
     Vector3d x;
     Vector3d x_ref;
     Vector3d dx;
@@ -119,5 +133,14 @@ protected:
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
     int extra_frames = 0;
-    
+
+    //simulation variables
+    bool simulation;
+
+private:
+    /** @brief forward simulate using beeman method
+    *   @details explained here https://www.compadre.org/PICUP/resources/Numerical-Integration/
+    */
+    bool Beeman(const VectorXd &p);
+
 };

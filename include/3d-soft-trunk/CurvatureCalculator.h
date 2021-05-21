@@ -31,7 +31,8 @@ class CurvatureCalculator {
 public:
     enum class SensorType{
         qualisys,
-        bend_labs
+        bend_labs,
+        simulator,
     };
     enum class CalcMethod{
         position /** calculate curvature using relative xyz coordinates */,

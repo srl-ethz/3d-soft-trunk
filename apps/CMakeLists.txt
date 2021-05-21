@@ -13,7 +13,7 @@ add_executable(example_SoftTrunkModel example_SoftTrunkModel.cpp)
 target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
 
 add_executable(example_Simulator example_Simulator.cpp)
-target_link_libraries(example_Simulator SoftTrunkModel Simulator)
+target_link_libraries(example_Simulator ControllerPCC)
 
 
 
@@ -33,10 +33,10 @@ add_executable(characterization_actuation characterization_actuation.cpp)
 target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)
 
 add_executable(simulate_logged_pressure simulate_logged_pressure.cpp)
-target_link_libraries(simulate_logged_pressure Simulator SoftTrunkModel Threads::Threads)
+target_link_libraries(simulate_logged_pressure ControllerPCC Threads::Threads)
 
 add_executable(record_movement record_movement.cpp)
-target_link_libraries(record_movement SerialInterface ControllerPCC Simulator)
+target_link_libraries(record_movement SerialInterface ControllerPCC)
 
 add_executable(play_movement play_movement.cpp)
-target_link_libraries(play_movement SerialInterface ControllerPCC Simulator)
+target_link_libraries(play_movement SerialInterface ControllerPCC)

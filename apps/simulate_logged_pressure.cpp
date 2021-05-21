@@ -1,5 +1,4 @@
-#include <3d-soft-trunk/SoftTrunkModel.h>
-#include <3d-soft-trunk/Simulator.h>
+#include "3d-soft-trunk/ControllerPCC.h"
 #include <csv.h>
 #include <fstream>
 
@@ -13,10 +12,9 @@
  * ```
  */
 int main(int argc, char *argv[]){
-    double step = 0.01;
-    SoftTrunkModel stm = SoftTrunkModel();
+    const double dt = 0.01;
     srl::State state;
-    Simulator sim = Simulator(stm, step, 1, state);
+    ControllerPCC cpcc{CurvatureCalculator::SensorType::simulator};
     VectorXd p = VectorXd::Zero(3*st_params::num_segments);
 
     // read and save the csv data
@@ -44,11 +42,13 @@ int main(int argc, char *argv[]){
             log_p[5].push_back(p5);
         }
     }
-
-    srl::Rate r{1./step};
+    const double hz = 1./dt;
+    srl::Rate r{hz};
+    
+    cpcc.set_frequency(hz);
     int log_index = 0; // index of log currently being referred to for pressure data
-    sim.start_log("log_sim");
-    for (double t = log_t[0]; t < log_t[log_t.size()-1]; t+=step)
+    cpcc.toggle_log();
+    for (double t = log_t[0]; t < log_t[log_t.size()-1]; t+=dt)
     {
         if (log_t[log_index] < t)
             log_index ++; // move to next point in log
@@ -61,8 +61,8 @@ int main(int argc, char *argv[]){
         p *= 100.; // mbar to Pa
 
         // run the simulation
-        sim.simulate(p);
+        cpcc.simulate(p);
         r.sleep();
     }
-    sim.end_log();
+    cpcc.toggle_log();
 }

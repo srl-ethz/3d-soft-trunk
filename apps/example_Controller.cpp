@@ -9,16 +9,16 @@ OSC osc(CurvatureCalculator::SensorType::qualisys);
         c = getchar();
         switch (c) {
             case 'a':
-                cpcc.kp*=1.1;
+                osc.kp*=1.1;
                 break;
             case 'y':
-                cpcc.kp*=0.9;
+                osc.kp*=0.9;
                 break;
             case 'o':
-                cpcc.kd*=1.1;
+                osc.kd*=1.1;
                 break;
             case 'l':
-                cpcc.kd*=0.9;
+                osc.kd*=0.9;
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", cpcc.kp, cpcc.kd);
@@ -28,7 +28,7 @@ OSC osc(CurvatureCalculator::SensorType::qualisys);
 void printer(){
     srl::Rate r{1};
     while(true){
-        //fmt::print("x = {}\n", cpcc.x.transpose());
+        //fmt::print("x = {}\n", osc.x.transpose());
         fmt::print("extra object: {}\n", osc.get_objects()[0].transpose());
         r.sleep();
     }
@@ -57,7 +57,7 @@ int main(){
     //std::thread gain_thread(gain);
     
     osc.toggle_log();
-    while (true) {
+    while (t<10) {
         
         /*circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
