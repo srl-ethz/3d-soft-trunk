@@ -29,7 +29,8 @@ public:
 
     OSC(CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
 
-    
+    std::vector<PotentialField> potfields;
+
 
 private:
     
@@ -41,7 +42,6 @@ private:
      */ 
     int singularity(const MatrixXd &J);
 
-    std::vector<PotentialField> potfields;
 
     /** @brief gains for OSC*/
     double kp;

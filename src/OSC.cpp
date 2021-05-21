@@ -5,7 +5,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
 
     potfields.resize(objects);
     for(int i = 0; i < potfields.size(); i++){
-        potfields[i].set_strength(10);
+        potfields[i].set_strength(0.005);
     }
 
     //set the gains
@@ -74,20 +74,22 @@ int OSC::singularity(const MatrixXd &J) {
 
 PotentialField::PotentialField(){
     this->pos = Vector3d::Zero();
-    this->strength = 0;
-    this->cutoff_distance = 0.05;
+    this->strength = 0.005;
+    this->cutoff_distance = 1.5;
 }
 
 PotentialField::PotentialField(Vector3d &pos, double s){
     this->pos = pos;
     this->strength = s;
-    this->cutoff_distance = 0.05;
+    this->cutoff_distance = 1.5;
 }
 
 Vector3d PotentialField::get_ddx(Vector3d &pos) {
     Vector3d differential = pos - this->pos;
-    if (differential.norm() < this->cutoff_distance)
+    if (differential.norm() < this->cutoff_distance) {
+        fmt::print("I am being touched, yuck!\n");
         return strength * (1./differential.norm() - 1./cutoff_distance) * 1./(differential.norm()*differential.norm()) * differential.normalized();
+    }
     return Vector3d::Zero();
 }
 
