@@ -6,10 +6,9 @@
 
 
 
-ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation) : simulation(simulation){
+ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation) extra_frames(objects){
 
     filename = "defaultController_log";
-    extra_frames = 1;
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y

@@ -6,7 +6,7 @@ class OSC: public ControllerPCC
 {
 public:
 
-    OSC(CurvatureCalculator::SensorType sensor_type);
+    OSC(CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
 
     
 

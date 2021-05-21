@@ -1,6 +1,6 @@
 #include "3d-soft-trunk/OSC.h"
 
-OSC::OSC(CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(sensor_type){
+OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(sensor_type, simulation, objects){
     filename = "OSC_logger";
 
     //set the gains
