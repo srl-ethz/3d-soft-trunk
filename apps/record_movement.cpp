@@ -1,6 +1,5 @@
 #include <3d-soft-trunk/ControllerPCC.h>
 #include <mobilerack-interface/SerialInterface.h>
-#include <3d-soft-trunk/Simulator.h>
 
 int main(){
     SoftTrunkModel stm{};

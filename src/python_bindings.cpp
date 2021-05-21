@@ -5,7 +5,6 @@
 #include <3d-soft-trunk/AugmentedRigidArm.h>
 #include <3d-soft-trunk/CurvatureCalculator.h>
 #include <3d-soft-trunk/SoftTrunkModel.h>
-#include <3d-soft-trunk/Simulator.h>
 #include <3d-soft-trunk/ControllerPCC.h>
 
 namespace py = pybind11;
@@ -59,28 +58,22 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         return stm.get_H_base().matrix();
     });
 
-    py::class_<Simulator>(m, "Simulator")
-    .def(py::init<SoftTrunkModel&, double, int, srl::State&>())
-    .def("simulate", &Simulator::simulate)
-    .def("getState", [](Simulator& sim){
-        srl::State state;
-        sim.get_state(state);
-        return state;
-    })
-    .def("start_log", &Simulator::start_log)
-    .def("end_log", &Simulator::end_log);
 
     py::class_<ControllerPCC>(m, "Controller")
-    .def(py::init<CurvatureCalculator::SensorType>())
+    .def(py::init<CurvatureCalculator::SensorType, bool>())
     .def("set_ref", py::overload_cast<const srl::State&>(&ControllerPCC::set_ref))
     .def("get_state", [](ControllerPCC& cpcc){
         srl::State state;
         cpcc.get_state(state);
         return state;
     })
-    .def("get_pressure", &ControllerPCC::get_pressure);
+    .def("get_pressure", &ControllerPCC::get_pressure)
+    .def("set_state", &ControllerPCC::set_state)
+    .def("toggle_log", &ControllerPCC::toggle_log)
+    .def("simulate", &ControllerPCC::simulate);
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)
-    .value("bend_labs", CurvatureCalculator::SensorType::bend_labs);
+    .value("bend_labs", CurvatureCalculator::SensorType::bend_labs)
+    .value("simulator", CurvatureCalculator::SensorType::simulator);
 }
