@@ -6,7 +6,7 @@
 
 
 
-ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation), extra_frames(objects){
+ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation), objects(objects){
 
     filename = "defaultController_log";
 
@@ -19,7 +19,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool s
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
     else if (sensor_type == CurvatureCalculator::SensorType::qualisys) {
-        cc = std::make_unique<CurvatureCalculator>(sensor_type, "" , extra_frames);
+        cc = std::make_unique<CurvatureCalculator>(sensor_type, "" , objects);
         base_transform = cc->get_frame(0);
     }
 
@@ -93,14 +93,14 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 }
 
 std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
-    std::vector<Eigen::Vector3d> objects(extra_frames); 
-    for (int i = 0; i < extra_frames; i++) {
-        objects[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
-        objects[i] = objects[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
-        objects[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*objects[i]; //rotate to match the internal coordinates
+    std::vector<Eigen::Vector3d> object_vec(objects); 
+    for (int i = 0; i < objects; i++) {
+        object_vec[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
+        object_vec[i] = object_vec[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
+        object_vec[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*object_vec[i]; //rotate to match the internal coordinates
     }
     
-    return objects;
+    return object_vec;
 }
 
 void ControllerPCC::set_frequency(const double &hz){

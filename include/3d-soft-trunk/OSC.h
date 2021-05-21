@@ -2,6 +2,27 @@
 
 #include "ControllerPCC.h"
 
+class PotentialField{
+public:
+    PotentialField();
+    PotentialField(Vector3d &pos, double strength);
+
+    Vector3d get_ddx(Vector3d &pos);
+
+    Vector3d get_pos();
+    double get_strength();
+    double get_cutoff();
+
+    void set_pos(Vector3d &pos);
+    void set_strength(double s);
+    void set_cutoff(double c);
+
+private:
+    Vector3d pos;
+    double strength;
+    double cutoff_distance;
+};
+
 class OSC: public ControllerPCC
 {
 public:
@@ -19,6 +40,8 @@ private:
      *  @details you can also use this as a bool
      */ 
     int singularity(const MatrixXd &J);
+
+    std::vector<PotentialField> potfields;
 
     /** @brief gains for OSC*/
     double kp;

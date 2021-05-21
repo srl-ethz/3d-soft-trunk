@@ -132,7 +132,7 @@ protected:
 
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
-    int extra_frames = 0;
+    int objects;
 
     //simulation variables
     bool simulation;

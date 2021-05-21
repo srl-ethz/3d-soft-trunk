@@ -3,6 +3,11 @@
 OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(sensor_type, simulation, objects){
     filename = "OSC_logger";
 
+    potfields.resize(objects);
+    for(int i = 0; i < potfields.size(); i++){
+        potfields[i].set_strength(10);
+    }
+
     //set the gains
     kp = 43.9;
     kd = 8.6;
@@ -30,6 +35,12 @@ void OSC::control_loop() {
         x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
         dx = stm->J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
+
+        for (int i = 0; i < potfields.size(); i++) {
+            potfields[i].set_pos(get_objects()[i]);
+            ddx_ref += potfields[i].get_ddx(x);
+        }
+
         B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
         //g_op = B_op*stm->J*stm->B.inverse()*stm->g;
         J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
@@ -59,4 +70,47 @@ int OSC::singularity(const MatrixXd &J) {
         }
     }
     return order;
+}
+
+PotentialField::PotentialField(){
+    this->pos = Vector3d::Zero();
+    this->strength = 0;
+    this->cutoff_distance = 0.05;
+}
+
+PotentialField::PotentialField(Vector3d &pos, double s){
+    this->pos = pos;
+    this->strength = s;
+    this->cutoff_distance = 0.05;
+}
+
+Vector3d PotentialField::get_ddx(Vector3d &pos) {
+    Vector3d differential = pos - this->pos;
+    if (differential.norm() < this->cutoff_distance)
+        return strength * (1./differential.norm() - 1./cutoff_distance) * 1./(differential.norm()*differential.norm()) * differential.normalized();
+    return Vector3d::Zero();
+}
+
+void PotentialField::set_pos(Vector3d &pos) {
+    this->pos = pos;
+}
+
+void PotentialField::set_strength(double s){
+    this->strength = s;
+}
+
+void PotentialField::set_cutoff(double c){
+    this->cutoff_distance = c;
+}
+
+Vector3d PotentialField::get_pos(){
+    return this->pos;
+}
+
+double PotentialField::get_strength(){
+    return this->strength;
+}
+
+double PotentialField::get_cutoff(){
+    return this->cutoff_distance;
 }
