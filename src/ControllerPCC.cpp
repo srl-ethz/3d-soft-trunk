@@ -93,6 +93,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 }
 
 std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
+    assert(sensor_type == CurvatureCalculator::SensorType::qualisys);
     std::vector<Eigen::Vector3d> object_vec(objects); 
     for (int i = 0; i < objects; i++) {
         object_vec[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
@@ -111,7 +112,8 @@ void ControllerPCC::set_frequency(const double &hz){
 void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;
-        initial_timestamp = cc->get_timestamp();
+        if (!simulation) {initial_timestamp = cc->get_timestamp();}
+        else {initial_timestamp = 0};
         this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
         fmt::print("Starting log to {}\n", this->filename);
         log_file.open(this->filename, std::fstream::out);
