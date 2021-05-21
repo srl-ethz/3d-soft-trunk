@@ -53,6 +53,8 @@ private:
     VectorXd g_op;
     /** @brief extended jacobian inverse*/
     MatrixXd J_inv;
+    /** @brief jacobian */
+    MatrixXd J;
 
     /** @brief reference torques */
     VectorXd tau_ref;
