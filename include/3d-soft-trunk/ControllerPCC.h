@@ -133,6 +133,7 @@ protected:
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
     int objects;
+    CurvatureCalculator::SensorType sensor_type;
 
     //simulation variables
     bool simulation;

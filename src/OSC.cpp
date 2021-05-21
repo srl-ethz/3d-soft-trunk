@@ -25,29 +25,35 @@ void OSC::control_loop() {
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        cc->get_curvature(state);
+        if (!simulation) cc->get_curvature(state);
+        
         stm->updateState(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
-        
+
+        J = stm->J;
+
         //do controls
         x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
-        dx = stm->J*state.dq;
-        ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
+        dx = J*state.dq;
+        ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
-        for (int i = 0; i < potfields.size(); i++) {
+        for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
             ddx_ref += potfields[i].get_ddx(x);
         }
 
-        B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
-        //g_op = B_op*stm->J*stm->B.inverse()*stm->g;
+        for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
+            J.block(0, st_params::q_size - 2*i - 2,3,2) = MatrixXd::Zero(3,2);
+        }
+
+        B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
          
-        f = B_op*ddx_ref;// + g_op;
+        f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = stm->J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;// + stm->pseudo2real(gravity_compensate(state));
         

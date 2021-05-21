@@ -6,7 +6,7 @@
 
 
 
-ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation), objects(objects){
+ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : sensor_type(sensor_type), simulation(simulation), objects(objects){
 
     filename = "defaultController_log";
 
@@ -113,7 +113,7 @@ void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;
         if (!simulation) {initial_timestamp = cc->get_timestamp();}
-        else {initial_timestamp = 0};
+        else {initial_timestamp = 0;}
         this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
         fmt::print("Starting log to {}\n", this->filename);
         log_file.open(this->filename, std::fstream::out);
