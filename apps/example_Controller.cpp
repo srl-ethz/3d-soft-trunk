@@ -1,7 +1,7 @@
 
 #include "3d-soft-trunk/OSC.h"
 
-OSC osc(CurvatureCalculator::SensorType::qualisys);
+OSC osc(CurvatureCalculator::SensorType::qualisys, false, 1);
 
 void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
@@ -58,7 +58,7 @@ int main(){
     Vector3d dx_ref = Vector3d::Zero();
     
     double t = 0;
-    double dt = 0.2;
+    double dt = 0.1;
     Vector3d circle;
 
     double amplitude = 0.15;
@@ -67,7 +67,7 @@ int main(){
     getchar();
     osc.set_ref(x_ref, dx_ref);
     std::thread print_thread(printer);
-    //std::thread gain_thread(gain);
+    std::thread gain_thread(gain);
     
     osc.toggle_log();
     while (true) {
@@ -77,6 +77,7 @@ int main(){
         circle << -sin(coef*t), cos(coef*t), 0;
         dx_ref = amplitude * coef * circle;*/
         getchar();
+
         x_ref = osc.get_objects()[0];
         osc.set_ref(x_ref, dx_ref);
         

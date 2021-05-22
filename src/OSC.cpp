@@ -41,11 +41,11 @@ void OSC::control_loop() {
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            ddx_ref += potfields[i].get_ddx(x);
+            //ddx_ref += potfields[i].get_ddx(x);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0, st_params::q_size - 2*i - 2,3,2) = MatrixXd::Zero(3,2);
+            J.block(0,2*i,3,2) + (i+1)*0.01*MatrixXd::Identity(3,2);
         }
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
@@ -55,7 +55,7 @@ void OSC::control_loop() {
         tau_null = -0.1*state.q*0;
         tau_ref = J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;// + stm->pseudo2real(gravity_compensate(state));
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
         
         if (!simulation) {actuate(p);}
         else {simulate(p);}
@@ -73,7 +73,7 @@ int OSC::singularity(const MatrixXd &J) {
 
     for (int i = 0; i < st_params::num_segments - 1; i++) {                         //check for singularities
         for (int j = 0; j < st_params::num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.9) order+=1;  //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.99) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;
