@@ -84,7 +84,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         log_file << t;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
             VectorXd x_tip = stm->get_H(i).translation();
-            log_file << fmt::format(", {}, {}, {}", x_tip(0), x_tip(1), x_tip(2));
+            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2));
         }
         for (int i=0; i < st_params::q_size; i++)               //log q
             log_file << fmt::format(", {}", state.q(i));
@@ -120,7 +120,7 @@ void ControllerPCC::toggle_log(){
         log_file << "timestamp";
 
         //write header
-        log_file << fmt::format(", x, y, z");
+        log_file << fmt::format(", x, y, z, x_ref, y_ref, z_ref");
 
         for (int i=0; i < st_params::q_size; i++)
             log_file << fmt::format(", q_{}", i);
@@ -158,7 +158,7 @@ bool ControllerPCC::simulate(const VectorXd &p){
         log_file << t;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
             VectorXd x_tip = stm->get_H(i).translation();
-            log_file << fmt::format(", {}, {}, {}", x_tip(0), x_tip(1), x_tip(2));
+            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2));
         }
         for (int i=0; i < st_params::q_size; i++)               //log q
             log_file << fmt::format(", {}", state.q(i));

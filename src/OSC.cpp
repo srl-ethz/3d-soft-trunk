@@ -103,23 +103,30 @@ Vector3d PotentialField::get_ddx(Vector3d &pos) {
 void PotentialField::set_pos(Vector3d &pos) {
     this->pos = pos;
 }
-
 void PotentialField::set_strength(double s){
     this->strength = s;
 }
-
 void PotentialField::set_cutoff(double c){
     this->cutoff_distance = c;
 }
-
 Vector3d PotentialField::get_pos(){
     return this->pos;
 }
-
 double PotentialField::get_strength(){
     return this->strength;
 }
-
 double PotentialField::get_cutoff(){
     return this->cutoff_distance;
+}
+double OSC::get_kd(){
+    return this->kd;
+}
+double OSC::get_kp(){
+    return this->kp;
+}
+void OSC::set_kd(double kd){
+    this->kd = kd;
+}
+void OSC::set_kp(double kp){
+    this->kp = kp;
 }

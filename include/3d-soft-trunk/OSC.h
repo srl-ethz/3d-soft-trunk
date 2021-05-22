@@ -31,6 +31,14 @@ public:
 
     std::vector<PotentialField> potfields;
 
+    /** @brief methods for getting OSC gain */
+    double get_kp();
+    double get_kd();
+
+    /** @brief methods for setting OCS gain */
+    void set_kp(double kp);
+    void set_kd(double kd);
+
 
 private:
     
