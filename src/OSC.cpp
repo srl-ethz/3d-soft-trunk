@@ -42,7 +42,7 @@ void OSC::control_loop() {
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            ddx_ref += potfields[i].get_ddx(x);
+            //ddx_ref += potfields[i].get_ddx(x);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
@@ -54,7 +54,7 @@ void OSC::control_loop() {
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = J.transpose()*f + stm->g + (stm->K * state.q)*0.75 + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
         

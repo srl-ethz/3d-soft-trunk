@@ -45,13 +45,14 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
 }
 
 void printer(){
-    srl::Rate r{5};
+    srl::Rate r{1./3};
     while(true){
-        //fmt::print("x = {}\n", osc.x.transpose());
+        fmt::print("-------------------------------------------------------------\n");
         fmt::print("extra object: {}\n", osc.get_objects()[0].transpose());
+        fmt::print("x tip: {}\n", osc.x.transpose());
         VectorXd p;
         osc.get_pressure(p);
-        fmt::print("pressure: {}\n", p.transpose());
+        //fmt::print("pressure: {}\n", p.transpose());
         r.sleep();
     }
 }

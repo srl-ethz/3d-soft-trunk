@@ -35,6 +35,9 @@ public:
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
 
+    /** @brief return x_tip */
+    Vector3d get_x();
+
     /**
      * @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere
      */
@@ -59,6 +62,7 @@ public:
 
     /** @brief sets the frequency of the simulator */
     void set_frequency(const double &hz);
+    Vector3d x;
 
 protected:
 
@@ -96,7 +100,7 @@ protected:
      * for DragonSkin 10, set to 150.
      * (not throughly examined- a larger or smaller value may be better)
      */
-    const int p_offset = 50;
+    const int p_offset = 0;
     const int p_max = 700; // 400 for DS 10, 1200 for DS 30
 
     
@@ -115,7 +119,7 @@ protected:
     srl::State state;
     srl::State state_ref;
     srl::State state_prev; //for simulation
-    Vector3d x;
+    
     Vector3d x_ref;
     Vector3d dx;
     Vector3d dx_ref;
