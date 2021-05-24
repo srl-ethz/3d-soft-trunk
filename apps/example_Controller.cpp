@@ -3,6 +3,9 @@
 
 OSC osc(CurvatureCalculator::SensorType::qualisys, false, 1);
 
+Vector3d x_ref;
+Vector3d dx_ref = Vector3d::Zero();
+
 void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
@@ -30,8 +33,11 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
                 osc.potfields[0].set_strength(osc.potfields[0].get_strength()*1.1);
                 break;
             case 'l':
-                osc.potfields[0].set_strength(osc.potfields[0].get_strength()*1.1);
+                osc.potfields[0].set_strength(osc.potfields[0].get_strength()*0.9);
                 break;
+            case 'g':
+                x_ref = osc.get_objects()[0];
+                osc.set_ref(x_ref, dx_ref);
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
         fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
@@ -39,10 +45,13 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
 }
 
 void printer(){
-    srl::Rate r{1};
+    srl::Rate r{5};
     while(true){
         //fmt::print("x = {}\n", osc.x.transpose());
         fmt::print("extra object: {}\n", osc.get_objects()[0].transpose());
+        VectorXd p;
+        osc.get_pressure(p);
+        fmt::print("pressure: {}\n", p.transpose());
         r.sleep();
     }
 }
@@ -52,10 +61,10 @@ int main(){
     srl::State state;
 
     Vector3d x_ref_center;
-    Vector3d x_ref;
-    x_ref_center << 0,-0.15,-0.2;
+    
+    x_ref_center << 0,0.15,-0.2;
     x_ref = x_ref_center;
-    Vector3d dx_ref = Vector3d::Zero();
+    
     
     double t = 0;
     double dt = 0.1;
@@ -75,11 +84,9 @@ int main(){
         /*circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
-        dx_ref = amplitude * coef * circle;*/
-        getchar();
-
-        x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref, dx_ref);
+        dx_ref = amplitude * coef * circle;
+        osc.set_ref(x_ref,dx_ref);*/
+        
         
         t+=dt;
         srl::sleep(dt);

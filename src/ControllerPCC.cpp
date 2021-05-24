@@ -12,7 +12,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool s
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,2,5,3,6,4};
+    std::vector<int> map = {1,3,2,0,6,4};
     
     if (!simulation) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
@@ -81,7 +81,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         vc->setSinglePressure(i, p(i));
     }
     if (logging){                                               //log once per control timestep
-        log_file << t;
+        log_file << (cc->get_timestamp() - initial_timestamp)/10e6;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
             VectorXd x_tip = stm->get_H(i).translation();
             log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2));

@@ -6,6 +6,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     potfields.resize(objects);
     for(int i = 0; i < potfields.size(); i++){
         potfields[i].set_strength(0.005);
+        potfields[i].set_cutoff(0.1);
     }
 
     //set the gains
@@ -41,7 +42,7 @@ void OSC::control_loop() {
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            //ddx_ref += potfields[i].get_ddx(x);
+            ddx_ref += potfields[i].get_ddx(x);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
@@ -53,7 +54,7 @@ void OSC::control_loop() {
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->g + (stm->K * state.q)*0.75 + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
 
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
         
@@ -94,8 +95,7 @@ PotentialField::PotentialField(Vector3d &pos, double s){
 Vector3d PotentialField::get_ddx(Vector3d &pos) {
     Vector3d differential = pos - this->pos;
     if (differential.norm() < this->cutoff_distance) {
-        fmt::print("I am being touched, yuck!\n");
-        return strength * (1./differential.norm() - 1./cutoff_distance) * 1./(differential.norm()*differential.norm()) * differential.normalized();
+        return strength * (1./differential.norm() - 1./cutoff_distance) * 1./(differential.norm()) * differential.normalized();
     }
     return Vector3d::Zero();
 }
