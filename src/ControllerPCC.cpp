@@ -72,7 +72,8 @@ VectorXd ControllerPCC::gravity_compensate3(srl::State state){
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
     assert(st_params::sections_per_segment == 1);
-    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q + stm->D * state.dq);
+    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
+
     return gravcomp/100; //to mbar
 }
 

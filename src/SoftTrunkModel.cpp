@@ -57,10 +57,21 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     VectorXd output = VectorXd::Zero(3*st_params::num_segments);
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse();
     for (int i = 0; i < st_params::num_segments; i++){
+
+        double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
+        
         output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //use Moore-Penrose to invert back onto real chambers
         double min_p = output.segment(3*i, 3).minCoeff();
         if (min_p < 0)
             output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
+    
+        //increase severity of pressure based on direction, if you are able to find a sexier way to do this than if statements please do
+
+        if (angle < 90 and angle >= -30) output.segment(3*i, 3) *= sqrt(abs(angle - 30)/70 + 1); 
+        else if (angle < -30 and angle >= -150) output.segment(3*i, 3) *= sqrt(abs(angle + 90)/70 + 1);
+        else if (angle > 90 and angle <= 180) output.segment(3*i, 3) *= sqrt(abs(angle - 150)/70 + 1);
+        else if (angle < -150 and angle > -180) output.segment(3*i, 3) *= sqrt(abs(angle + 210)/70 + 1);
+
     }
     return output;
 }

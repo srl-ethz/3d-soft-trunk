@@ -14,7 +14,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     kd = 8.6;
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./100;
+    dt = 1./50;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
@@ -46,18 +46,21 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,2*i,3,2) + (i+1)*0.01*MatrixXd::Identity(3,2);
+            //J.block(0,2*i,3,2) + (i+1)*MatrixXd::Identity(3,2);
         }
+        
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
-
+        tau_ref = J.transpose()*f + stm->D * state.dq  + 0.9*stm->g + stm->K*state.q + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        for (int i = 0; i < st_params::num_segments; i++){
+            if (tau_ref(2*i) < 0) tau_ref(2*i)*=0.9;
+        }
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
-        
+
         if (!simulation) {actuate(p);}
         else {simulate(p);}
     }

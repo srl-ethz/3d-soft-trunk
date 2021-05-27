@@ -83,7 +83,7 @@ private:
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::array<double, st_params::num_segments> shear_modulus = {33000., 47000};
+    std::array<double, st_params::num_segments> shear_modulus = {23000., 33000.};
     std::array<double, st_params::num_segments> drag_coef = {61000., 8000.};
 
     /**
