@@ -57,7 +57,9 @@ public:
 
     Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 
-    std::unique_ptr<AugmentedRigidArm> ara;
+
+    /** @brief set new angles for the chamber configuration*/
+    void newChamberConfig(Vector3d &angles);
     
     /**
      * @brief convert pseudopressures to real pressures
@@ -68,7 +70,8 @@ public:
     VectorXd pseudo2real(VectorXd pressure_pseudo);
 
 private:
-    
+    std::unique_ptr<AugmentedRigidArm> ara;
+
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
      * @param radius radius of the chamber. This is the input from which the other values will be calculated.

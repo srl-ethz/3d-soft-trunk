@@ -36,7 +36,7 @@ void OSC::control_loop() {
         J = stm->J;
 
         //do controls
-        x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
+        x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
         dx = J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 

@@ -110,6 +110,10 @@ void ControllerPCC::set_frequency(const double &hz){
     this->dt = 1./hz;
 }
 
+void ControllerPCC::newChamberConfig(Vector3d &angles) {
+    stm->newChamberConfig(angles);
+}
+
 void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;

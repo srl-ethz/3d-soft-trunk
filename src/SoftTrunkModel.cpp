@@ -52,6 +52,11 @@ Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H_base(){
     return ara->get_H_base();
 }
 
+void SoftTrunkModel::newChamberConfig(Vector3d &angles){
+    double toRad = 3.14156/180;
+    chamberMatrix << sin(angles(0)*toRad), sin(angles(1)*toRad), sin(angles(2)*toRad), cos(angles(0)*toRad), cos(angles(1)*toRad), cos(angles(2)*toRad);
+}
+
 VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     assert(pressure_pseudo.size() == 2 * st_params::num_segments);
     VectorXd output = VectorXd::Zero(3*st_params::num_segments);

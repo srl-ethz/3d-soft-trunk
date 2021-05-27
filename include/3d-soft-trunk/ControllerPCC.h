@@ -60,6 +60,9 @@ public:
     *   @return if the simulation was successful (true) or overflowed (false) */
     bool simulate(const VectorXd &p);
 
+    /** @brief new chamber configuration */
+    void newChamberConfig(Vector3d &angles);
+
     /** @brief sets the frequency of the simulator */
     void set_frequency(const double &hz);
     Vector3d x;
