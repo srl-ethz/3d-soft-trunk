@@ -11,7 +11,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
 
     //set the gains
     kp = 43.9;
-    kd = 8.6;
+    kd = 6.7;
 
     //OSC needs a higher refresh rate than other controllers
     dt = 1./50;
@@ -55,11 +55,11 @@ void OSC::control_loop() {
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = J.transpose()*f + stm->D * state.dq  + 0.9*stm->g + stm->K*state.q + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
-        for (int i = 0; i < st_params::num_segments; i++){
+        tau_ref = /*J.transpose()*f + stm->D * state.dq*/ stm->g + stm->K*state.q + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        /*for (int i = 0; i < st_params::num_segments; i++){
             if (tau_ref(2*i) < 0) tau_ref(2*i)*=0.9;
-        }
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;
+        }*/
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
 
         if (!simulation) {actuate(p);}
         else {simulate(p);}

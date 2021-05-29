@@ -70,4 +70,6 @@ private:
     VectorXd tau_null;
     /** @brief reference acceleration in cartesian coordinates */
     Vector3d ddx_ref;
+
+    
 };

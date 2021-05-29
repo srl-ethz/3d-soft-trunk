@@ -73,6 +73,7 @@ int main(){
 
     double amplitude = 0.15;
     double coef = 2 * 3.1415 / 16;
+
     
     getchar();
     osc.set_ref(x_ref, dx_ref);

@@ -65,15 +65,26 @@ public:
 
     /** @brief sets the frequency of the simulator */
     void set_frequency(const double &hz);
+
+    //////////////////////////////////////////////////////////
+    //variables under this line are public only temporarily //
+    //////////////////////////////////////////////////////////
     Vector3d x;
 
-protected:
-
-    /**int
+    /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
      */
     void actuate(const VectorXd &p);
+
+    std::unique_ptr<SoftTrunkModel> stm;
+    std::unique_ptr<CurvatureCalculator> cc;
+    srl::State state;
+
+protected:
+
+    
+    
 
     /**
      * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)
@@ -91,8 +102,8 @@ protected:
 
 
     std::unique_ptr<ValveController> vc;
-    std::unique_ptr<CurvatureCalculator> cc;
-    std::unique_ptr<SoftTrunkModel> stm;
+    
+    
 
 
     std::string bendlabs_portname = "/dev/ttyUSB0";
@@ -119,7 +130,7 @@ protected:
     void control_loop();
 
     // arm configuration+target positions
-    srl::State state;
+
     srl::State state_ref;
     srl::State state_prev; //for simulation
     
