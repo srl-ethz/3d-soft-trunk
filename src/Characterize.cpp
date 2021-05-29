@@ -50,7 +50,7 @@ void Characterize::logRadialPressureDist(int segment){
 }
 
 void Characterize::calcGravK(int segment, int directions){
-    MatrixXd gK = MatrixXd::Zero(2*directions*5, 2);
+    MatrixXd K = VectorXd::Zero(2*directions*5);
     VectorXd tau = VectorXd::Zero(2*directions*5);
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(2*st_params::num_segments);
@@ -65,19 +65,18 @@ void Characterize::calcGravK(int segment, int directions){
             fmt::print("angle = {}, intensity = {}\n", angle, 100+100*j);
 
             srl::sleep(10); //wait to let swinging subside
-            //fill in tau values
-            tau(10*i + 2*j) = pressures(2*segment);
-            tau(10*i + 2*j + 1) = pressures(2*segment+1);
             cc->get_curvature(state);
             stm->updateState(state);
+
+            tau(10*i + 2*j) = pressures(2*segment) - stm->g(2*segment);;
+            tau(10*i + 2*j + 1) = pressures(2*segment+1) - stm->g(2*segment+1);
             //fill in matrix containing g, K
-            gK(10*i + 2*j, 0) = stm->g(2*segment);
-            gK(10*i + 2*j + 1, 0) = stm->g(2*segment+1);
-            gK(10*i + 2*j, 1) = (stm->K*state.q)(2*segment);
-            gK(10*i + 2*j + 1, 1) = (stm->K*state.q)(2*segment+1);
+            K(10*i + 2*j) = (stm->K*state.q)(2*segment);
+            K(10*i + 2*j + 1) = (stm->K*state.q)(2*segment + 1);
+
         }
     }
 
-    VectorXd gKcoeffs = (gK.transpose()*gK).inverse()*gK.transpose()*tau;
-    fmt::print("Finished coeffient characterization. Best fit is {}*g + {}*K*q", gKcoeffs(0), gKcoeffs(1));
+    VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
+    fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q", Kcoeff.transpose());
 }
