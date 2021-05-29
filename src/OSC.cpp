@@ -61,7 +61,7 @@ void OSC::control_loop() {
         }*/
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
 
-        if (!simulation) {actuate(p);}
+        if (!simulation) {/*actuate(p);*/}
         else {simulate(p);}
     }
 }

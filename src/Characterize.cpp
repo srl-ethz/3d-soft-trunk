@@ -1,5 +1,9 @@
 #include "3d-soft-trunk/Characterize.h"
 
+Characterize::Characterize(CurvatureCalculator::SensorType sensor_type) : ControllerPCC(sensor_type){
+
+}
+
 void Characterize::logRadialPressureDist(int segment){
     VectorXd pressures = VectorXd::Zero(2 * st_params::num_segments);
     filename = "radialPressureDist";
@@ -13,15 +17,13 @@ void Characterize::logRadialPressureDist(int segment){
     log_file << fmt::format(", angle_measured, r, x, y, z");
     for (int i=0; i < st_params::q_size; i++)
         log_file << fmt::format(", q_{}", i);
-    log_file << "\n";
-
-    
+    log_file << "\n"; 
     
     pressures(2*segment) = 500;
 
     actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
-    srl::Rate r{1};
+    srl::Rate r{3};
 
     for (int i = 0; i < 360; i++){
         pressures(2*segment) = 500*cos(i*deg2rad);
@@ -44,7 +46,7 @@ void Characterize::logRadialPressureDist(int segment){
         r.sleep();
     }
     log_file.close();
-    fmt::print("\n Finished radial logging");
+    fmt::print("\n Finished radial logging\n");
 }
 
 void Characterize::calcGravK(int segment, int directions){
@@ -52,7 +54,7 @@ void Characterize::calcGravK(int segment, int directions){
     VectorXd tau = VectorXd::Zero(2*directions*5);
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(2*st_params::num_segments);
-    fmt::print("Starting coefficient characterization\n");
+    fmt::print("Starting coefficient characterization in {} directions\n",directions);
     for (int i = 0; i < directions; i ++){
         angle = i*360/directions; 
 
@@ -60,7 +62,7 @@ void Characterize::calcGravK(int segment, int directions){
             pressures(2*segment) = (100+100*j)*cos(angle*deg2rad);
             pressures(2*segment+1) = -(100+100*j)*sin(angle*deg2rad);
             actuate(stm->pseudo2real(pressures));
-            fmt::print("angle = {}, intensity = {}\n"), angle, 100+100*j;
+            fmt::print("angle = {}, intensity = {}\n", angle, 100+100*j);
 
             srl::sleep(10); //wait to let swinging subside
             //fill in tau values
