@@ -15,6 +15,9 @@ target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
 add_executable(example_Simulator example_Simulator.cpp)
 target_link_libraries(example_Simulator ControllerPCC)
 
+add_executable(example_Characterizer example_Characterizer.cpp)
+target_link_libraries(example_Characterizer Characterize)
+
 
 
 if(${roscpp_FOUND})

@@ -87,6 +87,9 @@ target_link_libraries(PID ControllerPCC MiniPID)
 add_library(LQR SHARED src/LQR.cpp)
 target_link_libraries(LQR ControllerPCC)
 
+add_library(Characterize src/Characterize.cpp)
+target_link_libraries(Characterize ControllerPCC)
+
 
 if(${roscpp_FOUND})
     add_library(VisualizerROS src/VisualizerROS.cpp)
