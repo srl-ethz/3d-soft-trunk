@@ -55,13 +55,11 @@ void OSC::control_loop() {
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = /*J.transpose()*f + stm->D * state.dq*/ stm->g + stm->K*state.q + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
-        /*for (int i = 0; i < st_params::num_segments; i++){
-            if (tau_ref(2*i) < 0) tau_ref(2*i)*=0.9;
-        }*/
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
+        tau_ref = /*J.transpose()*f + */stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        
+        p = /*stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) +*/ stm->pseudo2real(gravity_compensate(state));
 
-        if (!simulation) {/*actuate(p);*/}
+        if (!simulation) {actuate(p);}
         else {simulate(p);}
     }
 }
