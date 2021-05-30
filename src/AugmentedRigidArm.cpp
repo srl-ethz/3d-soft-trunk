@@ -43,8 +43,17 @@ void AugmentedRigidArm::setup_drake_model()
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    int num_joints = multibody_plant->num_joints() - 2; // subtract one mystery joint, and one fixed joint at the base
+    int num_joints = multibody_plant->num_positions(); // multibody_plant->num_joints() also returns fake joints at base, so use num_positions
+   
+    // quite confusingly, ordering of generalized positions vs order of joints is different for the prismatic joints...
+    // joint ordering: [first Z axis joint] -> [X axis joint] -> [Y axis joint] -> [second Z axis joint]
+    // generalized position ordering: [first Z axis joint] -> [X axis joint] -> [second Z axis joint] ->  [Y axis joint]
+    // however, this implementation of generalized position ordering may change with future versions of drake, so verify this each time to make sure
 
+    /** @todo check that idiosyncratic generalized position ordering is consistent */
+    for (drake::multibody::JointIndex ji(0); ji<num_joints+2; ji++)
+      fmt::print("position index:{}\tname:{}\n", multibody_plant->get_joint(ji).position_start(), multibody_plant->get_joint(ji).name());
+    
     // check that parameters make sense, just in case
     assert(st_params::num_segments * 2 == st_params::lengths.size());
     assert(st_params::num_segments + 1 == st_params::diameters.size());
@@ -97,13 +106,16 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
        Cos(p1)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p1)*Cos(t0/2.)*Cos(t1/2.)*Power(Sin(p0),2)*Sin(p1) - Cos(p0)*Sin(p1)*Sin(t0/2.)*Sin(t1/2.))/
      Sqrt(1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2)));
 
+        // check the comments in setup_drake_model() for the generalized position indexing.
+        // prismatic joints in Z direction to change length
         xi_(joint_id_head + 3) = l / 2 - l * sin((t1) / 2) / t1;
-        xi_(joint_id_head + 6) = xi_(joint_id_head + 3);
+        xi_(joint_id_head + 5) = xi_(joint_id_head + 3);
 
-        // prismatic joints to match CoM
-        /** @todo */
-        xi_(joint_id_head + 4) = 0;
-        xi_(joint_id_head + 5) = 0;
+        // prismatic joints in X & Y direction to match CoM
+        // centroid for "Arc of cirle" is described here: https://en.wikipedia.org/wiki/List_of_centroids
+        double tmp = l / t1 * (sin(t1/2) / (t1/2) - cos(t1/2));
+        xi_(joint_id_head + 4) = - cos(p1) * tmp;
+        xi_(joint_id_head + 6) = - sin(p1) * tmp;
 
         t0 = t1;
         p0 = p1;
@@ -253,17 +265,17 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
 
             // d(prismatic)/d(phi0)
             dxi_dpt(3,0) = 0;
-            dxi_dpt(6,0) = 0;
+            dxi_dpt(5,0) = 0;
 
             // d(prismatic)/d(theta0)
             dxi_dpt(3,1) = 0;
-            dxi_dpt(6,1) = 0;
+            dxi_dpt(5,1) = 0;
 
             // prismatic joints to match CoM
             dxi_dpt(4,0) = 0;
-            dxi_dpt(5,0) = 0;
+            dxi_dpt(6,0) = 0;
             dxi_dpt(4,1) = 0;
-            dxi_dpt(5,1) = 0;
+            dxi_dpt(6,1) = 0;
 
             calcPhiThetaDiff(q_(q_head - 2), q_(q_head-1), dpt_dL);
             Jm_.block(xi_head, q_head-2, 7, 2) = dxi_dpt * dpt_dL;
@@ -334,16 +346,17 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
         // d(prismatic)/d(phi1)
         dxi_dpt(3,0) = 0;
-        dxi_dpt(6,0) = 0;
+        dxi_dpt(5,0) = 0;
         // d(prismatic)/d(theta1)
         dxi_dpt(3,1) = -0.5*(l*Cos(t1/2.))/t1 + (l*Sin(t1/2.))/Power(t1,2);
-        dxi_dpt(6,1) = dxi_dpt(3,1);
+        dxi_dpt(5,1) = dxi_dpt(3,1);
 
         // prismatic joints to match CoM
+        /** @todo */
         dxi_dpt(4,0) = 0; // d(X_com)/d(phi1)
-        dxi_dpt(5,0) = 0; // d(Y_com)/d(phi1)
+        dxi_dpt(6,0) = 0; // d(Y_com)/d(phi1)
         dxi_dpt(4,1) = 0; // d(X_com)/d(theta1)
-        dxi_dpt(5,1) = 0; // d(Y_com)/d(theta1)
+        dxi_dpt(6,1) = 0; // d(Y_com)/d(theta1)
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
         Jm_.block(xi_head, q_head, 7, 2) = dxi_dpt * dpt_dL;
