@@ -49,8 +49,8 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     fmt::print("\n Finished radial logging\n");
 }
 
-void Characterize::calcGravK(int segment, int directions, int verticalsteps){
-    MatrixXd gK = MatrixXd::Zero(2*directions*verticalsteps,1);
+void Characterize::calcK(int segment, int directions, int verticalsteps){
+    VectorXd K = VectorXd::Zero(2*directions*verticalsteps,1);
     VectorXd tau = VectorXd::Zero(2*directions*verticalsteps);
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(2*st_params::num_segments);
@@ -68,20 +68,17 @@ void Characterize::calcGravK(int segment, int directions, int verticalsteps){
             cc->get_curvature(state);
             stm->updateState(state);
 
-            tau(2*verticalsteps*i + 2*j) = pressures(2*segment) - (stm->A_pseudo.inverse()*stm->K*state.q/100)(2*segment);
-            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*segment+1) - (stm->A_pseudo.inverse()*stm->K*state.q/100)(2*segment + 1);
-            //fill in matrix containing g, K
-            //gK(2*verticalsteps*i + 2*j, 0) = (stm->A_pseudo.inverse()*stm->g/100)(2*segment);
-            //gK(2*verticalsteps*i + 2*j + 1, 0) = (stm->A_pseudo.inverse()*stm->g/100)(2*segment+1);
+            tau(2*verticalsteps*i + 2*j) = pressures(2*segment) - (stm->A_pseudo.inverse()*stm->g/100)(2*segment);
+            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*segment+1) - (stm->A_pseudo.inverse()*stm->g/100)(2*segment+1);
 
-            gK(2*verticalsteps*i + 2*j, 0) = (stm->A_pseudo.inverse()*stm->g/100)(2*segment);
-            gK(2*verticalsteps*i + 2*j + 1, 0) = (stm->A_pseudo.inverse()*stm->g/100)(2*segment+1);
+            K(2*verticalsteps*i + 2*j) = (stm->A_pseudo.inverse()*stm->K*state.q/100)(2*segment);
+            K(2*verticalsteps*i + 2*j + 1) = (stm->A_pseudo.inverse()*stm->K*state.q/100)(2*segment + 1);
 
         }
     }
 
-    VectorXd gKcoeff = (gK.transpose()*gK).inverse()*gK.transpose()*tau;
+    VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
-    fmt::print("Finished coeffient characterization. Best fit is {}*g + K*q\n\n", gKcoeff(0));
-    fmt::print("tau: \n{}\n gK Matrix: \n{}\n", tau.transpose(), gK);
+    fmt::print("Finished coeffient characterization. Best fit is {}*g + K*q\n\n", Kcoeff(0));
+    fmt::print("tau: \n{}\n K: \n{}\n", tau.transpose(), K);
 }

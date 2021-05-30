@@ -14,7 +14,7 @@ public:
 
     /** @brief calculate optimal coefficients for gravity vs K term using least squares fitting
      * */
-    void calcGravK(int segment, int directions = 8, int verticalsteps = 5);
+    void calcK(int segment, int directions = 8, int verticalsteps = 5);
     
 private:
     const double deg2rad = 0.01745329;
