@@ -11,5 +11,5 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.5/cmake-3.16.5
 RUN tar -zxvf cmake-3.16.5.tar.gz
 RUN cd cmake-3.16.5; ./bootstrap; make; make install
 
-RUN apt-get install --yes python3-dev python3-numpy
-RUN apt-get install --yes libmodbus-dev libeigen3-dev libserialport-dev libopencv-dev
+RUN apt-get update --yes; apt-get install --yes python3-dev python3-numpy
+RUN apt-get update --yes; apt-get install --yes libmodbus-dev libeigen3-dev libserialport-dev libopencv-dev
