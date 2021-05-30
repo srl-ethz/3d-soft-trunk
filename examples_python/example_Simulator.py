@@ -1,28 +1,29 @@
-from softtrunk_pybind_module import Simulator, State, SoftTrunkModel
+from softtrunk_pybind_module import ControllerPCC, State, CurvatureCalculator
+import numpy as np
 
-stm = SoftTrunkModel()
-state = State()
-
+initial_state = State()
 # set initial state
-q = state.q
-for i in range(len(q)):
-    q[i] = 2. / len(q)
-state.q = q
+q = initial_state.q
+q = 2. / q.size * np.ones(q.size)
+initial_state.q = q
 
-# set pressure (use A matrix to figure out number of chambers)
-stm.updateState(state)
-_, _, _, _, _, A, _ = stm.getModel()
-p = [0] * A.shape[1]
+# set pressure (use size of state to figure out number of chambers)
+num_segments = initial_state.q.size // 2
+print(f"number of segements: {num_segments}")
+p = np.zeros(3 * num_segments)
 
-sim = Simulator(stm, 0.01, 1, state)
-sim.start_log("sim_Python")
+# simulator functionality is provided as part of the Controller class
+ctrl = ControllerPCC(CurvatureCalculator.SensorType.simulator, True)
+dt = 0.01
+ctrl.set_frequency(1./dt)
+ctrl.set_state(initial_state)
+
 i = 0
 while True:
-    sim.simulate(p)
+    ctrl.simulate(p)
     if i == 10:
         # once every 10 steps, print the state of robot
-        state = sim.getState()
+        state = ctrl.get_state()
         print(state.q)
         i = 0
     i += 1
-sim.end_log()
