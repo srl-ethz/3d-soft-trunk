@@ -13,10 +13,9 @@
 
 /**
  * @brief Implements the PCC controller as described in paper.
- * @details It receives pointers to instances of AugmentedRigidArm and SoftArm, so it can access instances of those classes to retrieve information about them that can be used in the Manager class to control the Soft Trunk.
- * By setting USE_PID_CURVATURE_CONTROL to true in SoftTrunk_common_defs.h, it can also do PID control.
- * @todo update to fully use SoftTrunkModel. This should get much shorter.
- */
+ * @details Different controllers can be implemented by creating a child class of this class.
+ * Includes a simulator functionality, which integrates the analytical model forward in time.
+ **/
 class ControllerPCC {
 public:
     ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
@@ -41,7 +40,7 @@ public:
     void toggle_log();
 
     /** @brief change log filename to string */
-    void set_log_filename(const std::string &s);
+    void set_log_filename(const std::string s);
 
     /**
     *@brief return segment tip transformation
@@ -58,7 +57,7 @@ public:
     bool simulate(const VectorXd &p);
 
     /** @brief sets the frequency of the simulator */
-    void set_frequency(const double &hz);
+    void set_frequency(const double hz);
 
 protected:
 

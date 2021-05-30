@@ -103,7 +103,7 @@ std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
     return objects;
 }
 
-void ControllerPCC::set_frequency(const double &hz){
+void ControllerPCC::set_frequency(const double hz){
     assert(simulation);
     this->dt = 1./hz;
 }
@@ -131,7 +131,7 @@ void ControllerPCC::toggle_log(){
     }
 }
 
-void ControllerPCC::set_log_filename(const std::string & s){
+void ControllerPCC::set_log_filename(const std::string s){
     this->filename = s;
 }
 
