@@ -1,6 +1,8 @@
 from softtrunk_pybind_module import AugmentedRigidArm, State
 from time import sleep
 
+# because of the current implementation, an instance of SoftTrunkModel must be run beforehand to generate the URDF / XACRO model of the robot.
+
 ara = AugmentedRigidArm()
 state = State()
 q = state.q
