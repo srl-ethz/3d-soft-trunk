@@ -20,8 +20,8 @@
 void q_update(double seconds, srl::State& state) {
     // generate nice-looking poses
     for (int i = 0; i < st_params::num_segments * st_params::sections_per_segment ; i++) {
-        state.q(2 * i + 0) = 0.8 * sin(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
-        state.q(2 * i + 1) = 0.4 * cos(seconds * (double) i / st_params::sections_per_segment) / st_params::sections_per_segment;
+        state.q(2 * i + 0) = 0.8 * sin(seconds * (double) (i+1) / st_params::sections_per_segment) / st_params::sections_per_segment;
+        state.q(2 * i + 1) = 0.4 * cos(seconds * (double) (i+1) / st_params::sections_per_segment) / st_params::sections_per_segment;
 
     }
 }
