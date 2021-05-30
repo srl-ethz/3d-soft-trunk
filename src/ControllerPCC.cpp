@@ -46,6 +46,11 @@ void ControllerPCC::get_state(srl::State &state) {
     state = this->state;
 }
 
+void ControllerPCC::get_x(Vector3d &x) {
+    std::lock_guard<std::mutex> lock(mtx);
+    x = this->x;
+}
+
 void ControllerPCC::set_state(const srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
     assert(simulation);
@@ -97,9 +102,9 @@ std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
     assert(sensor_type == CurvatureCalculator::SensorType::qualisys);
     std::vector<Eigen::Vector3d> object_vec(objects); 
     for (int i = 0; i < objects; i++) {
-        object_vec[i] = stm->get_H_base().rotation()*cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
-        /*object_vec[i] = object_vec[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
-        object_vec[i] = cc->get_frame(0).rotation()*object_vec[i]; //rotate to match the internal coordinates*/
+        object_vec[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
+        object_vec[i] = object_vec[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
+        object_vec[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*object_vec[i]; //rotate to match the internal coordinates*/
     }
     
     return object_vec;

@@ -2,7 +2,6 @@
 
 int main(){
     Characterize ch{CurvatureCalculator::SensorType::qualisys};
-    ch.logRadialPressureDist(0, "radialDistTopSegment");
-    ch.logRadialPressureDist(1, "radialDistBottomSegment");
+    ch.calcK(1,8,5);
     fmt::print("\n\n You can close the laptop now\n");
 }

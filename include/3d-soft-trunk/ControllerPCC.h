@@ -29,6 +29,9 @@ public:
     /** @brief get current kinematic state of the arm */
     void get_state(srl::State &state);
 
+    /** @brief get the tip x coordinates */
+    void get_x(Vector3d &x);
+
     /** @brief set position of arm, only use for simulations! */
     void set_state(const srl::State &state);
 

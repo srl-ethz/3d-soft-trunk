@@ -79,6 +79,6 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
 
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
-    fmt::print("Finished coeffient characterization. Best fit is {}*g + K*q\n\n", Kcoeff(0));
+    fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
     fmt::print("tau: \n{}\n K: \n{}\n", tau.transpose(), K);
 }
