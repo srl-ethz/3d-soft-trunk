@@ -57,6 +57,9 @@ private:
     double kp;
     double kd;
 
+    /** @brief x coordinates of middle segment tip */
+    Vector3d x_mid;
+
     /** @brief operational dynamics */
     MatrixXd B_op;
     /** @brief operational space gravity*/
@@ -65,6 +68,8 @@ private:
     MatrixXd J_inv;
     /** @brief jacobian */
     MatrixXd J;
+    /** @brief Jacobian of both middle segment and tip segment */
+    MatrixXd Jt = MatrixXd::Zero(3*st_params::num_segments, st_params::q_size);
 
     /** @brief reference torques */
     VectorXd tau_ref;
@@ -73,5 +78,9 @@ private:
     /** @brief reference acceleration in cartesian coordinates */
     Vector3d ddx_ref;
 
+    /** @brief ddx for null space control */
+    VectorXd ddx_null;
+    MatrixXd B_op_null;
+    VectorXd f_null;
     
 };
