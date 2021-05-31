@@ -361,10 +361,10 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         dxi_dpt(5,1) = dxi_dpt(3,1);
 
         // prismatic joints to match CoM
-        dxi_dpt(4,0) = (Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1; // d(X_com)/d(phi1)
-        dxi_dpt(6,0) = -((Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1); // d(Y_com)/d(phi1)
-        dxi_dpt(4,1) = -((Cos(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(X_com)/d(theta1)
-        dxi_dpt(6,1) = -((Sin(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(Y_com)/d(theta1)
+        dxi_dpt(4,0) = (l*Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1; // d(X_com)/d(phi1)
+        dxi_dpt(6,0) = -((l*Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1); // d(Y_com)/d(phi1)
+        dxi_dpt(4,1) = -((l*Cos(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (l*Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(X_com)/d(theta1)
+        dxi_dpt(6,1) = -((l*Sin(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (l*Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(Y_com)/d(theta1)
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
         Jm_.block(xi_head, q_head, 7, 2) = dxi_dpt * dpt_dL;
