@@ -38,6 +38,8 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
             case 'g':
                 x_ref = osc.get_objects()[0];
                 osc.set_ref(x_ref, dx_ref);
+            case 't':
+                osc.toggleGripper();
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
         fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());

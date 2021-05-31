@@ -68,6 +68,9 @@ public:
     /** @brief sets the frequency of the simulator */
     void set_frequency(const double hz);
 
+    /** @brief toggles gripper */
+    void toggleGripper();
+
 
 protected:
 
@@ -131,6 +134,8 @@ protected:
     Vector3d x_ref;
     Vector3d dx;
     Vector3d dx_ref;
+
+    bool gripping = false;
 
     //actuation vectors, p is pressures and f is torques
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);

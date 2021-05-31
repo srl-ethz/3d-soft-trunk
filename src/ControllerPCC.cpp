@@ -12,7 +12,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool s
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,3,2,0,6,4};
+    std::vector<int> map = {1,3,2,0,6,4,5};
     
     if (!simulation) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
@@ -62,17 +62,9 @@ void ControllerPCC::get_pressure(VectorXd& p){
     p = this->p;
 }
 
-
-VectorXd ControllerPCC::gravity_compensate3(srl::State state){
-    assert(st_params::sections_per_segment == 1);
-    VectorXd gravcomp = VectorXd::Zero(3*st_params::num_segments);
-    for (int i = 0; i < st_params::num_segments; i++){
-        MatrixXd A_inverse_block = stm->A.block(2*i, 3*i, 2, 3).transpose()*(stm->A.block(2*i, 3*i, 2, 3)*stm->A.block(2*i, 3*i, 2, 3).transpose()).inverse();
-        gravcomp.segment(3*i,3) = A_inverse_block * (stm->g + stm->K*state.q).segment(2*i,2);
-        if (gravcomp.segment(3*i,3).minCoeff() < 0)
-            gravcomp.segment(3*i, 3) -= gravcomp.segment(3*i,3).minCoeff() * Vector3d::Ones();
-    }
-    return gravcomp/100;
+void ControllerPCC::toggleGripper(){
+    gripping = !gripping;
+    vc->setSinglePressure(3*st_params::num_segments, gripping*150);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){

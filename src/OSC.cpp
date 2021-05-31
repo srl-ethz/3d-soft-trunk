@@ -54,6 +54,7 @@ void OSC::control_loop() {
         J_inv = stm->B.inverse()*J.transpose()*B_op;
          
         f = B_op*ddx_ref;
+        if (gripperAttached) f(2) += 0.24; //the gripper weighs 24 grams -> 0.24 Newton
         tau_null = -0.1*state.q*0;
         tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
