@@ -88,8 +88,8 @@ private:
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::array<double, st_params::num_segments> shear_modulus = {34200., 60000.};
-    std::array<double, st_params::num_segments> drag_coef = {33000., 8000.};
+    std::array<double, st_params::num_segments> shear_modulus = {34200., 56500.};
+    std::array<double, st_params::num_segments> drag_coef = {28000., 8000.};
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.

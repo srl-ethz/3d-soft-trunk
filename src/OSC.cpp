@@ -10,8 +10,8 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     }
 
     //set the gains
-    kp = 35;
-    kd = 1.7;
+    kp = 45;
+    kd = 4.5;
 
     //OSC needs a higher refresh rate than other controllers
     dt = 1./50;
@@ -42,7 +42,7 @@ void OSC::control_loop() {
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            //ddx_ref += potfields[i].get_ddx(x);
+            ddx_ref += potfields[i].get_ddx(x);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
@@ -55,7 +55,7 @@ void OSC::control_loop() {
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = J.transpose()*f + /*stm->D * state.dq + */(MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 

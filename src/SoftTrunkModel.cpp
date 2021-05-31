@@ -76,8 +76,8 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         // the 2* angle comes from the fact that I characterize in 0,5 degree steps -> the graph spans 720
-        angle = -0.0000048968*pow(angle,3) + 0.0024420891*pow(angle,2) + 0.7378089443*angle + 4.0716085641;
-        
+        angle = -0.0000048968*pow(angle,3) + 0.0024420891*pow(angle,2) + 0.7378089443*angle + 6.0716085641;
+
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
         pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
 
@@ -90,7 +90,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
         if(-10 < angle && angle <= 124) output.segment(3*i,3) *= 0.14/(-0.00000006583626*pow(angle,3) + 0.00000874836118*pow(angle,2) + 0.00010997931452*angle + 0.12264170021766);
-        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.14/(-0.000010250*pow(angle,2) + 0.003622464*angle - 0.144449532);
+        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.15/( -0.000010250406*pow(angle,2) + 0.003622464079*angle - 0.144449531551);
         else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(-0.00000000107448087454*pow(angle,4) + 0.00000128667017990424*pow(angle,3) - 0.00057394958472449700*pow(angle,2) + 0.11280669747965400000*angle - 8.08770166486212000000); //yikes
         
     }

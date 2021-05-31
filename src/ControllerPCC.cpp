@@ -89,8 +89,8 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
     if (logging){                                               //log once per control timestep
         log_file << (cc->get_timestamp() - initial_timestamp)/10e5;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
-            VectorXd x_tip = stm->get_H(i).translation();
-            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2));
+
+            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x(0), x(1), x(2), x_ref(0), x_ref(1), x_ref(2));
         }
         for (int i=0; i < st_params::q_size; i++)               //log q
             log_file << fmt::format(", {}", state.q(i));

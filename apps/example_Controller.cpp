@@ -65,7 +65,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0,-0.15,-0.2;
+    x_ref_center << 0,0,-0.2;
     x_ref = x_ref_center;
     
     
@@ -79,17 +79,17 @@ int main(){
     
     getchar();
     osc.set_ref(x_ref, dx_ref);
-    std::thread print_thread(printer);
+    //std::thread print_thread(printer);
     std::thread gain_thread(gain);
     
     osc.toggle_log();
-    while (true) {
+    while (t < 10) {
         
-        /*circle << cos(coef*t), sin(coef*t), 0;
+        circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
-        dx_ref = amplitude * coef * circle;
-        osc.set_ref(x_ref,dx_ref);*/
+        //dx_ref = amplitude * coef * circle;
+        osc.set_ref(x_ref,dx_ref);
         
         
         t+=dt;

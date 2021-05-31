@@ -19,15 +19,15 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         log_file << fmt::format(", q_{}", i);
     log_file << "\n"; 
     
-    pressures(2*segment) = 500;
+    pressures(2*segment) = 300;
 
     actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
     srl::Rate r{2};
 
     for (int i = 0; i < 720; i++){
-        pressures(2*segment) = 500*cos(i*deg2rad/2);
-        pressures(2*segment+1) = -500*sin(i*deg2rad/2);
+        pressures(2*segment) = 300*cos(i*deg2rad/2);
+        pressures(2*segment+1) = -300*sin(i*deg2rad/2);
 
         actuate(stm->pseudo2real(pressures));
         fmt::print("angle: {}, pressure: {}\n", (i+0.0)/2, stm->pseudo2real(pressures).transpose());
