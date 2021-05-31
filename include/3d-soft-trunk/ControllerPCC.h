@@ -13,10 +13,9 @@
 
 /**
  * @brief Implements the PCC controller as described in paper.
- * @details It receives pointers to instances of AugmentedRigidArm and SoftArm, so it can access instances of those classes to retrieve information about them that can be used in the Manager class to control the Soft Trunk.
- * By setting USE_PID_CURVATURE_CONTROL to true in SoftTrunk_common_defs.h, it can also do PID control.
- * @todo update to fully use SoftTrunkModel. This should get much shorter.
- */
+ * @details Different controllers can be implemented by creating a child class of this class.
+ * Includes a simulator functionality, which integrates the analytical model forward in time.
+ **/
 class ControllerPCC {
 public:
     ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
@@ -29,11 +28,17 @@ public:
     /** @brief get current kinematic state of the arm */
     void get_state(srl::State &state);
 
+    /** @brief get the tip x coordinates */
+    void get_x(Vector3d &x);
+
     /** @brief set position of arm, only use for simulations! */
     void set_state(const srl::State &state);
 
     /** @brief get current pressure output to the arm */
     void get_pressure(VectorXd &p_vectorized);
+
+    /** @brief return x_tip */
+    Vector3d get_x();
 
     /**
      * @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere
@@ -41,7 +46,7 @@ public:
     void toggle_log();
 
     /** @brief change log filename to string */
-    void set_log_filename(const std::string &s);
+    void set_log_filename(const std::string s);
 
     /**
     *@brief return segment tip transformation
@@ -57,12 +62,17 @@ public:
     *   @return if the simulation was successful (true) or overflowed (false) */
     bool simulate(const VectorXd &p);
 
+    /** @brief new chamber configuration */
+    void newChamberConfig(Vector3d &angles);
+
     /** @brief sets the frequency of the simulator */
-    void set_frequency(const double &hz);
+    void set_frequency(const double hz);
+
 
 protected:
 
-    /**int
+    
+    /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
      */
@@ -84,8 +94,9 @@ protected:
 
 
     std::unique_ptr<ValveController> vc;
-    std::unique_ptr<CurvatureCalculator> cc;
     std::unique_ptr<SoftTrunkModel> stm;
+    std::unique_ptr<CurvatureCalculator> cc;
+    
 
 
     std::string bendlabs_portname = "/dev/ttyUSB0";
@@ -96,8 +107,8 @@ protected:
      * for DragonSkin 10, set to 150.
      * (not throughly examined- a larger or smaller value may be better)
      */
-    const int p_offset = 50;
-    const int p_max = 600; // 400 for DS 10, 1200 for DS 30
+    const int p_offset = 0;
+    const int p_max = 700; // 400 for DS 10, 1200 for DS 30
 
     
 
@@ -115,6 +126,7 @@ protected:
     srl::State state;
     srl::State state_ref;
     srl::State state_prev; //for simulation
+    
     Vector3d x;
     Vector3d x_ref;
     Vector3d dx;
@@ -132,7 +144,8 @@ protected:
 
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
-    int extra_frames = 0;
+    int objects;
+    CurvatureCalculator::SensorType sensor_type;
 
     //simulation variables
     bool simulation;

@@ -93,7 +93,7 @@ private:
      */
     void calculateCurvature();
 
-    VectorXd initial_q;
+    VectorXd initial_q = VectorXd::Zero(st_params::q_size);
     std::mutex mtx;
 
     /** @brief PCC configuration of each segment of soft arm. depends on st_params::parametrization */
@@ -109,5 +109,7 @@ private:
 
     /** @brief extra qualisys frames to be tracked*/
     int extra_frames;
+
+    int counter = 0;
     
 };

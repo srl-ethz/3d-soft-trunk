@@ -3,12 +3,18 @@
 OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(sensor_type, simulation, objects){
     filename = "OSC_logger";
 
+    potfields.resize(objects);
+    for(int i = 0; i < potfields.size(); i++){
+        potfields[i].set_strength(0.005);
+        potfields[i].set_cutoff(0.1);
+    }
+
     //set the gains
-    kp = 43.9;
-    kd = 8.6;
+    kp = 45;
+    kd = 4.5;
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./100;
+    dt = 1./50;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
@@ -20,27 +26,41 @@ void OSC::control_loop() {
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        cc->get_curvature(state);
+        if (!simulation) cc->get_curvature(state);
+        
         stm->updateState(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
-        
+
+        J = stm->J;
+
         //do controls
-        x = stm->ara->get_H_base().rotation()*stm->ara->get_H_tip().translation();
-        dx = stm->J*state.dq;
-        ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //values are critically damped approach
-        B_op = (stm->J*stm->B.inverse()*stm->J.transpose()).inverse();
-        //g_op = B_op*stm->J*stm->B.inverse()*stm->g;
+        x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
+        dx = J*state.dq;
+        ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
+
+        for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
+            potfields[i].set_pos(get_objects()[i]);
+            ddx_ref += potfields[i].get_ddx(x);
+        }
+
+        for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
+            J.block(0,2*i,3,2) = MatrixXd::Zero(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
+        }
+        
+
+        B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
          
-        f = B_op*ddx_ref;// + g_op;
+        f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = stm->J.transpose()*f + stm->g + stm->K * state.q + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
-
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref)/100;// + stm->pseudo2real(gravity_compensate(state));
+        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
         
-        actuate(p);
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
+
+        if (!simulation) {actuate(p);}
+        else {simulate(p);}
     }
 }
 
@@ -55,8 +75,59 @@ int OSC::singularity(const MatrixXd &J) {
 
     for (int i = 0; i < st_params::num_segments - 1; i++) {                         //check for singularities
         for (int j = 0; j < st_params::num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.9) order+=1;  //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.99) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;
+}
+
+PotentialField::PotentialField(){
+    this->pos = Vector3d::Zero();
+    this->strength = 0.005;
+    this->cutoff_distance = 1.5;
+}
+
+PotentialField::PotentialField(Vector3d &pos, double s){
+    this->pos = pos;
+    this->strength = s;
+    this->cutoff_distance = 1.5;
+}
+
+Vector3d PotentialField::get_ddx(Vector3d &pos) {
+    Vector3d differential = pos - this->pos;
+    if (differential.norm() < this->cutoff_distance) {
+        return strength * (1./differential.norm() - 1./cutoff_distance) * 1./(differential.norm()) * differential.normalized();
+    }
+    return Vector3d::Zero();
+}
+
+void PotentialField::set_pos(Vector3d &pos) {
+    this->pos = pos;
+}
+void PotentialField::set_strength(double s){
+    this->strength = s;
+}
+void PotentialField::set_cutoff(double c){
+    this->cutoff_distance = c;
+}
+Vector3d PotentialField::get_pos(){
+    return this->pos;
+}
+double PotentialField::get_strength(){
+    return this->strength;
+}
+double PotentialField::get_cutoff(){
+    return this->cutoff_distance;
+}
+double OSC::get_kd(){
+    return this->kd;
+}
+double OSC::get_kp(){
+    return this->kp;
+}
+void OSC::set_kd(double kd){
+    this->kd = kd;
+}
+void OSC::set_kp(double kp){
+    this->kp = kp;
 }

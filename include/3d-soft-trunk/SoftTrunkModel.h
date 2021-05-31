@@ -57,7 +57,9 @@ public:
 
     Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 
-    std::unique_ptr<AugmentedRigidArm> ara;
+
+    /** @brief set new angles for the chamber configuration*/
+    void newChamberConfig(Vector3d &angles);
     
     /**
      * @brief convert pseudopressures to real pressures
@@ -67,8 +69,11 @@ public:
      */
     VectorXd pseudo2real(VectorXd pressure_pseudo);
 
+
+
 private:
-    
+    std::unique_ptr<AugmentedRigidArm> ara;
+
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
      * @param radius radius of the chamber. This is the input from which the other values will be calculated.
@@ -83,8 +88,8 @@ private:
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::array<double, st_params::num_segments> shear_modulus = {33000., 47000};
-    std::array<double, st_params::num_segments> drag_coef = {61000., 8000.};
+    std::array<double, st_params::num_segments> shear_modulus = {34200., 56500.};
+    std::array<double, st_params::num_segments> drag_coef = {28000., 8000.};
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.
