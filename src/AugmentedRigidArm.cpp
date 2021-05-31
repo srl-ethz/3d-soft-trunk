@@ -46,13 +46,22 @@ void AugmentedRigidArm::setup_drake_model()
     int num_joints = multibody_plant->num_positions(); // multibody_plant->num_joints() also returns fake joints at base, so use num_positions
    
     // quite confusingly, ordering of generalized positions vs order of joints is different for the prismatic joints...
-    // joint ordering: [first Z axis joint] -> [X axis joint] -> [Y axis joint] -> [second Z axis joint]
-    // generalized position ordering: [first Z axis joint] -> [X axis joint] -> [second Z axis joint] ->  [Y axis joint]
+    // joint ordering: [xyz rotational joint] -> [first Z axis joint] -> [X axis joint] -> [Y axis joint] -> [second Z axis joint]
+    // generalized position ordering: [xyz rotational joint] -> [first Z axis joint] -> [X axis joint] -> [second Z axis joint] ->  [Y axis joint]
     // however, this implementation of generalized position ordering may change with future versions of drake, so verify this each time to make sure
 
-    /** @todo check that idiosyncratic generalized position ordering is consistent */
-    for (drake::multibody::JointIndex ji(0); ji<num_joints+2; ji++)
-      fmt::print("position index:{}\tname:{}\n", multibody_plant->get_joint(ji).position_start(), multibody_plant->get_joint(ji).name());
+    /* check that idiosyncratic generalized position ordering is consistent. If this assertion fails, the drake implementation for generalized position ordering may have changed. */
+    for (int joint_id = 0; joint_id < num_joints; joint_id++){
+      int joint_id_in_section = joint_id % 7;
+      drake::multibody::JointIndex ji(joint_id+1); // first joint is world to base joint, so ignore
+      std::string joint_name = multibody_plant->get_joint(ji).name();
+      int position_id = joint_id;
+      if (joint_id_in_section == 5)
+        position_id += 1;
+      if (joint_id_in_section == 6)
+        position_id -= 1;
+      assert(multibody_plant->get_joint(ji).position_start() == position_id);
+    }
     
     // check that parameters make sense, just in case
     assert(st_params::num_segments * 2 == st_params::lengths.size());
@@ -352,11 +361,10 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         dxi_dpt(5,1) = dxi_dpt(3,1);
 
         // prismatic joints to match CoM
-        /** @todo */
-        dxi_dpt(4,0) = 0; // d(X_com)/d(phi1)
-        dxi_dpt(6,0) = 0; // d(Y_com)/d(phi1)
-        dxi_dpt(4,1) = 0; // d(X_com)/d(theta1)
-        dxi_dpt(6,1) = 0; // d(Y_com)/d(theta1)
+        dxi_dpt(4,0) = (Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1; // d(X_com)/d(phi1)
+        dxi_dpt(6,0) = -((Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1); // d(Y_com)/d(phi1)
+        dxi_dpt(4,1) = -((Cos(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(X_com)/d(theta1)
+        dxi_dpt(6,1) = -((Sin(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(Y_com)/d(theta1)
         
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
         Jm_.block(xi_head, q_head, 7, 2) = dxi_dpt * dpt_dL;
