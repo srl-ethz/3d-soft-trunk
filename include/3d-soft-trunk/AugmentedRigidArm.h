@@ -62,7 +62,7 @@ private:
     /** @brief time derivative of Jm_ */
     MatrixXd dJm_;
     /** @brief Jacobian of tip position vs xi_ */
-    MatrixXd Jxi_;
+    std::vector<Eigen::MatrixXd> Jxi_;
     /** @brief inertia matrix */
     MatrixXd B_xi_;
     /** @brief Coriolis, centripital & gyroscopic effects */
@@ -96,7 +96,7 @@ public:
     /** @brief gravity mapped to q */
     MatrixXd g;
     /** @brief Jacobian of tip position vs q */
-    MatrixXd J;
+    std::vector<Eigen::MatrixXd> J;
 
     /** @brief current joint angles of the augmented rigid arm
      * @todo this is exposed because I want it in solve_tip_force for visualization, figure out more elegant solution....

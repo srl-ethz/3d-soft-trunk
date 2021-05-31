@@ -33,7 +33,7 @@ void OSC::control_loop() {
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
 
-        J = stm->J;
+        J = stm->J[st_params::num_segments-1]; //tip jacobian
 
         //do controls
         x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
@@ -51,11 +51,11 @@ void OSC::control_loop() {
         
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
-        J_inv = stm->B.inverse()*stm->J.transpose()*B_op;
+        J_inv = stm->B.inverse()*J.transpose()*B_op;
          
         f = B_op*ddx_ref;
         tau_null = -0.1*state.q*0;
-        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - stm->J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 

@@ -14,9 +14,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     log_file << "angle";
 
     //write header
-    log_file << fmt::format(", angle_measured, r, x, y, z");
-    for (int i=0; i < st_params::q_size; i++)
-        log_file << fmt::format(", q_{}", i);
+    log_file << fmt::format(", angle_measured, r");
     log_file << "\n"; 
     
     pressures(2*segment) = 300;
@@ -26,11 +24,11 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     srl::Rate r{2};
 
     for (int i = 0; i < 720; i++){
-        pressures(2*segment) = 300*cos(i*deg2rad/2);
-        pressures(2*segment+1) = -300*sin(i*deg2rad/2);
+        pressures(2*segment) = 500*cos(i*deg2rad/2);
+        pressures(2*segment+1) = -500*sin(i*deg2rad/2);
 
         actuate(stm->pseudo2real(pressures));
-        fmt::print("angle: {}, pressure: {}\n", (i+0.0)/2, stm->pseudo2real(pressures).transpose());
+        
 
         cc->get_curvature(state);
         stm->updateState(state);
@@ -38,10 +36,12 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
 
         double angle = atan2(x(1),x(0))*180/3.14156;
         if (angle < 0) angle+=360;
-        log_file << fmt::format("{},{},{},{},{}", (i+0.0)/2, angle, sqrt(x(0)*x(0)+x(1)*x(1)), x(0), x(1), x(2));
 
-        for (int i=0; i < st_params::q_size; i++)               //log q
-            log_file << fmt::format(", {}", state.q(i));
+        fmt::print("angle: {}, angle_measured: {} pressure: {}\n", (i+0.0)/2, angle, stm->pseudo2real(pressures).transpose());
+
+        log_file << fmt::format("{},{}", (i+0.0)/2, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+
+
         log_file << "\n";
         r.sleep();
     }
@@ -80,5 +80,4 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
     fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
-    fmt::print("tau: \n{}\n K: \n{}\n", tau.transpose(), K);
 }
