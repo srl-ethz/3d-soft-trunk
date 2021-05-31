@@ -6,20 +6,20 @@
 
 
 
-ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : simulation(simulation), extra_frames(objects){
+ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : sensor_type(sensor_type), simulation(simulation), objects(objects){
 
     filename = "defaultController_log";
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,2,5,3,6,4};
+    std::vector<int> map = {1,3,2,0,6,4};
     
     if (!simulation) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(sensor_type, bendlabs_portname);
     else if (sensor_type == CurvatureCalculator::SensorType::qualisys) {
-        cc = std::make_unique<CurvatureCalculator>(sensor_type, "" , extra_frames);
+        cc = std::make_unique<CurvatureCalculator>(sensor_type, "" , objects);
         base_transform = cc->get_frame(0);
     }
 
@@ -44,6 +44,11 @@ void ControllerPCC::set_ref(const Vector3d &x_ref, const Vector3d &dx_ref){
 void ControllerPCC::get_state(srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
     state = this->state;
+}
+
+void ControllerPCC::get_x(Vector3d &x) {
+    std::lock_guard<std::mutex> lock(mtx);
+    x = this->x;
 }
 
 void ControllerPCC::set_state(const srl::State &state) {
@@ -72,7 +77,8 @@ VectorXd ControllerPCC::gravity_compensate3(srl::State state){
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
     assert(st_params::sections_per_segment == 1);
-    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q + stm->D * state.dq);
+    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
+
     return gravcomp/100; //to mbar
 }
 
@@ -81,10 +87,10 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         vc->setSinglePressure(i, p(i));
     }
     if (logging){                                               //log once per control timestep
-        log_file << t;
+        log_file << (cc->get_timestamp() - initial_timestamp)/10e5;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
-            VectorXd x_tip = stm->get_H(i).translation();
-            log_file << fmt::format(", {}, {}, {}", x_tip(0), x_tip(1), x_tip(2));
+
+            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x(0), x(1), x(2), x_ref(0), x_ref(1), x_ref(2));
         }
         for (int i=0; i < st_params::q_size; i++)               //log q
             log_file << fmt::format(", {}", state.q(i));
@@ -93,14 +99,15 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 }
 
 std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
-    std::vector<Eigen::Vector3d> objects(extra_frames); 
-    for (int i = 0; i < extra_frames; i++) {
-        objects[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
-        objects[i] = objects[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
-        objects[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*objects[i]; //rotate to match the internal coordinates
+    assert(sensor_type == CurvatureCalculator::SensorType::qualisys);
+    std::vector<Eigen::Vector3d> object_vec(objects); 
+    for (int i = 0; i < objects; i++) {
+        object_vec[i] = cc->get_frame(st_params::num_segments + 1 + i).translation(); //read in the extra frame
+        object_vec[i] = object_vec[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
+        object_vec[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*object_vec[i]; //rotate to match the internal coordinates*/
     }
     
-    return objects;
+    return object_vec;
 }
 
 void ControllerPCC::set_frequency(const double hz){
@@ -108,17 +115,22 @@ void ControllerPCC::set_frequency(const double hz){
     this->dt = 1./hz;
 }
 
+void ControllerPCC::newChamberConfig(Vector3d &angles) {
+    stm->newChamberConfig(angles);
+}
+
 void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;
-        initial_timestamp = cc->get_timestamp();
+        if (!simulation) {initial_timestamp = cc->get_timestamp();}
+        else {initial_timestamp = 0;}
         this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
         fmt::print("Starting log to {}\n", this->filename);
         log_file.open(this->filename, std::fstream::out);
         log_file << "timestamp";
 
         //write header
-        log_file << fmt::format(", x, y, z");
+        log_file << fmt::format(", x, y, z, x_ref, y_ref, z_ref");
 
         for (int i=0; i < st_params::q_size; i++)
             log_file << fmt::format(", q_{}", i);
@@ -156,7 +168,7 @@ bool ControllerPCC::simulate(const VectorXd &p){
         log_file << t;
         for (int i=0; i < st_params::num_segments; i++){        //log tip pos
             VectorXd x_tip = stm->get_H(i).translation();
-            log_file << fmt::format(", {}, {}, {}", x_tip(0), x_tip(1), x_tip(2));
+            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2));
         }
         for (int i=0; i < st_params::q_size; i++)               //log q
             log_file << fmt::format(", {}", state.q(i));

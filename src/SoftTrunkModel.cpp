@@ -52,15 +52,47 @@ Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H_base(){
     return ara->get_H_base();
 }
 
+void SoftTrunkModel::newChamberConfig(Vector3d &angles){
+    double toRad = 3.14156/180;
+    chamberMatrix << sin(angles(0)*toRad), sin(angles(1)*toRad), sin(angles(2)*toRad), cos(angles(0)*toRad), cos(angles(1)*toRad), cos(angles(2)*toRad);
+    fmt::print("Chamber Matrix:\n{}\n", chamberMatrix);
+}
+
 VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     assert(pressure_pseudo.size() == 2 * st_params::num_segments);
     VectorXd output = VectorXd::Zero(3*st_params::num_segments);
-    MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse();
+    MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params::num_segments; i++){
-        output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //use Moore-Penrose to invert back onto real chambers
+        //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
+        if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
+
+        double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
+        if (angle < -30) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
+        
+        
+        //shift coordinates to start at the same spot as the characterization program
+        angle = angle - 90; 
+        if (angle < -10) angle += 360;       
+        double deg2rad = 0.01745329;
+        double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
+        // the 2* angle comes from the fact that I characterize in 0,5 degree steps -> the graph spans 720
+        angle = -0.0000048968*pow(angle,3) + 0.0024420891*pow(angle,2) + 0.7378089443*angle + 6.0716085641;
+
+        pressure_pseudo(2*i) = r*cos(angle*deg2rad);
+        pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
+
+        output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //invert back onto real chambers
+
         double min_p = output.segment(3*i, 3).minCoeff();
         if (min_p < 0)
             output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
+
+
+        //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
+        if(-10 < angle && angle <= 124) output.segment(3*i,3) *= 0.14/(-0.00000006583626*pow(angle,3) + 0.00000874836118*pow(angle,2) + 0.00010997931452*angle + 0.12264170021766);
+        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.15/( -0.000010250406*pow(angle,2) + 0.003622464079*angle - 0.144449531551);
+        else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(-0.00000000107448087454*pow(angle,4) + 0.00000128667017990424*pow(angle,3) - 0.00057394958472449700*pow(angle,2) + 0.11280669747965400000*angle - 8.08770166486212000000); //yikes
+        
     }
     return output;
 }

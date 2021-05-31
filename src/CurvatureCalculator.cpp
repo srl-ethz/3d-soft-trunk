@@ -176,7 +176,11 @@ void CurvatureCalculator::calculateCurvature() {
         }
         phiTheta2longitudinal(phi, theta, state.q(2*i), state.q(2*i+1));
     }
-    // q -= initial_q; // implement better way to get rid of initial error...
+    if (counter < 10){
+        initial_q += state.q;
+        counter++;
+    }
+    state.q -= initial_q/counter; // implement better way to get rid of initial error...
 }
 
 CurvatureCalculator::~CurvatureCalculator() {
