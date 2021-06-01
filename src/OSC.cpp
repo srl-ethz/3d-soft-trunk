@@ -34,9 +34,7 @@ void OSC::control_loop() {
             continue;
 
         J = stm->J[st_params::num_segments-1]; //tip jacobian
-        for (int i = 0; i < st_params::num_segments; i++){
-            Jt.block(3*i, 0, 3, st_params::q_size) = stm->J[i];
-        }
+        J_mid = stm->J[st_params::num_segments-2]; //middle seg jacobian
 
         //do controls
         x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
@@ -44,30 +42,26 @@ void OSC::control_loop() {
 
         dx = J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
-        ddx_null = VectorXd::Zero(3*st_params::num_segments);
-        ddx_null.segment(3,3) = ddx_ref;
+        ddx_null = Vector3d::Zero();
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
             ddx_ref += potfields[i].get_ddx(x);
-            ddx_null.segment(3*(st_params::num_segments-2),3) += potfields[i].get_ddx(x_mid);
+            ddx_null += potfields[i].get_ddx(x_mid);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
             J.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
         }
-
-        for (int i = 0; i < st_params::num_segments; i++) { //clean up total jacobian as well
-            for (int j = 0; j < singularity(Jt.block(3*i,0,3,st_params::q_size)); j++){
-                Jt.block(3*i, 2*j,3,2) += 0.1*(i+1)*MatrixXd::Identity(3,2);
-            }
+        for (int i = 0; i < singularity(J_mid); i++){               //reduce jacobian order if the arm is in a singularity
+            J_mid.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
         }
-        fmt::print("Jt: \n{}\n",Jt);
+
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         J_inv = stm->B.inverse()*J.transpose()*B_op;
 
-        B_op_null = (Jt*stm->B.inverse()*Jt.transpose()).inverse();
+        B_op_null = (J_mid*stm->B.inverse()*J_mid.transpose()).inverse();
          
         f = B_op*ddx_ref;
         
@@ -75,7 +69,7 @@ void OSC::control_loop() {
         if (gripperAttached) f(2) += 0.24; //the gripper weighs 24 grams -> 0.24 Newto
 
         tau_null = VectorXd::Zero(4);//Jt.transpose()*f_null*0;
-        tau_ref = /*J.transpose()*f*/Jt.transpose()*f_null + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = /*J.transpose()*f*/J_mid.transpose()*f_null + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 

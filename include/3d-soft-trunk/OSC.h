@@ -69,7 +69,7 @@ private:
     /** @brief jacobian */
     MatrixXd J;
     /** @brief Jacobian of both middle segment and tip segment */
-    MatrixXd Jt = MatrixXd::Zero(3*st_params::num_segments, st_params::q_size);
+    MatrixXd J_mid;
 
     /** @brief reference torques */
     VectorXd tau_ref;
@@ -79,7 +79,7 @@ private:
     Vector3d ddx_ref;
 
     /** @brief ddx for null space control */
-    VectorXd ddx_null;
+    Vector3d ddx_null;
     MatrixXd B_op_null;
     VectorXd f_null;
     
