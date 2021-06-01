@@ -38,8 +38,15 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
             case 'g':
                 x_ref = osc.get_objects()[0];
                 osc.set_ref(x_ref, dx_ref);
+                break;
             case 't':
                 osc.toggleGripper();
+                break;
+            case 'v':
+                x_ref(1) *= -1;
+                osc.set_ref(x_ref,dx_ref);
+                break;
+            
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
         fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
@@ -67,7 +74,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0,0,-0.2;
+    x_ref_center << 0,-0.15,-0.2;
     x_ref = x_ref_center;
     
     
@@ -77,21 +84,21 @@ int main(){
 
     double amplitude = 0.15;
     double coef = 2 * 3.1415 / 16;
-
+    osc.gripperAttached = false;
     
     getchar();
     osc.set_ref(x_ref, dx_ref);
-    //std::thread print_thread(printer);
+    std::thread print_thread(printer);
     std::thread gain_thread(gain);
     
     osc.toggle_log();
-    while (t < 10) {
+    while (true) {
         
-        circle << cos(coef*t), sin(coef*t), 0;
+        /*circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
         //dx_ref = amplitude * coef * circle;
-        osc.set_ref(x_ref,dx_ref);
+        osc.set_ref(x_ref,dx_ref);*/
         
         
         t+=dt;

@@ -1,5 +1,6 @@
 //
 // Created by yasu and rkk on 26/10/18.
+// revamped by oliver in may 21
 //
 
 #include "3d-soft-trunk/ControllerPCC.h"
@@ -64,7 +65,7 @@ void ControllerPCC::get_pressure(VectorXd& p){
 
 void ControllerPCC::toggleGripper(){
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params::num_segments, gripping*150);
+    vc->setSinglePressure(3*st_params::num_segments, gripping*250);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){

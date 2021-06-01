@@ -10,8 +10,8 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     }
 
     //set the gains
-    kp = 45;
-    kd = 4.5;
+    kp = 35;
+    kd = 5.5;
 
     //OSC needs a higher refresh rate than other controllers
     dt = 1./50;
@@ -45,6 +45,7 @@ void OSC::control_loop() {
         dx = J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
         ddx_null = VectorXd::Zero(3*st_params::num_segments);
+        ddx_null.segment(3,3) = ddx_ref;
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
@@ -53,15 +54,15 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,2*i,3,2) = MatrixXd::Zero(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
+            J.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
         }
 
         for (int i = 0; i < st_params::num_segments; i++) { //clean up total jacobian as well
             for (int j = 0; j < singularity(Jt.block(3*i,0,3,st_params::q_size)); j++){
-                Jt.block(3*i, 2*j,3,2) = MatrixXd::Zero(3,2);
+                Jt.block(3*i, 2*j,3,2) += 0.1*(i+1)*MatrixXd::Identity(3,2);
             }
         }
-        
+        fmt::print("Jt: \n{}\n",Jt);
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         J_inv = stm->B.inverse()*J.transpose()*B_op;
@@ -69,16 +70,18 @@ void OSC::control_loop() {
         B_op_null = (Jt*stm->B.inverse()*Jt.transpose()).inverse();
          
         f = B_op*ddx_ref;
+        
         f_null = B_op_null*ddx_null;
         if (gripperAttached) f(2) += 0.24; //the gripper weighs 24 grams -> 0.24 Newto
 
-        tau_null = Jt.transpose()*f_null;
-        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
+        tau_null = VectorXd::Zero(4);//Jt.transpose()*f_null*0;
+        tau_ref = /*J.transpose()*f*/Jt.transpose()*f_null + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 
         if (!simulation) {actuate(p);}
         else {simulate(p);}
+        
     }
 }
 
