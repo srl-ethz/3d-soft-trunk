@@ -4,10 +4,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     filename = "OSC_logger";
 
     potfields.resize(objects);
-    for(int i = 0; i < potfields.size(); i++){
-        potfields[i].set_strength(0.005);
-        potfields[i].set_cutoff(0.1);
-    }
+    
 
     //set the gains
     kp = 35;
@@ -104,19 +101,22 @@ int OSC::singularity(const MatrixXd &J) {
 PotentialField::PotentialField(){
     this->pos = Vector3d::Zero();
     this->strength = 0.005;
-    this->cutoff_distance = 1.5;
+    this->cutoff_distance = 0.1;
+    this->radius = 0.05;
 }
 
 PotentialField::PotentialField(Vector3d &pos, double s){
     this->pos = pos;
     this->strength = s;
-    this->cutoff_distance = 1.5;
+    this->cutoff_distance = 0.1;
+    this->radius = 0.05;
 }
 
 Vector3d PotentialField::get_ddx(Vector3d &pos) {
     Vector3d differential = pos - this->pos;
-    if (differential.norm() < this->cutoff_distance) {
-        return strength * (1./differential.norm() - 1./cutoff_distance) * 1./(differential.norm()) * differential.normalized();
+    double distance = differential.norm() - radius;
+    if (distance < this->cutoff_distance) {
+        return strength * (1./distance - 1./cutoff_distance) * 1./distance * differential.normalized();
     }
     return Vector3d::Zero();
 }
@@ -130,6 +130,12 @@ void PotentialField::set_strength(double s){
 void PotentialField::set_cutoff(double c){
     this->cutoff_distance = c;
 }
+
+void PotentialField::set_radius(double r) {
+    assert(r > 0.);
+    this->radius = r;
+}
+
 Vector3d PotentialField::get_pos(){
     return this->pos;
 }

@@ -16,11 +16,13 @@ public:
     void set_pos(Vector3d &pos);
     void set_strength(double s);
     void set_cutoff(double c);
+    void set_radius(double r);
 
 private:
     Vector3d pos;
     double strength;
     double cutoff_distance;
+    double radius;
 };
 
 class OSC: public ControllerPCC
