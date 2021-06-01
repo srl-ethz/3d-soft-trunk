@@ -12,34 +12,35 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     fmt::print("Starting radial log to {}\n", filename);
     log_file.open(filename, std::fstream::out);
     log_file << "angle";
-
+    VectorXd stiffpressure = VectorXd::Zero(3*st_params::num_segments);
+    stiffpressure.segment((st_params::num_segments -1 - segment)*3,3) = 400*Vector3d::Ones();
     //write header
     log_file << fmt::format(", angle_measured, r");
     log_file << "\n"; 
     
-    pressures(2*segment) = 300;
+    pressures(2*segment) = 500;
 
-    actuate(stm->pseudo2real(pressures));
+    actuate(stm->pseudo2real(pressures)+stiffpressure);
     srl::sleep(5);
-    srl::Rate r{2};
+    srl::Rate r{1};
 
-    for (int i = 0; i < 720; i++){
-        pressures(2*segment) = 500*cos(i*deg2rad/2);
-        pressures(2*segment+1) = -500*sin(i*deg2rad/2);
+    for (int i = 0; i < 360; i++){
+        pressures(2*segment) = 500*cos(i*deg2rad);
+        pressures(2*segment+1) = -500*sin(i*deg2rad);
 
-        actuate(stm->pseudo2real(pressures));
+        actuate(stm->pseudo2real(pressures) + stiffpressure);
         
 
         cc->get_curvature(state);
         stm->updateState(state);
-        x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
+        x = stm->get_H_base().rotation()*stm->get_H(segment).translation();
 
         double angle = atan2(x(1),x(0))*180/3.14156;
         if (angle < 0) angle+=360;
 
-        fmt::print("angle: {}, angle_measured: {} pressure: {}\n", (i+0.0)/2, angle, stm->pseudo2real(pressures).transpose());
+        fmt::print("angle: {}, angle_measured: {} pressure: {}\n", i, angle, (stm->pseudo2real(pressures)+stiffpressure).transpose());
 
-        log_file << fmt::format("{},{}", (i+0.0)/2, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        log_file << fmt::format("{},{}", i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
 
 
         log_file << "\n";

@@ -68,8 +68,13 @@ void OSC::control_loop() {
         f_null = B_op_null*ddx_null;
         if (gripperAttached) f(2) += 0.24; //the gripper weighs 24 grams -> 0.24 Newto
 
-        tau_null = VectorXd::Zero(4);//Jt.transpose()*f_null*0;
-        tau_ref = /*J.transpose()*f*/J_mid.transpose()*f_null + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
+        tau_null = J_mid.transpose()*f_null;
+        
+        for(int i = 0; i < st_params::q_size; i++){     //for some reason tau is sometimes nan, catch that
+            if(isnan(tau_null(i))) tau_null(i) = 0;
+        }
+
+        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 
