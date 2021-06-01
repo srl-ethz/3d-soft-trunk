@@ -3,7 +3,7 @@
 
 AugmentedRigidArm::AugmentedRigidArm(SoftTrunkParameters &st_params): st_params(st_params)
 {
-    st_params.sanity_check();
+    assert(st_params.is_finalized());
     setup_drake_model();
 }
 

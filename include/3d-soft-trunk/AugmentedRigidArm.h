@@ -22,7 +22,7 @@
  */
 class AugmentedRigidArm {
 private:
-    SoftTrunkParameters st_params;
+    const SoftTrunkParameters st_params;
     // drake variables start
     /** @brief this builder helps in adding & connecting system blocks */
     drake::systems::DiagramBuilder<double> builder;

@@ -32,6 +32,7 @@ namespace srl{
         VectorXd q;
         VectorXd dq;
         VectorXd ddq;
+        /** @brief designate size of state (i.e. degrees of freedom) */
         State(const int q_size){
             q = VectorXd::Zero(q_size);
             dq = VectorXd::Zero(q_size);
@@ -40,15 +41,28 @@ namespace srl{
     };
 }
 
+/**
+ * @brief save various parameters related to the configuration of the soft trunk.
+ * The parameters are first populated by their default values. After customizing them by changing the member variables or reading from a YAML file,
+ * call finalize() to run sanity checks on the values, and to set other parameters.
+ * @todo the parameters ideally should be private members, and only changeable through functions, to prevent further change after finalize() is called. for now, leave it as is, maybe change when more people start to use it.
+ * @todo implement load_yaml function
+ */
 class SoftTrunkParameters{
 public:
+    /** @brief return empty state with appropriate size. */
+    srl::State empty_state(){
+        assert(is_finalized());
+        return srl::State(q_size);
+    }
     /** @brief name of robot (and of urdf / xacro file) */
     std::string robot_name = "2segment";
+    /** @brief number of actuated segments */
     int num_segments = 2;
+    /** @brief number of PCC elements per section */
     int sections_per_segment = 1;
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
-     * fake value for segment 3
      */
     std::array<double, 4> masses = {0.160, 0.020, 0.082, 0.023};
     /** @brief length of each part, in m
@@ -70,10 +84,13 @@ public:
     std::array<double, 2> shear_modulus = {34200., 56500.};
     std::array<double, 2> drag_coef = {28000., 8000.};
 
-    /** @brief set when sanity_check() is called */
+    /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
 
-    void sanity_check(){
+    void finalize(){
+        assert(!is_finalized()); // already finalized
+
+        // run sanity checks to make sure that at least the size of the arrays make sense
         assert(num_segments * 2 == masses.size());
         assert(num_segments * 2 == lengths.size());
         assert(num_segments + 1 == diameters.size());
@@ -81,10 +98,21 @@ public:
         assert(num_segments == drag_coef.size());
 
         q_size = 2*num_segments*sections_per_segment;
+        finalized = true;
     }
-    srl::State empty_state(){
-        return srl::State(q_size);
+
+    /** @brief populate the parameters by reading from a YAML file
+     * @todo implement this
+     */
+    void load_yaml(const std::string filename){
+        assert(!is_finalized());
     }
+    
+    bool is_finalized(){
+        return finalized;
+    }
+private:
+    bool finalized = false;
 };
 
 
