@@ -34,9 +34,13 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
         is_initial_ref_received = true;
 }
 
-void ControllerPCC::set_ref(const Vector3d &x_ref, const Vector3d &dx_ref){
+void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref){
     std::lock_guard<std::mutex> lock(mtx);
-    this->x_ref = x_ref;
+    Vector3d x_r = x_ref;
+    if (x_ref.norm() > 0.27) {
+        x_r = 0.27*x_ref.normalized();
+    }
+    this->x_ref = x_r;
     this->dx_ref = dx_ref;
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
@@ -64,8 +68,9 @@ void ControllerPCC::get_pressure(VectorXd& p){
 }
 
 void ControllerPCC::toggleGripper(){
+    gripperAttached = true;
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params::num_segments, gripping*250);
+    vc->setSinglePressure(3*st_params::num_segments, gripping*300);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){

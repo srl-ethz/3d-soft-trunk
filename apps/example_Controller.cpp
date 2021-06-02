@@ -2,8 +2,9 @@
 #include "3d-soft-trunk/OSC.h"
 
 OSC osc(CurvatureCalculator::SensorType::qualisys, false, 1);
-
+bool freedom = false;
 Vector3d x_ref;
+Vector3d x;
 Vector3d dx_ref = Vector3d::Zero();
 
 void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
@@ -41,6 +42,7 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
                 break;
             case 't':
                 osc.toggleGripper();
+                freedom = true;
                 break;
             case 'v':
                 x_ref(1) *= -1;
@@ -84,7 +86,7 @@ int main(){
 
     double amplitude = 0.15;
     double coef = 2 * 3.1415 / 16;
-    osc.gripperAttached = false;
+    osc.gripperAttached = true;
     
     getchar();
     osc.set_ref(x_ref, dx_ref);
@@ -92,18 +94,36 @@ int main(){
     std::thread gain_thread(gain);
     
     osc.toggle_log();
-    while (true) {
+    while (!freedom) {
         /*x_ref_center << 0,-0,-0.2;
         circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
-        //dx_ref = amplitude * coef * circle;
-        osc.set_ref(x_ref,dx_ref);*/
-        
+        //dx_ref = amplitude * coef * circle;*/
+        x_ref = osc.get_objects()[0];
+        osc.set_ref(x_ref,dx_ref);
+        osc.get_x(x);
+        if ((x_ref - x).norm() < 0.07){
+            freedom = true;
+            osc.toggleGripper();
+        }
         
         t+=dt;
         srl::sleep(dt);
     }
+    srl::sleep(2);
     osc.toggle_log();
+    x_ref << 0.15,0,-0.2;
+    osc.set_ref(x_ref,dx_ref);
+    srl::sleep(4);
+    x_ref << -0.15,0,-0.2;
+    dx_ref << -10, 0, 0;
+    osc.set_ref(x_ref,dx_ref);
+    srl::sleep(0.3);
+    osc.toggleGripper();
+    dx_ref << 0, 0, 0;
+    osc.set_ref(x_ref,dx_ref);
+    while (true){}
+    
     return 1;
 }

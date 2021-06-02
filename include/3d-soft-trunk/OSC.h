@@ -41,7 +41,7 @@ public:
     void set_kp(double kp);
     void set_kd(double kd);
 
-    bool gripperAttached = false;
+    
 
 
 private:

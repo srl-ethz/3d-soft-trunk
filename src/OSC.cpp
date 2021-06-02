@@ -46,8 +46,8 @@ void OSC::control_loop() {
 
         dx = J*state.dq;
 
-        if((x_ref - x).norm() < 0.02) kp = 35*(3 - (x_ref - x).norm()*2/0.02);
-        else kp = 35.5;
+        /*if((x_ref - x).norm() < 0.02) kp = 35*(3 - (x_ref - x).norm()*2/0.02);
+        else kp = 35.5;*/
 
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
         ddx_null = VectorXd::Zero(3*st_params::num_segments);
@@ -55,7 +55,7 @@ void OSC::control_loop() {
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
             //ddx_ref += potfields[i].get_ddx(x);
-            ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
+            //ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
@@ -63,7 +63,7 @@ void OSC::control_loop() {
         }
         for (int j = 0; j < st_params::num_segments; j++){
             for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params::q_size)); i++){               //reduce jacobian order if the arm is in a singularity
-                J_mid.block(3*j,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);
+                J_mid.block(3*j,2*i,3,2) + 0.2*(i+1)*MatrixXd::Identity(3,2);
             }
         }
 
@@ -75,7 +75,7 @@ void OSC::control_loop() {
         f = B_op*ddx_ref;
         
         f_null = B_op_null*ddx_null;
-        if (gripperAttached) f(2) += 0.24; //the gripper weighs 24 grams -> 0.24 Newto
+        //if (gripperAttached) f(2) += 0.16; //the gripper weighs 24 grams -> 0.24 Newto
 
         tau_null = J_mid.transpose()*f_null;
         
