@@ -34,7 +34,8 @@ void OSC::control_loop() {
         J_mid = stm->J[st_params::num_segments-2]; //middle seg jacobian
 
         //do controls
-        x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
+        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params::num_segments).translation()-cc->get_frame(0).translation());
+        //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
         x_mid = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-2).translation();
 
         dx = J*state.dq;
