@@ -10,13 +10,13 @@ from std_msgs.msg import Bool
 Server for the Interactive Marker that is used as GUI to designate desired hand position.
 publishes to rostopics:
 osc_target (JointTrajectoryPoint): marker position & estimated velocity
-osc_control_hand (bool): control command to open or close hand
+control_hand (bool): control command to open or close hand. true=open, false=closed
 
 to start,
 - start `roslaunch rviz.launch` in urdf/ directory. rviz opens.
 - in rviz, File -> Open Config (Recent Configs) -> select robot.rviz in urdf/
-- start program which uses VisualizerROS, e.g. ui_controller. robot should show up in rviz.
 - start this program, `./ui_server.py`. Interactive marker should show up in rviz.
+- start program which uses VisualizerROS, e.g. ui_controller. robot should show up in rviz.
 
 to use,
 - move green ball around to move target position
@@ -66,7 +66,7 @@ def processFeedback(feedback):
 if __name__ == "__main__":
     rospy.init_node("ui_server")
     pub = rospy.Publisher("osc_target", JointTrajectoryPoint, queue_size=10)
-    pub_hand = rospy.Publisher("osc_control_hand", Bool, queue_size=10)
+    pub_hand = rospy.Publisher("control_hand", Bool, queue_size=10)
 
     server = InteractiveMarkerServer("softtrunk_interactive_marker")
     menu_handler = MenuHandler()
