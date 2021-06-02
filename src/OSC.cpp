@@ -4,6 +4,11 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     filename = "OSC_logger";
 
     potfields.resize(objects);
+    for (int i = 0; i < objects; i++) {
+        potfields[i].set_cutoff(0.1);
+        potfields[i].set_strength(0.005);
+        potfields[i].set_radius(0.001);
+    }
     
 
     //set the gains
