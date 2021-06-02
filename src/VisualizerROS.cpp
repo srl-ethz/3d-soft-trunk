@@ -5,7 +5,7 @@ VisualizerROS::VisualizerROS(SoftTrunkModel& stm) : stm(stm){
     joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
     marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-    joint_msg.name.resize(5 * st_params::num_segments * (st_params::sections_per_segment + 1));
+    joint_msg.name.resize(7 * st_params::num_segments * (st_params::sections_per_segment + 1));
     joint_msg.position.resize(joint_msg.name.size());
     // set up the name of each joint in the rigid body model
     for (int i = 0; i < st_params::num_segments*(st_params::sections_per_segment+1); i++)
@@ -14,11 +14,13 @@ VisualizerROS::VisualizerROS(SoftTrunkModel& stm) : stm(stm){
         int section_id = i % (st_params::sections_per_segment+1);
 
         std::string pcc_name = fmt::format("seg{}_sec{}", segment_id, section_id);
-        joint_msg.name[5*i+0] = fmt::format("{}-ball-ball-joint_x_joint", pcc_name);
-        joint_msg.name[5*i+1] = fmt::format("{}-ball-ball-joint_y_joint", pcc_name);
-        joint_msg.name[5*i+2] = fmt::format("{}-ball-ball-joint_z_joint", pcc_name);
-        joint_msg.name[5*i+3] = fmt::format("{}-a-b_joint", pcc_name);
-        joint_msg.name[5*i+4] = fmt::format("{}-b-seg{}_sec{}-{}_connect_joint", pcc_name, segment_id, section_id, section_id+1);
+        joint_msg.name[7*i+0] = fmt::format("{}-ball-ball-joint_x_joint", pcc_name);
+        joint_msg.name[7*i+1] = fmt::format("{}-ball-ball-joint_y_joint", pcc_name);
+        joint_msg.name[7*i+2] = fmt::format("{}-ball-ball-joint_z_joint", pcc_name);
+        joint_msg.name[7*i+3] = fmt::format("{}-a-b_joint", pcc_name);
+        joint_msg.name[7*i+4] = fmt::format("{}-b-branch-a_joint", pcc_name);
+        joint_msg.name[7*i+5] = fmt::format("{}-b-seg{}_sec{}-{}_connect_joint", pcc_name, segment_id, section_id, section_id+1);
+        joint_msg.name[7*i+6] = fmt::format("{}-branch-a-branch-b_joint", pcc_name);
     }
 
     marker_msg.id = 0;
