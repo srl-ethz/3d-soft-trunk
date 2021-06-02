@@ -12,10 +12,15 @@ publishes to rostopics:
 osc_target (JointTrajectoryPoint): marker position & estimated velocity
 osc_control_hand (bool): control command to open or close hand
 
-to use,
+to start,
 - start `roslaunch rviz.launch` in urdf/ directory. rviz opens.
-- start program which uses VisualizerROS, e.g. example_VisualizerROS. robot should show up in rviz.
+- in rviz, File -> Open Config (Recent Configs) -> select robot.rviz in urdf/
+- start program which uses VisualizerROS, e.g. ui_controller. robot should show up in rviz.
 - start this program, `./ui_server.py`. Interactive marker should show up in rviz.
+
+to use,
+- move green ball around to move target position
+- right click on green ball to open/close hand.
 
 since this project isn't set up as a ROS package, it's not as simple to launch the ROS-related programs than if it were
 
@@ -69,7 +74,7 @@ if __name__ == "__main__":
     menu_handler.insert("Close Hand", callback=processFeedback)
 
     int_marker = InteractiveMarker()
-    int_marker.header.frame_id = "softTrunk_base"
+    int_marker.header.frame_id = "base_link"
     int_marker.name = "osc_target_marker"
     int_marker.description = "OSC target"
     int_marker.scale = 0.2
@@ -77,7 +82,7 @@ if __name__ == "__main__":
     # set initial position to be easily reachable
     int_marker.pose.position.x = 0.1
     int_marker.pose.position.y = 0.
-    int_marker.pose.position.z = 0.25
+    int_marker.pose.position.z = -0.25
 
     sphere_marker = Marker()
     sphere_marker.type = Marker.SPHERE
