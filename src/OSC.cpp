@@ -61,7 +61,6 @@ void OSC::control_loop() {
 
         if (!simulation) {actuate(p);}
         else {
-            p*=100; // convert from mbar to Pa
             assert(simulate(p));
         }
     }
