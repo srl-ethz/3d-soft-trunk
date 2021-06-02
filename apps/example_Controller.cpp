@@ -93,8 +93,8 @@ int main(){
     
     osc.toggle_log();
     while (true) {
-        
-        /*circle << cos(coef*t), sin(coef*t), 0;
+        /*x_ref_center << 0,-0,-0.2;
+        circle << cos(coef*t), sin(coef*t), 0;
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
         //dx_ref = amplitude * coef * circle;

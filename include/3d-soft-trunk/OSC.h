@@ -81,7 +81,7 @@ private:
     Vector3d ddx_ref;
 
     /** @brief ddx for null space control */
-    Vector3d ddx_null;
+    VectorXd ddx_null;
     MatrixXd B_op_null;
     VectorXd f_null;
     

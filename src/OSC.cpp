@@ -4,7 +4,13 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     filename = "OSC_logger";
 
     potfields.resize(objects);
-    
+    for (int i = 0; i < objects; i++) {
+        potfields[i].set_cutoff(0.1);
+        potfields[i].set_strength(0.005);
+        potfields[i].set_radius(0.001);
+    }
+
+    J_mid = MatrixXd::Zero(3*st_params::num_segments, st_params::q_size);
 
     //set the gains
     kp = 35;
@@ -31,7 +37,7 @@ void OSC::control_loop() {
             continue;
 
         J = stm->J[st_params::num_segments-1]; //tip jacobian
-        J_mid = stm->J[st_params::num_segments-2]; //middle seg jacobian
+        J_mid << stm->J[st_params::num_segments-2], stm->J[st_params::num_segments-1] ; //middle seg jacobian
 
         //do controls
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params::num_segments).translation()-cc->get_frame(0).translation());
@@ -39,22 +45,27 @@ void OSC::control_loop() {
         x_mid = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-2).translation();
 
         dx = J*state.dq;
+
+        if((x_ref - x).norm() < 0.02) kp = 35*(3 - (x_ref - x).norm()*2/0.02);
+        else kp = 35.5;
+
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
-        ddx_null = Vector3d::Zero();
+        ddx_null = VectorXd::Zero(3*st_params::num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            ddx_ref += potfields[i].get_ddx(x);
-            ddx_null += potfields[i].get_ddx(x_mid);
+            //ddx_ref += potfields[i].get_ddx(x);
+            ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
+            J.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);
         }
-        for (int i = 0; i < singularity(J_mid); i++){               //reduce jacobian order if the arm is in a singularity
-            J_mid.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);//+ (i+1)*0.01*MatrixXd::Identity(3,2);
+        for (int j = 0; j < st_params::num_segments; j++){
+            for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params::q_size)); i++){               //reduce jacobian order if the arm is in a singularity
+                J_mid.block(3*j,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);
+            }
         }
-
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         J_inv = stm->B.inverse()*J.transpose()*B_op;
@@ -69,7 +80,7 @@ void OSC::control_loop() {
         tau_null = J_mid.transpose()*f_null;
         
         for(int i = 0; i < st_params::q_size; i++){     //for some reason tau is sometimes nan, catch that
-            if(isnan(tau_null(i))) tau_null(i) = 0;
+            if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params::num_segments);
         }
 
         tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
