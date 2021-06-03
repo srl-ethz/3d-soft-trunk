@@ -18,6 +18,8 @@ target_link_libraries(example_Simulator ControllerPCC)
 add_executable(example_Characterizer example_Characterizer.cpp)
 target_link_libraries(example_Characterizer Characterize)
 
+add_executable(example_dynamic example_dynamic.cpp)
+target_link_libraries(example_dynamic Dyn)
 
 
 if(${roscpp_FOUND})
