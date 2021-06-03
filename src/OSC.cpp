@@ -45,6 +45,7 @@ void OSC::control_loop() {
         x_mid = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-2).translation();
 
         dx = J*state.dq;
+        //fmt::print("dx = {}\n", dx.norm());
 
         /*if((x_ref - x).norm() < 0.02) kp = 35*(3 - (x_ref - x).norm()*2/0.02);
         else kp = 35.5;*/

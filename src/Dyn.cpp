@@ -1,8 +1,8 @@
 #include "3d-soft-trunk/Dyn.h"
 
 Dyn::Dyn(CurvatureCalculator::SensorType sensor_type, bool simulation) : ControllerPCC::ControllerPCC(sensor_type, simulation){
-    Kp = VectorXd::Ones(st_params::q_size);
-    Kd = VectorXd::Ones(st_params::q_size);
+    Kp = 0.1*VectorXd::Ones(st_params::q_size);
+    Kd = 0.*VectorXd::Ones(st_params::q_size);
 
     control_thread = std::thread(&Dyn::control_loop, this);
 }

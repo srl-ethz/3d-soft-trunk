@@ -62,7 +62,8 @@ void printer(){
         osc.get_x(x);
         fmt::print("------------------------------------\n");
         fmt::print("extra object: {}\n", osc.get_objects()[0].transpose());
-        fmt::print("tip x: {}\n", x.transpose());
+        fmt::print("x error: {}\n", (x_ref-x).transpose());
+        fmt::print("x error normalized: {}\n", (x_ref-x).norm());
         VectorXd p;
         osc.get_pressure(p);
         fmt::print("pressure: {}\n", p.transpose());
@@ -100,13 +101,13 @@ int main(){
         x_ref = x_ref_center + amplitude*circle;
         circle << -sin(coef*t), cos(coef*t), 0;
         //dx_ref = amplitude * coef * circle;*/
-        x_ref = osc.get_objects()[0];
+        /*x_ref = osc.get_objects()[0];
         osc.set_ref(x_ref,dx_ref);
         osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
             osc.toggleGripper();
-        }
+        }*/
         
         t+=dt;
         srl::sleep(dt);
