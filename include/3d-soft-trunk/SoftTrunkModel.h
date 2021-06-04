@@ -70,9 +70,9 @@ public:
     VectorXd pseudo2real(VectorXd pressure_pseudo);
 
 
-
-private:
     std::unique_ptr<AugmentedRigidArm> ara;
+private:
+    
 
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
