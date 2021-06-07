@@ -1,5 +1,6 @@
 //
 // Created by yasu and rkk on 26/10/18.
+// revamped by oliver in may 21
 //
 
 #include "3d-soft-trunk/ControllerPCC.h"
@@ -12,7 +13,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool s
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,3,2,0,6,4};
+    std::vector<int> map = {1,3,2,0,6,4,5};
     
     if (!simulation) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
@@ -33,9 +34,13 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
         is_initial_ref_received = true;
 }
 
-void ControllerPCC::set_ref(const Vector3d &x_ref, const Vector3d &dx_ref){
+void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref){
     std::lock_guard<std::mutex> lock(mtx);
-    this->x_ref = x_ref;
+    Vector3d x_r = x_ref;
+    if (x_ref.norm() > 0.27) {
+        x_r = 0.27*x_ref.normalized();
+    }
+    this->x_ref = x_r;
     this->dx_ref = dx_ref;
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
@@ -62,17 +67,10 @@ void ControllerPCC::get_pressure(VectorXd& p){
     p = this->p;
 }
 
-
-VectorXd ControllerPCC::gravity_compensate3(srl::State state){
-    assert(st_params::sections_per_segment == 1);
-    VectorXd gravcomp = VectorXd::Zero(3*st_params::num_segments);
-    for (int i = 0; i < st_params::num_segments; i++){
-        MatrixXd A_inverse_block = stm->A.block(2*i, 3*i, 2, 3).transpose()*(stm->A.block(2*i, 3*i, 2, 3)*stm->A.block(2*i, 3*i, 2, 3).transpose()).inverse();
-        gravcomp.segment(3*i,3) = A_inverse_block * (stm->g + stm->K*state.q).segment(2*i,2);
-        if (gravcomp.segment(3*i,3).minCoeff() < 0)
-            gravcomp.segment(3*i, 3) -= gravcomp.segment(3*i,3).minCoeff() * Vector3d::Ones();
-    }
-    return gravcomp/100;
+void ControllerPCC::toggleGripper(){
+    gripperAttached = true;
+    gripping = !gripping;
+    vc->setSinglePressure(3*st_params::num_segments, gripping*300);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){

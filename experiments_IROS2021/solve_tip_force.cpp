@@ -143,9 +143,9 @@ int main(int argc, char** argv){
         VectorXd e = stm.g - stm.A*p + f_offset;
 
         double ratio = 0.01;
-        MatrixXd Q = Mq.transpose()*stm.K.transpose()*stm.K*Mq + Mf.transpose()*stm.J*stm.J.transpose()*Mf - 2*Mq.transpose()*stm.K.transpose()*stm.J.transpose()*Mf + ratio*Mf.transpose()*Mf; 
+        MatrixXd Q = Mq.transpose()*stm.K.transpose()*stm.K*Mq + Mf.transpose()*stm.J[st_params::num_segments-1]*stm.J[st_params::num_segments-1].transpose()*Mf - 2*Mq.transpose()*stm.K.transpose()*stm.J[st_params::num_segments-1].transpose()*Mf + ratio*Mf.transpose()*Mf; 
         Q *= 2;
-        VectorXd b = 2*e.transpose()*stm.K*Mq - 2*e.transpose()*stm.J.transpose()*Mf;
+        VectorXd b = 2*e.transpose()*stm.K*Mq - 2*e.transpose()*stm.J[st_params::num_segments-1].transpose()*Mf;
 
         drake::solvers::VectorDecisionVariable<15> x = prog.NewContinuousVariables<15>();
         prog.AddQuadraticCost(Q, b, x);

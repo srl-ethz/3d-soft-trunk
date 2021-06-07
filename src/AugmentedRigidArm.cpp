@@ -76,7 +76,10 @@ void AugmentedRigidArm::setup_drake_model()
     g_xi_ = VectorXd::Zero(num_joints);
     Jm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     dJm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
-    Jxi_ = MatrixXd::Zero(3, num_joints);
+    Jxi_.resize(st_params::num_segments);
+    J.resize(st_params::num_segments);
+    for (int i = 0; i < st_params::num_segments; i++)
+      Jxi_[i] = MatrixXd::Zero(3, num_joints);
     H_list.resize(st_params::num_segments);
 
     map_normal2expanded = MatrixXd::Zero(2*st_params::num_segments*(st_params::sections_per_segment + 1), 2*st_params::num_segments*st_params::sections_per_segment);
@@ -153,14 +156,14 @@ void AugmentedRigidArm::update_drake_model()
     {
       frame_name = fmt::format("seg{}_sec{}-{}_connect", i, st_params::sections_per_segment-1, st_params::sections_per_segment);
       H_list[i] = multibody_plant->GetFrameByName(frame_name).CalcPose(plant_context, multibody_plant->GetFrameByName("softTrunk_base")).GetAsMatrix4();
-      if (i == st_params::num_segments - 1){
-        // for the final segment, calculate the Jacobian for tip as well
-        frame_name = fmt::format("seg{}_sec{}-{}_connect", i, st_params::sections_per_segment, st_params::sections_per_segment+1);
-        multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
+      
+        // calc Jacobian
+      frame_name = fmt::format("seg{}_sec{}-{}_connect", i, st_params::sections_per_segment, st_params::sections_per_segment+1);
+      multibody_plant->CalcJacobianTranslationalVelocity(plant_context, drake::multibody::JacobianWrtVariable::kQDot,
                                                        multibody_plant->GetFrameByName(frame_name),
                                                        VectorXd::Zero(3), multibody_plant->world_frame(),
-                                                       multibody_plant->world_frame(), &Jxi_);
-      }
+                                                       multibody_plant->world_frame(), &Jxi_[i]);
+      
     }
     H_base = multibody_plant->GetFrameByName("softTrunk_base").CalcPoseInWorld(plant_context).GetAsMatrix4();
 }
@@ -404,7 +407,8 @@ void AugmentedRigidArm::update(const srl::State &state)
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
-    J = Jxi_ * Jm_ * map_normal2expanded;
+    for (int i = 0; i < st_params::num_segments; i++)
+      J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
     //    update_dJm(state.q,state.dq);
     //
 }
