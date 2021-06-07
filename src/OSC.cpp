@@ -19,7 +19,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
     ki_gain = 1;
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./50;
+    dt = 1./100;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
@@ -49,10 +49,6 @@ void OSC::control_loop() {
         dx = J*state.dq;
         //fmt::print("dx = {}\n", dx.norm());
 
-        if((dx_ref-dx).norm() < 0.03) {
-            ki += (x_ref - x).norm()*ki_gain;
-            fmt::print("integrator kicking in\n");
-        } else ki = 0.;
 
         ddx_ref = (kp + ki)*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
         ddx_null = VectorXd::Zero(3*st_params::num_segments);
