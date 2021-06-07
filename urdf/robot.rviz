@@ -62,182 +62,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec0-1_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec0-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec0-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg0_sec0-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec0-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec1-2_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec1-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec1-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg0_sec1-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec1-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec2-3_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec2-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec2-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg0_sec2-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec2-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec3-4_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec3-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec3-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg0_sec3-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg0_sec3-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec0-1_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec0-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec0-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg1_sec0-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec0-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec1-2_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec1-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec1-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg1_sec1-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec1-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec2-3_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec2-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec2-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg1_sec2-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec2-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec3-4_connect:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec3-a:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec3-b:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        seg1_sec3-ball-ball-joint_link_0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        seg1_sec3-ball-ball-joint_link_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        softTrunk_base:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -251,6 +75,15 @@ Visualization Manager:
       Namespaces:
         {}
       Queue Size: 100
+      Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /softtrunk_interactive_marker/update
       Value: true
   Enabled: true
   Global Options:

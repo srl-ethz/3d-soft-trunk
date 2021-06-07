@@ -15,10 +15,13 @@ int main(int argc, char** argv){
 
     double dt = 0.1;
     srl::Rate r{1./dt};
-    for (double t = 0; t < 5; t += 0.1)
+    for (double t = 0; t < 50; t += 0.1)
     {
-        state.q(0) = sin(t);
-        state.q(1) = cos(t);
+        for (int i = 0; i < state.q.size()/2; i++)
+        {
+            state.q(2*i) = 2 * sin(t) / state.q.size();
+            state.q(2*i+1) = 2 * cos(t) / state.q.size();;
+        }
         stm.updateState(state);
         vis.publishState();
         vis.publishArrow(1, xyz, rgb, false);

@@ -89,8 +89,9 @@ void OSC::control_loop() {
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 
         if (!simulation) {actuate(p);}
-        else {simulate(p);}
-        
+        else {
+            assert(simulate(p));
+        }
     }
 }
 

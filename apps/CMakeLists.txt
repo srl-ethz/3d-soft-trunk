@@ -45,3 +45,8 @@ target_link_libraries(record_movement SerialInterface ControllerPCC)
 
 add_executable(play_movement play_movement.cpp)
 target_link_libraries(play_movement SerialInterface ControllerPCC)
+
+if(${roscpp_FOUND})
+    add_executable(ui_controller ui_controller.cpp)
+    target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
+endif(${roscpp_FOUND})

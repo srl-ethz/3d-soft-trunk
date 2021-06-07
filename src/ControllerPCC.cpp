@@ -148,8 +148,9 @@ void ControllerPCC::set_log_filename(const std::string s){
 bool ControllerPCC::simulate(const VectorXd &p){
     stm->updateState(state);
     state_prev.ddq = state.ddq;
+    VectorXd p_adjusted = 100*p; //convert from mbar
 
-    VectorXd b_inv_rest = stm->B.inverse() * (stm->A * p - stm->c - stm->g - stm->K * state.q);      //set up constant terms to not constantly recalculate
+    VectorXd b_inv_rest = stm->B.inverse() * (stm->A * p_adjusted - stm->c - stm->g - stm->K * state.q);      //set up constant terms to not constantly recalculate
     MatrixXd b_inv_d = -stm->B.inverse() * stm->D;
     VectorXd ddq_prev;
 
