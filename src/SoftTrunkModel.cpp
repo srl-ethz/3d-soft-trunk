@@ -11,6 +11,7 @@ SoftTrunkModel::SoftTrunkModel()
     D = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2 * st_params::sections_per_segment * st_params::num_segments);
     A = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 3 * st_params::num_segments);
     A_pseudo = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2*st_params::num_segments);
+    J.resize(st_params::num_segments);
 
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
     for (int section_id = 0; section_id < st_params::sections_per_segment * st_params::num_segments; section_id++)
@@ -76,7 +77,15 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         // the 2* angle comes from the fact that I characterize in 0,5 degree steps -> the graph spans 720
-        angle = -0.0000048968*pow(angle,3) + 0.0024420891*pow(angle,2) + 0.7378089443*angle + 6.0716085641;
+        
+        /*angle += 0.00000000892566*pow(angle,4) - 0.00001126867723*pow(angle,3) + 0.00387707937057*pow(angle,2) - 0.35349388476932*angle + 1.82784956215392;*/
+        if (0 < angle && angle <= 180) angle += 0.00000000003444*pow(angle,6) - 0.00000001692522*pow(angle,5) + 0.00000287210313*pow(angle,4) - 0.00019231576235*pow(angle,3) + 0.00566838599605*pow(angle,2) - 0.25525348085193*angle + 11.36922207042150;
+
+        else if (180 < angle && angle < 350) angle += -0.00000000003412*pow(angle-180,6) + 0.00000002301207*pow(angle-180,5) - 0.00000565869111*pow(angle-180,4) + 0.00061822853405*pow(angle-180,3) - 0.02951718943376*pow(angle-180,2) + 0.56885711783252*(angle-180) + 13.65997592618080;
+        else if (-10 < angle && angle <= 0) angle += -0.00000000003412*pow(angle+180,6) + 0.00000002301207*pow(angle+180,5) - 0.00000565869111*pow(angle+180,4) + 0.00061822853405*pow(angle+180,3) - 0.02951718943376*pow(angle+180,2) + 0.56885711783252*(angle+180) + 13.65997592618080;
+
+
+
 
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
         pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);

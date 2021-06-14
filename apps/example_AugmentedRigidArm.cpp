@@ -45,7 +45,7 @@ int main() {
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
         fmt::print("B:{}\n", ara.B);
         fmt::print("g:{}\n", ara.g);
-        fmt::print("J:{}\n", ara.J);
+        fmt::print("J:{}\n", ara.J[st_params::num_segments-1]);
         fmt::print("H_tip:{}\n", ara.get_H_tip().matrix());
         r.sleep();
     }

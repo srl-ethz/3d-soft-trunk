@@ -47,7 +47,7 @@ public:
     MatrixXd A_pseudo;
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
-    MatrixXd J;
+    std::vector<Eigen::MatrixXd> J;
 
     /**
      * @brief get relative pose from base to tip of segment (at the tip of curved sections, ignores connector part)
@@ -69,7 +69,10 @@ public:
      */
     VectorXd pseudo2real(VectorXd pressure_pseudo);
 
+
     std::unique_ptr<AugmentedRigidArm> ara;
+private:
+    
 
 private:
     /**

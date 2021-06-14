@@ -16,11 +16,13 @@ public:
     void set_pos(Vector3d &pos);
     void set_strength(double s);
     void set_cutoff(double c);
+    void set_radius(double r);
 
 private:
     Vector3d pos;
     double strength;
     double cutoff_distance;
+    double radius;
 };
 
 class OSC: public ControllerPCC
@@ -39,6 +41,8 @@ public:
     void set_kp(double kp);
     void set_kd(double kd);
 
+    
+
 
 private:
     
@@ -54,6 +58,11 @@ private:
     /** @brief gains for OSC*/
     double kp;
     double kd;
+    double ki;
+    double ki_gain;
+
+    /** @brief x coordinates of middle segment tip */
+    Vector3d x_mid;
 
     /** @brief operational dynamics */
     MatrixXd B_op;
@@ -63,6 +72,8 @@ private:
     MatrixXd J_inv;
     /** @brief jacobian */
     MatrixXd J;
+    /** @brief Jacobian of both middle segment and tip segment */
+    MatrixXd J_mid;
 
     /** @brief reference torques */
     VectorXd tau_ref;
@@ -71,5 +82,9 @@ private:
     /** @brief reference acceleration in cartesian coordinates */
     Vector3d ddx_ref;
 
+    /** @brief ddx for null space control */
+    VectorXd ddx_null;
+    MatrixXd B_op_null;
+    VectorXd f_null;
     
 };

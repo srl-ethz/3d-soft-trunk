@@ -23,7 +23,7 @@ public:
     /** @brief set the reference pose (trajectory) of the arm
      */
     void set_ref(const srl::State &pose_ref);
-    void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref);
+    void set_ref(const Vector3d x_r, const Vector3d &dx_ref);
 
     /** @brief get current kinematic state of the arm */
     void get_state(srl::State &state);
@@ -68,6 +68,10 @@ public:
     /** @brief sets the frequency of the simulator */
     void set_frequency(const double hz);
 
+    /** @brief toggles gripper */
+    void toggleGripper();
+
+    bool gripperAttached = false;
 
 protected:
 
@@ -131,6 +135,8 @@ protected:
     Vector3d x_ref;
     Vector3d dx;
     Vector3d dx_ref;
+
+    bool gripping = false;
 
     //actuation vectors, p is pressures and f is torques
     VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
