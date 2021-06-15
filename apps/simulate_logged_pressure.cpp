@@ -13,9 +13,11 @@
  */
 int main(int argc, char *argv[]){
     const double dt = 0.01;
-    srl::State state;
-    ControllerPCC cpcc{CurvatureCalculator::SensorType::simulator};
-    VectorXd p = VectorXd::Zero(3*st_params::num_segments);
+    SoftTrunkParameters st_params;
+    st_params.finalize();
+    srl::State state = st_params.empty_state();
+    ControllerPCC cpcc{st_params, CurvatureCalculator::SensorType::simulator};
+    VectorXd p = VectorXd::Zero(3*st_params.num_segments);
 
     // read and save the csv data
     std::string p_filename;
@@ -29,7 +31,7 @@ int main(int argc, char *argv[]){
 
     // read the CSV, and save the datapoints to a vector
     std::vector<double> log_t;
-    std::array<std::vector<double>, 3*st_params::num_segments> log_p;
+    std::array<std::vector<double>, 3*st_params.num_segments> log_p;
     {
         double t, p0, p1, p2, p3, p4, p5;
         while (in.read_row(t, p0, p1, p2, p3, p4, p5)){

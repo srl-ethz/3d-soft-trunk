@@ -27,14 +27,16 @@ VectorXd p = VectorXd::Zero(3);
  * See IROS2021 paper (toshimitsu et al., 2021) for details.
  */
 int main() {
+    SoftTrunkParameters st_params;
+    st_params.finalize();
     std::vector<int> map = {0, 1, 2};
     ValveController vc{"192.168.0.100", map, 600};
-    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys, "192.168.0.101"};
+    CurvatureCalculator cc{st_params, CurvatureCalculator::SensorType::qualisys, "192.168.0.101"};
 
     // The current characterization process assumes constant curvature across the entire length of the actuated segment.
     // This assumption is not actually true, especially when affected by gravitational forces when the arm is configured with multiple segments.
     // so this process only works for a single segment characterization with nothing connected at its tip.
-    assert(st_params::num_segments == 1);
+    assert(st_params.num_segments == 1);
 
     srl::sleep(1);
     unsigned long long int timestamp = cc.get_timestamp();

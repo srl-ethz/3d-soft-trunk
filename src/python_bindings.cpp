@@ -13,12 +13,19 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     /** @todo would be better if elements could be set like `state.q[0] = 0.1` in Python */
     py::class_<srl::State>(m, "State", "individual elements in array can be read but not set, see example codes")
     .def(py::init<>())
+    .def(py::init<int>())
+    .def("setSize", &srl::State::setSize)
     .def_property("q", [](srl::State& s){return s.q;}, [](srl::State& s, const VectorXd& q){s.q=q;})
     .def_property("dq", [](srl::State& s){return s.dq;}, [](srl::State& s, const VectorXd& dq){s.dq=dq;})
     .def_property("ddq", [](srl::State& s){return s.ddq;}, [](srl::State& s, const VectorXd& ddq){s.ddq=ddq;});
 
-    py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
+    py::class_<SoftTrunkParameters>(m, "SoftTrunkParameters")
     .def(py::init<>())
+    .def("empty_state", &SoftTrunkParameters::empty_state)
+    .def("finalize", &SoftTrunkParameters::finalize);
+
+    py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
+    .def(py::init<SoftTrunkParameters>())
     .def("update", &AugmentedRigidArm::update)
     .def("get_H", [](AugmentedRigidArm& ara, int i){
         return ara.get_H(i).matrix();
@@ -31,7 +38,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     });
 
     py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
-    cc.def(py::init<CurvatureCalculator::SensorType, std::string>())
+    cc.def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, std::string>())
     .def("get_curvature", [](CurvatureCalculator& cc){
         // return as tuple rather than by reference
         srl::State state;
@@ -46,7 +53,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     .def("get_timestamp", &CurvatureCalculator::get_timestamp);
     
     py::class_<SoftTrunkModel> stm(m, "SoftTrunkModel");
-    stm.def(py::init<>())
+    stm.def(py::init<SoftTrunkParameters>())
     .def("updateState", &SoftTrunkModel::updateState)
     .def("getModel", [](SoftTrunkModel& stm){
         return std::make_tuple(stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
@@ -60,7 +67,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
 
 
     py::class_<ControllerPCC>(m, "ControllerPCC")
-    .def(py::init<CurvatureCalculator::SensorType, bool>())
+    .def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, bool>())
     .def("set_ref", py::overload_cast<const srl::State&>(&ControllerPCC::set_ref))
     .def("get_state", [](ControllerPCC& cpcc){
         srl::State state;
