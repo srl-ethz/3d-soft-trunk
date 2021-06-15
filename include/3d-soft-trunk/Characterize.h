@@ -4,7 +4,7 @@
 
 class Characterize: public ControllerPCC {
 public:
-    Characterize(CurvatureCalculator::SensorType sensor_type);
+    Characterize(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type);
 
     /** @brief log a graph containing radial intensity of arm's actuation
      * @details the arm doesn't actuate equally in all directions, this is meant to enable counteracting that
