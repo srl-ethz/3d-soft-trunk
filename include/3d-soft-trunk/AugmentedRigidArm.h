@@ -82,7 +82,7 @@ private:
     Eigen::Transform<double, 3, Eigen::Affine> H_base;
 
 public:
-    AugmentedRigidArm(SoftTrunkParameters &st_params);
+    AugmentedRigidArm(const SoftTrunkParameters &st_params);
 
     /** @brief update the member variables based on current PCC value */
     void update(const srl::State &state);

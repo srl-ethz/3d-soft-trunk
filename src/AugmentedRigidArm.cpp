@@ -1,7 +1,7 @@
 // Copyright 2018 ...
 #include "3d-soft-trunk/AugmentedRigidArm.h"
 
-AugmentedRigidArm::AugmentedRigidArm(SoftTrunkParameters &st_params): st_params(st_params)
+AugmentedRigidArm::AugmentedRigidArm(const SoftTrunkParameters &st_params): st_params(st_params)
 {
     assert(st_params.is_finalized());
     setup_drake_model();
