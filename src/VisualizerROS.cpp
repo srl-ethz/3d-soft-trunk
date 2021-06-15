@@ -1,17 +1,17 @@
 #include <3d-soft-trunk/VisualizerROS.h>
 
 
-VisualizerROS::VisualizerROS(SoftTrunkModel& stm) : stm(stm){
+VisualizerROS::VisualizerROS(SoftTrunkModel& stm) : stm(stm), st_params(stm.getSoftTrunkParameters()){
     joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
     marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-    joint_msg.name.resize(7 * st_params::num_segments * (st_params::sections_per_segment + 1));
+    joint_msg.name.resize(7 * st_params.num_segments * (st_params.sections_per_segment + 1));
     joint_msg.position.resize(joint_msg.name.size());
     // set up the name of each joint in the rigid body model
-    for (int i = 0; i < st_params::num_segments*(st_params::sections_per_segment+1); i++)
+    for (int i = 0; i < st_params.num_segments*(st_params.sections_per_segment+1); i++)
     {
-        int segment_id = i / (st_params::sections_per_segment+1);
-        int section_id = i % (st_params::sections_per_segment+1);
+        int segment_id = i / (st_params.sections_per_segment+1);
+        int section_id = i % (st_params.sections_per_segment+1);
 
         std::string pcc_name = fmt::format("seg{}_sec{}", segment_id, section_id);
         joint_msg.name[7*i+0] = fmt::format("{}-ball-ball-joint_x_joint", pcc_name);
@@ -47,7 +47,7 @@ void VisualizerROS::publishArrow(int segment, Vector3d xyz, Vector3d rgb, bool g
         xyz = base_to_segment.inverse() * world_to_base.inverse() * xyz;
     }
        
-    marker_msg.header.frame_id = fmt::format("seg{}_sec{}-{}_connect", st_params::num_segments-1, st_params::sections_per_segment, st_params::sections_per_segment+1);
+    marker_msg.header.frame_id = fmt::format("seg{}_sec{}-{}_connect", st_params.num_segments-1, st_params.sections_per_segment, st_params.sections_per_segment+1);
     marker_msg.points[1].x = xyz(0); marker_msg.points[1].y = xyz(1); marker_msg.points[1].z = xyz(2); 
     marker_msg.color.r = rgb(0); marker_msg.color.g = rgb(1); marker_msg.color.b = rgb(2); 
     marker_msg.header.stamp = ros::Time::now();

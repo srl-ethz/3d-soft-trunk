@@ -5,9 +5,11 @@
 int main(int argc, char** argv){
     ros::init(argc, argv, "example_VisualizerROS");
 
-    SoftTrunkModel stm{};
+    SoftTrunkParameters st_params{};
+    st_params.finalize();
+    SoftTrunkModel stm{st_params};
     VisualizerROS vis{stm};
-    srl::State state;
+    srl::State state = st_params.empty_state();
     Vector3d rgb;
     rgb << 1,0,0;
     Vector3d xyz;

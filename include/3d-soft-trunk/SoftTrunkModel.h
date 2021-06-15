@@ -21,6 +21,9 @@ public:
      * @brief update the model's state, and calculate the parameters of the model. Currently has problems when both Lx and Ly are 0.
      */
     void updateState(const srl::State &state);
+    SoftTrunkParameters getSoftTrunkParameters(){
+        return st_params;
+    }
 
     /** @brief inertia matrix */
     MatrixXd B;
