@@ -1,11 +1,10 @@
 #include "3d-soft-trunk/CurvatureCalculator.h"
 
 
-CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames): sensor_type(sensor_type), extra_frames(extra_frames) {
+CurvatureCalculator::CurvatureCalculator(const SoftTrunkParameters& st_params, CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames): st_params(st_params), sensor_type(sensor_type), extra_frames(extra_frames) {
+    assert(st_params.is_finalized());
     // initialize size of arrays that record transforms
-    abs_transforms.resize(st_params::num_segments + 1 + extra_frames);
-
-    srl::State state;
+    abs_transforms.resize(st_params.num_segments + 1 + extra_frames);
 
     if (sensor_type == CurvatureCalculator::SensorType::qualisys){
         fmt::print("Using Qualisys to measure curvature...\n");
@@ -18,16 +17,12 @@ CurvatureCalculator::CurvatureCalculator(CurvatureCalculator::SensorType sensor_
 
     calculatorThread = std::thread(&CurvatureCalculator::calculator_loop, this);
 
-    // get the current q, to subtract from measurements to get rid of the offset
-//    fmt::print("Waiting for 2 seconds to wait for the arm to stop swinging, and measure the initial q... \n");
-//    sleep(2);
-//    initial_q = q;
-//    fmt::print("initial q measured:{}. This value is considered the offset and will be subtracted from future measurements.\n", initial_q);
+    state.setSize(st_params.q_size);
 }
 
 void CurvatureCalculator::setupQualisys() {
     std::vector<int> emptyCameraList = {};
-    optiTrackClient = std::make_unique<QualisysClient>(st_params::num_segments + 1 + extra_frames, emptyCameraList, true);
+    optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + extra_frames, emptyCameraList, true);
 }
 
 void CurvatureCalculator::setupIntegratedSensor(std::string portname) {
@@ -43,14 +38,14 @@ void CurvatureCalculator::calculator_loop() {
         log_file.open(filename, std::fstream::out);
         log_file << "timestamp";
         // log both parametrizations
-        for (int i = 0; i < st_params::num_segments; ++i)
+        for (int i = 0; i < st_params.num_segments; ++i)
             log_file << fmt::format(", La_{}, Lb_{}", i, i);
-        for (int i = 0; i < st_params::num_segments; i++)
+        for (int i = 0; i < st_params.num_segments; i++)
             log_file << fmt::format(", phi_{}, theta_{}", i, i);
         log_file << "\n";
     }
 
-    srl::State state_prev;
+    srl::State state_prev = st_params.empty_state();
     double interval = 0.01;
     srl::Rate rate{1. / interval};
     run = true;
@@ -67,7 +62,7 @@ void CurvatureCalculator::calculator_loop() {
 
             // if ANY of the frames has not been received, disregard the entire data.
             bool all_frames_received = true;
-            for (int i=0; i<st_params::num_segments+1; i++){
+            for (int i=0; i<st_params.num_segments+1; i++){
                 if (std::isnan(abs_transforms[i](0,0)))
                     all_frames_received = false;
             }
@@ -93,10 +88,10 @@ void CurvatureCalculator::calculator_loop() {
         state_prev.dq = state.dq;
         if (log) {
             log_file << timestamp;
-            for (int i = 0; i < 2 * st_params::num_segments; ++i)
+            for (int i = 0; i < 2 * st_params.num_segments; ++i)
                 log_file << fmt::format(", {}", state.q(i));
             double phi, theta;
-            for (int i = 0; i < st_params::num_segments; i++){
+            for (int i = 0; i < st_params.num_segments; i++){
                 longitudinal2phiTheta(state.q(2*i), state.q(2*i+1), phi, theta);
                 log_file << fmt::format(", {}, {}", phi, theta);
             } 
@@ -152,7 +147,7 @@ void CurvatureCalculator::calculateCurvature() {
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
     {
         for (int i = 0; i < 1; i++){
-            /** @todo change 1 to st_params::num_segments */
+            /** @todo change 1 to st_params.num_segments */
             state.q(2*i+0) = bendLab_data[2*i+1] * PI / 180.;
             state.q(2*i+1) = bendLab_data[2*i+0] * PI / 180.;
         }
@@ -161,7 +156,7 @@ void CurvatureCalculator::calculateCurvature() {
     MatrixXd matrix;
     double phi, theta;
     // next, calculate the parameters
-    for (int i = 0; i < st_params::num_segments; i++) {
+    for (int i = 0; i < st_params.num_segments; i++) {
         matrix = (abs_transforms[i].inverse() * abs_transforms[i + 1]).matrix();
         // see documentation in header file for how this is calculated
         if (calcMethod == CalcMethod::orientation)
@@ -176,11 +171,6 @@ void CurvatureCalculator::calculateCurvature() {
         }
         phiTheta2longitudinal(phi, theta, state.q(2*i), state.q(2*i+1));
     }
-    if (counter < 10){
-        initial_q += state.q;
-        counter++;
-    }
-    state.q -= initial_q/counter; // implement better way to get rid of initial error...
 }
 
 CurvatureCalculator::~CurvatureCalculator() {

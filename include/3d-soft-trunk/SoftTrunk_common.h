@@ -32,8 +32,15 @@ namespace srl{
         VectorXd q;
         VectorXd dq;
         VectorXd ddq;
-        /** @brief designate size of state (i.e. degrees of freedom) */
+        /** @brief initialize and set the size of the vectors at the same time. */
         State(const int q_size){
+            setSize(q_size);
+        }
+        /** @brief default constructor, the size of the vectors must be set later with setSize(). */
+        State(){
+        }
+        /** @brief designate size of state (i.e. degrees of freedom) */
+        void setSize(const int q_size){
             q = VectorXd::Zero(q_size);
             dq = VectorXd::Zero(q_size);
             ddq = VectorXd::Zero(q_size);
@@ -51,9 +58,10 @@ namespace srl{
 class SoftTrunkParameters{
 public:
     /** @brief return empty state with appropriate size. */
-    srl::State empty_state(){
+    srl::State empty_state() const {
         assert(is_finalized());
-        return srl::State(q_size);
+        srl::State state{q_size};
+        return state;
     }
     /** @brief name of robot (and of urdf / xacro file) */
     std::string robot_name = "2segment";
@@ -108,7 +116,7 @@ public:
         assert(!is_finalized());
     }
     
-    bool is_finalized(){
+    bool is_finalized() const {
         return finalized;
     }
 private:
