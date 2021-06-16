@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
     const double dt = 0.01;
     SoftTrunkParameters st_params;
     st_params.finalize();
-    srl::State state = st_params.empty_state();
+    srl::State state = st_params.getBlankState();
     ControllerPCC cpcc{st_params, CurvatureCalculator::SensorType::simulator};
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
 

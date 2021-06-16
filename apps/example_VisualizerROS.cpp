@@ -9,7 +9,7 @@ int main(int argc, char** argv){
     st_params.finalize();
     SoftTrunkModel stm{st_params};
     VisualizerROS vis{stm};
-    srl::State state = st_params.empty_state();
+    srl::State state = st_params.getBlankState();
     Vector3d rgb;
     rgb << 1,0,0;
     Vector3d xyz;

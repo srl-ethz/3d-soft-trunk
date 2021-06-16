@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     // for ROS-based visualization
     SoftTrunkModel stm{st_params};
     VisualizerROS vis{stm};
-    srl::State state = st_params.empty_state();
+    srl::State state = st_params.getBlankState();
 
     // subscribe to ros topic
     ros::NodeHandle nh;

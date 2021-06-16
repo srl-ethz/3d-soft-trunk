@@ -45,7 +45,7 @@ void CurvatureCalculator::calculator_loop() {
         log_file << "\n";
     }
 
-    srl::State state_prev = st_params.empty_state();
+    srl::State state_prev = st_params.getBlankState();
     double interval = 0.01;
     srl::Rate rate{1. / interval};
     run = true;

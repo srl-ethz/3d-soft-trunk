@@ -10,7 +10,7 @@ int main(){
     SoftTrunkModel stm{st_params};
     SerialInterface si{"/dev/ttyACM0", 115200};
 
-    srl::State state = st_params.empty_state();
+    srl::State state = st_params.getBlankState();
     std::vector<float> bendLab_data;
     VectorXd bendLab_offset = VectorXd::Zero(6); // use the first N measurements as offset
     int N = 10;

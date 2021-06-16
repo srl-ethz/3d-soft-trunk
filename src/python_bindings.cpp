@@ -21,7 +21,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
 
     py::class_<SoftTrunkParameters>(m, "SoftTrunkParameters")
     .def(py::init<>())
-    .def("empty_state", &SoftTrunkParameters::empty_state)
+    .def("getBlankState", &SoftTrunkParameters::getBlankState)
     .def("finalize", &SoftTrunkParameters::finalize);
 
     py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")

@@ -33,7 +33,7 @@ int main() {
     AugmentedRigidArm ara{st_params};
 
     // calculate the state of arm at a particular value of q and print out the various parameters
-    srl::State state = st_params.empty_state();
+    srl::State state = st_params.getBlankState();
 
     double delta_t = 0.03;
     srl::Rate r{1. / delta_t};
