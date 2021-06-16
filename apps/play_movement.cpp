@@ -6,7 +6,10 @@
  */
 int main(){
 
-    srl::State state_ref, state;
+    SoftTrunkParameters st_params{};
+    st_params.finalize();
+    srl::State state_ref = st_params.getBlankState();
+    srl::State state = st_params.getBlankState();
     std::string filename;
     std::string line;
     std::cout << "Enter filename you want to play back, located in 3d-soft-trunk\n";
@@ -16,7 +19,7 @@ int main(){
     std::string substr;
     log_file.open(filename);
     
-    ControllerPCC cpcc{CurvatureCalculator::SensorType::qualisys};
+    ControllerPCC cpcc{st_params, CurvatureCalculator::SensorType::qualisys};
 
     if(log_file){
         //skip the header
