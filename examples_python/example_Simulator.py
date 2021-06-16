@@ -1,7 +1,10 @@
-from softtrunk_pybind_module import ControllerPCC, State, CurvatureCalculator
+from softtrunk_pybind_module import ControllerPCC, State, CurvatureCalculator, SoftTrunkParameters
 import numpy as np
 
-initial_state = State()
+st_params = SoftTrunkParameters()
+st_params.finalize()
+
+initial_state = st_params.getBlankState()
 # set initial state
 q = initial_state.q
 q = 2. / q.size * np.ones(q.size)
@@ -13,7 +16,7 @@ print(f"number of segements: {num_segments}")
 p = np.zeros(3 * num_segments)
 
 # simulator functionality is provided as part of the Controller class
-ctrl = ControllerPCC(CurvatureCalculator.SensorType.simulator, True)
+ctrl = ControllerPCC(st_params, CurvatureCalculator.SensorType.simulator, True)
 dt = 0.01
 ctrl.set_frequency(1./dt)
 ctrl.set_state(initial_state)

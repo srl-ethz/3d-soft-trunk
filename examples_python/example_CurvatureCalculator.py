@@ -1,8 +1,10 @@
-from softtrunk_pybind_module import CurvatureCalculator
+from softtrunk_pybind_module import CurvatureCalculator, SoftTrunkParameters
 from time import sleep
 import numpy as np
 
-cc = CurvatureCalculator(CurvatureCalculator.SensorType.qualisys, "")
+st_params = SoftTrunkParameters()
+st_params.finalize()
+cc = CurvatureCalculator(st_params, CurvatureCalculator.SensorType.qualisys, "")
 
 num_segments = 3
 

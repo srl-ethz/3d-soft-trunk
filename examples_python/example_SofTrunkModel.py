@@ -1,7 +1,11 @@
-from softtrunk_pybind_module import SoftTrunkModel, State
+from softtrunk_pybind_module import SoftTrunkModel, State, SoftTrunkParameters
 
-stm = SoftTrunkModel()
-state = State()
+st_params = SoftTrunkParameters()
+# todo: add example code for editing SoftTrunkParameters
+st_params.finalize()
+
+stm = SoftTrunkModel(st_params)
+state = st_params.getBlankState()
 
 # editing elements in state
 state.q[0] = 0.1 # this method of setting elements does not work

@@ -64,8 +64,10 @@ python3
 >> vc.setSinglePressure(0, 100)
 
 >> import softtrunk_pybind_module
->> aar = softtrunk_pybind_module.AugmentedRigidArm()
->> aar.update([0]*6, [0]*6)
+>> st_params = softtrunk_pybind_module.SoftTrunkParameters()
+>> st_params.finalize()
+>> stm = softtrunk_pybind_module.SoftTrunkModel(st_params)
+>> stm.getModel()
 ```
 
 see more examples in `examples_python/` and `mobilerack-interface/examples_python`.
