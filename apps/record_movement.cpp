@@ -2,14 +2,16 @@
 #include <mobilerack-interface/SerialInterface.h>
 
 int main(){
-    SoftTrunkModel stm{};
+    SoftTrunkParameters st_params;
+    st_params.finalize();
+    SoftTrunkModel stm{st_params};
     
     std::string filename;
     std::fstream log_file;
     srl::State state;
     double time = 0;
 
-    CurvatureCalculator cc(CurvatureCalculator::SensorType::qualisys);
+    CurvatureCalculator cc(st_params, CurvatureCalculator::SensorType::qualisys);
 
     fmt::print("\n Enter filename to log to, logging starts after entering\n");
     std::cin >> filename;
@@ -17,7 +19,7 @@ int main(){
 
     log_file.open(filename, std::fstream::out);     //create header
     log_file << "time";
-    for (int i = 0; i < st_params::q_size; i++){
+    for (int i = 0; i < st_params.q_size; i++){
         log_file << fmt::format(",q_{}", i);
     }
 
@@ -26,7 +28,7 @@ int main(){
     {
         cc.get_curvature(state);                    //log curvatures+time
         log_file << time;
-        for (int i = 0; i < st_params::num_segments*st_params::sections_per_segment; i++)
+        for (int i = 0; i < st_params.num_segments*st_params.sections_per_segment; i++)
         {
             log_file << fmt::format(",{},{}", state.q(2*i), state.q(2*i+1));
         }

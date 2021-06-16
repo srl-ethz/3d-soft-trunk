@@ -30,12 +30,12 @@ int main(){
         while(getline(log_file, line)){
             std::stringstream().swap(ss);
             ss << line;
-            for (int i = 0; i < st_params::q_size; i++){
+            for (int i = 0; i < st_params.q_size; i++){
                 getline(ss, substr, ',');
                 state_ref.q(i) = std::stod (substr);
             }
             getline(ss, substr);
-            state_ref.q(st_params::q_size - 1) = std::stod (substr);
+            state_ref.q(st_params.q_size - 1) = std::stod (substr);
             cpcc.set_ref(state_ref);
             r.sleep();
         }    

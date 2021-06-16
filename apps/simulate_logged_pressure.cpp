@@ -13,7 +13,7 @@
  */
 int main(int argc, char *argv[]){
     const double dt = 0.01;
-    SoftTrunkParameters st_params;
+    SoftTrunkParameters st_params{};
     st_params.finalize();
     srl::State state = st_params.getBlankState();
     ControllerPCC cpcc{st_params, CurvatureCalculator::SensorType::simulator};
@@ -31,17 +31,13 @@ int main(int argc, char *argv[]){
 
     // read the CSV, and save the datapoints to a vector
     std::vector<double> log_t;
-    std::array<std::vector<double>, 3*st_params.num_segments> log_p;
+    std::vector<std::vector<double>> log_p;
     {
         double t, p0, p1, p2, p3, p4, p5;
         while (in.read_row(t, p0, p1, p2, p3, p4, p5)){
             log_t.push_back(t);
-            log_p[0].push_back(p0);
-            log_p[1].push_back(p1);
-            log_p[2].push_back(p2);
-            log_p[3].push_back(p3);
-            log_p[4].push_back(p4);
-            log_p[5].push_back(p5);
+            std::vector<double> p = {p0, p1, p2, p3, p4, p5};
+            log_p.push_back(p);
         }
     }
     const double hz = 1./dt;
