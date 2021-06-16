@@ -52,13 +52,14 @@ namespace srl{
  * @brief save various parameters related to the configuration of the soft trunk.
  * The parameters are first populated by their default values. After customizing them by changing the member variables or reading from a YAML file,
  * call finalize() to run sanity checks on the values, and to set other parameters.
+ * check apps/example_SoftTrunkModel.cpp to for a demo of how to edit these values
  * @todo the parameters ideally should be private members, and only changeable through functions, to prevent further change after finalize() is called. for now, leave it as is, maybe change when more people start to use it.
  * @todo implement load_yaml function
  */
 class SoftTrunkParameters{
 public:
     /** @brief return empty state with appropriate size. */
-    srl::State empty_state() const {
+    srl::State getBlankState() const {
         assert(is_finalized());
         srl::State state{q_size};
         return state;
@@ -72,16 +73,16 @@ public:
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
      */
-    std::array<double, 4> masses = {0.160, 0.020, 0.082, 0.023};
+    std::vector<double> masses = {0.160, 0.020, 0.082, 0.023};
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
+    std::vector<double> lengths = {0.125, 0.02, 0.125, 0.02};
     /**
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
      */
-    std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
+    std::vector<double> diameters = {0.035, 0.028, 0.0198};
     /** @brief angle of arm rel. to upright */
     double armAngle = 180;
 
@@ -89,8 +90,8 @@ public:
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::array<double, 2> shear_modulus = {34200., 56500.};
-    std::array<double, 2> drag_coef = {28000., 8000.};
+    std::vector<double> shear_modulus = {34200., 56500.};
+    std::vector<double> drag_coef = {28000., 8000.};
 
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
