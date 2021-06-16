@@ -88,6 +88,7 @@ VectorXd ControllerPCC::gravity_compensate(const srl::State state){
 }
 
 void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to mapping from header
+    assert(p.size() == 3 * st_params.num_segments);
     for (int i = 0; i < 3*st_params.num_segments; i++){
         vc->setSinglePressure(i, p(i));
     }
