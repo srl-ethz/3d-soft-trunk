@@ -2,10 +2,13 @@
 
 int main(){
     srl::State state_ref;
-    Dyn d(CurvatureCalculator::SensorType::qualisys, false); //warning: Dynamic is also an eigen function so make sure you use the namespace
-    for (int i = 0; i < st_params::num_segments; i++){
-        state_ref.q(2*i) = 0.3;
-    }
+    Dyn d(CurvatureCalculator::SensorType::qualisys, false); 
+    state_ref.q << -0.261782868,	-0.669757892,	0.707805025,	-0.390006514;
     d.set_ref(state_ref);
-    while(true);
+    while(true){
+        getchar();
+        d.toggle_log();
+        srl::sleep(5);
+        d.toggle_log();
+    };
 }
