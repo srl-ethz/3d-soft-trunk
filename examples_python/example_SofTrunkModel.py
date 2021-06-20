@@ -1,7 +1,8 @@
 from softtrunk_pybind_module import SoftTrunkModel, State, SoftTrunkParameters
 
 st_params = SoftTrunkParameters()
-# todo: add example code for editing SoftTrunkParameters
+# currently the ability to edit parameter values from the Python interface (as is done in the equivalend C++ example) is not implemented, because of lack of demand & still changing specifications.
+# plz implement yourself to src/python_bindings.cpp if needed...
 st_params.finalize()
 
 stm = SoftTrunkModel(st_params)

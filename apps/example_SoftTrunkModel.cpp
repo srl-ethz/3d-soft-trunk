@@ -16,20 +16,19 @@ int main(){
     st_params.armAngle = 30;
     st_params.shear_modulus = {30000, 30000, 30000};
     st_params.drag_coef = {10000, 10000, 10000};
-    st_params.finalize();
+    st_params.finalize();  // run sanity check and finalize parameters
 
     SoftTrunkModel stm = SoftTrunkModel(st_params);
-    // currently there's some errors when soft trunk is completely straight, so create some offset
-    srl::State state = st_params.getBlankState();
-    /*state.q.setOnes();
-    state.q *= 0.01;
-    state.dq.setOnes();
-    state.dq *= 0.01;*/
+    srl::State state = st_params.getBlankState();  // get blank state with appropriate size
+    state.q(0) = 0.2;
     stm.updateState(state);
+    // print parameters of model
+    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params.num_segments-1]);
+
+    // example of converting between pseudopressure to real pressure
     VectorXd v = VectorXd::Zero(2*st_params.num_segments);
     v(0) = 200;
     fmt::print("{}\n\n\n", stm.pseudo2real(v).transpose());
 
-    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params.num_segments-1]);
     return 1;
 }

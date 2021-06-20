@@ -77,3 +77,4 @@ see more examples in `examples_python/` and `mobilerack-interface/examples_pytho
 Uses Doxygen to generate documentation from inline comments in code. Install [Doxygen](http://www.doxygen.nl), and
 run `doxygen Doxyfile` in this directory to generate HTML (can be seen with browser at html/index.html) & LATEX output.
 
+Example code are in `apps/example_*.cpp` and `examples_python/example_*.py`.

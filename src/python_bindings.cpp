@@ -19,6 +19,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     .def_property("dq", [](srl::State& s){return s.dq;}, [](srl::State& s, const VectorXd& dq){s.dq=dq;})
     .def_property("ddq", [](srl::State& s){return s.ddq;}, [](srl::State& s, const VectorXd& ddq){s.ddq=ddq;});
 
+    /** @todo implement ability to edit parameters from Python interface as needed */
     py::class_<SoftTrunkParameters>(m, "SoftTrunkParameters")
     .def(py::init<>())
     .def("getBlankState", &SoftTrunkParameters::getBlankState)
