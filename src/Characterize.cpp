@@ -13,7 +13,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     log_file.open(filename, std::fstream::out);
     log_file << "angle";
     VectorXd stiffpressure = VectorXd::Zero(3*st_params.num_segments);
-    stiffpressure.segment((st_params.num_segments -1 - segment)*3,3) = 400*Vector3d::Ones();
+    stiffpressure.segment((st_params.num_segments -1 - segment)*3,3) = 0*Vector3d::Ones();
     //write header
     log_file << fmt::format(", angle_measured, r");
     log_file << "\n"; 
@@ -33,7 +33,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
 
         cc->get_curvature(state);
         stm->updateState(state);
-        x = stm->get_H_base().rotation()*stm->get_H(segment).translation();
+        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
 
         double angle = atan2(x(1),x(0))*180/3.14156;
         if (angle < 0) angle+=360;

@@ -77,13 +77,19 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (angle < -10) angle += 360;       
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
-        // the 2* angle comes from the fact that I characterize in 0,5 degree steps -> the graph spans 720
         
-        /*angle += 0.00000000892566*pow(angle,4) - 0.00001126867723*pow(angle,3) + 0.00387707937057*pow(angle,2) - 0.35349388476932*angle + 1.82784956215392;*/
-        if (0 < angle && angle <= 180) angle += 0.00000000003444*pow(angle,6) - 0.00000001692522*pow(angle,5) + 0.00000287210313*pow(angle,4) - 0.00019231576235*pow(angle,3) + 0.00566838599605*pow(angle,2) - 0.25525348085193*angle + 11.36922207042150;
+        
+        /*if (0 < angle && angle <= 180) angle += 0.00000000003444*pow(angle,6) - 0.00000001692522*pow(angle,5) + 0.00000287210313*pow(angle,4) - 0.00019231576235*pow(angle,3) + 0.00566838599605*pow(angle,2) - 0.25525348085193*angle + 11.36922207042150;
 
         else if (180 < angle && angle < 350) angle += -0.00000000003412*pow(angle-180,6) + 0.00000002301207*pow(angle-180,5) - 0.00000565869111*pow(angle-180,4) + 0.00061822853405*pow(angle-180,3) - 0.02951718943376*pow(angle-180,2) + 0.56885711783252*(angle-180) + 13.65997592618080;
-        else if (-10 < angle && angle <= 0) angle += -0.00000000003412*pow(angle+180,6) + 0.00000002301207*pow(angle+180,5) - 0.00000565869111*pow(angle+180,4) + 0.00061822853405*pow(angle+180,3) - 0.02951718943376*pow(angle+180,2) + 0.56885711783252*(angle+180) + 13.65997592618080;
+        else if (-10 < angle && angle <= 0) angle += -0.00000000003412*pow(angle+180,6) + 0.00000002301207*pow(angle+180,5) - 0.00000565869111*pow(angle+180,4) + 0.00061822853405*pow(angle+180,3) - 0.02951718943376*pow(angle+180,2) + 0.56885711783252*(angle+180) + 13.65997592618080;*/
+        if (-10 < angle && angle <= 115) angle += 0.00002304*pow(angle,3) - 0.00291402*pow(angle,2) + 0.02071285*angle + 6.89857450;
+
+
+        else if (115 < angle && angle < 232) angle +=  0.00000328*pow(angle-115,3) - 0.00103194*pow(angle-115,2) + 0.07548487*(angle-115) + 8.66524063;
+
+        else if (232 < angle && angle <= 350) angle += 0.0000004750724134*pow(angle-232,4) - 0.0000827074734174*pow(angle-232,3) + 0.0010236674201867*pow(angle-232,2) + 0.2440728943129220*(angle-232) + 8.4957818912748700;
+        //excel is a motherfucker for making us do the -232
 
 
 

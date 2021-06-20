@@ -14,7 +14,7 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     //set the gains
     kp = 35;
-    kd = 5.5;
+    kd = 5.3;
     ki = 0.;
     ki_gain = 1;
 
@@ -60,7 +60,7 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,2*i,3,2) + 0.1*(i+1)*MatrixXd::Identity(3,2);
+            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.5*(i+1)*MatrixXd::Identity(3,2);
         }
         for (int j = 0; j < st_params.num_segments; j++){
             for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params.q_size)); i++){               //reduce jacobian order if the arm is in a singularity
