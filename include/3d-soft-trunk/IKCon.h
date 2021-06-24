@@ -14,6 +14,6 @@ private:
     MatrixXd dJ;
     MatrixXd J_prev;
     Vector3d dx_prev;
-    Vector3d ddx_ref;
+    VectorXd ddx_ref;
     VectorXd tau_ref;
 };

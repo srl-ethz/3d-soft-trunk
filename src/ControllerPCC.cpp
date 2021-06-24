@@ -13,7 +13,7 @@ ControllerPCC::ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool s
 
     stm = std::make_unique<SoftTrunkModel>();
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,3,2,0,6,4,5};
+    std::vector<int> map = {1,2,5,3,6,4,0};
     
     if (!simulation) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 

@@ -24,7 +24,7 @@ void IKCon::control_loop(){
             continue;
 
         J = stm->J[st_params::num_segments-1]; //tip jacobian
-            dJ = (J - J_prev)/dt;
+        dJ = (J - J_prev)/dt;
 
         J_prev = J;
         //do controls
@@ -33,7 +33,7 @@ void IKCon::control_loop(){
 
         dx = J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx); 
-        state_ref.ddq = J.completeOrthogonalDecomposition().pseudoInverse()*(ddx_ref - dJ*state.dq);
+        state_ref.ddq = J.transpose()*(J*J.transpose()).inverse()*(ddx_ref - dJ*state.dq);
 
         tau_ref = stm->B*state_ref.ddq;
         
