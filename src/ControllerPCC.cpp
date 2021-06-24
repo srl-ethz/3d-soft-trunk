@@ -75,7 +75,7 @@ void ControllerPCC::toggleGripper(){
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
     assert(st_params::sections_per_segment == 1);
-    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
+    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q + stm->c + stm->D*state.dq);
 
     return gravcomp/100; //to mbar
 }

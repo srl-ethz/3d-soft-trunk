@@ -93,6 +93,9 @@ target_link_libraries(Dyn ControllerPCC)
 add_library(Characterize src/Characterize.cpp)
 target_link_libraries(Characterize ControllerPCC)
 
+add_library(IKCon src/IKCon.cpp)
+target_link_libraries(IKCon ControllerPCC)
+
 
 if(${roscpp_FOUND})
     add_library(VisualizerROS src/VisualizerROS.cpp)
