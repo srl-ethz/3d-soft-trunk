@@ -23,50 +23,109 @@ enum class ControllerType {
     osc,        //OSC controller, coordinates are task space
 };
 
-
-
-/** @brief parameters that define the configuration of the Soft Trunk */
-namespace st_params {
-    /** @brief name of robot (and of urdf / xacro file) */
-    const std::string robot_name = "2segment";
-    /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
-     * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
-     * fake value for segment 3
-     */
-    const std::array<double, 4> masses = {0.160, 0.020, 0.082, 0.023};
-    /** @brief length of each part, in m
-     * account for a bit of stretching under pressure...
-     * {length of base segment, length of base connector piece, ..., length of tip segment} */
-    const std::array<double, 4> lengths = {0.125, 0.02, 0.125, 0.02};
-    /**
-     * @brief outer diameters of semicircular chamber
-     * {base of base segment, tip of base segment = base of next segment, ...}
-     */
-    const std::array<double, 3> diameters = {0.035, 0.028, 0.0198};
-    const int num_segments = 2;
-    const int sections_per_segment = 1;
-    const int q_size = 2*num_segments*sections_per_segment;
-    /** @brief angle of arm rel. to upright */
-    const double armAngle = 180;
-    const ControllerType controller = ControllerType::osc;
-}
-
 namespace srl{
     /**
      * @brief represents the position \f$q\f$, velocity \f$\dot q\f$, and acceleration \f$\ddot q\f$ for the soft arm.
      */
     class State{
     public:
-        Matrix<double, st_params::q_size, 1> q;
-        Matrix<double, st_params::q_size, 1> dq;
-        Matrix<double, st_params::q_size, 1> ddq;
+        VectorXd q;
+        VectorXd dq;
+        VectorXd ddq;
+        /** @brief initialize and set the size of the vectors at the same time. */
+        State(const int q_size){
+            setSize(q_size);
+        }
+        /** @brief default constructor, the size of the vectors must be set later with setSize(). */
         State(){
-            q.setZero();
-            dq.setZero();
-            ddq.setZero();
+        }
+        /** @brief designate size of state (i.e. degrees of freedom) */
+        void setSize(const int q_size){
+            q = VectorXd::Zero(q_size);
+            dq = VectorXd::Zero(q_size);
+            ddq = VectorXd::Zero(q_size);
         }
     };
 }
+
+/**
+ * @brief save various parameters related to the configuration of the soft trunk.
+ * The parameters are first populated by their default values. After customizing them by changing the member variables or reading from a YAML file,
+ * call finalize() to run sanity checks on the values, and to set other parameters.
+ * check apps/example_SoftTrunkModel.cpp to for a demo of how to edit these values
+ * @todo the parameters ideally should be private members, and only changeable through functions, to prevent further change after finalize() is called. for now, leave it as is, maybe change when more people start to use it.
+ * @todo implement load_yaml function
+ */
+class SoftTrunkParameters{
+public:
+    /** @brief return empty state with appropriate size. */
+    srl::State getBlankState() const {
+        assert(is_finalized());
+        srl::State state{q_size};
+        return state;
+    }
+    /** @brief name of robot (and of urdf / xacro file) */
+    std::string robot_name = "2segment";
+    /** @brief number of actuated segments */
+    int num_segments = 2;
+    /** @brief number of PCC elements per section */
+    int sections_per_segment = 1;
+    /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
+     * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
+     */
+    std::vector<double> masses = {0.160, 0.020, 0.082, 0.023};
+    /** @brief length of each part, in m
+     * account for a bit of stretching under pressure...
+     * {length of base segment, length of base connector piece, ..., length of tip segment} */
+    std::vector<double> lengths = {0.125, 0.02, 0.125, 0.02};
+    /**
+     * @brief outer diameters of semicircular chamber
+     * {base of base segment, tip of base segment = base of next segment, ...}
+     */
+    std::vector<double> diameters = {0.035, 0.028, 0.0198};
+    /** @brief angle of arm rel. to upright */
+    double armAngle = 180;
+
+    /** @brief shear modulus of Dragon Skin 10, in Pa
+     * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
+     * @todo the value for the base segment is fake now, must run characterization on the real segment
+     */
+    std::vector<double> shear_modulus = {39000., 65400.};
+    std::vector<double> drag_coef = {28000., 8000.};
+
+    /** @brief degrees of freedom of arm. is set when finalize() is called */
+    int q_size;
+
+    void finalize(){
+        assert(!is_finalized()); // already finalized
+
+        // run sanity checks to make sure that at least the size of the arrays make sense
+        assert(num_segments * 2 == masses.size());
+        assert(num_segments * 2 == lengths.size());
+        assert(num_segments + 1 == diameters.size());
+        assert(num_segments == shear_modulus.size());
+        assert(num_segments == drag_coef.size());
+
+        q_size = 2*num_segments*sections_per_segment;
+        finalized = true;
+    }
+
+    /** @brief populate the parameters by reading from a YAML file
+     * @todo implement this
+     */
+    void load_yaml(const std::string filename){
+        assert(!is_finalized());
+    }
+    
+    bool is_finalized() const {
+        return finalized;
+    }
+private:
+    bool finalized = false;
+};
+
+
+
 
 /**
  * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.

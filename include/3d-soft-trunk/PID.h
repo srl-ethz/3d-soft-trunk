@@ -5,7 +5,7 @@
 class PID: public ControllerPCC 
 {
 public:
-    PID(CurvatureCalculator::SensorType sensor_type);
+    PID(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type);
 
 private:
     void control_loop();

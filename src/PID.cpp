@@ -1,10 +1,10 @@
 #include "3d-soft-trunk/PID.h"
 
 
-PID::PID(CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(sensor_type){
+PID::PID(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "PID_log";
 
-    for (int j = 0; j < st_params::num_segments; ++j){
+    for (int j = 0; j < st_params.num_segments; ++j){
             miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for X direction
             miniPIDs.push_back(ZieglerNichols(Ku[j], Tu[j], dt)); // for Y direction
     }
@@ -35,7 +35,7 @@ void PID::control_loop(){
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         
-        for (int i = 0; i < 2 * st_params::num_segments; ++i)
+        for (int i = 0; i < 2 * st_params.num_segments; ++i)
             f[i] = miniPIDs[i].getOutput(state.q[i], state_ref.q[i]);
         
         p = stm->pseudo2real(f + gravity_compensate(state));

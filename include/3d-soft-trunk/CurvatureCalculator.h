@@ -44,7 +44,7 @@ public:
      * 
      * @param address portname of Arduino when using Bend Labs. (value ignored when using Qualisys as sensor)
      */
-    CurvatureCalculator(CurvatureCalculator::SensorType sensor_type, std::string address = "/dev/ttyACM0", int extra_frames = 0);
+    CurvatureCalculator(const SoftTrunkParameters& st_params, CurvatureCalculator::SensorType sensor_type, std::string address = "/dev/ttyACM0", int extra_frames = 0);
 
 
 
@@ -58,6 +58,7 @@ public:
     Eigen::Transform<double, 3, Eigen::Affine> get_frame(int id);
 
 private:
+    const SoftTrunkParameters st_params;
     SensorType sensor_type;
 
     std::unique_ptr<QualisysClient> optiTrackClient;
@@ -93,7 +94,7 @@ private:
      */
     void calculateCurvature();
 
-    VectorXd initial_q = VectorXd::Zero(st_params::q_size);
+    VectorXd initial_q;
     std::mutex mtx;
 
     /** @brief PCC configuration of each segment of soft arm. depends on st_params::parametrization */
@@ -109,7 +110,5 @@ private:
 
     /** @brief extra qualisys frames to be tracked*/
     int extra_frames;
-
-    int counter = 0;
     
 };

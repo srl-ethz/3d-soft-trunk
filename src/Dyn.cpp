@@ -1,10 +1,11 @@
 #include "3d-soft-trunk/Dyn.h"
 
-Dyn::Dyn(CurvatureCalculator::SensorType sensor_type, bool simulation) : ControllerPCC::ControllerPCC(sensor_type, simulation){
+Dyn::Dyn(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, bool simulation) : ControllerPCC::ControllerPCC(st_params, sensor_type, simulation){
     filename = "dynamic_log";
-    Kp = 0.1*VectorXd::Ones(st_params::q_size);
-    Kd = 0.000*VectorXd::Ones(st_params::q_size);
+    Kp = 0.1*VectorXd::Ones(st_params.q_size);
+    Kd = 0.000*VectorXd::Ones(st_params.q_size);
     dt = 1./100;
+
     control_thread = std::thread(&Dyn::control_loop, this);
 }
 
@@ -18,7 +19,7 @@ void Dyn::control_loop(){
         if (!simulation) cc->get_curvature(state);
         
         stm->updateState(state);
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params::num_segments).translation()-cc->get_frame(0).translation());
+        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;

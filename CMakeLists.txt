@@ -70,7 +70,7 @@ ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
 TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt)
 
 add_library(AugmentedRigidArm SHARED src/AugmentedRigidArm.cpp)
-target_link_libraries(AugmentedRigidArm drake::drake ${catkin_LIBRARIES})
+target_link_libraries(AugmentedRigidArm drake::drake)
 
 add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
 target_link_libraries(SoftTrunkModel AugmentedRigidArm)
