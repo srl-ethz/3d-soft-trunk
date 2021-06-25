@@ -18,7 +18,7 @@ void IKCon::control_loop(){
 
         //update the internal visualization
         if (!simulation) cc->get_curvature(state);
-        
+        //
         stm->updateState(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
