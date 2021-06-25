@@ -81,7 +81,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0,0.15,-0.2;
+    x_ref_center << 0.15,0,-0.2;
     x_ref = x_ref_center;
     
     
@@ -92,19 +92,20 @@ int main(){
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 32;
     osc.gripperAttached = true;
-    
-    getchar();
     osc.set_ref(x_ref, dx_ref);
+    srl::sleep(5);
+    getchar();
+    
     //std::thread print_thread(printer);
     std::thread gain_thread(gain);
     
     osc.toggle_log();
-    while (true){
-        /*double r = amplitude*sin(3*coef*t);
+    while (t<32){
+        double r = 0.15;//amplitude*sin(3*coef*t);
         circle << r*cos(coef*t), r*sin(coef*t), -sqrt(pow(0.27,2) - pow(1.2*r,2));
         x_ref = circle;
         //dx_ref = amplitude * coef * circle;*/
-        x_ref = osc.get_objects()[0];
+        //x_ref = osc.get_objects()[0];
         osc.set_ref(x_ref,dx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
