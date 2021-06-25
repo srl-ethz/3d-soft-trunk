@@ -5,7 +5,7 @@ IKCon::IKCon(CurvatureCalculator::SensorType sensor_type, bool simulation, int o
 
     J_prev = MatrixXd::Zero(3, st_params::q_size);
     kp = 35;
-    kd = 10;
+    kd = 5;
     control_thread = std::thread(&IKCon::control_loop, this);
 }
 //
@@ -18,7 +18,6 @@ void IKCon::control_loop(){
 
         //update the internal visualization
         if (!simulation) cc->get_curvature(state);
-        //
         stm->updateState(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
