@@ -5,12 +5,9 @@ IKCon::IKCon(CurvatureCalculator::SensorType sensor_type, bool simulation, int o
 
     J_prev = MatrixXd::Zero(3, st_params::q_size);
     kp = 35;
-    kd = 5.5;
+    kd = 10;
     control_thread = std::thread(&IKCon::control_loop, this);
 }
-//
-//
-//
 //
 void IKCon::control_loop(){
     srl::Rate r{1./dt};
@@ -36,7 +33,8 @@ void IKCon::control_loop(){
 
         dx = J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx); 
-        state_ref.ddq = J.transpose()*(J*J.transpose()).inverse()*(ddx_ref - dJ*state.dq);
+        J_inv = J.transpose()*(J*J.transpose()).inverse();
+        state_ref.ddq = J_inv*(ddx_ref - dJ*state.dq) + ((MatrixXd::Identity(st_params::q_size, st_params::q_size)-J_inv*J)*(-kd*state.dq);
 
         tau_ref = stm->B*state_ref.ddq;
         
