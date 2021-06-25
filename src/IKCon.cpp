@@ -8,7 +8,10 @@ IKCon::IKCon(CurvatureCalculator::SensorType sensor_type, bool simulation, int o
     kd = 5.5;
     control_thread = std::thread(&IKCon::control_loop, this);
 }
-
+//
+//
+//
+//
 void IKCon::control_loop(){
     srl::Rate r{1./dt};
     while(true){
