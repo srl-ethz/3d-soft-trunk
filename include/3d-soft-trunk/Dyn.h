@@ -5,7 +5,7 @@
 class Dyn: public ControllerPCC
 {
 public:
-    Dyn(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType, bool simulation = false);
+    Dyn(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType);
 
 private:
     void control_loop();

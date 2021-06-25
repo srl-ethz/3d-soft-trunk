@@ -18,7 +18,7 @@
  **/
 class ControllerPCC {
 public:
-    ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
+    ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
 
     /** @brief set the reference pose (trajectory) of the arm
      */

@@ -7,7 +7,7 @@
 
 
 
-ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : st_params(st_params), sensor_type(sensor_type), simulation(simulation), objects(objects){
+ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : st_params(st_params), sensor_type(sensor_type), objects(objects){
     assert(st_params.is_finalized());
     // set appropriate size for each member
     state.setSize(st_params.q_size);
@@ -22,7 +22,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
     // +X, +Y, -X, -Y
     std::vector<int> map = {1,3,2,0,6,4,5};
     
-    if (!simulation) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
+    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, bendlabs_portname);
@@ -65,7 +65,7 @@ void ControllerPCC::get_x(Vector3d &x) {
 
 void ControllerPCC::set_state(const srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
-    assert(simulation);
+    assert(sensor_type == CurvatureCalculator::SensorType::simulator);
     this->state = state;
 }
 
@@ -117,7 +117,7 @@ std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
 }
 
 void ControllerPCC::set_frequency(const double hz){
-    assert(simulation);
+    assert(sensor_type == CurvatureCalculator::SensorType::simulator);
     this->dt = 1./hz;
 }
 
@@ -128,7 +128,7 @@ void ControllerPCC::newChamberConfig(Vector3d &angles) {
 void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;
-        if (!simulation) {initial_timestamp = cc->get_timestamp();}
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {initial_timestamp = cc->get_timestamp();}
         else {initial_timestamp = 0;}
         this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
         fmt::print("Starting log to {}\n", this->filename);
@@ -185,5 +185,4 @@ bool ControllerPCC::simulate(const VectorXd &p){
     t+=dt;
 
     return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
-
 }

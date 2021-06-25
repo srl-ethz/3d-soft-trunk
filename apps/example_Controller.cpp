@@ -77,7 +77,7 @@ void printer(OSC& osc){
 int main(){
     SoftTrunkParameters st_params;
     st_params.finalize();
-    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, false, 1);
+    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 1);
     VectorXd p;
     srl::State state = st_params.getBlankState();
 

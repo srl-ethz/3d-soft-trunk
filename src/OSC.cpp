@@ -1,6 +1,6 @@
 #include "3d-soft-trunk/OSC.h"
 
-OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, simulation, objects){
+OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
     filename = "OSC_logger";
 
     potfields.resize(objects);
@@ -31,7 +31,7 @@ void OSC::control_loop() {
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        if (!simulation) cc->get_curvature(state);
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
         
         stm->updateState(state);
         
@@ -88,7 +88,7 @@ void OSC::control_loop() {
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 
-        if (!simulation) {actuate(p);}
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
             assert(simulate(p));
         }
