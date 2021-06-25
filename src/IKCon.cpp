@@ -34,7 +34,7 @@ void IKCon::control_loop(){
         dx = J*state.dq;
         ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx); 
         J_inv = J.transpose()*(J*J.transpose()).inverse();
-        state_ref.ddq = J_inv*(ddx_ref - dJ*state.dq) + ((MatrixXd::Identity(st_params::q_size, st_params::q_size)-J_inv*J)*(-kd*state.dq);
+        state_ref.ddq = J_inv*(ddx_ref - dJ*state.dq) + ((MatrixXd::Identity(st_params::q_size, st_params::q_size) - J_inv*J))*(-kd*state.dq);
 
         tau_ref = stm->B*state_ref.ddq;
         
