@@ -23,7 +23,7 @@ public:
     /** @brief set the reference pose (trajectory) of the arm
      */
     void set_ref(const srl::State &pose_ref);
-    void set_ref(const Vector3d x_r, const Vector3d &dx_ref);
+    void set_ref(const Vector3d x_r, const Vector3d &dx_ref, const Vector3d &ddx_ref);
 
     /** @brief get current kinematic state of the arm */
     void get_state(srl::State &state);
@@ -135,6 +135,7 @@ protected:
     Vector3d x_ref;
     Vector3d dx;
     Vector3d dx_ref;
+    Vector3d ddx_ref;
 
     bool gripping = false;
 

@@ -5,7 +5,8 @@ OSC osc(CurvatureCalculator::SensorType::qualisys, false, 1);
 bool freedom = false;
 Vector3d x_ref;
 Vector3d x;
-Vector3d dx_ref = Vector3d::Zero();
+Vector3d dx_ref;
+Vector3d ddx_ref;
 
 void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
@@ -38,7 +39,7 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
                 break;
             case 'g':
                 x_ref = osc.get_objects()[0];
-                osc.set_ref(x_ref, dx_ref);
+                osc.set_ref(x_ref, dx_ref, ddx_ref);
                 break;
             case 't':
                 osc.toggleGripper();
@@ -46,7 +47,7 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
                 break;
             case 'v':
                 x_ref(1) *= -1;
-                osc.set_ref(x_ref,dx_ref);
+                osc.set_ref(x_ref,dx_ref, ddx_ref);
                 break;
             case 'r':
                 osc.toggle_log();
@@ -88,11 +89,13 @@ int main(){
     double t = 0;
     double dt = 0.1;
     Vector3d circle;
+    Vector3d d_circle;
+    Vector3d dd_circle;
 
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 32;
     osc.gripperAttached = true;
-    osc.set_ref(x_ref, dx_ref);
+    osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(5);
     getchar();
     
@@ -101,12 +104,16 @@ int main(){
     
     osc.toggle_log();
     while (t<32){
-        double r = 0.15;//amplitude*sin(3*coef*t);
-        circle << r*cos(coef*t), r*sin(coef*t), -sqrt(pow(0.27,2) - pow(1.2*r,2));
+        double r = 0.15;
+        circle << r*cos(coef*t), r*sin(coef*t), 0.2;
+        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
+        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
         x_ref = circle;
+        dx_ref = d_circle;
+        ddx_ref = dd_circle;
         //dx_ref = amplitude * coef * circle;*/
         //x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref);
+        osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
@@ -120,15 +127,15 @@ int main(){
     srl::sleep(2);
     
     x_ref << 0.15,0,-0.2;
-    osc.set_ref(x_ref,dx_ref);
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(4);
     x_ref << -0.15,0,-0.2;
     dx_ref << -10, 0, 0;
-    osc.set_ref(x_ref,dx_ref);
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(0.3);
     osc.toggleGripper();
     dx_ref << 0, 0, 0;
-    osc.set_ref(x_ref,dx_ref);
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
     
     return 1;
 }

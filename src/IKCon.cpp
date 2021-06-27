@@ -6,6 +6,7 @@ IKCon::IKCon(CurvatureCalculator::SensorType sensor_type, bool simulation, int o
     J_prev = MatrixXd::Zero(3, st_params::q_size);
     kp = 35;
     kd = 5;
+    dt = 1./50;
     control_thread = std::thread(&IKCon::control_loop, this);
 }
 //
@@ -32,13 +33,13 @@ void IKCon::control_loop(){
         //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
 
         dx = J*state.dq;
-        ddx_ref = kp*(x_ref - x) + kd*(dx_ref - dx); 
+        ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
         J_inv = J.transpose()*(J*J.transpose()).inverse();
-        state_ref.ddq = J_inv*(ddx_ref - dJ*state.dq) + ((MatrixXd::Identity(st_params::q_size, st_params::q_size) - J_inv*J))*(-kd*state.dq);
+        state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params::q_size, st_params::q_size) - J_inv*J))*(-kd*state.dq);
 
-        tau_ref = stm->B*state_ref.ddq;
+        tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state_ref.q + stm->D*state_ref.dq;
         
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
 
         if (!simulation) {actuate(p);}
         else {
@@ -46,4 +47,17 @@ void IKCon::control_loop(){
         }
     }
 
+}
+
+double IKCon::get_kd(){
+    return this->kd;
+}
+double IKCon::get_kp(){
+    return this->kp;
+}
+void IKCon::set_kd(double kd){
+    this->kd = kd;
+}
+void IKCon::set_kp(double kp){
+    this->kp = kp;
 }
