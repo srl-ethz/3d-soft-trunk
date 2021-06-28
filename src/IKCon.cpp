@@ -37,7 +37,7 @@ void IKCon::control_loop(){
         J_inv = J.transpose()*(J*J.transpose()).inverse();
         state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params::q_size, st_params::q_size) - J_inv*J))*(-kd*state.dq);
 
-        tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state_ref.q + stm->D*state_ref.dq;
+        tau_ref = stm->B*state_ref.ddq /*+ stm->c*/ + stm->g + stm->K * state.q + stm->D*state.dq;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
 

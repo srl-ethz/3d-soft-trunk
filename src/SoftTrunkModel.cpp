@@ -89,7 +89,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         else if (232 < angle && angle <= 350) angle += 0.0000004750724134*pow(angle-232,4) - 0.0000827074734174*pow(angle-232,3) + 0.0010236674201867*pow(angle-232,2) + 0.2440728943129220*(angle-232) + 8.4957818912748700;
         //excel is a motherfucker for making us do the -232
-
+        angle -= 7;
 
 
 
