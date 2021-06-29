@@ -149,14 +149,15 @@ void AugmentedRigidArm::update_drake_model()
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
+    
     auto plant_autodiff = drake::systems::System<double>::ToAutoDiffXd(*multibody_plant);
     auto context_autodiff = plant_autodiff->CreateDefaultContext();
-
     context_autodiff->SetTimeStateAndParametersFrom(*diagram_context);
+    
     drake::AutoDiffVecXd c_auto_diff_ = drake::AutoDiffVecXd::Zero(7*st_params::num_segments*(st_params::sections_per_segment+1));
     plant_autodiff->CalcBiasTerm(*context_autodiff, &c_auto_diff_);
     MatrixXd jac = drake::math::autoDiffToGradientMatrix(c_auto_diff_);
-
+    fmt::print("J: {}\n\n\n\n\n\n", jac);
     S_xi_ = 0.5*jac.rightCols(jac.size());
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 

@@ -13,6 +13,6 @@ int main(){
     v << 200, 0, 0, 0;
     fmt::print("{}\n\n\n", stm.pseudo2real(v).transpose());
 
-    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params::num_segments-1]);
+    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\nS: {}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params::num_segments-1], stm.S);
     return 1;
 }
