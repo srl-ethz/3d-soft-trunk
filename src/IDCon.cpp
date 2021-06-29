@@ -1,17 +1,17 @@
-#include "3d-soft-trunk/IKCon.h"
+#include "3d-soft-trunk/IDCon.h"
 
-IKCon::IKCon(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(sensor_type, simulation, objects){
-    filename = "IK_logger";
+IDCon::IDCon(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(sensor_type, simulation, objects){
+    filename = "ID_logger";
 
     J_prev = MatrixXd::Zero(3, st_params::q_size);
     kp = 35;
     kd = 5.5;
     dt = 1./50;
-    control_thread = std::thread(&IKCon::control_loop, this);
+    control_thread = std::thread(&IDCon::control_loop, this);
 }
 //
 //
-void IKCon::control_loop(){
+void IDCon::control_loop(){
     srl::Rate r{1./dt};
     while(true){
         r.sleep();
@@ -49,15 +49,15 @@ void IKCon::control_loop(){
 
 }
 
-double IKCon::get_kd(){
+double IDCon::get_kd(){
     return this->kd;
 }
-double IKCon::get_kp(){
+double IDCon::get_kp(){
     return this->kp;
 }
-void IKCon::set_kd(double kd){
+void IDCon::set_kd(double kd){
     this->kd = kd;
 }
-void IKCon::set_kp(double kp){
+void IDCon::set_kp(double kp){
     this->kp = kp;
 }
