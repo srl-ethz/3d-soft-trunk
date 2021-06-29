@@ -41,21 +41,21 @@ void OSC::control_loop() {
         J = stm->J[st_params.num_segments-1]; //tip jacobian
         J_mid << stm->J[st_params.num_segments-2], stm->J[st_params.num_segments-1] ; //middle seg jacobian
 
-        //do controls
+        //this x is from qualisys directly
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        //this x is from forward kinematics, use when using bendlabs sensors
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
         x_mid = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-2).translation();
 
         dx = J*state.dq;
-        //fmt::print("dx = {}\n", dx.norm());
 
 
-        ddx_ref = (kp + ki)*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
+        ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            //ddx_ref += potfields[i].get_ddx(x);
+            //ddx_des += potfields[i].get_ddx(x);
             //ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }
 
@@ -73,10 +73,10 @@ void OSC::control_loop() {
 
         B_op_null = (J_mid*stm->B.inverse()*J_mid.transpose()).inverse();
          
-        f = B_op*ddx_ref;
+        f = B_op*ddx_des;
         
         f_null = B_op_null*ddx_null;
-        //if (gripperAttached) f(2) += 0.16; //the gripper weighs 24 grams -> 0.24 Newto
+        if (gripperAttached) f(2) += 0.16; //the gripper weighs 24 grams -> 0.24 Newto
 
         tau_null = J_mid.transpose()*f_null;
         
@@ -106,7 +106,7 @@ int OSC::singularity(const MatrixXd &J) {
 
     for (int i = 0; i < st_params.num_segments - 1; i++) {                         //check for singularities
         for (int j = 0; j < st_params.num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.99) order+=1;  //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.995) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;
