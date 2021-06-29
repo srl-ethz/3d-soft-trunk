@@ -10,13 +10,15 @@
 #include <drake/systems/analysis/simulator.h>
 #include <drake/systems/framework/diagram.h>
 #include <drake/systems/framework/diagram_builder.h>
+#include <drake/math/rigid_transform.h>
 #include <drake/math/autodiff_gradient.h>
 #include <drake/common/find_resource.h>
+#include <drake/math/gradient.h>
 #include <drake/common/autodiff.h>
 #include <drake/common/autodiffxd.h>
 #include <drake/common/autodiffxd_make_coherent.h>
 #include <drake/common/autodiff_overloads.h>
-
+#include <drake/math/autodiff.h>
 #include "mdefs.h"
 #include "SoftTrunk_common.h"
 

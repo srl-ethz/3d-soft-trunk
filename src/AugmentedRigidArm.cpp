@@ -150,7 +150,7 @@ void AugmentedRigidArm::update_drake_model()
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
     
-    MatrixXd jac = drake::common::autoDiffToGradientMatrix(c_xi_);
+    MatrixXd jac = drake::math::autoDiffToGradientMatrix(c_xi_);
     S_xi_ = 0.5*jac.rightCols(7 * st_params::num_segments * (st_params::sections_per_segment + 1));
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
