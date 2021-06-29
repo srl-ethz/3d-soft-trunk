@@ -153,7 +153,7 @@ void AugmentedRigidArm::update_drake_model()
     auto context_autodiff = plant_autodiff->CreateDefaultContext();
     context_autodiff->SetTimeStateAndParametersFrom(*diagram_context);
     
-    drake::AutoDiffVecXd c_auto_diff_ = drake::AutoDiffVecXd::Zero(7*st_params::num_segments*(st_params::sections_per_segment+1));
+    drake::AutoDiffVecXd c_auto_diff_ = drake::AutoDiffVecXd::Zero(7*st_params.num_segments*(st_params.sections_per_segment+1));
     plant_autodiff->CalcBiasTerm(*context_autodiff, &c_auto_diff_);
     MatrixXd jac = drake::math::autoDiffToGradientMatrix(c_auto_diff_);
     fmt::print("J: {}\n\n\n\n\n\n", jac);
