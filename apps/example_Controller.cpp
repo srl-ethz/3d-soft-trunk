@@ -100,7 +100,7 @@ int main(){
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(5);
     getchar();
-    osc.set_ref(x_ref, dx_ref);
+    osc.set_ref(x_ref, dx_ref, ddx_ref);
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     // std::thread print_thread(printer, std::ref(osc));

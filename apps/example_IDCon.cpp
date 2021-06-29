@@ -1,6 +1,5 @@
 #include "3d-soft-trunk/IDCon.h"
 
-IDCon id(CurvatureCalculator::SensorType::qualisys, false, 1);
 bool freedom = false;
 Vector3d x_ref;
 Vector3d x;
@@ -10,7 +9,7 @@ Vector3d circle = Vector3d::Zero();
 Vector3d d_circle = Vector3d::Zero();
 Vector3d dd_circle = Vector3d::Zero();
 
-void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
+void gain(IDCon &id){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
         c = getchar();
@@ -49,7 +48,7 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
     }
 }
 
-void printer(){
+void printer(IDCon &id){
     srl::Rate r{1};
     while(true){
         Vector3d x;
@@ -66,6 +65,9 @@ void printer(){
 }
 
 int main(){
+    SoftTrunkParameters st_params;
+    st_params.finalize();
+    IDCon id(st_params, CurvatureCalculator::SensorType::qualisys, 1);
     double t = 0;
     double dt = 0.1;
     x_ref << 0,0.15,-0.2;
@@ -76,8 +78,8 @@ int main(){
     srl::sleep(4);
     getchar();
 
-    std::thread print_thread(printer);
-    std::thread gain_thread(gain);
+    std::thread print_thread(printer, std::ref(id));
+    std::thread gain_thread(gain, std::ref(id));
 
     id.toggle_log();
     while (t<100){
