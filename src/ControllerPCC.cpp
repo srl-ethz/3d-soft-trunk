@@ -20,7 +20,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
 
     stm = std::make_unique<SoftTrunkModel>(st_params);
     // +X, +Y, -X, -Y
-    std::vector<int> map = {1,3,2,0,6,4,5};
+    std::vector<int> map = {1,2,5,3,6,4,0};
     
     if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
@@ -41,14 +41,15 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
         is_initial_ref_received = true;
 }
 
-void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref){
+void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref, const Vector3d &ddx_ref){
     std::lock_guard<std::mutex> lock(mtx);
     Vector3d x_r = x_ref;
     if (x_ref.norm() > 0.27) {
-        x_r = 0.27*x_ref.normalized();
+        x_r = 0.27*x_ref.normalized(); //What is this???
     }
     this->x_ref = x_r;
     this->dx_ref = dx_ref;
+    this->ddx_ref = ddx_ref;
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }

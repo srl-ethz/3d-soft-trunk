@@ -21,6 +21,8 @@ target_link_libraries(example_Characterizer Characterize)
 add_executable(example_dynamic example_dynamic.cpp)
 target_link_libraries(example_dynamic Dyn)
 
+add_executable(example_IDCon example_IDCon.cpp)
+target_link_libraries(example_IDCon IDCon)
 
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)

@@ -4,7 +4,8 @@
 bool freedom = false;
 Vector3d x_ref;
 Vector3d x;
-Vector3d dx_ref = Vector3d::Zero();
+Vector3d dx_ref;
+Vector3d ddx_ref;
 
 void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
@@ -37,7 +38,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'g':
                 x_ref = osc.get_objects()[0];
-                osc.set_ref(x_ref, dx_ref);
+                osc.set_ref(x_ref, dx_ref, ddx_ref);
                 break;
             case 't':
                 osc.toggleGripper();
@@ -45,7 +46,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'v':
                 x_ref(1) *= -1;
-                osc.set_ref(x_ref,dx_ref);
+                osc.set_ref(x_ref,dx_ref, ddx_ref);
                 break;
             case 'r':
                 osc.toggle_log();
@@ -83,33 +84,40 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0,0.15,-0.2;
+    x_ref_center << 0.15,0,-0.2;
     x_ref = x_ref_center;
     
     
     double t = 0;
     double dt = 0.1;
     Vector3d circle;
+    Vector3d d_circle;
+    Vector3d dd_circle;
 
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 32;
     osc.gripperAttached = true;
-    
+    osc.set_ref(x_ref, dx_ref, ddx_ref);
+    srl::sleep(5);
     getchar();
-    osc.set_ref(x_ref, dx_ref);
+    osc.set_ref(x_ref, dx_ref, ddx_ref);
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     // std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
     osc.toggle_log();
-    while (true){
-        /*double r = amplitude*sin(3*coef*t);
-        circle << r*cos(coef*t), r*sin(coef*t), -sqrt(pow(0.27,2) - pow(1.2*r,2));
+    while (t<32){
+        double r = 0.15;
+        circle << r*cos(coef*t), r*sin(coef*t), 0.2;
+        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
+        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
         x_ref = circle;
+        dx_ref = d_circle;
+        ddx_ref = dd_circle;
         //dx_ref = amplitude * coef * circle;*/
-        x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref);
+        //x_ref = osc.get_objects()[0];
+        osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
@@ -123,15 +131,15 @@ int main(){
     srl::sleep(2);
     
     x_ref << 0.15,0,-0.2;
-    osc.set_ref(x_ref,dx_ref);
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(4);
     x_ref << -0.15,0,-0.2;
     dx_ref << -10, 0, 0;
-    osc.set_ref(x_ref,dx_ref);
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(0.3);
     osc.toggleGripper();
     dx_ref << 0, 0, 0;
-    osc.set_ref(x_ref,dx_ref);
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
     
     return 1;
 }

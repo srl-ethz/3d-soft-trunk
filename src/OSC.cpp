@@ -13,13 +13,13 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 35;
+    kp = 70;
     kd = 5.3;
     ki = 0.;
     ki_gain = 1;
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./100;
+    dt = 1./50;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
