@@ -12,6 +12,7 @@ SoftTrunkModel::SoftTrunkModel()
     A = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 3 * st_params::num_segments);
     A_pseudo = MatrixXd::Zero(2 * st_params::sections_per_segment * st_params::num_segments, 2*st_params::num_segments);
     J.resize(st_params::num_segments);
+    S = MatrixXd::Zero(st_params::q_size,st_params::q_size);
 
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
     for (int section_id = 0; section_id < st_params::sections_per_segment * st_params::num_segments; section_id++)
@@ -44,6 +45,7 @@ void SoftTrunkModel::updateState(const srl::State &state)
     c = ara->c;
     g = ara->g;
     J = ara->J;
+    S = ara->S;
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id){

@@ -73,6 +73,7 @@ void AugmentedRigidArm::setup_drake_model()
     dxi_ = VectorXd::Zero(num_joints);
     B_xi_ = MatrixXd::Zero(num_joints, num_joints);
     c_xi_ = VectorXd::Zero(num_joints);
+    S_xi_ = MatrixXd::Zero(num_joints, num_joints);
     g_xi_ = VectorXd::Zero(num_joints);
     Jm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
     dJm_ = MatrixXd::Zero(num_joints, 2 * st_params::num_segments * (st_params::sections_per_segment+1));
@@ -148,6 +149,9 @@ void AugmentedRigidArm::update_drake_model()
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
+    
+    MatrixXd jac = drake::common::autoDiffToGradientMatrix(c_xi_);
+    S_xi_ = 0.5*jac.rightCols(7 * st_params::num_segments * (st_params::sections_per_segment + 1));
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
@@ -407,6 +411,7 @@ void AugmentedRigidArm::update(const srl::State &state)
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
+    S = map_normal2expanded.transpose() * (Jm_.transpose() * S_xi_ * Jm_) * map_normal2expanded;
     for (int i = 0; i < st_params::num_segments; i++)
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
     //    update_dJm(state.q,state.dq);
