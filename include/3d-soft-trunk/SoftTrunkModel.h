@@ -15,12 +15,15 @@
  */
 class SoftTrunkModel{
 public:
-    SoftTrunkModel();
+    SoftTrunkModel(const SoftTrunkParameters& st_params);
 
     /**
      * @brief update the model's state, and calculate the parameters of the model. Currently has problems when both Lx and Ly are 0.
      */
     void updateState(const srl::State &state);
+    SoftTrunkParameters getSoftTrunkParameters(){
+        return st_params;
+    }
 
     /** @brief inertia matrix */
     MatrixXd B;
@@ -75,6 +78,7 @@ private:
     
 
 private:
+    const SoftTrunkParameters st_params;
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
      * @param radius radius of the chamber. This is the input from which the other values will be calculated.
@@ -84,13 +88,6 @@ private:
      * @param secondMomentOfArea
      */
     void calculateCrossSectionProperties(double radius, double& chamberCentroidDist, double& siliconeArea, double& chamberArea, double& secondMomentOfArea);
-
-    /** @brief shear modulus of Dragon Skin 10, in Pa
-     * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
-     * @todo the value for the base segment is fake now, must run characterization on the real segment
-     */
-    std::array<double, st_params::num_segments> shear_modulus = {39000., 65400.};
-    std::array<double, st_params::num_segments> drag_coef = {28000., 8000.};
 
     /**
      * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.

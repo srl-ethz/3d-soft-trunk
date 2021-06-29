@@ -19,18 +19,21 @@
 
 void q_update(double seconds, srl::State& state) {
     // generate nice-looking poses
-    for (int i = 0; i < st_params::num_segments * st_params::sections_per_segment ; i++) {
-        state.q(2 * i + 0) = 0.8 * sin(seconds * (double) (i+1) / st_params::sections_per_segment) / st_params::sections_per_segment;
-        state.q(2 * i + 1) = 0.4 * cos(seconds * (double) (i+1) / st_params::sections_per_segment) / st_params::sections_per_segment;
+    int dof = state.q.size();
+    for (int i = 0; i < dof/2 ; i++) {
+        state.q(2 * i + 0) = 1.6 * sin(seconds * (double) (i+1)) / dof;
+        state.q(2 * i + 1) = 0.8 * cos(seconds * (double) (i+1)) / dof;
 
     }
 }
 
 int main() {
-    AugmentedRigidArm ara{};
+    SoftTrunkParameters st_params{};
+    st_params.finalize();
+    AugmentedRigidArm ara{st_params};
 
     // calculate the state of arm at a particular value of q and print out the various parameters
-    srl::State state;
+    srl::State state = st_params.getBlankState();
 
     double delta_t = 0.03;
     srl::Rate r{1. / delta_t};
@@ -42,7 +45,7 @@ int main() {
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
         fmt::print("B:{}\n", ara.B);
         fmt::print("g:{}\n", ara.g);
-        fmt::print("J:{}\n", ara.J[st_params::num_segments-1]);
+        fmt::print("J:{}\n", ara.J[st_params.num_segments-1]);
         fmt::print("H_tip:{}\n", ara.get_H_tip().matrix());
         r.sleep();
     }

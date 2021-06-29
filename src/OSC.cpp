@@ -1,6 +1,6 @@
 #include "3d-soft-trunk/OSC.h"
 
-OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objects) : ControllerPCC::ControllerPCC(sensor_type, simulation, objects){
+OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
     filename = "OSC_logger";
 
     potfields.resize(objects);
@@ -10,7 +10,7 @@ OSC::OSC(CurvatureCalculator::SensorType sensor_type, bool simulation, int objec
         potfields[i].set_radius(0.001);
     }
 
-    J_mid = MatrixXd::Zero(3*st_params::num_segments, st_params::q_size);
+    J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
     kp = 70;
@@ -31,27 +31,27 @@ void OSC::control_loop() {
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        if (!simulation) cc->get_curvature(state);
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
         
         stm->updateState(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
 
-        J = stm->J[st_params::num_segments-1]; //tip jacobian
-        J_mid << stm->J[st_params::num_segments-2], stm->J[st_params::num_segments-1] ; //middle seg jacobian
+        J = stm->J[st_params.num_segments-1]; //tip jacobian
+        J_mid << stm->J[st_params.num_segments-2], stm->J[st_params.num_segments-1] ; //middle seg jacobian
 
         //do controls
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params::num_segments).translation()-cc->get_frame(0).translation());
-        //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
-        x_mid = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-2).translation();
+        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        x_mid = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-2).translation();
 
         dx = J*state.dq;
         //fmt::print("dx = {}\n", dx.norm());
 
 
         ddx_ref = (kp + ki)*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
-        ddx_null = VectorXd::Zero(3*st_params::num_segments);
+        ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
@@ -60,10 +60,10 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,(st_params::num_segments-1-i)*2,3,2) += 0.5*(i+1)*MatrixXd::Identity(3,2);
+            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.5*(i+1)*MatrixXd::Identity(3,2);
         }
-        for (int j = 0; j < st_params::num_segments; j++){
-            for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params::q_size)); i++){               //reduce jacobian order if the arm is in a singularity
+        for (int j = 0; j < st_params.num_segments; j++){
+            for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params.q_size)); i++){               //reduce jacobian order if the arm is in a singularity
                 J_mid.block(3*j,2*i,3,2) + 0.2*(i+1)*MatrixXd::Identity(3,2);
             }
         }
@@ -80,15 +80,15 @@ void OSC::control_loop() {
 
         tau_null = J_mid.transpose()*f_null;
         
-        for(int i = 0; i < st_params::q_size; i++){     //for some reason tau is sometimes nan, catch that
-            if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params::num_segments);
+        for(int i = 0; i < st_params.q_size; i++){     //for some reason tau is sometimes nan, catch that
+            if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params.num_segments);
         }
 
-        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params::q_size, st_params::q_size) - J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params.q_size, st_params.q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
 
-        if (!simulation) {actuate(p);}
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
             assert(simulate(p));
         }
@@ -97,15 +97,15 @@ void OSC::control_loop() {
 
 int OSC::singularity(const MatrixXd &J) {
     int order = 0;
-    std::vector<Eigen::Vector3d> plane_normals(st_params::num_segments);            //normals to planes create by jacobian
-    for (int i = 0; i < st_params::num_segments; i++) {
+    std::vector<Eigen::Vector3d> plane_normals(st_params.num_segments);            //normals to planes create by jacobian
+    for (int i = 0; i < st_params.num_segments; i++) {
         Vector3d j1 = J.col(2*i).normalized();   //Eigen hates fun so we have to do this
         Vector3d j2 = J.col(2*i+1).normalized();
         plane_normals[i] = j1.cross(j2);
     }
 
-    for (int i = 0; i < st_params::num_segments - 1; i++) {                         //check for singularities
-        for (int j = 0; j < st_params::num_segments - 1 - i; j++){
+    for (int i = 0; i < st_params.num_segments - 1; i++) {                         //check for singularities
+        for (int j = 0; j < st_params.num_segments - 1 - i; j++){
             if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.99) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }

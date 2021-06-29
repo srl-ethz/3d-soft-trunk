@@ -64,8 +64,10 @@ python3
 >> vc.setSinglePressure(0, 100)
 
 >> import softtrunk_pybind_module
->> aar = softtrunk_pybind_module.AugmentedRigidArm()
->> aar.update([0]*6, [0]*6)
+>> st_params = softtrunk_pybind_module.SoftTrunkParameters()
+>> st_params.finalize()
+>> stm = softtrunk_pybind_module.SoftTrunkModel(st_params)
+>> stm.getModel()
 ```
 
 see more examples in `examples_python/` and `mobilerack-interface/examples_python`.
@@ -75,3 +77,4 @@ see more examples in `examples_python/` and `mobilerack-interface/examples_pytho
 Uses Doxygen to generate documentation from inline comments in code. Install [Doxygen](http://www.doxygen.nl), and
 run `doxygen Doxyfile` in this directory to generate HTML (can be seen with browser at html/index.html) & LATEX output.
 
+Example code are in `apps/example_*.cpp` and `examples_python/example_*.py`.
