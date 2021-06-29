@@ -36,13 +36,15 @@ void control_hand_cb(const std_msgs::Bool &msg){
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ui_controller");
+    SoftTrunkParameters st_params{};
+    st_params.finalize();
 
-    OSC osc(CurvatureCalculator::SensorType::simulator, true);
+    OSC osc(st_params, CurvatureCalculator::SensorType::simulator, true);
 
     // for ROS-based visualization
-    SoftTrunkModel stm{};
+    SoftTrunkModel stm{st_params};
     VisualizerROS vis{stm};
-    srl::State state;
+    srl::State state = st_params.getBlankState();
 
     // subscribe to ros topic
     ros::NodeHandle nh;
@@ -50,7 +52,7 @@ int main(int argc, char **argv)
     ros::Subscriber control_hand_sub = nh.subscribe("control_hand", 1, control_hand_cb);
 
     // set initial state
-    state.q = 0.1 * VectorXd::Ones(st_params::q_size);
+    state.q = 0.1 * VectorXd::Ones(st_params.q_size);
     osc.set_state(state);
 
     double hz = 50.; // hardcoded in OSC.cpp?

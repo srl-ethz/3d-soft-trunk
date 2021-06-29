@@ -33,6 +33,7 @@
  */
 class AugmentedRigidArm {
 private:
+    const SoftTrunkParameters st_params;
     // drake variables start
     /** @brief this builder helps in adding & connecting system blocks */
     drake::systems::DiagramBuilder<double> builder;
@@ -94,7 +95,7 @@ private:
     Eigen::Transform<double, 3, Eigen::Affine> H_base;
 
 public:
-    AugmentedRigidArm();
+    AugmentedRigidArm(const SoftTrunkParameters &st_params);
 
     /** @brief update the member variables based on current PCC value */
     void update(const srl::State &state);

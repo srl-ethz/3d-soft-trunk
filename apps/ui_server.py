@@ -11,7 +11,7 @@ Server for the Interactive Marker that is used as GUI to designate desired hand 
 publishes to rostopics:
 osc_target (JointTrajectoryPoint): marker position & estimated velocity
 control_hand (bool): control command to open or close hand. true=open, false=closed
-
+![](../img/rviz_ui_diagram.png)
 to start,
 - start `roslaunch rviz.launch` in urdf/ directory. rviz opens.
 - in rviz, File -> Open Config (Recent Configs) -> select robot.rviz in urdf/

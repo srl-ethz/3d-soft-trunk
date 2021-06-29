@@ -21,14 +21,16 @@ int main(int argc, char** argv){
     /** @todo untested after updating to use VisualizerROS (since mobile rack is currently unusable), remove this comment when it is confirmed to work */
     ros::init(argc, argv, "solve_force_tip");
 
-    SoftTrunkModel stm{};
+    SoftTrunkParameters st_params{};
+    st_params.finalize();
+    SoftTrunkModel stm{st_params};
     SerialInterface si{"/dev/ttyACM0", 38400};
     ValveController vc{"192.168.0.100", {11, 10, 9, 13, 12, 14, 15}, 600};
     VisualizerROS vis{stm};
     Vector3d rgb;
     rgb << 1, 0, 0;
 
-    VectorXd q = VectorXd::Zero(2*st_params::num_segments*st_params::sections_per_segment);
+    VectorXd q = VectorXd::Zero(2*st_params.num_segments*st_params.sections_per_segment);
     VectorXd p = VectorXd::Zero(6);
     VectorXd s = VectorXd::Zero(4);
 
@@ -92,11 +94,11 @@ int main(int argc, char** argv){
         srl::sleep(0.02);
     }
     bendLab_initial /= N;
-    for (int i = 0; i < st_params::num_segments*st_params::sections_per_segment; i++)
+    for (int i = 0; i < st_params.num_segments*st_params.sections_per_segment; i++)
     {
-        int segment_i = i / st_params::sections_per_segment;
-        q_initial(2*i) = bendLab_initial(2*segment_i) / st_params::sections_per_segment;
-        q_initial(2*i+1) = bendLab_initial(2*segment_i+1) / st_params::sections_per_segment;
+        int segment_i = i / st_params.sections_per_segment;
+        q_initial(2*i) = bendLab_initial(2*segment_i) / st_params.sections_per_segment;
+        q_initial(2*i+1) = bendLab_initial(2*segment_i+1) / st_params.sections_per_segment;
     }
     // use a somewhat hacky way to update the state, not fully integrated with the new srl::State, but it's just for now.
     srl::State state;
@@ -129,13 +131,13 @@ int main(int argc, char** argv){
     {
         s = getSensor(si, bendLab_offset);
         
-        for (int i = 0; i < st_params::num_segments*st_params::sections_per_segment; i++)
+        for (int i = 0; i < st_params.num_segments*st_params.sections_per_segment; i++)
         {
             // copy data from bendlab to Soft Trunk pose
             // divide curvauture equally across PCC sections
-            int segment_id = i / st_params::sections_per_segment;
-            q(2*i) = s(2*segment_id) / st_params::sections_per_segment;
-            q(2*i+1) = s(2*segment_id+1) / st_params::sections_per_segment;
+            int segment_id = i / st_params.sections_per_segment;
+            q(2*i) = s(2*segment_id) / st_params.sections_per_segment;
+            q(2*i+1) = s(2*segment_id+1) / st_params.sections_per_segment;
         }
         state.q = q;
         stm.updateState(state);
@@ -143,9 +145,9 @@ int main(int argc, char** argv){
         VectorXd e = stm.g - stm.A*p + f_offset;
 
         double ratio = 0.01;
-        MatrixXd Q = Mq.transpose()*stm.K.transpose()*stm.K*Mq + Mf.transpose()*stm.J[st_params::num_segments-1]*stm.J[st_params::num_segments-1].transpose()*Mf - 2*Mq.transpose()*stm.K.transpose()*stm.J[st_params::num_segments-1].transpose()*Mf + ratio*Mf.transpose()*Mf; 
+        MatrixXd Q = Mq.transpose()*stm.K.transpose()*stm.K*Mq + Mf.transpose()*stm.J[st_params.num_segments-1]*stm.J[st_params.num_segments-1].transpose()*Mf - 2*Mq.transpose()*stm.K.transpose()*stm.J[st_params.num_segments-1].transpose()*Mf + ratio*Mf.transpose()*Mf; 
         Q *= 2;
-        VectorXd b = 2*e.transpose()*stm.K*Mq - 2*e.transpose()*stm.J[st_params::num_segments-1].transpose()*Mf;
+        VectorXd b = 2*e.transpose()*stm.K*Mq - 2*e.transpose()*stm.J[st_params.num_segments-1].transpose()*Mf;
 
         drake::solvers::VectorDecisionVariable<15> x = prog.NewContinuousVariables<15>();
         prog.AddQuadraticCost(Q, b, x);
@@ -158,7 +160,7 @@ int main(int argc, char** argv){
         stm.updateState(state);
 
         vis.publishState();
-        vis.publishArrow(st_params::num_segments-1, x_result.segment(12, 3), rgb, true);
+        vis.publishArrow(st_params.num_segments-1, x_result.segment(12, 3), rgb, true);
     }
     return 1;
 }

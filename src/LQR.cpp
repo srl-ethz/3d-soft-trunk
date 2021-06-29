@@ -1,14 +1,14 @@
 #include "3d-soft-trunk/LQR.h"
 
-LQR::LQR(CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(sensor_type){
+LQR::LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "LQR_log";
 
-    A = MatrixXd::Zero(2*st_params::q_size, 2*st_params::q_size);
-    B = MatrixXd::Zero(2*st_params::q_size, 2*st_params::num_segments);
+    A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
+    B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);
 
-    R = 0.0001*MatrixXd::Identity(2*st_params::num_segments, 2*st_params::num_segments);
-    Q = 100000*MatrixXd::Identity(2*st_params::q_size, 2*st_params::q_size);
-    Q.block(st_params::q_size, st_params::q_size, st_params::q_size, st_params::q_size) *= 0.001; // reduce cost for velocity
+    R = 0.0001*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
+    Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
+    Q.block(st_params.q_size, st_params.q_size, st_params.q_size, st_params.q_size) *= 0.001; // reduce cost for velocity
 
     relinearize(state); //linearizes in non-actuated position on startup
 
@@ -19,8 +19,8 @@ void LQR::relinearize(srl::State state){
     stm->updateState(state);
     
     //update A, B with new dynamics
-    A << MatrixXd::Zero(st_params::q_size,st_params::q_size), MatrixXd::Identity(st_params::q_size, st_params::q_size), - stm->B.inverse() * stm->K, -stm->B.inverse() * stm->D;
-    B << MatrixXd::Zero(st_params::q_size, 2*st_params::num_segments), stm->B.inverse()*stm->A_pseudo;
+    A << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - stm->B.inverse() * stm->K, -stm->B.inverse() * stm->D;
+    B << MatrixXd::Zero(st_params.q_size, 2*st_params.num_segments), stm->B.inverse()*stm->A_pseudo;
 
     solveRiccati(A, B, Q, R, K);
 }

@@ -11,7 +11,9 @@
  */
 
 int main() {
-    CurvatureCalculator cc{CurvatureCalculator::SensorType::qualisys};
+    SoftTrunkParameters st_params{};
+    st_params.finalize();
+    CurvatureCalculator cc{st_params, CurvatureCalculator::SensorType::qualisys};
     srl::State state;
     unsigned long long int timestamp;
     srl::Rate r{5};

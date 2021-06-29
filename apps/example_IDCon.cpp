@@ -1,6 +1,5 @@
-#include "3d-soft-trunk/IKCon.h"
+#include "3d-soft-trunk/IDCon.h"
 
-IKCon ik(CurvatureCalculator::SensorType::qualisys, false, 1);
 bool freedom = false;
 Vector3d x_ref;
 Vector3d x;
@@ -10,76 +9,79 @@ Vector3d circle = Vector3d::Zero();
 Vector3d d_circle = Vector3d::Zero();
 Vector3d dd_circle = Vector3d::Zero();
 
-void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
+void gain(IDCon &id){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
         c = getchar();
         switch (c) {
             case 'q':
-                ik.set_kp(ik.get_kp()*1.1);
+                id.set_kp(id.get_kp()*1.1);
                 break;
             case 'a':
-                ik.set_kp(ik.get_kp()*0.9);
+                id.set_kp(id.get_kp()*0.9);
                 break;
             case 'e':
-                ik.set_kd(ik.get_kd()*1.1);
+                id.set_kd(id.get_kd()*1.1);
                 break;
             case 'd':
-                ik.set_kd(ik.get_kd()*0.9);
+                id.set_kd(id.get_kd()*0.9);
                 break;
             case 'g':
-                x_ref = ik.get_objects()[0];
-                ik.set_ref(x_ref, dx_ref, ddx_ref);
+                x_ref = id.get_objects()[0];
+                id.set_ref(x_ref, dx_ref, ddx_ref);
                 break;
             case 't':
-                ik.toggleGripper();
+                id.toggleGripper();
                 freedom = true;
                 break;
             case 'v':
                 x_ref(1) *= -1;
-                ik.set_ref(x_ref,dx_ref, ddx_ref);
+                id.set_ref(x_ref,dx_ref, ddx_ref);
                 break;
             case 'r':
-                ik.toggle_log();
+                id.toggle_log();
                 srl::sleep(5);
-                ik.toggle_log();
+                id.toggle_log();
                 break;
         }
-        fmt::print("kp = {}, kd = {}\n", ik.get_kp(), ik.get_kd());
+        fmt::print("kp = {}, kd = {}\n", id.get_kp(), id.get_kd());
     }
 }
 
-void printer(){
+void printer(IDCon &id){
     srl::Rate r{1};
     while(true){
         Vector3d x;
-        ik.get_x(x);
+        id.get_x(x);
         fmt::print("------------------------------------\n");
-        fmt::print("extra object: {}\n", ik.get_objects()[0].transpose());
+        fmt::print("extra object: {}\n", id.get_objects()[0].transpose());
         fmt::print("x error: {}\n", (x_ref-x).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-x).norm());
         VectorXd p;
-        ik.get_pressure(p);
+        id.get_pressure(p);
         fmt::print("pressure: {}\n", p.transpose());
         r.sleep();
     }
 }
 
 int main(){
+    SoftTrunkParameters st_params;
+    st_params.finalize();
+    IDCon id(st_params, CurvatureCalculator::SensorType::qualisys, 1);
     double t = 0;
     double dt = 0.1;
     x_ref << 0,0.15,-0.2;
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 32;
     bool freedom = false;
-    ik.set_ref(x_ref,dx_ref,ddx_ref);
+    id.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(4);
     getchar();
 
-    std::thread print_thread(printer);
-    std::thread gain_thread(gain);
+    std::thread print_thread(printer, std::ref(id));
+    std::thread gain_thread(gain, std::ref(id));
 
-    ik.toggle_log();
+    id.toggle_log();
     while (t<100){
         
         double r = 0.15;
@@ -89,13 +91,13 @@ int main(){
         x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
-        ik.set_ref(x_ref,dx_ref,ddx_ref);
+        id.set_ref(x_ref,dx_ref,ddx_ref);
         
         
         t+=dt;
         srl::sleep(dt);
     }
-    ik.toggle_log();
+    id.toggle_log();
 
     srl::sleep(2);
     

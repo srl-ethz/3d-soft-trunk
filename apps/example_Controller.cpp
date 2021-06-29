@@ -1,14 +1,13 @@
 
 #include "3d-soft-trunk/OSC.h"
 
-OSC osc(CurvatureCalculator::SensorType::qualisys, false, 1);
 bool freedom = false;
 Vector3d x_ref;
 Vector3d x;
 Vector3d dx_ref;
 Vector3d ddx_ref;
 
-void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
+void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
         c = getchar();
@@ -60,7 +59,7 @@ void gain(){ //change gain with keyboard to avoid recompiling, q/a change kp, w/
     }
 }
 
-void printer(){
+void printer(OSC& osc){
     srl::Rate r{1};
     while(true){
         Vector3d x;
@@ -77,8 +76,11 @@ void printer(){
 }
 
 int main(){
+    SoftTrunkParameters st_params;
+    st_params.finalize();
+    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 1);
     VectorXd p;
-    srl::State state;
+    srl::State state = st_params.getBlankState();
 
     Vector3d x_ref_center;
     
@@ -98,9 +100,11 @@ int main(){
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(5);
     getchar();
-    
-    //std::thread print_thread(printer);
-    std::thread gain_thread(gain);
+    osc.set_ref(x_ref, dx_ref, ddx_ref);
+    // arguments to pass by reference must be explicitly designated as so
+    // https://en.cppreference.com/w/cpp/thread/thread/thread
+    // std::thread print_thread(printer, std::ref(osc));
+    std::thread gain_thread(gain, std::ref(osc));
     
     osc.toggle_log();
     while (t<32){

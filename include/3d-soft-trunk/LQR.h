@@ -5,7 +5,7 @@
 class LQR: public ControllerPCC
 {
 public:
-    LQR(CurvatureCalculator::SensorType sensor_type);
+    LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type);
 
     /** @brief realinearize the LQR controller at given state, takes quite a while */
     void relinearize(srl::State state);

@@ -5,4 +5,4 @@ variables:
 build:
   script:
     - cmake -DCMAKE_PREFIX_PATH=/opt/drake .
-    - make
+    - make -j$(nproc) # use as many cores as available

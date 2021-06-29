@@ -18,7 +18,7 @@
  **/
 class ControllerPCC {
 public:
-    ControllerPCC(CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
+    ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
 
     /** @brief set the reference pose (trajectory) of the arm
      */
@@ -75,7 +75,7 @@ public:
 
 protected:
 
-    
+    const SoftTrunkParameters st_params;
     /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
@@ -140,8 +140,8 @@ protected:
     bool gripping = false;
 
     //actuation vectors, p is pressures and f is torques
-    VectorXd p = VectorXd::Zero(3 * st_params::num_segments);
-    VectorXd f = VectorXd::Zero(2 * st_params::num_segments);
+    VectorXd p;
+    VectorXd f;
 
     //logging variables
     bool logging = false;

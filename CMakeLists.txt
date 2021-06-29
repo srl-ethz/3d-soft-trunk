@@ -70,7 +70,7 @@ ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
 TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt)
 
 add_library(AugmentedRigidArm SHARED src/AugmentedRigidArm.cpp)
-target_link_libraries(AugmentedRigidArm drake::drake ${catkin_LIBRARIES})
+target_link_libraries(AugmentedRigidArm drake::drake)
 
 add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
 target_link_libraries(SoftTrunkModel AugmentedRigidArm)
@@ -93,8 +93,8 @@ target_link_libraries(Dyn ControllerPCC)
 add_library(Characterize src/Characterize.cpp)
 target_link_libraries(Characterize ControllerPCC)
 
-add_library(IKCon src/IKCon.cpp)
-target_link_libraries(IKCon ControllerPCC)
+add_library(IDCon src/IDCon.cpp)
+target_link_libraries(IDCon ControllerPCC)
 
 
 if(${roscpp_FOUND})

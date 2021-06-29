@@ -2,9 +2,9 @@
 
 #include "ControllerPCC.h"
 
-class IKCon: public ControllerPCC {
+class IDCon: public ControllerPCC {
 public:
-    IKCon(CurvatureCalculator::SensorType sensor_type, bool simulation = false, int objects = 0);
+    IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
     /** @brief methods for getting OSC gain */
     double get_kp();
     double get_kd();
@@ -14,7 +14,7 @@ public:
     void set_kd(double kd);
 private:
     void control_loop();
-    /** @brief gains for IK*/
+    /** @brief gains for ID*/
     double kp;
     double kd;
     MatrixXd J;

@@ -32,6 +32,7 @@
  */
 class VisualizerROS{
     const SoftTrunkModel& stm;
+    const SoftTrunkParameters st_params;
 
     ros::NodeHandle nh;
     ros::Publisher joint_pub;

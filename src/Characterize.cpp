@@ -1,19 +1,19 @@
 #include "3d-soft-trunk/Characterize.h"
 
-Characterize::Characterize(CurvatureCalculator::SensorType sensor_type) : ControllerPCC(sensor_type){
+Characterize::Characterize(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC(st_params, sensor_type){
 
 }
 
 void Characterize::logRadialPressureDist(int segment, std::string fname){
-    VectorXd pressures = VectorXd::Zero(2 * st_params::num_segments);
+    VectorXd pressures = VectorXd::Zero(2 * st_params.num_segments);
     filename = fname;
 
     filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
     fmt::print("Starting radial log to {}\n", filename);
     log_file.open(filename, std::fstream::out);
     log_file << "angle";
-    VectorXd stiffpressure = VectorXd::Zero(3*st_params::num_segments);
-    stiffpressure.segment((st_params::num_segments -1 - segment)*3,3) = 0*Vector3d::Ones();
+    VectorXd stiffpressure = VectorXd::Zero(3*st_params.num_segments);
+    stiffpressure.segment((st_params.num_segments -1 - segment)*3,3) = 0*Vector3d::Ones();
     //write header
     log_file << fmt::format(", angle_measured, r");
     log_file << "\n"; 
@@ -33,7 +33,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
 
         cc->get_curvature(state);
         stm->updateState(state);
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params::num_segments).translation()-cc->get_frame(0).translation());
+        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
 
         double angle = atan2(x(1),x(0))*180/3.14156;
         if (angle < 0) angle+=360;
@@ -54,7 +54,7 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
     VectorXd K = VectorXd::Zero(2*directions*verticalsteps,1);
     VectorXd tau = VectorXd::Zero(2*directions*verticalsteps);
     double angle = 0;
-    VectorXd pressures = VectorXd::Zero(2*st_params::num_segments);
+    VectorXd pressures = VectorXd::Zero(2*st_params.num_segments);
     fmt::print("Starting coefficient characterization in {} directions\n", directions);
     for (int i = 0; i < directions; i ++){
         angle = 45+i*360/directions; 
