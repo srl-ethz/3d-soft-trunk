@@ -93,15 +93,8 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
     for (int i = 0; i < 3*st_params.num_segments; i++){
         vc->setSinglePressure(i, p(i));
     }
-    if (logging){                                               //log once per control timestep
-        log_file << (cc->get_timestamp() - initial_timestamp)/10e5;
-        for (int i=0; i < st_params.num_segments; i++){        //log tip pos
-
-            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x(0), x(1), x(2), x_ref(0), x_ref(1), x_ref(2));
-        }
-        for (int i=0; i < st_params.q_size; i++)               //log q
-            log_file << fmt::format(", {}", state.q(i));
-        log_file << "\n";
+    if (logging){  
+        log((cc->get_timestamp() - initial_timestamp)/10e5);                     //log once per control timestep
     }
 }
 
@@ -124,30 +117,6 @@ void ControllerPCC::set_frequency(const double hz){
 
 void ControllerPCC::newChamberConfig(Vector3d &angles) {
     stm->newChamberConfig(angles);
-}
-
-void ControllerPCC::toggle_log(){
-    if(!logging) {
-        logging = true;
-        if (sensor_type != CurvatureCalculator::SensorType::simulator) {initial_timestamp = cc->get_timestamp();}
-        else {initial_timestamp = 0;}
-        this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
-        fmt::print("Starting log to {}\n", this->filename);
-        log_file.open(this->filename, std::fstream::out);
-        log_file << "timestamp";
-
-        //write header
-        log_file << fmt::format(", x, y, z, x_ref, y_ref, z_ref");
-
-        for (int i=0; i < st_params.q_size; i++)
-            log_file << fmt::format(", q_{}", i);
-
-        log_file << "\n";
-    } else {
-        logging = false;
-        fmt::print("Ending log to {}\n", this->filename);
-        log_file.close();
-    }
 }
 
 void ControllerPCC::set_log_filename(const std::string s){
@@ -173,17 +142,48 @@ bool ControllerPCC::simulate(const VectorXd &p){
 
 
     if (logging){                                               //log once per control timestep
-        log_file << t;
-        for (int i=0; i < st_params.num_segments; i++){        //log tip pos
-            VectorXd x_tip = stm->get_H(i).translation();
-            log_file << fmt::format(", {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2));
-        }
-        for (int i=0; i < st_params.q_size; i++)               //log q
-            log_file << fmt::format(", {}", state.q(i));
-        log_file << "\n";
-        
+        log(t);
     }
     t+=dt;
 
     return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
+}
+
+void ControllerPCC::toggle_log(){
+    if(!logging) {
+        logging = true;
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {initial_timestamp = cc->get_timestamp();}
+        else {initial_timestamp = 0;}
+        this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
+        fmt::print("Starting log to {}\n", this->filename);
+        log_file.open(this->filename, std::fstream::out);
+        log_file << "timestamp";
+
+        //write header
+        log_file << fmt::format(", x, y, z, x_ref, y_ref, z_ref, err");
+
+        for (int i=0; i < st_params.q_size; i++)
+            log_file << fmt::format(", q_{}", i);
+        for (int i=0; i < st_params.num_segments*3; i++)
+            log_file << fmt::format(", p_{}", i);
+
+        log_file << "\n";
+    } else {
+        logging = false;
+        fmt::print("Ending log to {}\n", this->filename);
+        log_file.close();
+    }
+}
+
+void ControllerPCC::log(double time){
+    log_file << time;
+    for (int i=0; i < st_params.num_segments; i++){        //log tip pos
+        VectorXd x_tip = stm->get_H(i).translation();
+        log_file << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2), (x - x_ref).norm());
+    }
+    for (int i=0; i < st_params.q_size; i++)               //log q
+        log_file << fmt::format(", {}", state.q(i));
+    for (int i=0; i < st_params.num_segments*3; i++)
+        log_file << fmt::format(", {}", p(i));
+    log_file << "\n";
 }
