@@ -13,8 +13,8 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 70;
-    kd = 5.3;
+    kp = 40;
+    kd = 5.5;
     ki = 0.;
     ki_gain = 1;
 

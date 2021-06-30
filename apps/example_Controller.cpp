@@ -98,7 +98,7 @@ int main(){
     double coef = 2 * 3.1415 / 32;
     osc.gripperAttached = true;
     osc.set_ref(x_ref, dx_ref, ddx_ref);
-    srl::sleep(5);
+    srl::sleep(2);
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     // arguments to pass by reference must be explicitly designated as so
@@ -115,7 +115,6 @@ int main(){
         x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
-        //dx_ref = amplitude * coef * circle;*/
         //x_ref = osc.get_objects()[0];
         osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
