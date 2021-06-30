@@ -51,7 +51,7 @@ void CurvatureCalculator::calculator_loop() {
     }
 
     srl::State state_prev;
-    double interval = 0.01;
+    double interval = 0.001;
     srl::Rate rate{1. / interval};
     run = true;
     unsigned long long int last_timestamp;
@@ -114,7 +114,7 @@ double sign(double val) {
 }
 
 void CurvatureCalculator::get_curvature(srl::State &state) {
-    std::lock_guard<std::mutex> lock(mtx);
+    //std::lock_guard<std::mutex> lock(mtx);
     state = this->state;
 }
 
