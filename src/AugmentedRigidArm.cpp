@@ -154,10 +154,11 @@ void AugmentedRigidArm::update_drake_model()
     context_autodiff->SetTimeStateAndParametersFrom(*diagram_context);
     
     drake::AutoDiffVecXd c_auto_diff_ = drake::AutoDiffVecXd::Zero(7*st_params.num_segments*(st_params.sections_per_segment+1));
+    auto v = drake::math::initializeAutoDiff(VectorXd::Zero(7*st_params.num_segments*(st_params.sections_per_segment+1)));
+    plant_autodiff->SetVelocities(context_autodiff.get(), v);
     plant_autodiff->CalcBiasTerm(*context_autodiff, &c_auto_diff_);
     MatrixXd jac = drake::math::autoDiffToGradientMatrix(c_auto_diff_);
-    fmt::print("J: {}\n\n\n\n\n\n", jac);
-    S_xi_ = 0.5*jac.rightCols(jac.size());
+    S_xi_ = 0.5*jac.rightCols(7*st_params.num_segments*(st_params.sections_per_segment+1));
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
@@ -415,8 +416,10 @@ void AugmentedRigidArm::update(const srl::State &state)
     update_drake_model();
     // map to q space
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
+    S = map_normal2expanded.transpose() * (Jm_.transpose() * S_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
+
     for (int i = 0; i < st_params.num_segments; i++)
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
     //    update_dJm(state.q,state.dq);

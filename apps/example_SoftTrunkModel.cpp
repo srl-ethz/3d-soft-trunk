@@ -23,12 +23,11 @@ int main(){
     state.q(0) = 0.2;
     stm.updateState(state);
     // print parameters of model
-    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params.num_segments-1]);
+    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n S:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params.num_segments-1], stm.S);
 
     // example of converting between pseudopressure to real pressure
     VectorXd v = VectorXd::Zero(2*st_params.num_segments);
     v(0) = 200;
-    fmt::print("{}\n\n\n", stm.pseudo2real(v).transpose());
 
     return 1;
 }
