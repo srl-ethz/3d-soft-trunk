@@ -109,7 +109,7 @@ int main(){
     osc.toggle_log();
     while (t<32){
         double r = 0.15;
-        circle << r*cos(coef*t), r*sin(coef*t), 0.2;
+        circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
         x_ref = circle;
