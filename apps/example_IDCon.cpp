@@ -72,7 +72,7 @@ int main(){
     double dt = 0.1;
     x_ref << 0.15,0,-0.2;
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 32;
+    double coef = 2 * 3.1415 / 8;
     bool freedom = false;
     id.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(3);

@@ -95,7 +95,7 @@ int main(){
     Vector3d dd_circle;
 
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 32;
+    double coef = 2 * 3.1415 / 8;
     osc.gripperAttached = true;
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(2);

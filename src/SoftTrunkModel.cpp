@@ -79,10 +79,6 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
         
-        /*if (0 < angle && angle <= 180) angle += 0.00000000003444*pow(angle,6) - 0.00000001692522*pow(angle,5) + 0.00000287210313*pow(angle,4) - 0.00019231576235*pow(angle,3) + 0.00566838599605*pow(angle,2) - 0.25525348085193*angle + 11.36922207042150;
-
-        else if (180 < angle && angle < 350) angle += -0.00000000003412*pow(angle-180,6) + 0.00000002301207*pow(angle-180,5) - 0.00000565869111*pow(angle-180,4) + 0.00061822853405*pow(angle-180,3) - 0.02951718943376*pow(angle-180,2) + 0.56885711783252*(angle-180) + 13.65997592618080;
-        else if (-10 < angle && angle <= 0) angle += -0.00000000003412*pow(angle+180,6) + 0.00000002301207*pow(angle+180,5) - 0.00000565869111*pow(angle+180,4) + 0.00061822853405*pow(angle+180,3) - 0.02951718943376*pow(angle+180,2) + 0.56885711783252*(angle+180) + 13.65997592618080;*/
         if (-10 < angle && angle <= 115) angle += 0.00002304*pow(angle,3) - 0.00291402*pow(angle,2) + 0.02071285*angle + 6.89857450;
 
 

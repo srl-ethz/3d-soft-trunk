@@ -4,7 +4,7 @@ IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorTyp
     filename = "ID_logger";
 
     J_prev = MatrixXd::Zero(3, st_params.q_size);
-    kp = 35;
+    kp = 70;
     kd = 5.5;
     dt = 1./50;
     control_thread = std::thread(&IDCon::control_loop, this);

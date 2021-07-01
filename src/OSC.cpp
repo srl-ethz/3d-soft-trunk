@@ -15,8 +15,7 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     //set the gains
     kp = 70;
     kd = 5.5;
-    ki = 0.;
-    ki_gain = 1;
+
 
     //OSC needs a higher refresh rate than other controllers
     dt = 1./50;

@@ -109,7 +109,7 @@ double sign(double val) {
 }
 
 void CurvatureCalculator::get_curvature(srl::State &state) {
-    std::lock_guard<std::mutex> lock(mtx);
+    //std::lock_guard<std::mutex> lock(mtx);
     state = this->state;
 }
 
@@ -119,7 +119,7 @@ unsigned long long int CurvatureCalculator::get_timestamp(){
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> CurvatureCalculator::get_frame(int id){
-    std::lock_guard<std::mutex> lock(mtx);
+    //std::lock_guard<std::mutex> lock(mtx);
     assert(0 <= id && id < abs_transforms.size());
     assert(sensor_type == SensorType::qualisys);
     return abs_transforms[id];
