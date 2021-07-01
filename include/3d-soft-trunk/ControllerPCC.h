@@ -72,6 +72,7 @@ public:
     void toggleGripper();
     /** @brief gripper attached */
     bool gripperAttached = false;
+    double loadAttached = 0.;
 
 protected:
 

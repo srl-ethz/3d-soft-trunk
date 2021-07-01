@@ -76,7 +76,8 @@ void OSC::control_loop() {
         f = B_op*ddx_des;
         
         f_null = B_op_null*ddx_null;
-        if (gripperAttached) f(2) += 0.16; //the gripper weighs 24 grams -> 0.24 Newto
+        
+        f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
         tau_null = J_mid.transpose()*f_null;
         
