@@ -60,9 +60,11 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 osc.toggle_log();
                 srl::sleep(1);
                 osc.toggleGripper();
-                osc.loadAttached = 1; //100grams
+                osc.loadAttached = 0; //100grams
                 srl::sleep(4);
                 osc.toggle_log();
+                osc.toggleGripper();
+                osc.loadAttached = 0;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
         fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
@@ -92,7 +94,7 @@ int main(){
     VectorXd p;
     srl::State state = st_params.getBlankState();
     
-    x_ref << 0.15,0,-0.2;
+    x_ref << 0.,0.15,-0.2;
     osc.gripperAttached = true;
     
     getchar();
