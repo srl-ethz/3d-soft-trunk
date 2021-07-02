@@ -47,9 +47,12 @@ void OSC::control_loop() {
         x_mid = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-2).translation();
 
         dx = J*state.dq;
-
-
+        
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
+
+        double distance = (x - x_ref).norm();
+        if (distance > 0.15) ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.15 + kd*(dx_ref - dx);
+
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
@@ -75,7 +78,8 @@ void OSC::control_loop() {
         f = B_op*ddx_des;
         
         f_null = B_op_null*ddx_null;
-        if (gripperAttached) f(2) += 0.16; //the gripper weighs 24 grams -> 0.24 Newto
+
+        f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
         tau_null = J_mid.transpose()*f_null;
         
