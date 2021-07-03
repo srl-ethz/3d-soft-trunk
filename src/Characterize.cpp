@@ -40,7 +40,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
 
         fmt::print("angle: {}, angle_measured: {} pressure: {}\n", i, angle, (stm->pseudo2real(pressures)+stiffpressure).transpose());
 
-        log_file << fmt::format("{},{}", i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        log_file << fmt::format("{},{},{}", i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
 
 
         log_file << "\n";
