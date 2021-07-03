@@ -107,7 +107,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(osc));
     
     osc.toggle_log();
-    while (t<32){
+    while (t<10){
         double r = 0.15;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
@@ -128,7 +128,7 @@ int main(){
     }
     osc.toggle_log();
     srl::sleep(2);
-    
+    /*
     x_ref << 0.15,0,-0.2;
     osc.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(4);
@@ -139,6 +139,6 @@ int main(){
     osc.toggleGripper();
     dx_ref << 0, 0, 0;
     osc.set_ref(x_ref,dx_ref,ddx_ref);
-    
+    */
     return 1;
 }

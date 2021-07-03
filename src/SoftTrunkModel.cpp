@@ -102,7 +102,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
         if(-10 < angle && angle <= 124) output.segment(3*i,3) *= 0.14/(-0.00000006583626*pow(angle,3) + 0.00000874836118*pow(angle,2) + 0.00010997931452*angle + 0.12264170021766);
-        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.15/( -0.000010250406*pow(angle,2) + 0.003622464079*angle - 0.144449531551);
+        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.14/( -0.000010250406*pow(angle,2) + 0.003622464079*angle - 0.144449531551);
         else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(-0.00000000107448087454*pow(angle,4) + 0.00000128667017990424*pow(angle,3) - 0.00057394958472449700*pow(angle,2) + 0.11280669747965400000*angle - 8.08770166486212000000); //yikes
         
     }
