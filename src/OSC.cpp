@@ -13,7 +13,7 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 35;
+    kp = 60;
     kd = 5.5;
 
 
@@ -51,7 +51,7 @@ void OSC::control_loop() {
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
         double distance = (x - x_ref).norm();
-        if (distance > 0.15) ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.15 + kd*(dx_ref - dx);
+        //if (distance > 0.15) ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.15 + kd*(dx_ref - dx);
 
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
@@ -89,7 +89,7 @@ void OSC::control_loop() {
 
         tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params.q_size, st_params.q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + stm->pseudo2real(gravity_compensate(state));
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state));
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {

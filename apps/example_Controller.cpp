@@ -50,7 +50,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'r':
                 osc.toggle_log();
-                srl::sleep(5);
+                srl::sleep(8);
                 osc.toggle_log();
                 break;
         }
@@ -106,8 +106,8 @@ int main(){
     // std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
-    osc.toggle_log();
-    while (t<10){
+    //osc.toggle_log();
+    while (true){
         double r = 0.15;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
@@ -126,7 +126,7 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    osc.toggle_log();
+    //osc.toggle_log();
     srl::sleep(2);
     /*
     x_ref << 0.15,0,-0.2;
