@@ -84,7 +84,7 @@ void dampedPseudoInverse(const Eigen::MatrixBase<Derived1>& A, double e, double 
 }
 
 //return pesudo inverse computed in dampedPseudoInverse function 
-Eigen::MatrixXd computePinv(Eigen::MatrixXd j,double e,double lambda)
+Eigen::MatrixXd IDCon::computePinv(Eigen::MatrixXd j,double e,double lambda)
 {
 
 	Eigen::MatrixXd pJacobian(j.cols(), j.rows());
