@@ -1,7 +1,12 @@
 #pragma once
 
 #include "ControllerPCC.h"
-
+#include <Eigen/Core>
+#include <Eigen/QR>
+#include <Eigen/LU>
+#include <Eigen/Dense>
+#include <Eigen/SVD>
+#include <iostream>
 class IDCon: public ControllerPCC {
 public:
     IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
@@ -25,5 +30,5 @@ private:
     Vector3d ddx_ref;
     Vector3d ddx_d;
     VectorXd tau_ref;
-
+    Eigen::MatrixXd computePinv(Eigen::MatrixXd j, double e, double lambda);
 };
