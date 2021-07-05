@@ -22,8 +22,8 @@ public:
 
     /** @brief set the reference pose (trajectory) of the arm
      */
-    void set_ref(const srl::State &pose_ref);
-    void set_ref(const Vector3d x_r, const Vector3d &dx_ref, const Vector3d &ddx_ref);
+    void set_ref(const srl::State &state_ref);
+    void set_ref(const Vector3d x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
 
     /** @brief get current kinematic state of the arm */
     void get_state(srl::State &state);
@@ -70,8 +70,9 @@ public:
 
     /** @brief toggles gripper */
     void toggleGripper();
-
+    /** @brief gripper attached */
     bool gripperAttached = false;
+    double loadAttached = 0.;
 
 protected:
 
@@ -148,14 +149,13 @@ protected:
     unsigned long long int initial_timestamp;
     std::fstream log_file;
     std::string filename;
+    void log(double t);
 
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
     int objects;
     CurvatureCalculator::SensorType sensor_type;
 
-    //simulation variables
-    bool simulation;
 
 private:
     /** @brief forward simulate using beeman method

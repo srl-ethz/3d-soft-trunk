@@ -12,15 +12,13 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     fmt::print("Starting radial log to {}\n", filename);
     log_file.open(filename, std::fstream::out);
     log_file << "angle";
-    VectorXd stiffpressure = VectorXd::Zero(3*st_params.num_segments);
-    stiffpressure.segment((st_params.num_segments -1 - segment)*3,3) = 0*Vector3d::Ones();
     //write header
     log_file << fmt::format(", angle_measured, r");
     log_file << "\n"; 
     
     pressures(2*segment) = 500;
 
-    actuate(stm->pseudo2real(pressures)+stiffpressure);
+    actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
     srl::Rate r{1};
 
@@ -28,7 +26,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         pressures(2*segment) = 500*cos(i*deg2rad);
         pressures(2*segment+1) = -500*sin(i*deg2rad);
 
-        actuate(stm->pseudo2real(pressures) + stiffpressure);
+        actuate(stm->pseudo2real(pressures));
         
 
         cc->get_curvature(state);
@@ -38,9 +36,9 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         double angle = atan2(x(1),x(0))*180/3.14156;
         if (angle < 0) angle+=360;
 
-        fmt::print("angle: {}, angle_measured: {} pressure: {}\n", i, angle, (stm->pseudo2real(pressures)+stiffpressure).transpose());
+        fmt::print("angle: {}, angle_measured: {} radius: {}\n", i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
 
-        log_file << fmt::format("{},{}", i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        log_file << fmt::format("{},{},{}", i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
 
 
         log_file << "\n";

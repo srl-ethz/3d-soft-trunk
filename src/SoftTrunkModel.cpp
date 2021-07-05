@@ -80,10 +80,6 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
         
-        /*if (0 < angle && angle <= 180) angle += 0.00000000003444*pow(angle,6) - 0.00000001692522*pow(angle,5) + 0.00000287210313*pow(angle,4) - 0.00019231576235*pow(angle,3) + 0.00566838599605*pow(angle,2) - 0.25525348085193*angle + 11.36922207042150;
-
-        else if (180 < angle && angle < 350) angle += -0.00000000003412*pow(angle-180,6) + 0.00000002301207*pow(angle-180,5) - 0.00000565869111*pow(angle-180,4) + 0.00061822853405*pow(angle-180,3) - 0.02951718943376*pow(angle-180,2) + 0.56885711783252*(angle-180) + 13.65997592618080;
-        else if (-10 < angle && angle <= 0) angle += -0.00000000003412*pow(angle+180,6) + 0.00000002301207*pow(angle+180,5) - 0.00000565869111*pow(angle+180,4) + 0.00061822853405*pow(angle+180,3) - 0.02951718943376*pow(angle+180,2) + 0.56885711783252*(angle+180) + 13.65997592618080;*/
         if (-10 < angle && angle <= 115) angle += 0.00002304*pow(angle,3) - 0.00291402*pow(angle,2) + 0.02071285*angle + 6.89857450;
 
 
@@ -91,8 +87,8 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         else if (232 < angle && angle <= 350) angle += 0.0000004750724134*pow(angle-232,4) - 0.0000827074734174*pow(angle-232,3) + 0.0010236674201867*pow(angle-232,2) + 0.2440728943129220*(angle-232) + 8.4957818912748700;
         //excel is a motherfucker for making us do the -232
-        angle -= 7;
-
+        angle += 0;
+        
 
 
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
@@ -104,11 +100,12 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (min_p < 0)
             output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
 
-
+        if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
-        if(-10 < angle && angle <= 124) output.segment(3*i,3) *= 0.14/(-0.00000006583626*pow(angle,3) + 0.00000874836118*pow(angle,2) + 0.00010997931452*angle + 0.12264170021766);
-        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.15/( -0.000010250406*pow(angle,2) + 0.003622464079*angle - 0.144449531551);
-        else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(-0.00000000107448087454*pow(angle,4) + 0.00000128667017990424*pow(angle,3) - 0.00057394958472449700*pow(angle,2) + 0.11280669747965400000*angle - 8.08770166486212000000); //yikes
+        
+        if (0 < angle && angle <= 118) output.segment(3*i,3) *= 0.14/(-0.000000025203*pow(angle,3) - 0.000002486432*pow(angle,2) + 0.000815206675*angle + 0.121425554913);
+        else if (118 < angle && angle <= 234) output.segment(3*i,3) *= 0.14/(0.000000051954*pow(angle-118,3) - 0.000018062140*pow(angle-118,2) + 0.00121219241*(angle-118) + 0.139055098090);
+        else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(0.000000002796*pow(angle-234,3) - 0.000000112723*pow(angle-234,2) + 0.000000301831*(angle-234) + 0.123154364516); //yikes
         
     }
     return output;

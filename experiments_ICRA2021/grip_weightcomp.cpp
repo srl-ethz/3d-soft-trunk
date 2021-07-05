@@ -1,5 +1,5 @@
-
 #include "3d-soft-trunk/OSC.h"
+
 
 bool freedom = false;
 Vector3d x_ref;
@@ -41,6 +41,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 osc.set_ref(x_ref, dx_ref, ddx_ref);
                 break;
             case 't':
+                assert(osc.gripperAttached);
                 osc.toggleGripper();
                 freedom = true;
                 break;
@@ -50,9 +51,20 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'r':
                 osc.toggle_log();
-                srl::sleep(8);
+                srl::sleep(5);
                 osc.toggle_log();
                 break;
+            case 'f':
+                osc.set_log_filename("grip_diagram");
+                osc.loadAttached = 0;
+                osc.toggle_log();
+                srl::sleep(1);
+                osc.toggleGripper();
+                osc.loadAttached = 0; //100grams
+                srl::sleep(4);
+                osc.toggle_log();
+                osc.toggleGripper();
+                osc.loadAttached = 0;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
         fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
@@ -81,64 +93,19 @@ int main(){
     OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 1);
     VectorXd p;
     srl::State state = st_params.getBlankState();
-
-    Vector3d x_ref_center;
     
-    x_ref_center << 0.15,0,-0.2;
-    x_ref = x_ref_center;
-    
-    
-    double t = 0;
-    double dt = 0.1;
-    Vector3d circle;
-    Vector3d d_circle;
-    Vector3d dd_circle;
-
-    double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 8;
+    x_ref << 0.,0.15,-0.2;
     osc.gripperAttached = true;
-    osc.set_ref(x_ref, dx_ref, ddx_ref);
-    srl::sleep(2);
+    
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
-    // arguments to pass by reference must be explicitly designated as so
-    // https://en.cppreference.com/w/cpp/thread/thread/thread
-    // std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
-    //osc.toggle_log();
     while (true){
-        double r = 0.15;
-        circle << r*cos(coef*t), r*sin(coef*t), -0.2;
-        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
-        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
-        //x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref, ddx_ref);
-        /*osc.get_x(x);
-        if ((x_ref - x).norm() < 0.07){
-            freedom = true;
-            osc.toggleGripper();
-        }*/
-        
-        t+=dt;
-        srl::sleep(dt);
+    
     }
-    //osc.toggle_log();
-    srl::sleep(2);
-    /*
-    x_ref << 0.15,0,-0.2;
-    osc.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(4);
-    x_ref << -0.15,0,-0.2;
-    dx_ref << -10, 0, 0;
-    osc.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(0.3);
-    osc.toggleGripper();
-    dx_ref << 0, 0, 0;
-    osc.set_ref(x_ref,dx_ref,ddx_ref);
-    */
+
+
+    
     return 1;
 }

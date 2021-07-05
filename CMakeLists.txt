@@ -115,3 +115,4 @@ endif(${roscpp_FOUND})
 
 add_subdirectory(apps)
 add_subdirectory(experiments_IROS2021)
+add_subdirectory(experiments_ICRA2021)

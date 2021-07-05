@@ -70,19 +70,19 @@ int main(){
     IDCon id(st_params, CurvatureCalculator::SensorType::qualisys, 1);
     double t = 0;
     double dt = 0.1;
-    x_ref << 0,0.15,-0.2;
+    x_ref << 0.15,0,-0.2;
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 32;
+    double coef = 2 * 3.1415 / 8;
     bool freedom = false;
     id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(4);
+    srl::sleep(3);
     getchar();
 
     std::thread print_thread(printer, std::ref(id));
     std::thread gain_thread(gain, std::ref(id));
 
     id.toggle_log();
-    while (t<100){
+    while (t<32){
         
         double r = 0.15;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;

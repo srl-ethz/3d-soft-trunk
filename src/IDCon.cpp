@@ -4,7 +4,7 @@ IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorTyp
     filename = "ID_logger";
 
     J_prev = MatrixXd::Zero(3, st_params.q_size);
-    kp = 35;
+    kp = 70;
     kd = 5.5;
     dt = 1./50;
     control_thread = std::thread(&IDCon::control_loop, this);
@@ -18,7 +18,7 @@ void IDCon::control_loop(){
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        if (!simulation) cc->get_curvature(state);
+        if (!(sensor_type == CurvatureCalculator::SensorType::simulator)) cc->get_curvature(state);
         stm->updateState(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
@@ -41,7 +41,7 @@ void IDCon::control_loop(){
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
 
-        if (!simulation) {actuate(p);}
+        if (!(sensor_type == CurvatureCalculator::SensorType::simulator)) {actuate(p);}
         else {
             assert(simulate(p));
         }

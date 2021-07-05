@@ -7,15 +7,25 @@ public:
     PotentialField();
     PotentialField(Vector3d &pos, double strength);
 
+    /** @brief get acceleration caused by potential field on an object at position pos 
+    * @param pos cartesian position of object being influenced by field
+    */
     Vector3d get_ddx(Vector3d &pos);
 
+    /** @brief get position of potential field's center */
     Vector3d get_pos();
+    /** @brief get potential field gain */
     double get_strength();
+    /** @brief get radius at which potential field stops influencing objects */
     double get_cutoff();
 
+    /** @brief set position of potential field center */
     void set_pos(Vector3d &pos);
+    /** @brief set potential field gain */
     void set_strength(double s);
+    /** @brief set radius at which potential field stops influencing objects */
     void set_cutoff(double c);
+    /** @brief set radius from center at which potential field begins */
     void set_radius(double r);
 
 private:
@@ -31,14 +41,17 @@ public:
 
     OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
 
+    /* @brief vector containing all potential fields */
     std::vector<PotentialField> potfields;
 
-    /** @brief methods for getting OSC gain */
+    /** @brief get kp gain */    
     double get_kp();
+    /** @brief get kd gain */
     double get_kd();
 
-    /** @brief methods for setting OCS gain */
+    /** @brief set kp gain */
     void set_kp(double kp);
+    /** @brief set kd gain */
     void set_kd(double kd);
 
     
@@ -80,7 +93,7 @@ private:
     /** @brief nullspace torques */
     VectorXd tau_null;
     /** @brief reference acceleration in cartesian coordinates */
-    Vector3d ddx_ref;
+    Vector3d ddx_des;
 
     /** @brief ddx for null space control */
     VectorXd ddx_null;
