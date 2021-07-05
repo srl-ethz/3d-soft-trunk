@@ -1,3 +1,6 @@
+// Inverse Dynamics approach With Singularity Avoidance 
+// Amirhossein Kazemipour
+
 #include "3d-soft-trunk/IDCon.h"
 
 IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){

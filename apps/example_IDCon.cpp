@@ -72,7 +72,7 @@ int main(){
     double dt = 0.1;
     x_ref << 0.15,0,-0.2;
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 8;
+    double coef = 2 * 3.1415 / 16;
     bool freedom = false;
     id.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(3);
@@ -88,9 +88,10 @@ int main(){
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
+        //x_ref = circle;
+        //dx_ref = d_circle;
+        //ddx_ref = dd_circle;
+        x_ref = id.get_objects()[0];
         id.set_ref(x_ref,dx_ref,ddx_ref);
         
         
