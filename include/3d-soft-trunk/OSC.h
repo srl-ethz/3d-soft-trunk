@@ -99,5 +99,7 @@ private:
     VectorXd ddx_null;
     MatrixXd B_op_null;
     VectorXd f_null;
+
+    MatrixXd computePinv(MatrixXd j,double e,double lambda);
     
 };
