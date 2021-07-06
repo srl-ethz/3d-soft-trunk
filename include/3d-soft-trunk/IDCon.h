@@ -30,5 +30,7 @@ private:
     Vector3d ddx_ref;
     Vector3d ddx_d;
     VectorXd tau_ref;
+    double eps;
+    double lambda;
     Eigen::MatrixXd computePinv(Eigen::MatrixXd j, double e, double lambda);
 };

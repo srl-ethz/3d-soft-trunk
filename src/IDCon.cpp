@@ -10,8 +10,8 @@ IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorTyp
     kd = 5.5;
     dt = 1./50;
     control_thread = std::thread(&IDCon::control_loop, this);
-    double eps = 1e-1;
-	double lambda = 0.5e-1;
+    eps = 1e-1;
+	lambda = 0.5e-1;
 }
 //
 //
@@ -39,7 +39,7 @@ void IDCon::control_loop(){
         dx = J*state.dq;
         ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
         //J_inv = J.transpose()*(J*J.transpose()).inverse();
-        J_inv = computePinv(J, 1e-1, 0.5e-1);
+        J_inv = computePinv(J, eps, lambda);
         state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
 
         tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state.q + stm->D*state.dq;
