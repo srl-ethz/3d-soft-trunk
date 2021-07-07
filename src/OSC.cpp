@@ -85,7 +85,7 @@ void OSC::control_loop() {
 
         f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
-        tau_null = -kd * state.dq;//J_mid.transpose()*f_null;
+        tau_null = -kd *0.000 * state.dq;//J_mid.transpose()*f_null;
         
         for(int i = 0; i < st_params.q_size; i++){     //for some reason tau is sometimes nan, catch that
             if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params.num_segments);
