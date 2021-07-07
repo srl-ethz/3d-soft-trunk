@@ -72,7 +72,6 @@ void AugmentedRigidArm::setup_drake_model()
     dxi_ = VectorXd::Zero(num_joints);
     B_xi_ = MatrixXd::Zero(num_joints, num_joints);
     c_xi_ = VectorXd::Zero(num_joints);
-    S_xi_ = MatrixXd::Zero(num_joints, num_joints);
     g_xi_ = VectorXd::Zero(num_joints);
     Jm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1));
     dJm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1));
@@ -148,17 +147,7 @@ void AugmentedRigidArm::update_drake_model()
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
-    
-    auto plant_autodiff = drake::systems::System<double>::ToAutoDiffXd(*multibody_plant);
-    auto context_autodiff = plant_autodiff->CreateDefaultContext();
-    context_autodiff->SetTimeStateAndParametersFrom(*diagram_context);
-    
-    drake::AutoDiffVecXd c_auto_diff_ = drake::AutoDiffVecXd::Zero(7*st_params.num_segments*(st_params.sections_per_segment+1));
-    auto v = drake::math::initializeAutoDiff(VectorXd::Zero(7*st_params.num_segments*(st_params.sections_per_segment+1)));
-    plant_autodiff->SetVelocities(context_autodiff.get(), v);
-    plant_autodiff->CalcBiasTerm(*context_autodiff, &c_auto_diff_);
-    MatrixXd jac = drake::math::autoDiffToGradientMatrix(c_auto_diff_);
-    S_xi_ = 0.5*jac.rightCols(7*st_params.num_segments*(st_params.sections_per_segment+1));
+
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
@@ -416,7 +405,6 @@ void AugmentedRigidArm::update(const srl::State &state)
     update_drake_model();
     // map to q space
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
-    S = map_normal2expanded.transpose() * (Jm_.transpose() * S_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
 
