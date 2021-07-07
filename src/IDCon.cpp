@@ -67,7 +67,9 @@ void IDCon::set_kp(double kp){
     this->kp = kp;
 }
 
-//compute damped pesudo inverse
+//compute damped pesudo inverse with a variable damping
+//Deo, A. S., & Walker, I. D. (1995). Overview of damped least-squares methods for inverse kinematics of robot manipulators. Journal of Intelligent and Robotic Systems, 14(1), 43-68.
+//Flacco, Fabrizio, and Alessandro De Luca. "A reverse priority approach to multi-task control of redundant robots." 2014 IEEE/RSJ International Conference on Intelligent Robots and Systems. IEEE, 2014.
 template <typename Derived1, typename Derived2>
 void dampedPseudoInverse(const Eigen::MatrixBase<Derived1>& A, double e, double dampingFactor, Eigen::MatrixBase<Derived2>& Apinv, unsigned int computationOptions)
 {
