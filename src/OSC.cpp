@@ -5,9 +5,9 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
-        potfields[i].set_cutoff(0.1);
-        potfields[i].set_strength(0.005);
-        potfields[i].set_radius(0.001);
+        potfields[i].set_cutoff(0.15);
+        potfields[i].set_strength(0.02);
+        potfields[i].set_radius(0.03);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
@@ -52,6 +52,10 @@ void OSC::control_loop() {
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
+        if ((x_ref - x).norm() > 0.06) {                                   //deal with super high distances
+            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.06 + kd*(dx_ref - dx);  
+        }
+
         double distance = (x - x_ref).norm();
         //if (distance > 0.15) ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.15 + kd*(dx_ref - dx);
 
@@ -59,7 +63,7 @@ void OSC::control_loop() {
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             potfields[i].set_pos(get_objects()[i]);
-            //ddx_des += potfields[i].get_ddx(x);
+            ddx_des += potfields[i].get_ddx(x);
             //ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }
 

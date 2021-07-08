@@ -46,6 +46,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'v':
                 x_ref(1) *= -1;
+                x_ref(0) *= -1;
                 osc.set_ref(x_ref,dx_ref, ddx_ref);
                 break;
             case 'r':
@@ -84,7 +85,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.15,0,-0.2;
+    x_ref_center << 0.15*cos(-90*0.01745329),0.15*sin(-90*0.01745329),-0.2;
     x_ref = x_ref_center;
     
     
@@ -106,17 +107,17 @@ int main(){
     // std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
-    osc.toggle_log();
-    while (t<10){
+    //osc.toggle_log();
+    while (true){
         double r = 0.15;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
+        /*x_ref = circle;
         dx_ref = d_circle;
-        ddx_ref = dd_circle;
+        ddx_ref = dd_circle;*/
         //x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref, ddx_ref);
+        //osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
