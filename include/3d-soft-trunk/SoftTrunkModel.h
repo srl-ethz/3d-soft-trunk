@@ -96,5 +96,6 @@ private:
 
     /** @brief mapping between 2D pseudopressures and 3 chambers */
     MatrixXd chamberMatrix = MatrixXd::Zero(2, 3); // describes the direction of each chamber
-
+    MatrixXd rc = MatrixXd::Zero(30,5);
+    VectorXd rca = VectorXd::Zero(30);
 };
