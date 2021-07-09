@@ -18,7 +18,8 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     
     pressures(2*segment) = 500;
 
-    actuate(stm->pseudo2real(pressures));
+    if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
+        else actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
     srl::Rate r{1};
 
@@ -26,7 +27,8 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         pressures(2*segment) = 500*cos(i*deg2rad);
         pressures(2*segment+1) = -500*sin(i*deg2rad);
 
-        actuate(stm->pseudo2real(pressures));
+        if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
+        else actuate(stm->pseudo2real(pressures));
         
 
         cc->get_curvature(state);
@@ -60,7 +62,8 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
         for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
             pressures(2*segment) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
             pressures(2*segment+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
-            actuate(stm->pseudo2real(pressures));
+            if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
+                else actuate(stm->pseudo2real(pressures));
             fmt::print("angle = {}, intensity = {}\n", angle, 500/verticalsteps+500*j/verticalsteps);
 
             srl::sleep(10); //wait to let swinging subside
