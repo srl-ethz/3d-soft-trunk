@@ -66,7 +66,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
 -6.69531977686204e-08,5.5006004020621e-07,1.09319546880551e-05,0.000116472075001289,0.127905137225095,
 1.55766740541902e-07,-2.65476635965172e-06,-2.68475237459917e-05,0.000155483115963586,0.130434012999194,
 -3.41438729224297e-07,4.80126828762068e-06,1.16821858610512e-05,-0.000559851650379048,0.127094958397189;
-    rca << 0,11.9666666666667,23.9333333333333,35.9,47.8666666666667,59.8333333333333,71.8,83.7666666666667,95.7333333333333,107.7,119.666666666667,131.633333333333,143.6,155.566666666667,167.533333333333,179.5,191.466666666667,203.433333333333,215.4,227.366666666667,239.333333333333,251.3,263.266666666667,275.233333333333,287.2,299.166666666667,311.133333333333,323.1,335.066666666667,347.033333333333;
+    rca << 0,11.9666666666667,23.9333333333333,35.9,47.8666666666667,59.8333333333333,71.8,83.7666666666667,95.7333333333333,107.7,119.666666666667,131.633333333333,143.6,155.566666666667,167.533333333333,179.5,191.466666666667,203.433333333333,215.4,227.366666666667,239.333333333333,251.3,263.266666666667,275.233333333333,287.2,299.166666666667,311.133333333333,323.1,335.066666666667,347.033333333333,361;
 }
 
 void SoftTrunkModel::updateState(const srl::State &state)
@@ -118,6 +118,8 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         else if (240 < angle && angle <= 360) angle += 0.000041666881*pow(angle-240,3) - 0.009056094721*pow(angle-240,2) + 0.437521763515*(angle-240) + 12.346903014262;
 
+        angle -= 6;
+
         //excel is a motherfucker for making us do the -232
         
 
@@ -133,28 +135,23 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
-        
+        /*
         if (0 < angle && angle <= 118) output.segment(3*i,3) *= 0.14/(-0.000000006902*pow(angle,3) - 0.000005643435*pow(angle,2) + 0.000830297530*angle + 0.119540588926);
         else if (118 < angle && angle <= 234) output.segment(3*i,3) *= 0.14/(0.000000060972*pow(angle-118,3) - 0.000017514232*pow(angle-118,2) + 0.001139288022*(angle-118) + 0.130108516811);
         else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(0.000000000000472113*pow(angle-234,6) - 0.000000000178955503*pow(angle-234,5) + 0.000000024484785244*pow(angle-234,4) - 0.000001441192959112*pow(angle-234,3) + 0.000031911305931942*pow(angle-234,2) - 0.000064605943293827*(angle-234) + 0.126783514275473000);
-        
+        */
         /*
-        for (int i = 0; i < 30; i++){
-<<<<<<< HEAD
-            if (angle >= rca(i) && angle <= rca(i+1)){
-                fmt::print("{}\n",rca(i));
-                output.segment(3*i,3) *= 0.14/(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*pow(angle-rca(i),1) + rc(i,4)*pow(angle-rca(i),0));
-                fmt::print("coef: {}",(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*pow(angle-rca(i),1) + rc(i,4)*pow(angle-rca(i),0)));
-=======
-            if (angle > rca(i)){
-<<<<<<< HEAD
-                output.segment(3*i,3) *= 0.14/(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*(angle-rca(i)) + rc(i,4));
-=======
-                output.segment(3*i,3) *= 0.14/(rc(0,i)*pow(angle,4) + rc(1,i)*pow(angle,3) + rc(2,i)*pow(angle,2) + rc(3,i)*pow(angle,1) + rc(4,i)*pow(angle,0));
->>>>>>> fbbcf0dbf753db646b80a1d23baf62d87178a961
->>>>>>> fce049e58b4ec588f446389cb788ce9187898806
-                break;
+        int h = 0;
+        bool go = true;
+        while(go){
+            fmt::print("angle : {}\n",angle);
+            if (angle >= rca(h) && angle < rca(h+1)){
+                fmt::print("break angle:{} at h={}\n",rca(h),h);
+                output.segment(3*i,3) *= 0.14/(rc(h,0)*pow(angle-rca(h),4) + rc(h,1)*pow(angle-rca(h),3) + rc(h,2)*pow(angle-rca(h),2) + rc(h,3)*pow(angle-rca(h),1) + rc(h,4)*pow(angle-rca(h),0));
+                fmt::print("coef: {}",(rc(h,0)*pow(angle-rca(h),4) + rc(h,1)*pow(angle-rca(h),3) + rc(h,2)*pow(angle-rca(h),2) + rc(h,3)*pow(angle-rca(h),1) + rc(h,4)*pow(angle-rca(h),0)));
+                go = false;
             }
+            h++;
         }*/
     }
     return output;
