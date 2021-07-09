@@ -85,7 +85,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.15*cos(-90*0.01745329),0.15*sin(-90*0.01745329),-0.2;
+    x_ref_center << 0.15*cos(30*0.01745329),0.15*sin(30*0.01745329),-0.2;
     x_ref = x_ref_center;
     
     
@@ -97,7 +97,7 @@ int main(){
 
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;
-    osc.gripperAttached = true;
+    osc.gripperAttached = false;
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(2);
     getchar();

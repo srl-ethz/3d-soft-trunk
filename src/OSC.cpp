@@ -5,15 +5,15 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
-        potfields[i].set_cutoff(0.15);
-        potfields[i].set_strength(0.02);
-        potfields[i].set_radius(0.03);
+        potfields[i].set_cutoff(0.2);
+        potfields[i].set_strength(0.015);
+        potfields[i].set_radius(0.05);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 60;
+    kp = 100;
     kd = 5.5;
 
 
@@ -52,8 +52,8 @@ void OSC::control_loop() {
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
-        if ((x_ref - x).norm() > 0.06) {                                   //deal with super high distances
-            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.06 + kd*(dx_ref - dx);  
+        if ((x_ref - x).norm() > 0.04) {                                   //deal with super high distances
+            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.04 + kd*(dx_ref - dx);  
         }
 
         double distance = (x - x_ref).norm();
@@ -89,7 +89,7 @@ void OSC::control_loop() {
 
         f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
-        tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
+        tau_null = -kd *0.000 * state.dq;//J_mid.transpose()*f_null;
         
         for(int i = 0; i < st_params.q_size; i++){     //for some reason tau is sometimes nan, catch that
             if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params.num_segments);

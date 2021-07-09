@@ -134,16 +134,17 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
         
-        /*if (0 < angle && angle <= 118) output.segment(3*i,3) *= 0.14/(-0.000000006902*pow(angle,3) - 0.000005643435*pow(angle,2) + 0.000830297530*angle + 0.119540588926);
+        if (0 < angle && angle <= 118) output.segment(3*i,3) *= 0.14/(-0.000000006902*pow(angle,3) - 0.000005643435*pow(angle,2) + 0.000830297530*angle + 0.119540588926);
         else if (118 < angle && angle <= 234) output.segment(3*i,3) *= 0.14/(0.000000060972*pow(angle-118,3) - 0.000017514232*pow(angle-118,2) + 0.001139288022*(angle-118) + 0.130108516811);
         else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(0.000000000000472113*pow(angle-234,6) - 0.000000000178955503*pow(angle-234,5) + 0.000000024484785244*pow(angle-234,4) - 0.000001441192959112*pow(angle-234,3) + 0.000031911305931942*pow(angle-234,2) - 0.000064605943293827*(angle-234) + 0.126783514275473000);
-        */
+        
+        /*
         for (int i = 0; i < 30; i++){
             if (angle > rca(i)){
-                output.segment(3*i,3) *= 0.14/(rc(0,i)*pow(angle,4) + rc(1,i)*pow(angle,3) + rc(2,i)*pow(angle,2) + rc(3,i)*pow(angle,1) + rc(4,i)*pow(angle,0));
+                output.segment(3*i,3) *= 0.14/(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*(angle-rca(i)) + rc(i,4));
                 break;
             }
-        }
+        }*/
     }
     return output;
 }
