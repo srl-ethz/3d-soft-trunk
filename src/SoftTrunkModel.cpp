@@ -140,8 +140,19 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         
         /*
         for (int i = 0; i < 30; i++){
+<<<<<<< HEAD
+            if (angle >= rca(i) && angle <= rca(i+1)){
+                fmt::print("{}\n",rca(i));
+                output.segment(3*i,3) *= 0.14/(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*pow(angle-rca(i),1) + rc(i,4)*pow(angle-rca(i),0));
+                fmt::print("coef: {}",(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*pow(angle-rca(i),1) + rc(i,4)*pow(angle-rca(i),0)));
+=======
             if (angle > rca(i)){
+<<<<<<< HEAD
                 output.segment(3*i,3) *= 0.14/(rc(i,0)*pow(angle-rca(i),4) + rc(i,1)*pow(angle-rca(i),3) + rc(i,2)*pow(angle-rca(i),2) + rc(i,3)*(angle-rca(i)) + rc(i,4));
+=======
+                output.segment(3*i,3) *= 0.14/(rc(0,i)*pow(angle,4) + rc(1,i)*pow(angle,3) + rc(2,i)*pow(angle,2) + rc(3,i)*pow(angle,1) + rc(4,i)*pow(angle,0));
+>>>>>>> fbbcf0dbf753db646b80a1d23baf62d87178a961
+>>>>>>> fce049e58b4ec588f446389cb788ce9187898806
                 break;
             }
         }*/
