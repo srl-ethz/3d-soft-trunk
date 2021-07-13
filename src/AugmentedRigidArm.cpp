@@ -147,6 +147,7 @@ void AugmentedRigidArm::update_drake_model()
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
+
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
@@ -406,6 +407,7 @@ void AugmentedRigidArm::update(const srl::State &state)
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
+
     for (int i = 0; i < st_params.num_segments; i++)
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
     //    update_dJm(state.q,state.dq);

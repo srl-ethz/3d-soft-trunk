@@ -1,5 +1,6 @@
 #pragma once
-
+#include <algorithm>
+#include <Eigen/Dense>
 #include <drake/common/drake_assert.h>
 #include <drake/common/find_resource.h>
 #include <drake/geometry/drake_visualizer.h>
@@ -9,9 +10,19 @@
 #include <drake/systems/analysis/simulator.h>
 #include <drake/systems/framework/diagram.h>
 #include <drake/systems/framework/diagram_builder.h>
-
+#include <drake/math/rigid_transform.h>
+#include <drake/math/autodiff_gradient.h>
+#include <drake/common/find_resource.h>
+#include <drake/math/gradient.h>
+#include <drake/common/autodiff.h>
+#include <drake/common/autodiffxd.h>
+#include <drake/common/autodiffxd_make_coherent.h>
+#include <drake/common/autodiff_overloads.h>
+#include <drake/math/autodiff.h>
 #include "mdefs.h"
 #include "SoftTrunk_common.h"
+
+#include <iostream>
 
 /**
  * @brief Represents the augmented rigid arm model.
@@ -70,6 +81,8 @@ private:
     VectorXd c_xi_;
     /** @brief gravity */
     MatrixXd g_xi_;
+    /** @brief coriolis factorization matrix */
+    MatrixXd S_xi_;
     /**
      * @brief matrix that maps from the [2 Nsegments] DoF parameters to [2 (Nsegment+1)] DoF parameters used internally.
      * e.g. q_ = map_normal2expanded * q
@@ -98,6 +111,8 @@ public:
     MatrixXd g;
     /** @brief Jacobian of tip position vs q */
     std::vector<Eigen::MatrixXd> J;
+    /* @brief Coriolis factorization matrix mapped to q */
+    MatrixXd S;
 
     /** @brief current joint angles of the augmented rigid arm
      * @todo this is exposed because I want it in solve_tip_force for visualization, figure out more elegant solution....

@@ -45,6 +45,7 @@ void SoftTrunkModel::updateState(const srl::State &state)
     c = ara->c;
     g = ara->g;
     J = ara->J;
+    S = ara->S;
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id){
@@ -79,19 +80,13 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
         
-        /*if (0 < angle && angle <= 180) angle += 0.00000000003444*pow(angle,6) - 0.00000001692522*pow(angle,5) + 0.00000287210313*pow(angle,4) - 0.00019231576235*pow(angle,3) + 0.00566838599605*pow(angle,2) - 0.25525348085193*angle + 11.36922207042150;
+        if (0 < angle && angle <= 120) angle += 0.000015675849*pow(angle,3) - 0.001883832719*pow(angle,2) + 0.066013713168*angle + 1.550690422149;
+        else if (120 < angle && angle < 240) angle += -0.000003158650*pow(angle-120,3) - 0.000350237253*pow(angle-120,2) + 0.095477824721*(angle-120) + 10.072740054068;
+        else if (240 < angle && angle <= 360) angle += 0.000045633589*pow(angle-240,3) - 0.009937615243*pow(angle-240,2) + 0.446800217681*(angle-240) + 12.438356128796;
+        angle += 1;
 
-        else if (180 < angle && angle < 350) angle += -0.00000000003412*pow(angle-180,6) + 0.00000002301207*pow(angle-180,5) - 0.00000565869111*pow(angle-180,4) + 0.00061822853405*pow(angle-180,3) - 0.02951718943376*pow(angle-180,2) + 0.56885711783252*(angle-180) + 13.65997592618080;
-        else if (-10 < angle && angle <= 0) angle += -0.00000000003412*pow(angle+180,6) + 0.00000002301207*pow(angle+180,5) - 0.00000565869111*pow(angle+180,4) + 0.00061822853405*pow(angle+180,3) - 0.02951718943376*pow(angle+180,2) + 0.56885711783252*(angle+180) + 13.65997592618080;*/
-        if (-10 < angle && angle <= 115) angle += 0.00002304*pow(angle,3) - 0.00291402*pow(angle,2) + 0.02071285*angle + 6.89857450;
-
-
-        else if (115 < angle && angle < 232) angle +=  0.00000328*pow(angle-115,3) - 0.00103194*pow(angle-115,2) + 0.07548487*(angle-115) + 8.66524063;
-
-        else if (232 < angle && angle <= 350) angle += 0.0000004750724134*pow(angle-232,4) - 0.0000827074734174*pow(angle-232,3) + 0.0010236674201867*pow(angle-232,2) + 0.2440728943129220*(angle-232) + 8.4957818912748700;
-        //excel is a motherfucker for making us do the -232
-        angle -= 7;
-
+        //excel is a motherfucker for making us do the -240
+        
 
 
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
@@ -103,11 +98,13 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (min_p < 0)
             output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
 
-
+        if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
-        if(-10 < angle && angle <= 124) output.segment(3*i,3) *= 0.14/(-0.00000006583626*pow(angle,3) + 0.00000874836118*pow(angle,2) + 0.00010997931452*angle + 0.12264170021766);
-        else if (124 < angle && angle <= 234) output.segment(3*i,3) *= 0.15/( -0.000010250406*pow(angle,2) + 0.003622464079*angle - 0.144449531551);
-        else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(-0.00000000107448087454*pow(angle,4) + 0.00000128667017990424*pow(angle,3) - 0.00057394958472449700*pow(angle,2) + 0.11280669747965400000*angle - 8.08770166486212000000); //yikes
+        
+        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.14/(-0.000000038963*pow(angle,3) - 0.000000486979*pow(angle,2) + 0.000754364684*angle + 0.115459394754);
+        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.14/(0.000000068974*pow(angle-120,3) - 0.000018447349*pow(angle-120,2) + 0.001098024401*(angle-120) + 0.134741580221);
+        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(0.000000002757*pow(angle-240,3) + 0.000000081886*pow(angle-240,2) - 0.000059196573*(angle-240) + 0.124253066835);
+
         
     }
     return output;

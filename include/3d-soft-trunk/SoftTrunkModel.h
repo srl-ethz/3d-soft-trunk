@@ -43,6 +43,9 @@ public:
     /** @brief map from pressure to generalized force */
     MatrixXd A;
 
+    /* @brief coriolis matrix */
+    MatrixXd S;
+
     /** @brief map from pseudopressure to generalized force.
      * The concept of pseudopressure creates a virtual chamber aligned with X and Y axes that can also output negative pressure values.
      * Calculating using pseudopressure may make it easier for some controllers.

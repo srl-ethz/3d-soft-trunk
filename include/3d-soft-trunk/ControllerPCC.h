@@ -72,6 +72,7 @@ public:
     void toggleGripper();
     /** @brief gripper attached */
     bool gripperAttached = false;
+    double loadAttached = 0.;
 
 protected:
 
@@ -148,6 +149,7 @@ protected:
     unsigned long long int initial_timestamp;
     std::fstream log_file;
     std::string filename;
+    void log(double t);
 
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
