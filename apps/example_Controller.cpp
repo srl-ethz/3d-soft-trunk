@@ -51,7 +51,10 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'r':
                 osc.toggle_log();
-                srl::sleep(8);
+                x_ref(1) *= -1;
+                x_ref(0) *= -1;
+                osc.set_ref(x_ref,dx_ref, ddx_ref);
+                srl::sleep(4);
                 osc.toggle_log();
                 break;
         }
@@ -85,7 +88,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.15*cos(30*0.01745329),0.15*sin(30*0.01745329),-0.2;
+    x_ref_center << 0.15*cos(45*0.01745329),0.15*sin(45*0.01745329),-0.2;
     x_ref = x_ref_center;
     
     

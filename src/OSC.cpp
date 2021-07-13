@@ -6,8 +6,8 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
         potfields[i].set_cutoff(0.2);
-        potfields[i].set_strength(0.015);
-        potfields[i].set_radius(0.05);
+        potfields[i].set_strength(0.15);
+        potfields[i].set_radius(0.03);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
@@ -18,7 +18,7 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./50;
+    dt = 1./100;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
@@ -52,8 +52,8 @@ void OSC::control_loop() {
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
-        if ((x_ref - x).norm() > 0.04) {                                   //deal with super high distances
-            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.04 + kd*(dx_ref - dx);  
+        if ((x_ref - x).norm() > 0.038) {                                   //deal with super high distances
+            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.038 + kd*(dx_ref - dx);  
         }
 
         double distance = (x - x_ref).norm();
@@ -89,13 +89,13 @@ void OSC::control_loop() {
 
         f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
-        tau_null = -kd *0.000 * state.dq;//J_mid.transpose()*f_null;
+        tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
         
         for(int i = 0; i < st_params.q_size; i++){     //for some reason tau is sometimes nan, catch that
             if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params.num_segments);
         }
 
-        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params.q_size, st_params.q_size) - J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->D * state.dq + stm->c + (MatrixXd::Identity(st_params.q_size, st_params.q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state));
 
@@ -141,7 +141,7 @@ Vector3d PotentialField::get_ddx(Vector3d &pos) {
     Vector3d differential = pos - this->pos;
     double distance = differential.norm() - radius;
     if (distance < this->cutoff_distance) {
-        return strength * (1./distance - 1./cutoff_distance) * 1./distance * differential.normalized();
+        return strength * 1./distance * differential.normalized();
     }
     return Vector3d::Zero();
 }

@@ -114,7 +114,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         else if (240 < angle && angle <= 360) angle += 0.000040481029*pow(angle-240,3) - 0.008919369902*pow(angle-240,2) + 0.397303212660*(angle-240) + 11.053088210030;
 
-        //angle += 1;
+        angle += 2; //this to compensate for the qualisys angular offset caused when recalibrating
         //excel is a motherfucker for making us do the -240
         
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
@@ -129,9 +129,10 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
         
-        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.135/(-0.000000032955*pow(angle,3) - 0.000001457414*pow(angle,2) + 0.000841482613*angle + 0.110926179508);
-        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.135/(0.000000083788*pow(angle-120,3) - 0.000021376188*pow(angle-120,2) + 0.001235091937*(angle-120) + 0.134178780255);
-        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.135/(0.000000011368*pow(angle-240,3) - 0.000001494043*pow(angle-240,2) + 0.000006210913*(angle-240) + 0.125046023967);
+        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.14/(-0.000000028449*pow(angle,3) - 0.000002400490*pow(angle,2) + 0.000897211981*angle + 0.111828214659);
+        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.14/(0.000000082471*pow(angle-120,3) - 0.000021075620*pow(angle-120,2) + 0.001178536375*(angle-120) + 0.136963828006);
+        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(0.000000001987*pow(angle-240,3) + 0.000000294525*pow(angle-240,2) - 0.000077505529*(angle-240) + 0.125038424045);
+        
     }
     return output;
 }
