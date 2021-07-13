@@ -109,21 +109,14 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
-        if (-6 < angle && angle <= 4) angle += 2;
-        if (4 < angle && angle <= 126) angle += 0.000023019205*pow(angle,3) - 0.002952847129*pow(angle,2) + 0.072823205506*angle + 7.271932801016;
+       if (0 < angle && angle <= 120) angle += 0.000017307962*pow(angle,3) - 0.002199171415*pow(angle,2) + 0.074390571809*angle - 0.026193228775;
+        else if (120 < angle && angle < 240) angle += -0.000002638394*pow(angle-120,3) - 0.000296853270*pow(angle-120,2) + 0.076656396461*(angle-120) + 9.375220818693;
 
+        else if (240 < angle && angle <= 360) angle += 0.000040481029*pow(angle-240,3) - 0.008919369902*pow(angle-240,2) + 0.397303212660*(angle-240) + 11.053088210030;
 
-        else if (126 < angle && angle < 240) angle += -0.000005370720*pow(angle-126,3) + 0.000312050650*pow(angle-126,2) + 0.010738591328*(angle-126) + 13.832115039876;
-
-
-        else if (240 < angle && angle <= 360) angle += 0.000041666881*pow(angle-240,3) - 0.009056094721*pow(angle-240,2) + 0.437521763515*(angle-240) + 12.346903014262;
-
-        angle -= 6;
-
-        //excel is a motherfucker for making us do the -232
+        //angle += 1;
+        //excel is a motherfucker for making us do the -240
         
-
-
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
         pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
 
@@ -135,24 +128,10 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
-        /*
-        if (0 < angle && angle <= 118) output.segment(3*i,3) *= 0.14/(-0.000000006902*pow(angle,3) - 0.000005643435*pow(angle,2) + 0.000830297530*angle + 0.119540588926);
-        else if (118 < angle && angle <= 234) output.segment(3*i,3) *= 0.14/(0.000000060972*pow(angle-118,3) - 0.000017514232*pow(angle-118,2) + 0.001139288022*(angle-118) + 0.130108516811);
-        else if (234 < angle && angle <=360) output.segment(3*i,3) *= 0.14/(0.000000000000472113*pow(angle-234,6) - 0.000000000178955503*pow(angle-234,5) + 0.000000024484785244*pow(angle-234,4) - 0.000001441192959112*pow(angle-234,3) + 0.000031911305931942*pow(angle-234,2) - 0.000064605943293827*(angle-234) + 0.126783514275473000);
-        */
-        /*
-        int h = 0;
-        bool go = true;
-        while(go){
-            fmt::print("angle : {}\n",angle);
-            if (angle >= rca(h) && angle < rca(h+1)){
-                fmt::print("break angle:{} at h={}\n",rca(h),h);
-                output.segment(3*i,3) *= 0.14/(rc(h,0)*pow(angle-rca(h),4) + rc(h,1)*pow(angle-rca(h),3) + rc(h,2)*pow(angle-rca(h),2) + rc(h,3)*pow(angle-rca(h),1) + rc(h,4)*pow(angle-rca(h),0));
-                fmt::print("coef: {}",(rc(h,0)*pow(angle-rca(h),4) + rc(h,1)*pow(angle-rca(h),3) + rc(h,2)*pow(angle-rca(h),2) + rc(h,3)*pow(angle-rca(h),1) + rc(h,4)*pow(angle-rca(h),0)));
-                go = false;
-            }
-            h++;
-        }*/
+        
+        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.135/(-0.000000032955*pow(angle,3) - 0.000001457414*pow(angle,2) + 0.000841482613*angle + 0.110926179508);
+        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.135/(0.000000083788*pow(angle-120,3) - 0.000021376188*pow(angle-120,2) + 0.001235091937*(angle-120) + 0.134178780255);
+        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.135/(0.000000011368*pow(angle-240,3) - 0.000001494043*pow(angle-240,2) + 0.000006210913*(angle-240) + 0.125046023967);
     }
     return output;
 }
