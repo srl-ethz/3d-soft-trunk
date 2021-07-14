@@ -12,6 +12,7 @@ IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorTyp
     control_thread = std::thread(&IDCon::control_loop, this);
     eps = 1e-1;
 	lambda = 0.5e-1;
+    fmt::print("IDCon initialized.\n");
 }
 //
 //

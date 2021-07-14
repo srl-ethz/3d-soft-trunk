@@ -30,7 +30,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
         cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, "" , objects);
         base_transform = cc->get_frame(0);
     }
-
+    fmt::print("ControllerPCC object initialized.\n");
 }
 
 void ControllerPCC::set_ref(const srl::State &state_ref) {

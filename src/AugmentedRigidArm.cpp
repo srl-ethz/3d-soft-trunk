@@ -66,6 +66,7 @@ void AugmentedRigidArm::setup_drake_model()
     map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1), 2*st_params.num_segments*st_params.sections_per_segment);
     for (int i = 0; i < st_params.num_segments; i++)
       map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1), 2*i*st_params.sections_per_segment, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+    fmt::print("Finished loading URDF model.\n");
     update_drake_model();
 }
 
@@ -372,9 +373,9 @@ void AugmentedRigidArm::update(const srl::State &state)
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
-
     for (int i = 0; i < st_params.num_segments; i++)
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
+
     //    update_dJm(state.q,state.dq);
     //
 }
