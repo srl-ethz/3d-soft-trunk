@@ -64,13 +64,6 @@ rigid model as described in IROS2021 paper (toshimitsu et al., 2021)
       <limit lower="0" upper="${length/2}" effort="1000" velocity="1000"/>
     </joint>
     <link name="${id}-b">
-      <xacro:default_inertial/>
-    </link>
-    <!-- These links branch out into the XY plane. The mass can move around the plane to match the CoM of the actual PCC model -->
-    <link name="${id}-branch-a">
-      <xacro:default_inertial/>
-    </link>
-    <link name="${id}-branch-b">
       <visual>
         <geometry>
           <cylinder length="${length}" radius="${radius}"/>
@@ -92,21 +85,6 @@ rigid model as described in IROS2021 paper (toshimitsu et al., 2021)
         <inertia ixx="${mass * (3*radius**2 + length**2) / 12.}" ixy="0.000" ixz="0.000" iyy="${mass * (3*radius**2 + length**2) / 12.}" iyz="0.000" izz="${mass * radius*radius / 2.}"/>
       </inertial>
     </link>
-
-    <!-- the next two joints are prismatic joints to move the mass on a plane to match CoM position -->
-    <joint name="${id}-b-branch-a_joint" type="prismatic">
-      <parent link="${id}-b"/>
-      <child link="${id}-branch-a"/>
-      <axis xyz="1 0 0"/>
-      <limit lower="-1" upper="1" effort="1000" velocity="1000"/>
-    </joint>
-    <joint name="${id}-branch-a-branch-b_joint" type="prismatic">
-      <parent link="${id}-branch-a"/>
-      <child link="${id}-branch-b"/>
-      <axis xyz="0 1 0"/>
-      <limit lower="-1" upper="1" effort="1000" velocity="1000"/>
-    </joint>
-
     <joint name="${id}-b-${child}_joint" type="prismatic">
       <parent link="${id}-b"/>
       <child link="${child}"/>
