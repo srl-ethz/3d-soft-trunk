@@ -76,6 +76,7 @@ void SoftTrunkModel::updateState(const srl::State &state)
     c = ara->c;
     g = ara->g;
     J = ara->J;
+    S = ara->S;
 }
 
 Eigen::Transform<double, 3, Eigen::Affine> SoftTrunkModel::get_H(int segment_id){

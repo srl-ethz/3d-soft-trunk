@@ -21,8 +21,8 @@ void q_update(double seconds, srl::State& state) {
     // generate nice-looking poses
     int dof = state.q.size();
     for (int i = 0; i < dof/2 ; i++) {
-        state.q(2 * i + 0) = 1.6 * sin(seconds * (double) (i+1)) / dof;
-        state.q(2 * i + 1) = 0.8 * cos(seconds * (double) (i+1)) / dof;
+        state.q(2 * i + 0) = 1.6 * sin(seconds * (double) i / dof);
+        state.q(2 * i + 1) = 0.8 * cos(seconds * (double) i / dof);
 
     }
 }

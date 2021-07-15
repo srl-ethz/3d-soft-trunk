@@ -44,28 +44,10 @@ void AugmentedRigidArm::setup_drake_model()
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    int num_joints = multibody_plant->num_positions(); // multibody_plant->num_joints() also returns fake joints at base, so use num_positions
-   
-    // quite confusingly, ordering of generalized positions vs order of joints is different for the prismatic joints...
-    // joint ordering: [xyz rotational joint] -> [first Z axis joint] -> [X axis joint] -> [Y axis joint] -> [second Z axis joint]
-    // generalized position ordering: [xyz rotational joint] -> [first Z axis joint] -> [X axis joint] -> [second Z axis joint] ->  [Y axis joint]
-    // however, this implementation of generalized position ordering may change with future versions of drake, so verify this each time to make sure
-
-    /* check that idiosyncratic generalized position ordering is consistent. If this assertion fails, the drake implementation for generalized position ordering may have changed. */
-    for (int joint_id = 0; joint_id < num_joints; joint_id++){
-      int joint_id_in_section = joint_id % 7;
-      drake::multibody::JointIndex ji(joint_id+1); // first joint is world to base joint, so ignore
-      std::string joint_name = multibody_plant->get_joint(ji).name();
-      int position_id = joint_id;
-      if (joint_id_in_section == 5)
-        position_id += 1;
-      if (joint_id_in_section == 6)
-        position_id -= 1;
-      assert(multibody_plant->get_joint(ji).position_start() == position_id);
-    }
+    int num_joints = multibody_plant->num_joints() - 2; //subtract one mystery joint, and one fixed joint at the base
     
     // check that parameters make sense, just in case
-    assert(num_joints == 7 * st_params.num_segments * (st_params.sections_per_segment + 1));
+    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1));
 
     // initialize variables
     xi_ = VectorXd::Zero(num_joints);
@@ -84,6 +66,7 @@ void AugmentedRigidArm::setup_drake_model()
     map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1), 2*st_params.num_segments*st_params.sections_per_segment);
     for (int i = 0; i < st_params.num_segments; i++)
       map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1), 2*i*st_params.sections_per_segment, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+    fmt::print("Finished loading URDF model.\n");
     update_drake_model();
 }
 
@@ -96,14 +79,14 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
     double p1; // phi of current section
     double t1; // theta of current section
     double l; // length of current section
-    int joint_id_head; // index of first joint in section (7 joints per section)
+    int joint_id_head; // index of first joint in section (5 joints per section)
     int segment_id;
     for (int section_id = 0; section_id < st_params.num_segments * (st_params.sections_per_segment + 1); ++section_id)
     {
         segment_id = section_id / (st_params.sections_per_segment + 1);
         longitudinal2phiTheta(q_(2*section_id), q_(2*section_id + 1), p1, t1);
         t1 = std::max(0.0001, t1); /** @todo hack way to get rid of errors when close to straight. */
-        joint_id_head = 7 * section_id;
+        joint_id_head = 5 * section_id;
         l = st_params.lengths[2 * segment_id] / st_params.sections_per_segment;
         // calculate joint angles that kinematically and dynamically match
         // this was calculated from Mathematica and not by hand
@@ -120,13 +103,7 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         // check the comments in setup_drake_model() for the generalized position indexing.
         // prismatic joints in Z direction to change length
         xi_(joint_id_head + 3) = l / 2 - l * sin((t1) / 2) / t1;
-        xi_(joint_id_head + 5) = xi_(joint_id_head + 3);
-
-        // prismatic joints in X & Y direction to match CoM
-        // centroid for "Arc of cirle" is described here: https://en.wikipedia.org/wiki/List_of_centroids
-        double tmp = l / t1 * (sin(t1/2) / (t1/2) - cos(t1/2));
-        xi_(joint_id_head + 4) = - cos(p1) * tmp;
-        xi_(joint_id_head + 6) = - sin(p1) * tmp;
+        xi_(joint_id_head + 4) = xi_(joint_id_head + 3);
 
         t0 = t1;
         p0 = p1;
@@ -147,6 +124,7 @@ void AugmentedRigidArm::update_drake_model()
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);
     multibody_plant->CalcBiasTerm(plant_context, &c_xi_);
+
     g_xi_ = - multibody_plant->CalcGravityGeneralizedForces(plant_context);
 
     std::string frame_name;
@@ -194,14 +172,14 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
     double t1;
     double l;
     int segment_id;
-    MatrixXd dxi_dpt = MatrixXd::Zero(7, 2); // d(xi)/d(phi, theta)
+    MatrixXd dxi_dpt = MatrixXd::Zero(5, 2); // d(xi)/d(phi, theta)
     MatrixXd dpt_dL = MatrixXd::Zero(2, 2); // d(phi, theta)/d(Lx, Ly)
     for (int section_id = 0; section_id < st_params.num_segments * (st_params.sections_per_segment + 1); section_id ++)
     {
         segment_id = section_id / (st_params.sections_per_segment+1);
         // differentiation is calculated via phi-theta parametrization for easier formulation.
         int q_head = 2 * section_id;
-        int xi_head = 7 * section_id;
+        int xi_head = 5 * section_id;
         l = st_params.lengths[2 * segment_id] / st_params.sections_per_segment;
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
@@ -276,20 +254,15 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
 
             // d(prismatic)/d(phi0)
             dxi_dpt(3,0) = 0;
-            dxi_dpt(5,0) = 0;
+            dxi_dpt(4,0) = 0;
 
             // d(prismatic)/d(theta0)
             dxi_dpt(3,1) = 0;
-            dxi_dpt(5,1) = 0;
-
-            // prismatic joints to match CoM
-            dxi_dpt(4,0) = 0;
-            dxi_dpt(6,0) = 0;
             dxi_dpt(4,1) = 0;
-            dxi_dpt(6,1) = 0;
+
 
             calcPhiThetaDiff(q_(q_head - 2), q_(q_head-1), dpt_dL);
-            Jm_.block(xi_head, q_head-2, 7, 2) = dxi_dpt * dpt_dL;
+            Jm_.block(xi_head, q_head-2, 5, 2) = dxi_dpt * dpt_dL;
         }
         // Calculated from Mathematica
         // d(rot_x)/d(phi1)
@@ -357,19 +330,13 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         (1 - Power(Cos(p0)*Cos(t1/2.)*Sin(t0/2.) + Cos(p1)*Cos(t0/2.)*Sin(t1/2.) + Cos(p1)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p1)*Cos(t0/2.)*Power(Sin(p0),2)*Sin(t1/2.) - Cos(p0)*Sin(p0)*Sin(p1)*Sin(t1/2.) + Cos(p0)*Cos(t0/2.)*Sin(p0)*Sin(p1)*Sin(t1/2.),2))));
         // d(prismatic)/d(phi1)
         dxi_dpt(3,0) = 0;
-        dxi_dpt(5,0) = 0;
+        dxi_dpt(4,0) = 0;
         // d(prismatic)/d(theta1)
         dxi_dpt(3,1) = -0.5*(l*Cos(t1/2.))/t1 + (l*Sin(t1/2.))/Power(t1,2);
-        dxi_dpt(5,1) = dxi_dpt(3,1);
+        dxi_dpt(4,1) = dxi_dpt(3,1);
 
-        // prismatic joints to match CoM
-        dxi_dpt(4,0) = (l*Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1; // d(X_com)/d(phi1)
-        dxi_dpt(6,0) = -((l*Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/t1); // d(Y_com)/d(phi1)
-        dxi_dpt(4,1) = -((l*Cos(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (l*Cos(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(X_com)/d(theta1)
-        dxi_dpt(6,1) = -((l*Sin(p1)*(Cos(t1/2.)/t1 + Sin(t1/2.)/2. - (2*Sin(t1/2.))/Power(t1,2)))/t1) + (l*Sin(p1)*(-Cos(t1/2.) + (2*Sin(t1/2.))/t1))/Power(t1,2); // d(Y_com)/d(theta1)
-        
         calcPhiThetaDiff(q_(q_head), q_(q_head+1), dpt_dL);
-        Jm_.block(xi_head, q_head, 7, 2) = dxi_dpt * dpt_dL;
+        Jm_.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
         p0 = p1;
         t0 = t1;
     }
@@ -408,6 +375,7 @@ void AugmentedRigidArm::update(const srl::State &state)
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
     for (int i = 0; i < st_params.num_segments; i++)
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
+
     //    update_dJm(state.q,state.dq);
     //
 }
