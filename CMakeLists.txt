@@ -56,6 +56,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 add_definitions(-DSOFTTRUNK_PROJECT_DIR="${PROJECT_SOURCE_DIR}")
 
 include_directories(include mobilerack-interface/include)
+add_subdirectory(subm/yaml-cpp)
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIRS})
@@ -67,16 +68,16 @@ find_package(roscpp) # this is optionally required for VisualizerROS
 
 ### libraries
 ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
-TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt)
+TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt yaml-cpp)
 
 add_library(AugmentedRigidArm SHARED src/AugmentedRigidArm.cpp)
-target_link_libraries(AugmentedRigidArm drake::drake)
+target_link_libraries(AugmentedRigidArm drake::drake yaml-cpp)
 
 add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
-target_link_libraries(SoftTrunkModel AugmentedRigidArm)
+target_link_libraries(SoftTrunkModel AugmentedRigidArm yaml-cpp)
 
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
-target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads)
+target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads yaml-cpp)
 
 add_library(OSC SHARED src/OSC.cpp)
 target_link_libraries(OSC ControllerPCC)

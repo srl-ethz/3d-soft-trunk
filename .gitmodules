@@ -1,3 +1,6 @@
 [submodule "mobilerack-interface"]
 	path = mobilerack-interface
 	url = ../mobilerack-interface.git
+[submodule "subm/yaml-cpp"]
+	path = subm/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git
