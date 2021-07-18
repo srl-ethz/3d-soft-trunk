@@ -113,10 +113,12 @@ public:
     }
 
     /** @brief populate the parameters by reading from a YAML file
+     * @details the YAML file should be placed inside of the config folder to be read
+     * @param filename filename, no need append .yaml as this is done automatically
      */
     void load_yaml(const std::string filename){
         assert(!is_finalized());
-        std::string loc = fmt::format("{}/config/{}.yaml",SOFTTRUNK_PROJECT_DIR,filename);
+        std::string loc = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,filename);
         YAML::Node params = YAML::LoadFile(loc);
         this->robot_name = params["robot_name"].as<std::string>();
         this->num_segments = params["num_segments"].as<int>();

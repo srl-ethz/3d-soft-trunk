@@ -1,0 +1,3 @@
+# CONFIG SPACE
+## YAML files
+The YAML files in this directory can be loaded into your program. While initializing the `st_params`, can call `st_params.load_yaml("examplefile.yaml")` to load a YAML file. Note that if you do not call the load function, default parameters (2 segment arm) will be used. To change parameters, simply edit an existing YAML or create a new one, and load it into your program. 
