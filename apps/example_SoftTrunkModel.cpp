@@ -17,6 +17,7 @@ int main(){
     st_params.armAngle = 30;
     st_params.shear_modulus = {30000, 30000, 30000};
     st_params.drag_coef = {10000, 10000, 10000};*/
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();  // run sanity check and finalize parameters
 
     SoftTrunkModel stm = SoftTrunkModel(st_params);

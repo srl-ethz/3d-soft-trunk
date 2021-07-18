@@ -12,13 +12,15 @@
 #include <thread>
 #include <assert.h>
 #include <array>
+#include <yaml-cpp/yaml.h>
+#include <fmt/core.h>
 
 using namespace Eigen;
 
 enum class ControllerType {
     dynamic,
     pid,        // for PID control, error is directly converted to pressure (i.e. alpha not used)
-    gravcomp,   //attempts to hold current position, make arm compliant
+    gravcomp,   //attempts to hold current position, msubmake arm compliant
     lqr,        //LQR controller, directly to pressure
     osc,        //OSC controller, coordinates are task space
 };
@@ -111,10 +113,22 @@ public:
     }
 
     /** @brief populate the parameters by reading from a YAML file
-     * @todo implement this
+     * @details the YAML file should be placed inside of the config folder to be read
+     * @param filename filename, no need append .yaml as this is done automatically
      */
     void load_yaml(const std::string filename){
         assert(!is_finalized());
+        std::string loc = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,filename);
+        YAML::Node params = YAML::LoadFile(loc);
+        this->robot_name = params["robot_name"].as<std::string>();
+        this->num_segments = params["num_segments"].as<int>();
+        this->sections_per_segment = params["sections_per_segment"].as<int>();
+        this->masses = params["masses"].as<std::vector<double>>();
+        this->lengths = params["lengths"].as<std::vector<double>>();
+        this->diameters = params["diameters"].as<std::vector<double>>();
+        this->armAngle = params["armAngle"].as<double>();
+        this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
+        this->drag_coef = params["drag_coef"].as<std::vector<double>>();  
     }
     
     bool is_finalized() const {

@@ -1,0 +1,20 @@
+---
+#Soft trunk parameters are defined here
+robot_name: 2segment
+#Physical segments of the arm
+num_segments: 2
+#PCC sections per segment
+sections_per_segment: 1
+#Masses of segments and connectors, starting at topmost segment
+masses: [0.160, 0.020, 0.082, 0.023]
+#Lengths of segments and connectors, starting at topmost segment
+lengths: [125, 0.02, 0.125, 0.02]
+#Diameters of segment top and bottoms, contains num_seg+1 values
+diameters: [0.035, 0.028, 0.0198]
+#Angle of arm relative to upright position
+armAngle: 180
+#Shear moduli of the segments
+shear_modulus: [35000,62000]
+#Drag coefficients of the segments
+drag_coef: [28000,8000]
+...
