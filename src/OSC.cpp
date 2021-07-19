@@ -81,13 +81,13 @@ void OSC::control_loop() {
         //J_inv = stm->B.inverse()*J.transpose()*B_op;
         J_inv = computePinv(J, 0.5e-1, 1.0e-1);
 
-        //B_op_null = (J_mid*stm->B.inverse()*J_mid.transpose()).inverse();
+        B_op_null = (J_mid*stm->B.inverse()*J_mid.transpose()).inverse();
          
         f = B_op*ddx_des;
         
         //f_null = B_op_null*ddx_null;
-
-        f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
+        f(0) += loadAttached;
+        f(2) += /*loadAttached +*/ 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
         tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
         

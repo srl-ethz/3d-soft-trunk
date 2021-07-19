@@ -57,6 +57,10 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 srl::sleep(7);
                 osc.toggle_log();
                 break;
+            case 'b':
+                osc.loadAttached = -3
+                ;
+                break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
         fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
@@ -88,7 +92,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.15*cos(90*0.01745329),0.15*sin(90*0.01745329),-0.2;
+    x_ref_center << 0.1*cos(0*0.01745329),0.1*sin(0*0.01745329),-0.24;
     x_ref = x_ref_center;
     
     
