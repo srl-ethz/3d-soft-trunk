@@ -78,6 +78,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
             case 'f': 
                 osc.freeze = !osc.freeze;
+                fmt::print("Freeze status: {}\n", osc.freeze);
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
@@ -93,11 +94,9 @@ void printer(OSC& osc){
         fmt::print("------------------------------------\n");
         fmt::print("extra object1: {}\n", osc.get_objects()[0].transpose());
         fmt::print("extra object1: {}\n", osc.get_objects()[1].transpose());
+        fmt::print("x tip: {}\n", x.transpose());
         fmt::print("x error: {}\n", (x_ref-x).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-x).norm());
-        VectorXd p;
-        osc.get_pressure(p);
-        fmt::print("pressure: {}\n", p.transpose());
         r.sleep();
     }
 }
@@ -111,7 +110,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.1*cos(-0*0.01745329),0.1*sin(-0*0.01745329),-0.24;
+    x_ref_center << 0.09*cos(-0*0.01745329),0.09*sin(-0*0.01745329),-0.238;
     x_ref = x_ref_center;
     
     
