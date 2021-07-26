@@ -66,7 +66,10 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     for(int p = 0; p < 3; p++){ 
         MatrixXd angval120 = angle_vals.block(0,0,120,4);
         VectorXd poly_coeffs = (angval120.transpose()*angval120).inverse()*angval120.transpose()*ang_err.segment(p*120,120); //calculate polynomial coeffs using least squares
-        polynomial_out << fmt::format("{}*pow(angle-{},3) + {}*pow(angle-{},2) + {}*(angle-{}) + {}),\n",poly_coeffs(0),p*120,poly_coeffs(1),p*120,poly_coeffs(2),p*120,poly_coeffs(3));
+        polynomial_out << fmt::format("angular: {}*pow(angle-{},3) + {}*pow(angle-{},2) + {}*(angle-{}) + {}),\n",poly_coeffs(0),p*120,poly_coeffs(1),p*120,poly_coeffs(2),p*120,poly_coeffs(3));
+        poly_coeffs = (angval120.transpose()*angval120).inverse()*angval120.transpose()*radii.segment(p*120,120); //calculate polynomial coeffs using least squares
+        polynomial_out << fmt::format("radial: {}*pow(angle-{},3) + {}*pow(angle-{},2) + {}*(angle-{}) + {}),\n",poly_coeffs(0),p*120,poly_coeffs(1),p*120,poly_coeffs(2),p*120,poly_coeffs(3));
+
     }
 }
 
