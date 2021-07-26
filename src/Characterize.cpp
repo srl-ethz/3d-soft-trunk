@@ -23,6 +23,10 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     srl::sleep(5);
     srl::Rate r{1};
 
+    VectorXd ang_err = VectorXd::Zero(360);
+    VectorXd radii = VectorXd::Zero(360);
+    MatrixXd angle_vals = MatrixXd::Zero(360,4);
+
     for (double i = 0; i < 360; i+=1.){
         pressures(2*segment) = 500*cos(i*deg2rad);
         pressures(2*segment+1) = -500*sin(i*deg2rad);
@@ -41,13 +45,29 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
 
         log_file << fmt::format("{},{},{}", (double) i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
-
+        ang_err(i) = i - angle;
+        if (abs(ang_err(i) > 180)) ang_err(i) += 360;
+        angle_vals(i,0) = i*i*i;
+        angle_vals(i,1) = i*i;
+        angle_vals(i,2) = i;
+        angle_vals(i,3) = 1;
+        radii(i) = sqrt(x(0)*x(0)+x(1)*x(1));
 
         log_file << "\n";
         r.sleep();
     }
     log_file.close();
-    fmt::print("\n Finished radial logging\n");
+    fmt::print("\n Finished radial logging\n");   
+
+    std::string poly_location = fmt::format("{}/polynomial_{}.txt", SOFTTRUNK_PROJECT_DIR,segment);
+    std::fstream polynomial_out;
+    polynomial_out.open(poly_location, std::fstream::out);
+
+    for(int p = 0; p < 3; p++){ 
+        MatrixXd angval120 = angle_vals.block(p*120,0,120,4);
+        VectorXd poly_coeffs = (angval120.transpose()*angval120).inverse()*angval120.transpose()*ang_err.segment(p*120,120); //calculate polynomial coeffs using least squares
+        polynomial_out << fmt::format("{}*pow(angle,3 + {}*pow(angle,2) + {}*angle + {}),\n",poly_coeffs(0),poly_coeffs(1),poly_coeffs(2),poly_coeffs(3));
+    }
 }
 
 void Characterize::calcK(int segment, int directions, int verticalsteps){
