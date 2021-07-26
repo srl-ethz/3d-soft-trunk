@@ -5,9 +5,9 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
-        potfields[i].set_cutoff(0.2);
-        potfields[i].set_strength(0.3);
-        potfields[i].set_radius(0.025);
+        potfields[i].set_cutoff(0.07);
+        potfields[i].set_strength(0.08);
+        potfields[i].set_radius(0.037);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
@@ -62,7 +62,8 @@ void OSC::control_loop() {
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
-            potfields[i].set_pos(get_objects()[i]);
+            if (!freeze)
+                potfields[i].set_pos(get_objects()[i]);
             ddx_des += potfields[i].get_ddx(x);
             //ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }

@@ -54,7 +54,7 @@ public:
     /** @brief set kd gain */
     void set_kd(double kd);
 
-    
+    bool freeze = false;
 
 
 private:
