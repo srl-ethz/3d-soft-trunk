@@ -110,9 +110,9 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
-        if (0 < angle && angle <= 120) angle += 0.000012955107*pow(angle,3) - 0.001891162145*pow(angle,2) + 0.092479153726*angle + 4.931110241236;
-        else if (120 < angle && angle < 240) angle += 0.000012638576*pow(angle-120,3) - 0.002525246442*pow(angle-120,2) + 0.067248028133*(angle-120) + 13.559365053643;
-        else if (240 < angle && angle <= 360) angle += 0.000032532054*pow(angle-240,3) - 0.007401032600*pow(angle-240,2) + 0.387485806286*(angle-240) + 8.686027453657;
+        if (0 < angle && angle <= 120) angle += 1.2638383065618627e-05*pow(angle-0,3) + -0.001849258999274803*pow(angle-0,2) + 0.1168440485360759*(angle-0) + 3.842584647783369;
+        else if (120 < angle && angle < 240) angle += 1.2918080084614576e-05*pow(angle-120,3) + -0.002692029382766064*pow(angle-120,2) + 0.06647396593747526*(angle-120) + 15.272700751804658;
+        else if (240 < angle && angle <= 360) angle += 3.5857253321680275e-05*pow(angle-240,3) + -0.00788494201423625*pow(angle-240,2) + 0.3946753563660461*(angle-240) + 8.05360332597899;
 
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
         //excel is a motherfucker for making us do the -240
