@@ -115,7 +115,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         else if (240 < angle && angle <= 360) angle += 3.5857253321680275e-05*pow(angle-240,3) + -0.00788494201423625*pow(angle-240,2) + 0.3946753563660461*(angle-240) + 8.05360332597899;
 
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
-        //excel is a motherfucker for making us do the -240
+        //possibly redundant thanks to new char.
         
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
         pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
@@ -129,9 +129,9 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
         
-        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-0.000000001559*pow(angle,3) - 0.000006948804*pow(angle,2) + 0.000928461075*angle + 0.109247290744);
-        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(0.000000031336*pow(angle-120,3) - 0.000009539736*pow(angle-120,2) + 0.000653322242*(angle-120) + 0.123243142797);
-        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(0.000000007951*pow(angle-240,3) - 0.000002532586*pow(angle-240,2) + 0.000133208520*(angle-240) + 0.123754267856);
+        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-2.534887594811526e-10*pow(angle-0,3) + -7.531728545619462e-06*pow(angle-0,2) + 0.0008937042916654311*(angle-0) + 0.11442213620279766);
+        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(2.4979770517834455e-08*pow(angle-120,3) + -7.824317053397979e-06*pow(angle-120,2) + 0.0005315514773651771*(angle-120) + 0.12127457505525914);
+        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(1.759132152897479e-08*pow(angle-240,3) + -4.2202449485888275e-06*pow(angle-240,2) + 0.0002757201651786094*(angle-240) + 0.12073766586568674);
         
     }
     return output;
