@@ -5,15 +5,15 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
-        potfields[i].set_cutoff(0.07);
-        potfields[i].set_strength(0.08);
-        potfields[i].set_radius(0.037);
+        potfields[i].set_cutoff(0.2);
+        potfields[i].set_strength(0.1);
+        potfields[i].set_radius(0.045);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 120;
+    kp = 100;
     kd = 5.5;
 
 
