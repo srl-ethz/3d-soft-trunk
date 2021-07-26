@@ -82,7 +82,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(id));
 
     id.toggle_log();
-    while (t<32){
+    while (t<10){
         
         double r = 0.15;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;

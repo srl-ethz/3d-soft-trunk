@@ -5,20 +5,20 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
-        potfields[i].set_cutoff(0.1);
-        potfields[i].set_strength(0.005);
-        potfields[i].set_radius(0.001);
+        potfields[i].set_cutoff(0.2);
+        potfields[i].set_strength(0.1);
+        potfields[i].set_radius(0.047);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 60;
+    kp = 100;
     kd = 5.5;
 
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./50;
+    dt = 1./100;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
@@ -38,17 +38,23 @@ void OSC::control_loop() {
             continue;
 
         J = stm->J[st_params.num_segments-1]; //tip jacobian
-        J_mid << stm->J[st_params.num_segments-2], stm->J[st_params.num_segments-1] ; //middle seg jacobian
+        //J_mid << stm->J[st_params.num_segments-2], stm->J[st_params.num_segments-1] ; //middle seg jacobian
 
         //this x is from qualisys directly
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
-        x_mid = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-2).translation();
+        
+        
+        //x_mid = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-2).translation();
 
         dx = J*state.dq;
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
+
+        if ((x_ref - x).norm() > 0.038) {                                   //deal with super high distances
+            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.038 + kd*(dx_ref - dx);  
+        }
 
         double distance = (x - x_ref).norm();
         //if (distance > 0.15) ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.15 + kd*(dx_ref - dx);
@@ -56,38 +62,41 @@ void OSC::control_loop() {
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
-            potfields[i].set_pos(get_objects()[i]);
-            //ddx_des += potfields[i].get_ddx(x);
+            if (!freeze)
+                potfields[i].set_pos(get_objects()[i]);
+            ddx_des += potfields[i].get_ddx(x);
             //ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
             J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.5*(i+1)*MatrixXd::Identity(3,2);
         }
-        for (int j = 0; j < st_params.num_segments; j++){
+        
+        /*for (int j = 0; j < st_params.num_segments; j++){
             for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params.q_size)); i++){               //reduce jacobian order if the arm is in a singularity
                 J_mid.block(3*j,2*i,3,2) + 0.2*(i+1)*MatrixXd::Identity(3,2);
             }
-        }
+        }*/
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
-        J_inv = stm->B.inverse()*J.transpose()*B_op;
+        //J_inv = stm->B.inverse()*J.transpose()*B_op;
+        J_inv = computePinv(J, 0.5e-1, 1.0e-1);
 
         B_op_null = (J_mid*stm->B.inverse()*J_mid.transpose()).inverse();
          
         f = B_op*ddx_des;
         
-        f_null = B_op_null*ddx_null;
+        //f_null = B_op_null*ddx_null;
+        f(0) += loadAttached;
+        f(2) += /*loadAttached +*/ 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
-        f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
-
-        tau_null = J_mid.transpose()*f_null;
+        tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
         
         for(int i = 0; i < st_params.q_size; i++){     //for some reason tau is sometimes nan, catch that
             if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params.num_segments);
         }
 
-        tau_ref = J.transpose()*f + stm->D * state.dq + (MatrixXd::Identity(st_params.q_size, st_params.q_size) - J.transpose()*J_inv.transpose())*tau_null;
+        tau_ref = J.transpose()*f + stm->D * state.dq + stm->c + (MatrixXd::Identity(st_params.q_size, st_params.q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state));
 
@@ -133,7 +142,7 @@ Vector3d PotentialField::get_ddx(Vector3d &pos) {
     Vector3d differential = pos - this->pos;
     double distance = differential.norm() - radius;
     if (distance < this->cutoff_distance) {
-        return strength * (1./distance - 1./cutoff_distance) * 1./distance * differential.normalized();
+        return strength * 1./distance * differential.normalized();
     }
     return Vector3d::Zero();
 }
@@ -173,4 +182,32 @@ void OSC::set_kd(double kd){
 }
 void OSC::set_kp(double kp){
     this->kp = kp;
+}
+
+//courtesy of amir
+template <typename Derived1, typename Derived2>
+void dampedPseudoInverse(const Eigen::MatrixBase<Derived1>& A, double e, double dampingFactor, Eigen::MatrixBase<Derived2>& Apinv, unsigned int computationOptions)
+{
+	int m = A.rows(), n = A.cols(), k = (m < n) ? m : n;
+	JacobiSVD<typename MatrixBase<Derived1>::PlainObject> svd = A.jacobiSvd(computationOptions);
+	const typename JacobiSVD<typename Derived1::PlainObject>::SingularValuesType& singularValues = svd.singularValues();
+	MatrixXd sigmaDamped = MatrixXd::Zero(k, k);
+	double damp = dampingFactor * dampingFactor;
+
+	for (int idx = 0; idx < k; idx++)
+	{
+		if (singularValues(idx) >= e)damp = 0;
+		else damp = (1 - ((singularValues(idx) / e)*(singularValues(idx) / e)))*dampingFactor * dampingFactor;
+		sigmaDamped(idx, idx) = singularValues(idx) / ((singularValues(idx) * singularValues(idx)) + damp);
+	}
+	Apinv = svd.matrixV() * sigmaDamped * svd.matrixU().transpose(); // damped pseudoinverse
+}
+
+//return pesudo inverse computed in dampedPseudoInverse function 
+MatrixXd OSC::computePinv(Eigen::MatrixXd j,double e,double lambda)
+{
+
+	Eigen::MatrixXd pJacobian(j.cols(), j.rows());
+	dampedPseudoInverse(j,e,lambda, pJacobian, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	return pJacobian;
 }

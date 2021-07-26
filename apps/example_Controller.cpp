@@ -7,6 +7,11 @@ Vector3d x;
 Vector3d dx_ref;
 Vector3d ddx_ref;
 
+//for crossing
+double crosstime;
+Vector3d newx;
+Vector3d diff;
+
 void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
@@ -45,13 +50,35 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 freedom = true;
                 break;
             case 'v':
-                x_ref(1) *= -1;
-                osc.set_ref(x_ref,dx_ref, ddx_ref);
+                //mirror across 0,0 in time "crosstime"
+                crosstime = 1.5;
+                ddx_ref = Vector3d::Zero();
+                newx = x_ref;
+                newx(1) *= -1;
+                newx(0) *= -1;
+                /*diff = newx - x_ref;
+                
+                for(double tl = 0; tl < crosstime; tl += 0.1){
+                    osc.set_ref(x_ref + (tl/crosstime) * diff, dx_ref, ddx_ref);
+                    srl::sleep(0.1);
+                }*/
+                x_ref = newx;
+                osc.set_ref(x_ref,dx_ref,ddx_ref);
                 break;
             case 'r':
                 osc.toggle_log();
-                srl::sleep(8);
+                x_ref(1) *= -1;
+                x_ref(0) *= -1;
+                osc.set_ref(x_ref,dx_ref, ddx_ref);
+                srl::sleep(7);
                 osc.toggle_log();
+                break;
+            case 'b':
+                osc.loadAttached = -3;
+                break;
+            case 'f': 
+                osc.freeze = !osc.freeze;
+                fmt::print("Freeze status: {}\n", osc.freeze);
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
@@ -65,12 +92,11 @@ void printer(OSC& osc){
         Vector3d x;
         osc.get_x(x);
         fmt::print("------------------------------------\n");
-        fmt::print("extra object: {}\n", osc.get_objects()[0].transpose());
+        fmt::print("extra object1: {}\n", osc.get_objects()[0].transpose());
+        fmt::print("extra object1: {}\n", osc.get_objects()[1].transpose());
+        fmt::print("x tip: {}\n", x.transpose());
         fmt::print("x error: {}\n", (x_ref-x).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-x).norm());
-        VectorXd p;
-        osc.get_pressure(p);
-        fmt::print("pressure: {}\n", p.transpose());
         r.sleep();
     }
 }
@@ -78,13 +104,13 @@ void printer(OSC& osc){
 int main(){
     SoftTrunkParameters st_params;
     st_params.finalize();
-    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 1);
+    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 2);
     VectorXd p;
     srl::State state = st_params.getBlankState();
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.15,0,-0.2;
+    x_ref_center << 0.09*cos(-0*0.01745329),0.09*sin(-0*0.01745329),-0.238;
     x_ref = x_ref_center;
     
     
@@ -96,14 +122,14 @@ int main(){
 
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;
-    osc.gripperAttached = true;
+    osc.gripperAttached = false;
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(2);
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
-    // std::thread print_thread(printer, std::ref(osc));
+    std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
     //osc.toggle_log();
@@ -112,11 +138,11 @@ int main(){
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
+        /*x_ref = circle;
         dx_ref = d_circle;
-        ddx_ref = dd_circle;
+        ddx_ref = dd_circle;*/
         //x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref, ddx_ref);
+        //osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
@@ -126,7 +152,7 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    //osc.toggle_log();
+    osc.toggle_log();
     srl::sleep(2);
     /*
     x_ref << 0.15,0,-0.2;
