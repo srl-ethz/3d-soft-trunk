@@ -109,7 +109,7 @@ public:
         assert(num_segments + 1 == diameters.size());
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
-        assert(model = "augmented" or model = "lagrangian");
+        assert(model == "augmented" or model == "lagrangian");
 
         q_size = 2*num_segments*sections_per_segment;
         finalized = true;
