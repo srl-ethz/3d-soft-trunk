@@ -98,6 +98,8 @@ public:
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
 
+    std::string model = "augmented";
+
     void finalize(){
         assert(!is_finalized()); // already finalized
 
@@ -107,6 +109,7 @@ public:
         assert(num_segments + 1 == diameters.size());
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
+        assert(model = "augmented" or model = "lagrangian");
 
         q_size = 2*num_segments*sections_per_segment;
         finalized = true;
@@ -129,6 +132,7 @@ public:
         this->armAngle = params["armAngle"].as<double>();
         this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
         this->drag_coef = params["drag_coef"].as<std::vector<double>>();  
+        this->model = params["model"].as<std::string>();
     }
     
     bool is_finalized() const {

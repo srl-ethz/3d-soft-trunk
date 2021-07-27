@@ -52,3 +52,5 @@ if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
 endif(${roscpp_FOUND})
+
+add_executable(M_fun M_fun.cpp)
