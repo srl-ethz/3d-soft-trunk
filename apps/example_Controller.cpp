@@ -56,6 +56,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 newx = x_ref;
                 newx(1) *= -1;
                 newx(0) *= -1;
+                osc.toggle_log();
                 /*diff = newx - x_ref;
                 
                 for(double tl = 0; tl < crosstime; tl += 0.1){
@@ -64,6 +65,8 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 }*/
                 x_ref = newx;
                 osc.set_ref(x_ref,dx_ref,ddx_ref);
+                srl::sleep(8);
+                osc.toggle_log();
                 break;
             case 'r':
                 osc.toggle_log();
@@ -110,9 +113,10 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.09*cos(-0*0.01745329),0.09*sin(-0*0.01745329),-0.238;
+    x_ref_center << 0.09*cos(-5*0.01745329),0.09*sin(-5*0.01745329),-0.238;
     x_ref = x_ref_center;
-    
+    std::thread print_thread(printer, std::ref(osc));
+
     
     double t = 0;
     double dt = 0.1;
@@ -123,13 +127,14 @@ int main(){
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;
     osc.gripperAttached = false;
+    srl::sleep(2);
+
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(2);
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
-    std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
     //osc.toggle_log();
@@ -140,7 +145,7 @@ int main(){
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
         /*x_ref = circle;
         dx_ref = d_circle;
-        ddx_ref = dd_circle;*/
+        ddx_ref = dd_circle;
         //x_ref = osc.get_objects()[0];
         //osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
