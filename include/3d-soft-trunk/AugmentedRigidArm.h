@@ -1,6 +1,5 @@
 #pragma once
 #include <algorithm>
-#include <Eigen/Dense>
 #include <drake/common/drake_assert.h>
 #include <drake/common/find_resource.h>
 #include <drake/geometry/drake_visualizer.h>

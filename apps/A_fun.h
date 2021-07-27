@@ -12,12 +12,11 @@
 
 // Include Files
 //#include "rtwtypes.h"
-#include <cstddef>
-#include <cstdlib>
+
 #include <iostream>
 #include <Eigen/Dense>
 // Function Declarations
-extern void A_fun(const double in1[4], double A_in[16]);
+
 
 #endif
 
