@@ -54,3 +54,4 @@ if(${roscpp_FOUND})
 endif(${roscpp_FOUND})
 
 add_executable(M_fun M_fun.cpp)
+add_executable(c_fun c_fun.cpp)
