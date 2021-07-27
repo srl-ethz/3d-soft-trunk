@@ -17,4 +17,5 @@ armAngle: 180
 shear_modulus: [35000,62000]
 #Drag coefficients of the segments
 drag_coef: [28000,8000]
+model: augmented
 ...
