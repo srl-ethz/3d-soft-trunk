@@ -81,7 +81,7 @@ void OSC::control_loop() {
         f = B_op*ddx_des;
         
         //f_null = B_op_null*ddx_null;
-        f(0) += loadAttached;
+        f(1) += loadAttached;
         f(2) += /*loadAttached +*/ 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
         tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
