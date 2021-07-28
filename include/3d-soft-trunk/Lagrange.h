@@ -1,35 +1,52 @@
 #pragma once
-
+#include <algorithm>
+#include "mdefs.h"
 #include "SoftTrunk_common.h"
-#include <cstddef>
-#include <cstdlib>
+#include <iostream>
 
-class Lagrange{
-public:
-    /** @brief inertia matrix mapped to q */
-    MatrixXd B;
-    /** @brief coreolis & centrifugal forces mapped to q */
-    VectorXd c;
-    /** @brief gravity mapped to q */
-    MatrixXd g;
-    /** @brief Jacobian of tip position vs q */
-    std::vector<Eigen::MatrixXd> J;
-    /* @brief Coriolis factorization matrix mapped to q */
-    MatrixXd S;
+/**
+ * @brief Represents the augmented rigid arm model.
+ * @details The rigid arm model  approximates the soft arm. (see paper etc. for more info on how this is so)
+ * This class can calculate the kinematics & dynamics of the augmented arm using Drake.
+ * Values with an underscore at the end have extra 2 DoFs at the end of each segment, which represents the (always straight) connection pieces as another PCC section.
+ * known issue: the values could get wrong when extremely close to straight configuration.
+ */
+class Lagrange {
 private:
+    const SoftTrunkParameters st_params;
+    const double g0 = 9.80665;
+    void A_update(VectorXd q);
+    void M_update(VectorXd q);
+    void g_update(VectorXd q);
+    void c_update(VectorXd q, VectorXd dq);
+    void k_update(VectorXd q);
+    void d_update(VectorXd q, VectorXd dq);
+    void p_update(VectorXd q);
+    void J_update(VectorXd q);
+    void JDot_update(VectorXd q, VectorXd dq);
 
+public:
+    Lagrange(const SoftTrunkParameters &st_params);
 
-    void A_update(const double in1[4], MatrixXd& A);
-    void c_update(const double in1[4], const double in2[4], const double in3[2], const double in4[2], VectorXd& c);
-    void d_update(const double in1[2], const double in2[4], const double in3[4], double D[4]);
-    void g_update(const double in1[4], const double in2[2], const double in3[2], double g0, double G[4]);
-    void J_update(const double in1[4], const double in2[2], double J[12]);
-    void JDot_update(const double in1[4], const double in2[4], const double in3[2], double JDot[12]);
-    void k_update(const double in1[2], const double in2[4], double K[4]);
-    void B_update(const double in1[4], const double in2[2], const double in3[2], double M[16]);
-    void p_update(const double in1[4], const double in2[2], double p_FK[3]);
+    /** @brief update the member variables based on current PCC value */
+    void update(const srl::State &state);
 
-    const double g0 = 9.80665; //earth's gravity constant
-
-}
-
+    /** @brief torque mapping matrix */
+    MatrixXd A;
+    /** @brief inertia matrix */
+    MatrixXd M;
+    /** @brief coriolis and centrifugal term */
+    VectorXd Cdq;
+    /** @brief gravity term */
+    VectorXd g;
+    /** @brief damping term */
+    VectorXd d;
+    /** @brief stiffness term */
+    VectorXd k;
+    /** @brief tip position */
+    VectorXd p;
+    /** @brief tip Jacobian */
+    MatrixXd J;
+    /** @brief tip JacobianDot */
+    MatrixXd JDot;   
+};

@@ -76,6 +76,9 @@ target_link_libraries(AugmentedRigidArm drake::drake yaml-cpp)
 add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
 target_link_libraries(SoftTrunkModel AugmentedRigidArm yaml-cpp)
 
+add_library(Lagrange SHARED src/Lagrange.cpp)
+target_link_libraries(Lagrange ControllerPCC)
+
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
 target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads yaml-cpp)
 

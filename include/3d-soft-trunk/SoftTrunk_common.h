@@ -95,6 +95,8 @@ public:
     std::vector<double> shear_modulus = {37800, 62000.};
     std::vector<double> drag_coef = {28000., 8000.};
 
+    std::vector<double> k_vect = {0.000108688, 0.0772599};
+    std::vector<double> d_vect = {2.17377e-05, 0.00249225};
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
 
@@ -104,8 +106,8 @@ public:
         assert(!is_finalized()); // already finalized
 
         // run sanity checks to make sure that at least the size of the arrays make sense
-        assert(num_segments * 2 == masses.size());
-        assert(num_segments * 2 == lengths.size());
+        assert(num_segments == masses.size());
+        assert(num_segments == lengths.size());
         assert(num_segments + 1 == diameters.size());
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
@@ -131,7 +133,9 @@ public:
         this->diameters = params["diameters"].as<std::vector<double>>();
         this->armAngle = params["armAngle"].as<double>();
         this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
-        this->drag_coef = params["drag_coef"].as<std::vector<double>>();  
+        this->drag_coef = params["drag_coef"].as<std::vector<double>>();
+        this->d_vect = params["d_vect"].as<std::vector<double>>();  
+        this->k_vect = params["k_vect"].as<std::vector<double>>();
         this->model = params["model"].as<std::string>();
     }
     
