@@ -73,15 +73,16 @@ public:
     /** @brief gripper attached */
     bool gripperAttached = false;
     double loadAttached = 0.;
-
-protected:
-
-    const SoftTrunkParameters st_params;
-    /**
+        /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
      */
     void actuate(const VectorXd &p);
+
+protected:
+
+    const SoftTrunkParameters st_params;
+
 
     /**
      * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)

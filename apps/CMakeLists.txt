@@ -25,7 +25,7 @@ add_executable(example_IDCon example_IDCon.cpp)
 target_link_libraries(example_IDCon IDCon)
 
 add_executable(example_Lagrange example_Lagrange.cpp)
-target_link_libraries(example_Lagrange Lagrange)
+target_link_libraries(example_Lagrange Lagrange SoftTrunkModel CurvatureCalculator ValveController)
 
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)
@@ -55,6 +55,9 @@ if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
 endif(${roscpp_FOUND})
+
+add_executable(example_Feedforward example_Feedforward.cpp)
+target_link_libraries(example_Feedforward ControllerPCC)
 
 ## add_executable(A_fun A_fun.cpp)
 

@@ -2,16 +2,49 @@
 #include <chrono>
 #include <thread>
 #include "3d-soft-trunk/Lagrange.h"
-
+#include "3d-soft-trunk/CurvatureCalculator.h"
+#include "mobilerack-interface/ValveController.h"
+#include "3d-soft-trunk/SoftTrunkModel.h"
 /**
  * demo to showcase how to use the SoftTrunkModel class, as well as create a custom arm configuration youself. 
  */
 int main(){
+    SoftTrunkParameters st_params_l{};
+    st_params_l.load_yaml("softtrunkparams_Lagrange.yaml");
+    st_params_l.finalize();  // run sanity check and finalize parameters
+
     SoftTrunkParameters st_params{};
-    st_params.load_yaml("softtrunkparams_Lagrange.yaml");
-    st_params.finalize();  // run sanity check and finalize parameters
-    Lagrange lag = Lagrange(st_params);
+    st_params.load_yaml("softtrunkparams_example.yaml");
+    st_params.finalize();
+
+    CurvatureCalculator cc(st_params, CurvatureCalculator::SensorType::qualisys);
+    SoftTrunkModel stm(st_params);
+
+    std::vector<int> map = {1,2,5,3,6,4,0};
+    ValveController vc("192.168.0.100", map, 600);
+    
+
+    Lagrange lag(st_params_l);
     srl::State state = st_params.getBlankState();  // get blank state with appropriate size
+
+    VectorXd tau = VectorXd::Zero(4);
+    VectorXd p = VectorXd::Zero(6);
+    double t = 0.2;
+    int sinusoid(double phase) { return 500 * sin(phase); }
+    while(true){
+
+        for (int i = 0; i < 3; i++){
+            p(i) = sinusoid()
+        }
+
+        for (int i = 0; i < st_params.num_segments*3; i++){
+            vc.setSinglePressure(i, p(i));
+        }
+        srl::sleep(0.2);
+        t += 0.2;
+    }
+
+    /*
     srand((unsigned int) time(0));
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
@@ -28,14 +61,8 @@ int main(){
     std::cout << "J:\n" << lag.J << std::endl;
     std::cout << "JDot:\n" << lag.JDot << std::endl;
     //std::cout << "par:\n" << st_params.masses << std::endl;
-    /*
     */
-    // print parameters of model
-    //fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nA_pseudo:{}\nJ:{}\n S:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.A_pseudo, stm.J[st_params.num_segments-1], stm.S);
-    //fmt::print("A:{}\n", lag.A);
-    //converting between pseudopressure to real pressure
-    //VectorXd v = VectorXd::Zero(2*st_params.num_segments);
-    //v(0) = 200;
+    
 
     return 1;
 }

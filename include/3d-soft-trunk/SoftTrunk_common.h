@@ -106,13 +106,14 @@ public:
         assert(!is_finalized()); // already finalized
 
         // run sanity checks to make sure that at least the size of the arrays make sense
+        /*
         assert(num_segments == masses.size());
         assert(num_segments == lengths.size());
         assert(num_segments + 1 == diameters.size());
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
         assert(model == "augmented" or model == "lagrangian");
-
+        */
         q_size = 2*num_segments*sections_per_segment;
         finalized = true;
     }
