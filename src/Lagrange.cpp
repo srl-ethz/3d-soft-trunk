@@ -3,7 +3,6 @@
 Lagrange::Lagrange(const SoftTrunkParameters &st_params): st_params(st_params)
 {
     assert(st_params.is_finalized());
-    //A = MatrixXd::Zero(4, 4);
 }
 
 void Lagrange::A_update(VectorXd q)
