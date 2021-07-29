@@ -54,9 +54,9 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 crosstime = 1.5;
                 ddx_ref = Vector3d::Zero();
                 newx = x_ref;
-                //newx(1) *= -1;
-                newx(0) *= -1;
-                osc.loadAttached = -0.2;
+                newx(1) *= -1;
+                //newx(0) *= -1;
+                osc.loadAttached = 0.2;
                 //osc.toggle_log();
                 /*diff = newx - x_ref;
                 
@@ -69,8 +69,11 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 //srl::sleep(8);
                 //osc.toggle_log();
                 break;
+
             case 'b':
                 osc.loadAttached = -3;
+                srl::sleep(0.2);
+                osc.toggleGripper();
                 break;
             case 'f': 
                 osc.freeze = !osc.freeze;
@@ -106,7 +109,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.09*cos(-30*0.01745329),0.09*sin(-30*0.01745329),-0.238;
+    x_ref_center << 0.14*cos(0*0.01745329),/*0.15*sin(0*0.01745329)*/0.05,-0.238;
     x_ref = x_ref_center;
     std::thread print_thread(printer, std::ref(osc));
 
@@ -150,17 +153,5 @@ int main(){
     }
     osc.toggle_log();
     srl::sleep(2);
-    /*
-    x_ref << 0.15,0,-0.2;
-    osc.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(4);
-    x_ref << -0.15,0,-0.2;
-    dx_ref << -10, 0, 0;
-    osc.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(0.3);
-    osc.toggleGripper();
-    dx_ref << 0, 0, 0;
-    osc.set_ref(x_ref,dx_ref,ddx_ref);
-    */
     return 1;
 }
