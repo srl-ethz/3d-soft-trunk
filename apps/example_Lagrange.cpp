@@ -30,7 +30,6 @@ int main(){
     VectorXd tau = VectorXd::Zero(4);
     VectorXd p = VectorXd::Zero(6);
     double t = 0.2;
-    int sinusoid(double phase) { return 500 * sin(phase); }
     while(true){
 
         for (int i = 0; i < 3; i++){

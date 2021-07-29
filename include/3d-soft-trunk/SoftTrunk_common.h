@@ -135,9 +135,9 @@ public:
         this->armAngle = params["armAngle"].as<double>();
         this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
         this->drag_coef = params["drag_coef"].as<std::vector<double>>();
-        this->d_vect = params["d_vect"].as<std::vector<double>>();  
+        /*this->d_vect = params["d_vect"].as<std::vector<double>>();  
         this->k_vect = params["k_vect"].as<std::vector<double>>();
-        this->model = params["model"].as<std::string>();
+        this->model = params["model"].as<std::string>();*/
     }
     
     bool is_finalized() const {

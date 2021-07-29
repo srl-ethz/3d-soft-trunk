@@ -185,6 +185,6 @@ void ControllerPCC::log(double time){
     for (int i=0; i < st_params.q_size; i++)               //log q
         log_file << fmt::format(", {}", state.q(i));
     for (int i=0; i < st_params.num_segments*3; i++)
-        log_file << fmt::format(", {}", stm->A(2,2)*p(i));
+        log_file << fmt::format(", {}", p(i));
     log_file << "\n";
 }

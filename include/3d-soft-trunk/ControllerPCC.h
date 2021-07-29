@@ -79,6 +79,9 @@ public:
      */
     void actuate(const VectorXd &p);
 
+        VectorXd p;
+        srl::State state;
+std::unique_ptr<CurvatureCalculator> cc;
 protected:
 
     const SoftTrunkParameters st_params;
@@ -101,7 +104,7 @@ protected:
 
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<SoftTrunkModel> stm;
-    std::unique_ptr<CurvatureCalculator> cc;
+    
     
 
 
@@ -129,7 +132,7 @@ protected:
     void control_loop();
 
     // arm configuration+target positions
-    srl::State state;
+    
     srl::State state_ref;
     srl::State state_prev; //for simulation
     
@@ -142,7 +145,7 @@ protected:
     bool gripping = false;
 
     //actuation vectors, p is pressures and f is torques
-    VectorXd p;
+
     VectorXd f;
 
     //logging variables
