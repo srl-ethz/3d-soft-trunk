@@ -14,7 +14,7 @@ int main(){
     while(time < 16){
 
         for (int i = 0; i < 3; i++){
-            cpcc.p(3+i) = 600*sin(time*2*PI/16 + i*2*PI/3);
+            cpcc.p(3+i) = 600*pow(sin(time*2*PI/16 + i*2*PI/3),2);
         }
         cpcc.cc->get_curvature(cpcc.state);
 
