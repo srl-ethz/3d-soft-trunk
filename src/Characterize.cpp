@@ -73,15 +73,19 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     }
 }
 
-void Characterize::calcK(int segment, int directions, int verticalsteps){
+void Characterize::calcK(int segment, int directions, int verticalsteps, std::string fname){
     VectorXd K = VectorXd::Zero(2*directions*verticalsteps,1);
     VectorXd tau = VectorXd::Zero(2*directions*verticalsteps);
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(2*st_params.num_segments);
+
+    filename = fname;
+
     fmt::print("Starting coefficient characterization in {} directions\n", directions);
+    toggle_log();
     for (int i = 0; i < directions; i ++){
         angle = 45+i*360/directions; 
-
+        
         for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
             pressures(2*segment) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
             pressures(2*segment+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
@@ -101,7 +105,7 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
 
         }
     }
-
+    toggle_log();
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
     fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
