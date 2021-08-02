@@ -12,13 +12,18 @@ int main(){
     srl::Rate r{1./0.1};
     cpcc.toggle_log();
     while(time < 18){
-        
-        for (int i = 0; i < 3; i++){
-            cpcc.p(3+i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
-        }
-        for (int i = 0; i < 3; i++){
-            cpcc.p(i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
-        }
+        //for stuff
+
+        cpcc.toggle_log()
+        cpcc.set_log_filename("log2");
+        cpcc.toggle_log();
+            for (int i = 0; i < 3; i++){
+                cpcc.p(3+i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
+            }
+            for (int i = 0; i < 3; i++){
+                cpcc.p(i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
+            }
+
         /*
         
         cpcc.p(0) = 0;
