@@ -78,7 +78,7 @@ void ControllerPCC::get_pressure(VectorXd& p){
 void ControllerPCC::toggleGripper(){
     gripperAttached = true;
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params.num_segments, gripping*300);
+    vc->setSinglePressure(3*st_params.num_segments, gripping*330);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){

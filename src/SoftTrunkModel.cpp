@@ -66,7 +66,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
+        if (pressure_pseudo.segment(2*i,2).norm() > 650) pressure_pseudo.segment(2*i,2) *= 650/pressure_pseudo.segment(2*i,2).norm();
 
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < -30) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
@@ -78,9 +78,9 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
-        if (0 < angle && angle <= 120) angle += 1.1939694769538097e-05*pow(angle-0,3) + -0.001591236332358157*pow(angle-0,2) + 0.08581993368980757*(angle-0) + -8.052581158644328;
-        else if (120 < angle && angle < 240) angle += 1.1873751753382705e-05*pow(angle-120,3) + -0.0025437960847354*pow(angle-120,2) + 0.08634968680563385*(angle-120) + 2.0580177930609294;
-        else if (240 < angle && angle <= 360) angle += 0.002362192260519005*pow(angle-240,3) + -0.35035059518862377*pow(angle-240,2) + 13.383124307772148*(angle-240) + -98.6374889048372;
+        if (0 < angle && angle <= 120) angle += 7.026720727750896e-06*pow(angle-0,3) + -0.0010119112695808584*pow(angle-0,2) + 0.07888533833278852*(angle-0) + -4.58710188836666;
+        else if (120 < angle && angle < 240) angle += 1.9957600803294914e-05*pow(angle-120,3) + -0.003794361222699832*pow(angle-120,2) + 0.10090167820307576*(angle-120) + 4.470065575102756;
+        else if (240 < angle && angle <= 360) angle += 2.8005708970870066e-05*pow(angle-240,3) + -0.006564999056507668*pow(angle-240,2) + 0.3668393302251732*(angle-240) + -2.2599641106614135;
         
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.

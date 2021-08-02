@@ -13,7 +13,7 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 100;
+    kp = 130;
     kd = 5.5;
 
 
@@ -43,6 +43,9 @@ void OSC::control_loop() {
         //this x is from qualisys directly
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
+        Vector3d gripperl = Vector3d::Zero();
+        gripperl(2) = 0.06;
+        x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
         
         
@@ -68,7 +71,7 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.2*(i+1)*MatrixXd::Identity(3,2);
+            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.02*(i+1)*MatrixXd::Identity(3,2);
         }
         
 
@@ -82,7 +85,7 @@ void OSC::control_loop() {
         
         //f_null = B_op_null*ddx_null;
         f(0) += loadAttached;
-        f(2) += /*loadAttached +*/ 0.24*gripperAttached; //the gripper weights 0.24 Newton
+        f(2) += /*loadAttached +*/ 0.27*gripperAttached; //the gripper weights 0.24 Newton
 
         tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
         
