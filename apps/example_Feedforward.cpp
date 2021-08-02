@@ -14,9 +14,7 @@ int main(){
     while(time < 18){
         //for stuff
 
-        cpcc.toggle_log()
-        cpcc.set_log_filename("log2");
-        cpcc.toggle_log();
+        cpcc.experiment += 1;
             for (int i = 0; i < 3; i++){
                 cpcc.p(3+i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
             }

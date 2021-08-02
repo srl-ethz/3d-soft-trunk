@@ -79,6 +79,8 @@ public:
      */
     void actuate(const VectorXd &p);
 
+    int experiment = 0;
+
         VectorXd p;
         srl::State state;
 std::unique_ptr<CurvatureCalculator> cc;
