@@ -9,7 +9,7 @@
 #include "SoftTrunkModel.h"
 #include <mobilerack-interface/ValveController.h>
 #include <mutex>
-
+#include "Lagrange.h"
 
 /**
  * @brief Implements the PCC controller as described in paper.
@@ -104,7 +104,7 @@ protected:
 
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<SoftTrunkModel> stm;
-    
+    std::unique_ptr<Lagrange> lag;
     
 
 
