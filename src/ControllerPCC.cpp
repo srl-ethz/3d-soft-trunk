@@ -179,6 +179,10 @@ void ControllerPCC::toggle_log(){
 
 void ControllerPCC::log(double time){
     log_file << experiment << ", ";
+    log_file << amp1 << ", ";
+    log_file << T1 << ", ";
+    log_file << amp2 << ", ";
+    log_file << T2 << ", ";
     log_file << time;
 
 

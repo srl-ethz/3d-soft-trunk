@@ -16,7 +16,8 @@
  * @details Different controllers can be implemented by creating a child class of this class.
  * Includes a simulator functionality, which integrates the analytical model forward in time.
  **/
-class ControllerPCC {
+class ControllerPCC
+{
 public:
     ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
 
@@ -73,21 +74,24 @@ public:
     /** @brief gripper attached */
     bool gripperAttached = false;
     double loadAttached = 0.;
-        /**
+    /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
      */
     void actuate(const VectorXd &p);
 
-    int experiment = 0;
+    int experiment = 0; // number of experiment
+    double amp1; // amplitude for input
+    double amp2;
+    double T1; //period of actuation of the first three chambers
+    double T2;
 
-        VectorXd p;
-        srl::State state;
-std::unique_ptr<CurvatureCalculator> cc;
+    VectorXd p;
+    srl::State state;
+    std::unique_ptr<CurvatureCalculator> cc;
+
 protected:
-
     const SoftTrunkParameters st_params;
-
 
     /**
      * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)
@@ -103,15 +107,11 @@ protected:
     */
     int singularity(const MatrixXd &J);
 
-
     std::unique_ptr<ValveController> vc;
     std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<Lagrange> lag;
-    
-
 
     std::string bendlabs_portname = "/dev/ttyUSB0";
-
 
     /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
      * for DragonSkin 30, set to 300.
@@ -121,9 +121,7 @@ protected:
     const int p_offset = 0;
     const int p_max = 700; // 400 for DS 10, 1200 for DS 30
 
-    
-
-    double dt = 1./30.;
+    double dt = 1. / 30.;
     double t;
 
     bool is_initial_ref_received = false;
@@ -134,10 +132,10 @@ protected:
     void control_loop();
 
     // arm configuration+target positions
-    
+
     srl::State state_ref;
     srl::State state_prev; //for simulation
-    
+
     Vector3d x;
     Vector3d x_ref;
     Vector3d dx;
@@ -162,11 +160,9 @@ protected:
     int objects;
     CurvatureCalculator::SensorType sensor_type;
 
-
 private:
     /** @brief forward simulate using beeman method
     *   @details explained here https://www.compadre.org/PICUP/resources/Numerical-Integration/
     */
     bool Beeman(const VectorXd &p);
-
 };
