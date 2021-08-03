@@ -14,17 +14,20 @@ int main()
 
     ControllerPCC cpcc(st_params, CurvatureCalculator::SensorType::qualisys);
     cpcc.set_log_filename("feedforward_log");
-    srl::Rate r{1. / 0.1};
+    double dt = 0.01;
+    
     cpcc.toggle_log();
     //for stuff
     double pMax = 350.0;
-    double pMin = 50.0;
-    double fMax = 25.0;
-    double fMin = 1.0;
+    double pMin = 100.0;
+    double fMax = 10.0;
+    double fMin = 1;
     int period = 10;   // time period
-    int totNumExp = 2; //total number of experiments
+    int totNumExp = 80; //total number of experiments
+    srl::Rate r{1. / dt};   
     while (cpcc.experiment < totNumExp)
     {
+        
         cpcc.amp1 = fRand(pMin, pMax);
         cpcc.amp2 = fRand(pMin, pMax);
         cpcc.T1 = fRand(fMin, fMax);
@@ -32,6 +35,7 @@ int main()
         double time = 0;
         while (time < period)
         {
+             
             for (int i = 0; i < 3; i++)
             {
                 cpcc.p(i) = cpcc.amp1 * pow(sin(time * 2 * PI / cpcc.T1 + i * 2 * PI / 3), 2) + cpcc.amp1;
@@ -40,13 +44,17 @@ int main()
             {
                 cpcc.p(3 + i) = cpcc.amp2 * pow(sin(time * 2 * PI / cpcc.T2 + i * 2 * PI / 3), 2) + cpcc.amp2;
             }
-            time += 0.1;
+            time += dt;
             cpcc.cc->get_curvature(cpcc.state);
             cpcc.actuate(cpcc.p);
             r.sleep();
-            std::cout << cpcc.p << std::endl;
+            //std::cout << time << std::endl;
+            //std::cout << cpcc.p << std::endl;
+            //std::cout << cpcc.T1 << " : " << cpcc.T2 << std::endl;
         }
         cpcc.experiment += 1;
+        std::cout << "experiment #" << cpcc.experiment << std::endl;
+       std::cout << cpcc.T1 << " : " << cpcc.T2 << std::endl;
     }
     cpcc.toggle_log();
 }
