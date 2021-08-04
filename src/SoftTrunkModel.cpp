@@ -66,10 +66,10 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i,2).norm() > 650) pressure_pseudo.segment(2*i,2) *= 650/pressure_pseudo.segment(2*i,2).norm();
+        if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
 
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
-        if (angle < -30) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
+        if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
         
         
         //shift coordinates to start at the same spot as the characterization program
@@ -77,11 +77,11 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
 
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
-        /*
-        if (0 < angle && angle <= 120) angle += 8.895928240869421e-06*pow(angle-0,3) + -0.0009992936546897617*pow(angle-0,2) + 0.06647894781523957*(angle-0) + 3.0471822862921263;
-        else if (120 < angle && angle < 240) angle += 1.6398813125387573e-05*pow(angle-120,3) + -0.003899274161576371*pow(angle-120,2) + 0.15718198889464668*(angle-120) + 14.125933276424142;
-        else if (240 < angle && angle <= 360) angle += 3.529461987389606e-05*pow(angle-240,3) + -0.007329177967080339*pow(angle-240,2) + 0.34080072921613275*(angle-240) + 5.6854873617498125;
-        */
+        
+        if (0 < angle && angle <= 120) angle += 1.1801621846074661e-05*pow(angle-0,3) + -0.0018117529252268624*pow(angle-0,2) + 0.075505448993192*(angle-0) + -1.4882327203950654;
+        else if (120 < angle && angle <= 240) angle += 1.7532135814765115e-05*pow(angle-120,3) + -0.0030809432907385613*pow(angle-120,2) + 0.011420567463255746*(angle-120) + 4.016272634432998;
+        else if (240 < angle && angle <= 360) angle += 2.7752592487695527e-05*pow(angle-240,3) + -0.0062640689509428586*pow(angle-240,2) + 0.39515272502029625*(angle-240) + -7.332763566383146;
+        
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.
         
@@ -91,16 +91,17 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //invert back onto real chambers
 
         double min_p = output.segment(3*i, 3).minCoeff();
-        if (min_p < 0)
-            output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
 
+        output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
+
+        
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
-        /*
-        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-5.682219689707674e-08*pow(angle-0,3) + 4.098243211813062e-06*pow(angle-0,2) + 0.0004278584735820392*(angle-0) + 0.11255601188533765);
-        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(2.742221371414724e-08*pow(angle-120,3) + -9.304443168300896e-06*pow(angle-120,2) + 0.0007551910374737406*(angle-120) + 0.11960203035686379);
-        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(2.458160772496894e-08*pow(angle-240,3) + -6.002860752007154e-06*pow(angle-240,2) + 0.0003890681122674549*(angle-240) + 0.11858111495475208);
-        */
+        
+        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-1.1522653341551559e-08*pow(angle-0,3) + -4.442029286607206e-06*pow(angle-0,2) + 0.0006276546035244565*(angle-0) + 0.11858127202276979);
+        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(1.1151979389300336e-08*pow(angle-120,3) + -5.113557624217834e-06*pow(angle-120,2) + 0.000613914116554326*(angle-120) + 0.10724524197623829);
+        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(1.5214773447303056e-08*pow(angle-240,3) + -6.541282867006305e-06*pow(angle-240,2) + 0.0006204029558873967*(angle-240) + 0.12183272655309335);
+        
     }
     return output;
 }

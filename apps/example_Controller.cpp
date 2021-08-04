@@ -112,7 +112,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.17*cos(0*0.01745329),/*0.15*sin(0*0.01745329)*/0.07,-0.26;
+    x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     x_ref = x_ref_center;
     std::thread print_thread(printer, std::ref(osc));
 
@@ -123,30 +123,30 @@ int main(){
     Vector3d d_circle;
     Vector3d dd_circle;
 
-    double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;
     osc.gripperAttached = true;
+    osc.loadAttached = 0.24;
     getchar();
     osc.toggleGripper();
 
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
+    getchar();
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
-    //osc.toggle_log();
-    while (true){
-        double r = 0.03;
-        //osc.loadAttached = 0.00;
-        circle << 0.15, r*cos(coef*t), -0.23+r*sin(coef*t);
-        d_circle << 0, -r*coef*sin(coef*t), r*coef*cos(coef*t);
-        dd_circle << 0,-r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t);
-        /*x_ref = circle;
+    osc.toggle_log();
+    while (t<16){
+        double r = 0.15;
+        circle << r*cos(coef*t), r*sin(coef*t),-0.215;
+        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
+        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
+        x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
         //x_ref = osc.get_objects()[0];
-        //osc.set_ref(x_ref,dx_ref, ddx_ref);
+        osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
