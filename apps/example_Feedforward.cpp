@@ -20,11 +20,11 @@ int main()
     //for stuff
     double pMax = 350.0;
     double pMin = 100.0;
-    double fMax = 10.0;
-    double fMin = 1;
+    double fMax = 15.0;
+    double fMin = 0.3;
     int period = 10;   // time period
     int totNumExp = 80; //total number of experiments
-    srl::Rate r{1. / dt};   
+      
     while (cpcc.experiment < totNumExp)
     {
         
@@ -33,6 +33,17 @@ int main()
         cpcc.T1 = fRand(fMin, fMax);
         cpcc.T2 = fRand(fMin, fMax);
         double time = 0;
+        for (int i = 0; i < 3; i++)
+            {
+                cpcc.p(i) = cpcc.amp1 * pow(sin(time * 2 * PI / cpcc.T1 + i * 2 * PI / 3), 2) + cpcc.amp1;
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                cpcc.p(3 + i) = cpcc.amp2 * pow(sin(time * 2 * PI / cpcc.T2 + i * 2 * PI / 3), 2) + cpcc.amp2;
+            }
+        cpcc.actuate(cpcc.p);
+        srl::sleep(5);
+        srl::Rate r{1. / dt}; 
         while (time < period)
         {
              
