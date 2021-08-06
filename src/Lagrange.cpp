@@ -3728,12 +3728,13 @@ void Lagrange::Y_update(VectorXd q, VectorXd dq, VectorXd ddq)
 
 void Lagrange::update(const srl::State &state)
 {
-    Lagrange::A_update(MatrixXd::Identity(4,4)*state.q);
+
+    Lagrange::A_update(MatrixXd::Identity(4,4)*state.q);/*
     Lagrange::M_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::g_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::c_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);
     Lagrange::k_update(MatrixXd::Identity(4,4)*state.q);
-    Lagrange::d_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);
+    Lagrange::d_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);*/
     Lagrange::p_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::J_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::JDot_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);

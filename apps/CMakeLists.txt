@@ -59,5 +59,7 @@ endif(${roscpp_FOUND})
 add_executable(example_Feedforward example_Feedforward.cpp)
 target_link_libraries(example_Feedforward ControllerPCC)
 
+add_executable(example_Adaptive example_Adaptive.cpp)
+target_link_libraries(example_Adaptive ControllerPCC Lagrange)
 ## add_executable(A_fun A_fun.cpp)
 

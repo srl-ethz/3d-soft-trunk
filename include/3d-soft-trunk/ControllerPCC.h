@@ -89,6 +89,7 @@ public:
     VectorXd p;
     srl::State state;
     std::unique_ptr<CurvatureCalculator> cc;
+    std::unique_ptr<SoftTrunkModel> stm;
 
 protected:
     const SoftTrunkParameters st_params;
@@ -108,7 +109,7 @@ protected:
     int singularity(const MatrixXd &J);
 
     std::unique_ptr<ValveController> vc;
-    std::unique_ptr<SoftTrunkModel> stm;
+    
     std::unique_ptr<Lagrange> lag;
 
     std::string bendlabs_portname = "/dev/ttyUSB0";
