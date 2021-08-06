@@ -8,7 +8,14 @@
 /**
  * demo to showcase how to use the SoftTrunkModel class, as well as create a custom arm configuration youself. 
  */
-int main(){
+double fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+int main()
+{
+    /*
     SoftTrunkParameters st_params_l{};
     st_params_l.load_yaml("softtrunkparams_Lagrange.yaml");
     st_params_l.finalize();  // run sanity check and finalize parameters
@@ -42,14 +49,20 @@ int main(){
         srl::sleep(0.2);
         t += 0.2;
     }
-
-    /*
-    srand((unsigned int) time(0));
+*/
+    SoftTrunkParameters st_params_l{};
+    st_params_l.load_yaml("softtrunkparams_Lagrange.yaml");
+    st_params_l.finalize(); // run sanity check and finalize parameters
+    Lagrange lag(st_params_l);
+    srl::State state = st_params_l.getBlankState(); // get blank state with appropriate size
+    srand((unsigned int)time(0));
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
+    state.ddq = VectorXd::Random(4);
+    lag.update(state);
+    /*
     std::cout << "q:\n" << state.q << std::endl;
     std::cout << "dq:\n" << state.dq << std::endl;
-    lag.update(state);
     std::cout << "A:\n" << lag.A << std::endl;
     std::cout << "Cdq:\n" << lag.Cdq << std::endl;
     std::cout << "M:\n" << lag.M << std::endl;
@@ -61,7 +74,10 @@ int main(){
     std::cout << "JDot:\n" << lag.JDot << std::endl;
     //std::cout << "par:\n" << st_params.masses << std::endl;
     */
-    
-
+    std::cout << "q:\n" << state.q << std::endl;
+    std::cout << "dq:\n" << state.dq << std::endl;
+    std::cout << "ddq:\n" << state.ddq << std::endl;
+    std::cout << "Y:\n"
+              << lag.Y << std::endl;
     return 1;
 }

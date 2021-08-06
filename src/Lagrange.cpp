@@ -2135,6 +2135,1591 @@ void Lagrange::c_update(VectorXd q, VectorXd dq)
 }
 
 
+void Lagrange::Y_update(VectorXd q, VectorXd dq, VectorXd ddq)
+{
+  double b_Y[44];
+  double Y_tmp;
+  double Y_tmp_tmp;
+  double Y_tmp_tmp_tmp;
+  double ab_Y_tmp;
+  double b_Y_tmp;
+  double b_Y_tmp_tmp;
+  double bb_Y_tmp;
+  double c_Y_tmp;
+  double c_Y_tmp_tmp;
+  double cb_Y_tmp;
+  double d;
+  double d1;
+  double d10;
+  double d100;
+  double d101;
+  double d102;
+  double d103;
+  double d104;
+  double d105;
+  double d106;
+  double d107;
+  double d108;
+  double d109;
+  double d11;
+  double d110;
+  double d111;
+  double d112;
+  double d113;
+  double d114;
+  double d115;
+  double d116;
+  double d117;
+  double d118;
+  double d119;
+  double d12;
+  double d120;
+  double d121;
+  double d122;
+  double d123;
+  double d124;
+  double d125;
+  double d126;
+  double d127;
+  double d128;
+  double d129;
+  double d13;
+  double d130;
+  double d131;
+  double d132;
+  double d133;
+  double d134;
+  double d135;
+  double d136;
+  double d137;
+  double d138;
+  double d139;
+  double d14;
+  double d140;
+  double d141;
+  double d142;
+  double d143;
+  double d144;
+  double d145;
+  double d146;
+  double d147;
+  double d148;
+  double d149;
+  double d15;
+  double d150;
+  double d151;
+  double d152;
+  double d153;
+  double d154;
+  double d155;
+  double d156;
+  double d157;
+  double d158;
+  double d159;
+  double d16;
+  double d160;
+  double d161;
+  double d162;
+  double d163;
+  double d164;
+  double d165;
+  double d166;
+  double d167;
+  double d168;
+  double d169;
+  double d17;
+  double d170;
+  double d171;
+  double d172;
+  double d173;
+  double d174;
+  double d175;
+  double d176;
+  double d177;
+  double d178;
+  double d179;
+  double d18;
+  double d180;
+  double d181;
+  double d182;
+  double d183;
+  double d184;
+  double d185;
+  double d186;
+  double d187;
+  double d188;
+  double d189;
+  double d19;
+  double d190;
+  double d191;
+  double d192;
+  double d193;
+  double d194;
+  double d195;
+  double d196;
+  double d197;
+  double d198;
+  double d199;
+  double d2;
+  double d20;
+  double d200;
+  double d201;
+  double d202;
+  double d203;
+  double d204;
+  double d205;
+  double d206;
+  double d207;
+  double d208;
+  double d209;
+  double d21;
+  double d210;
+  double d211;
+  double d212;
+  double d22;
+  double d23;
+  double d24;
+  double d25;
+  double d26;
+  double d27;
+  double d28;
+  double d29;
+  double d3;
+  double d30;
+  double d31;
+  double d32;
+  double d33;
+  double d34;
+  double d35;
+  double d36;
+  double d37;
+  double d38;
+  double d39;
+  double d4;
+  double d40;
+  double d41;
+  double d42;
+  double d43;
+  double d44;
+  double d45;
+  double d46;
+  double d47;
+  double d48;
+  double d49;
+  double d5;
+  double d50;
+  double d51;
+  double d52;
+  double d53;
+  double d54;
+  double d55;
+  double d56;
+  double d57;
+  double d58;
+  double d59;
+  double d6;
+  double d60;
+  double d61;
+  double d62;
+  double d63;
+  double d64;
+  double d65;
+  double d66;
+  double d67;
+  double d68;
+  double d69;
+  double d7;
+  double d70;
+  double d71;
+  double d72;
+  double d73;
+  double d74;
+  double d75;
+  double d76;
+  double d77;
+  double d78;
+  double d79;
+  double d8;
+  double d80;
+  double d81;
+  double d82;
+  double d83;
+  double d84;
+  double d85;
+  double d86;
+  double d87;
+  double d88;
+  double d89;
+  double d9;
+  double d90;
+  double d91;
+  double d92;
+  double d93;
+  double d94;
+  double d95;
+  double d96;
+  double d97;
+  double d98;
+  double d99;
+  double d_Y_tmp;
+  double d_Y_tmp_tmp;
+  double db_Y_tmp;
+  double e_Y_tmp;
+  double e_Y_tmp_tmp;
+  double eb_Y_tmp;
+  double f_Y_tmp;
+  double f_Y_tmp_tmp;
+  double fb_Y_tmp;
+  double g_Y_tmp;
+  double g_Y_tmp_tmp;
+  double gb_Y_tmp;
+  double h_Y_tmp;
+  double h_Y_tmp_tmp;
+  double hb_Y_tmp;
+  double i_Y_tmp;
+  double i_Y_tmp_tmp;
+  double ib_Y_tmp;
+  double j_Y_tmp;
+  double j_Y_tmp_tmp;
+  double jb_Y_tmp;
+  double k_Y_tmp;
+  double kb_Y_tmp;
+  double l_Y_tmp;
+  double lb_Y_tmp;
+  double m_Y_tmp;
+  double mb_Y_tmp;
+  double n_Y_tmp;
+  double nb_Y_tmp;
+  double o_Y_tmp;
+  double p_Y_tmp;
+  double q_Y_tmp;
+  double r_Y_tmp;
+  double s_Y_tmp;
+  double t10;
+  double t11;
+  double t12;
+  double t13;
+  double t15;
+  double t18;
+  double t19;
+  double t2;
+  double t20;
+  double t21;
+  double t22;
+  double t23;
+  double t24;
+  double t25;
+  double t26;
+  double t27;
+  double t28;
+  double t29;
+  double t3;
+  double t30;
+  double t31;
+  double t32;
+  double t33;
+  double t34;
+  double t35;
+  double t36;
+  double t38;
+  double t39;
+  double t4;
+  double t40;
+  double t5;
+  double t6;
+  double t7;
+  double t8;
+  double t9;
+  double t_Y_tmp;
+  double u_Y_tmp;
+  double v_Y_tmp;
+  double w_Y_tmp;
+  double x_Y_tmp;
+  double y_Y_tmp;
+
+  //     This function was generated by the Symbolic Math Toolbox version 8.6.
+  //     06-Aug-2021 10:29:40
+  t2 = std::cos(q[0]);
+  t3 = std::cos(q[1]);
+  t4 = std::cos(q[2]);
+  t5 = std::cos(q[3]);
+  t6 = std::sin(q[0]);
+  t7 = std::sin(q[1]);
+  t8 = std::sin(q[2]);
+  t9 = std::sin(q[3]);
+  t10 = dq[0] * dq[0];
+  t11 = dq[1] * dq[1];
+  t12 = dq[2] * dq[2];
+  t13 = dq[3] * dq[3];
+  t15 = q[1] * 2.0;
+  t18 = q[1] * q[1];
+  t19 = std::pow(q[1], 3.0);
+  t21 = q[3] * q[3];
+  t22 = std::pow(q[1], 5.0);
+  t23 = std::pow(q[3], 3.0);
+  t32 = 1.0 / q[1];
+  t35 = 1.0 / q[3];
+  t20 = t18 * t18;
+  t24 = t2 * t2;
+  t25 = t3 * t3;
+  t26 = t4 * t4;
+  t27 = t5 * t5;
+  t28 = std::sin(q[0] * 2.0);
+  t29 = std::sin(t15);
+  t30 = std::sin(q[2] * 2.0);
+  t31 = std::sin(q[3] * 2.0);
+  t33 = 1.0 / t18;
+  t34 = 1.0 / t19;
+  t36 = 1.0 / t21;
+  t38 = 1.0 / t23;
+  t40 = std::pow(t35, 5.0);
+  t39 = t36 * t36;
+  Y_tmp = dq[0] * dq[1];
+  b_Y_tmp = Y_tmp * t34;
+  c_Y_tmp = ddq[0] * t33;
+  Y_tmp_tmp_tmp = ddq[0] * t3;
+  d_Y_tmp = Y_tmp_tmp_tmp * t33;
+  Y_tmp_tmp = ddq[0] * t25;
+  e_Y_tmp = Y_tmp_tmp * t33;
+  b_Y_tmp_tmp = Y_tmp * t3;
+  f_Y_tmp = b_Y_tmp_tmp * t34;
+  c_Y_tmp_tmp = Y_tmp * t7;
+  g_Y_tmp = c_Y_tmp_tmp * t33;
+  h_Y_tmp = Y_tmp * t25 * t34;
+  i_Y_tmp = Y_tmp * t29 * t33;
+  b_Y[0] = ((((((c_Y_tmp / 4.0 - b_Y_tmp / 2.0) - d_Y_tmp / 2.0) + e_Y_tmp / 4.0)
+              + f_Y_tmp) + g_Y_tmp / 2.0) - h_Y_tmp / 2.0) - i_Y_tmp / 4.0;
+  j_Y_tmp = t3 * t11;
+  k_Y_tmp = t10 * t18 * t23;
+  l_Y_tmp = ddq[1] * q[1];
+  m_Y_tmp = t11 * t23;
+  n_Y_tmp = l_Y_tmp * t23;
+  o_Y_tmp = ddq[1] * t19 * t23;
+  p_Y_tmp = j_Y_tmp * t23;
+  q_Y_tmp = t11 * t18 * t23;
+  r_Y_tmp = q[1] * t7 * t11 * t23;
+  j_Y_tmp = j_Y_tmp * t18 * t23;
+  s_Y_tmp = t7 * t10 * t19 * t23;
+  t_Y_tmp = k_Y_tmp * t25;
+  u_Y_tmp = t10 * t19 * t23 * t29;
+  v_Y_tmp = 1.0 / t22 * t38;
+  w_Y_tmp = ddq[1] * t3;
+  x_Y_tmp = q[1] * t3;
+  b_Y[1] = v_Y_tmp * (((((((((((((m_Y_tmp * 4.0 - n_Y_tmp * 2.0) - o_Y_tmp) -
+    p_Y_tmp * 4.0) - k_Y_tmp) + q_Y_tmp) + w_Y_tmp * t15 * t23) - r_Y_tmp * 4.0)
+    + j_Y_tmp) + s_Y_tmp) - t_Y_tmp) - u_Y_tmp / 2.0) + l_Y_tmp * t7 * t15 * t23)
+                      + x_Y_tmp * t10 * t15 * t23) * -0.25;
+  b_Y[2] = 0.0;
+  b_Y[3] = 0.0;
+  b_Y[4] = ((((((c_Y_tmp - b_Y_tmp * 2.0) - d_Y_tmp * 2.0) + e_Y_tmp) + f_Y_tmp *
+              4.0) + g_Y_tmp * 2.0) - h_Y_tmp * 2.0) - i_Y_tmp;
+  b_Y_tmp = t3 * t10;
+  c_Y_tmp = l_Y_tmp * t3;
+  d_Y_tmp = ddq[1] * t7;
+  b_Y[5] = v_Y_tmp * (((((((((((((m_Y_tmp * 16.0 - n_Y_tmp * 8.0) - o_Y_tmp *
+    4.0) - p_Y_tmp * 16.0) - k_Y_tmp * 4.0) + q_Y_tmp * 4.0) + c_Y_tmp * t23 *
+    8.0) + d_Y_tmp * t18 * t23 * 8.0) - r_Y_tmp * 16.0) + b_Y_tmp * t18 * t23 *
+    8.0) + j_Y_tmp * 4.0) + s_Y_tmp * 4.0) - t_Y_tmp * 4.0) - u_Y_tmp * 2.0) *
+    -0.25;
+  b_Y[6] = 0.0;
+  b_Y[7] = 0.0;
+  d = dq[0] * dq[3];
+  d1 = dq[2] * dq[3];
+  d2 = dq[0] * dq[2];
+  d3 = ddq[2] * t3;
+  d4 = ddq[0] * t5;
+  d5 = ddq[0] * t24;
+  d6 = ddq[0] * t26;
+  d7 = d * t3;
+  d8 = d1 * t3;
+  d9 = d * t5;
+  d10 = d * t9;
+  d11 = d * t24;
+  d12 = d * t26;
+  d13 = d4 * t24;
+  d14 = d4 * t25;
+  d15 = d5 * t25;
+  d16 = d5 * t26;
+  d17 = Y_tmp_tmp * t26;
+  d18 = ddq[2] * t5;
+  d19 = d7 * t5;
+  d20 = d1 * t5;
+  d21 = Y_tmp_tmp_tmp * t5;
+  d22 = d3 * t5;
+  d23 = d8 * t5;
+  d24 = d9 * t24;
+  d25 = dq[1] * dq[2];
+  d26 = d25 * t7 * t24;
+  d27 = d * t25;
+  d28 = ddq[1] * t2;
+  d29 = ddq[1] * t4;
+  d30 = t2 * t5;
+  d31 = d30 * t6;
+  d32 = t4 * t5;
+  d33 = d32 * t8;
+  d34 = t2 * t6;
+  d35 = d34 * t10;
+  d34 *= t11;
+  d36 = t4 * t8;
+  d37 = d36 * t10;
+  d36 *= t11;
+  d38 = ddq[0] * t2;
+  d39 = d38 * t4;
+  d40 = ddq[3] * t2;
+  d41 = ddq[3] * t4;
+  d42 = d28 * t6 * t7;
+  d43 = d29 * t7 * t8;
+  d44 = d13 * t25;
+  d45 = d15 * t26;
+  d46 = t2 * t3;
+  d47 = t3 * t4;
+  d48 = t2 * t7 * t8;
+  d49 = t4 * t6;
+  d50 = d49 * t7;
+  d51 = d46 * t6 * t11;
+  d52 = d31 * t10;
+  d31 *= t11;
+  d53 = d47 * t8 * t11;
+  d54 = d33 * t10;
+  d33 *= t11;
+  d55 = d35 * t25;
+  d56 = d35 * t26;
+  d57 = d37 * t24;
+  d58 = d34 * t26;
+  d59 = d37 * t25;
+  d60 = d36 * t24;
+  d61 = d10 * t25;
+  d62 = d11 * t25;
+  d63 = d11 * t26;
+  d64 = d27 * t26;
+  d65 = d39 * t6 * t8;
+  d66 = d28 * t8;
+  d67 = d29 * t6;
+  d68 = d41 * t6;
+  d69 = d28 * t5;
+  d70 = d69 * t6 * t7;
+  d71 = d28 * t3;
+  d72 = d71 * t8;
+  d73 = w_Y_tmp * t4;
+  d74 = d73 * t6;
+  d75 = ddq[2] * t2;
+  d76 = d75 * t4;
+  d77 = d69 * t8;
+  d29 *= t5;
+  d78 = d48 * t9;
+  d79 = d50 * t9;
+  d80 = d2 * t2;
+  d81 = d80 * t5;
+  d82 = d81 * t6;
+  d83 = d42 * t26;
+  d84 = d43 * t24;
+  d85 = d30 * t7 * t8;
+  d32 *= t6;
+  d86 = d32 * t7;
+  d87 = d46 * t5;
+  d88 = d87 * t6 * t11;
+  d89 = d47 * t5;
+  d90 = d89 * t8 * t11;
+  d91 = d52 * t25;
+  d92 = d51 * t26;
+  d93 = d54 * t24;
+  d94 = d53 * t24;
+  d95 = d55 * t26;
+  d96 = d57 * t25;
+  d97 = ddq[0] * t6;
+  d98 = ddq[2] * t6;
+  d99 = Y_tmp * t2;
+  d100 = d99 * t4;
+  d101 = d100 * t9;
+  d102 = b_Y_tmp_tmp * t5;
+  d103 = d102 * t7;
+  d104 = d * t2;
+  d105 = d104 * t4;
+  d106 = d105 * t7;
+  d107 = d1 * t2;
+  d108 = d107 * t4;
+  d109 = d108 * t7;
+  d110 = d2 * t4;
+  d111 = d110 * t5;
+  d112 = dq[1] * dq[3];
+  d113 = d112 * t2;
+  d114 = d113 * t5;
+  d115 = d112 * t4;
+  d116 = d80 * t6;
+  d117 = b_Y_tmp_tmp * t7;
+  d118 = d110 * t8;
+  d119 = d25 * t5 * t7;
+  d120 = d113 * t8;
+  d121 = d115 * t6;
+  d122 = d9 * t9;
+  d123 = d10 * t24;
+  d124 = d115 * t7 * t8;
+  d125 = d * t6;
+  d126 = d125 * t7 * t8;
+  d127 = d1 * t6;
+  d128 = d127 * t7 * t8;
+  d129 = d117 * t24;
+  d130 = d116 * t25;
+  d131 = d116 * t26;
+  d132 = d118 * t24;
+  d133 = d117 * t26;
+  d134 = d119 * t24;
+  d135 = d118 * t25;
+  d136 = d122 * t24;
+  d137 = d122 * t25;
+  d138 = d24 * t25;
+  d139 = d123 * t25;
+  d140 = d26 * t26;
+  d141 = d62 * t26;
+  d142 = d99 * t3;
+  d143 = d142 * t4;
+  d144 = d104 * t3;
+  d145 = d144 * t4;
+  d146 = d145 * t7;
+  d147 = d105 * t5;
+  d148 = d147 * t7;
+  d149 = d113 * t3;
+  d150 = d149 * t5 * t8;
+  d151 = d120 * t9;
+  d152 = d121 * t9;
+  d153 = d100 * t5;
+  d154 = d112 * t3;
+  d155 = d154 * t4;
+  d156 = d155 * t5 * t6;
+  d157 = d105 * t6 * t8;
+  d158 = d114 * t6 * t7;
+  d159 = b_Y_tmp_tmp * t6;
+  d160 = d159 * t8;
+  d161 = d7 * t6;
+  d110 *= t6;
+  d162 = d115 * t5;
+  d163 = dq[0] * dq[2] * t4 * t5 * t8;
+  d164 = d113 * t6 * t7;
+  d165 = d162 * t7 * t8;
+  d166 = d9 * t6;
+  d167 = d124 * t9;
+  d168 = d103 * t24;
+  d169 = d82 * t25;
+  d170 = d163 * t24;
+  d171 = d164 * t26;
+  d172 = d124 * t24;
+  d173 = d129 * t26;
+  d174 = d130 * t26;
+  d175 = d132 * t25;
+  d176 = d136 * t25;
+  d162 = d162 * t6 * t9;
+  d177 = dq[1] * dq[3] * t2 * t5 * t8 * t9;
+  d178 = d126 * t9;
+  d179 = Y_tmp * t6;
+  d180 = d179 * t8;
+  d181 = d38 * t3;
+  d182 = d181 * t4;
+  d183 = d39 * t5;
+  d184 = d85 * t9;
+  d185 = d86 * t9;
+  d186 = d65 * t25;
+  d187 = d145 * t5;
+  d188 = d187 * t7;
+  d189 = d25 * t2;
+  d190 = d189 * t4;
+  d191 = d80 * t3;
+  d192 = d2 * t3;
+  t29 = d192 * t4;
+  d_Y_tmp_tmp = d147 * t6 * t8;
+  d193 = d19 * t6;
+  e_Y_tmp_tmp = d193 * t7 * t8;
+  f_Y_tmp_tmp = d157 * t9;
+  y_Y_tmp = d190 * t6 * t7 * t8;
+  d194 = d143 * t5;
+  ab_Y_tmp = d148 * t9;
+  d195 = d18 * t6;
+  d196 = d47 * t6;
+  d197 = t29 * t6;
+  d198 = d111 * t6;
+  d199 = d4 * t6;
+  d102 *= t6;
+  d200 = d102 * t8;
+  d201 = d158 * t9;
+  d202 = d108 * t5;
+  d203 = d20 * t6;
+  e_Y_tmp = d143 * t6 * t7 * t8;
+  f_Y_tmp = d_Y_tmp_tmp * t9;
+  g_Y_tmp = d182 * t5;
+  h_Y_tmp = d21 * t6;
+  g_Y_tmp_tmp = d89 * t6;
+  i_Y_tmp = d191 * t5;
+  j_Y_tmp = t29 * t5 * t6;
+  k_Y_tmp = dq[1] * dq[2] * t7 * t26;
+  m_Y_tmp = Y_tmp * t5;
+  n_Y_tmp = d29 * t7 * t8;
+  o_Y_tmp = d161 * t7 * t8;
+  p_Y_tmp = d166 * t7 * t8;
+  q_Y_tmp = d164 * t9;
+  r_Y_tmp = d106 * t9;
+  s_Y_tmp = Y_tmp_tmp_tmp * t6;
+  t_Y_tmp = d73 * t5 * t6;
+  b_Y[8] =
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    ((((((((((((((((((((((((((((((((ddq[0] * t36 / 2.0 - ddq[2] * t36 / 4.0) - d
+    * t38) + d1 * t38 / 2.0) - Y_tmp_tmp_tmp * t36 / 2.0) - d4 * t36 / 2.0) + d3
+    * t36 / 4.0) + d18 * t36 / 2.0) + d5 * t36 / 4.0) + d6 * t36 / 4.0) - ddq[2]
+    * t27 * t36 / 4.0) - t10 * t28 * t36 / 8.0) - t11 * t28 * t36 / 8.0) + t10 *
+    t30 * t36 / 8.0) + t11 * t30 * t36 / 8.0) + c_Y_tmp_tmp * t36 / 2.0) + d7 *
+    t38) + d9 * t38) - d8 * t38 / 2.0) + d10 * t36 / 2.0) - d20 * t38) - d1 * t9
+    * t36 / 2.0) - d11 * t38 / 2.0) + d2 * t28 * t36 / 4.0) - d12 * t38 / 2.0) -
+    d2 * t30 * t36 / 4.0) + d1 * t27 * t38 / 2.0) + d1 * t31 * t36 / 4.0) + d21 *
+    t36) - d22 * t36 / 2.0) - d13 * t36 / 2.0) - Y_tmp_tmp_tmp * t27 * t36 / 2.0)
+    - d14 * t36 / 2.0) - d4 * t26 * t36 / 2.0) + d3 * t27 * t36 / 4.0) - d15 *
+    t36 / 4.0) - d16 * t36 / 2.0) + d5 * t27 * t36 / 4.0) - d17 * t36 / 4.0) +
+    Y_tmp_tmp * t27 * t36 / 2.0) + d6 * t27 * t36 / 4.0) - m_Y_tmp * t7 * t36) -
+    d19 * t38 * 2.0) - d7 * t9 * t36) + d23 * t38) + d8 * t9 * t36 / 2.0) + d24 *
+    t38) - d26 * t36 / 2.0) + c_Y_tmp_tmp * t27 * t36 / 2.0) + d7 * t27 * t38) +
+    d9 * t25 * t38) + d9 * t26 * t38) + d * t9 * t24 * t36 / 2.0) - k_Y_tmp *
+    t36 / 2.0) + d61 * t36 / 2.0) - d8 * t27 * t38 / 2.0) + d10 * t26 * t36 /
+    2.0) + d62 * t38 / 2.0) + d63 * t38) - d11 * t27 * t38 / 2.0) + d64 * t38 /
+    2.0) - d27 * t27 * t38) - d12 * t27 * t38 / 2.0) + d42 * t36 / 4.0) + d66 *
+    t9 * t36 / 4.0) - d67 * t9 * t36 / 4.0) - d43 * t36 / 4.0) + d40 * t7 * t8 *
+    t36 / 4.0) - d68 * t7 * t36 / 4.0) + d44 * t36 / 2.0) + d13 * t26 * t36) +
+    d14 * t26 * t36 / 2.0) + d45 * t36 / 2.0) - d15 * t27 * t36 / 4.0) - d16 *
+    t27 * t36 / 2.0) - d17 * t27 * t36 / 4.0) + d51 * t36 / 4.0) + d52 * t36 /
+    2.0) + d31 * t36 / 2.0) - d53 * t36 / 4.0) - d54 * t36 / 2.0) - d33 * t36 /
+    2.0) - d48 * t13 * t38 / 2.0) + d50 * t13 * t38 / 2.0) + d55 * t36 / 4.0) +
+    d56 * t36 / 2.0) - d35 * t27 * t36 / 4.0) + d58 * t36 / 2.0) - d34 * t27 *
+    t36 / 4.0) - d57 * t36 / 2.0) - d59 * t36 / 4.0) - d60 * t36 / 2.0) + d37 *
+    t27 * t36 / 4.0) + d36 * t27 * t36 / 4.0) - d65 * t36 / 2.0) - d70 * t36 /
+    2.0) - d39 * t7 * t9 * t36 / 2.0) - d72 * t9 * t36 / 4.0) + d74 * t9 * t36 /
+    4.0) + d76 * t7 * t9 * t36 / 4.0) - d77 * t9 * t36 / 4.0) + d29 * t6 * t9 *
+    t36 / 4.0) + n_Y_tmp * t36 / 2.0) - d40 * t5 * t7 * t8 * t36 / 4.0) + d41 *
+    t5 * t6 * t7 * t36 / 4.0) - d97 * t7 * t8 * t9 * t36 / 2.0) + d98 * t7 * t8 *
+    t9 * t36 / 4.0) - d83 * t36 / 2.0) + d42 * t27 * t36 / 4.0) + d84 * t36 /
+    2.0) - d43 * t27 * t36 / 4.0) - d44 * t26 * t36) + d45 * t27 * t36 / 2.0) -
+    d88 * t36 / 2.0) + d90 * t36 / 2.0) - d78 * t10 * t36 / 4.0) + d79 * t10 *
+    t36 / 4.0) + d85 * t13 * t38 / 2.0) + d78 * t11 * t36 / 4.0) - d86 * t13 *
+    t38 / 2.0) - d79 * t11 * t36 / 4.0) - d78 * t12 * t36 / 4.0) + d79 * t12 *
+    t36 / 4.0) + d78 * t13 * t36 / 4.0) - d79 * t13 * t36 / 4.0) - d92 * t36 /
+    2.0) - d91 * t36 / 2.0) + d51 * t27 * t36 / 4.0) - d52 * t26 * t36) - d31 *
+    t26 * t36) + d94 * t36 / 2.0) + d93 * t36) + d54 * t25 * t36 / 2.0) + d33 *
+    t24 * t36) - d53 * t27 * t36 / 4.0) - d95 * t36 / 2.0) + d55 * t27 * t36 /
+    4.0) + d56 * t27 * t36 / 2.0) + d96 * t36 / 2.0) + d58 * t27 * t36 / 2.0) -
+    d57 * t27 * t36 / 2.0) - d59 * t27 * t36 / 4.0) - d60 * t27 * t36 / 2.0) -
+    d82 * t36) - d101 * t36 / 2.0) + d103 * t36) - d106 * t36 / 2.0) + d109 *
+    t36 / 2.0) + d111 * t8 * t36) + d114 * t8 * t36 / 2.0) - d115 * t5 * t6 *
+    t36 / 2.0) + d19 * t9 * t36) - d112 * t2 * t6 * t7 * t38 / 2.0) - d1 * t3 *
+    t5 * t9 * t36 / 2.0) - dq[0] * dq[1] * t6 * t8 * t9 * t36 / 2.0) - d126 *
+    t36 / 2.0) - d151 * t38 / 2.0) + d152 * t38 / 2.0) + d124 * t38 / 2.0) +
+    d128 * t36 / 2.0) + d129 * t36 / 2.0) - d130 * t36 / 2.0) - d131 * t36) +
+    d133 * t36 / 2.0) + d116 * t27 * t36 / 2.0) - d117 * t27 * t36) + d132 * t36)
+    + d135 * t36 / 2.0) + d134 * t36) - d118 * t27 * t36 / 2.0) - d136 * t36 /
+    2.0) + d119 * t26 * t36) - d120 * t27 * t36 / 2.0) + d121 * t27 * t36 / 2.0)
+    - d137 * t36) - d122 * t26 * t36 / 2.0) - d138 * t38) - d24 * t26 * t38 *
+    2.0) + d140 * t36) - dq[0] * dq[3] * t5 * t25 * t26 * t38) - d139 * t36 /
+    2.0) - d26 * t27 * t36 / 2.0) - d123 * t26 * t36) - d61 * t26 * t36 / 2.0) -
+    k_Y_tmp * t27 * t36 / 2.0) - d141 * t38) + d62 * t27 * t38 / 2.0) + d63 *
+    t27 * t38) + d64 * t27 * t38 / 2.0) - d143 * t9 * t36 / 2.0) + d146 * t36 /
+    2.0) + d153 * t9 * t36 / 2.0) - d148 * t36 / 2.0) - d150 * t36 / 2.0) + d156
+    * t36 / 2.0) + d157 * t38) + d158 * t38) - d160 * t9 * t36 / 2.0) + r_Y_tmp *
+    t38) + o_Y_tmp * t36 / 2.0) + d80 * t7 * t8 * t9 * t36 / 2.0) - d110 * t7 *
+    t9 * t36 / 2.0) + d149 * t8 * t9 * t38 / 2.0) + q_Y_tmp * t36 / 2.0) - d112 *
+    t3 * t4 * t6 * t9 * t38 / 2.0) + m_Y_tmp * t6 * t8 * t9 * t36 / 2.0) -
+    p_Y_tmp * t36 / 2.0) - d109 * t9 * t38 / 2.0) + d177 * t38 / 2.0) - d162 *
+    t38 / 2.0) - d165 * t38) - d167 * t36 / 2.0) + d178 * t38) - d128 * t9 * t38
+    / 2.0) - d168 * t36) + d169 * t36) + d101 * t25 * t36) + d82 * t26 * t36 *
+    2.0) - d103 * t26 * t36) - d170 * t36 * 2.0) + d106 * t27 * t36) - d163 *
+    t25 * t36) + dq[1] * dq[3] * t2 * t3 * t8 * t27 * t36 / 2.0) - d155 * t6 *
+    t27 * t36 / 2.0) - d109 * t27 * t36 / 2.0) + d171 * t38) - d164 * t27 * t38 /
+    2.0) + d180 * t9 * t25 * t36) - d172 * t38) + d126 * t27 * t36) + d124 * t27
+    * t38 / 2.0) - d128 * t27 * t36 / 2.0) - d173 * t36) + d174 * t36) + d129 *
+    t27 * t36 / 2.0) - d130 * t27 * t36 / 2.0) - d131 * t27 * t36) - d175 * t36)
+    + d133 * t27 * t36 / 2.0) + d132 * t27 * t36) - d134 * t26 * t36 * 2.0) +
+    d135 * t27 * t36 / 2.0) + d176 * t36 / 2.0) + d136 * t26 * t36) + d137 * t26
+    * t36 / 2.0) + d138 * t26 * t38 * 2.0) + d139 * t26 * t36) + d140 * t27 *
+    t36) - d141 * t27 * t38) + d182 * t7 * t9 * t36 / 2.0) + d183 * t6 * t8 *
+    t36) + d183 * t7 * t9 * t36 / 2.0) + d71 * t5 * t8 * t9 * t36 / 4.0) -
+    t_Y_tmp * t9 * t36 / 4.0) - d76 * t5 * t7 * t9 * t36 / 4.0) + s_Y_tmp * t7 *
+    t8 * t9 * t36 / 2.0) + d199 * t7 * t8 * t9 * t36 / 2.0) - d195 * t7 * t8 *
+    t9 * t36 / 4.0) + d186 * t36 / 2.0) - d65 * t27 * t36 / 2.0) + d70 * t26 *
+    t36) - n_Y_tmp * t24 * t36) - d83 * t27 * t36 / 2.0) + d84 * t27 * t36 / 2.0)
+    + d46 * t7 * t8 * t9 * t10 * t36 / 4.0) - d196 * t7 * t9 * t10 * t36 / 4.0)
+    + d184 * t10 * t36 / 4.0) - d185 * t10 * t36 / 4.0) - d184 * t11 * t36 / 4.0)
+    + d185 * t11 * t36 / 4.0) + d184 * t12 * t36 / 4.0) - d185 * t12 * t36 / 4.0)
+    + d88 * t26 * t36) - d90 * t24 * t36) + d91 * t26 * t36) - d92 * t27 * t36 /
+    2.0) - d93 * t25 * t36) + d94 * t27 * t36 / 2.0) - d95 * t27 * t36 / 2.0) +
+    d96 * t27 * t36 / 2.0) + d194 * t9 * t36 / 2.0) + d188 * t36 / 2.0) - d146 *
+    t9 * t38) - d_Y_tmp_tmp * t38 * 2.0) + y_Y_tmp * t36) - d191 * t7 * t8 * t9 *
+    t36 / 2.0) + d197 * t7 * t9 * t36 / 2.0) + d200 * t9 * t36 / 2.0) - ab_Y_tmp
+    * t38) - f_Y_tmp_tmp * t36) + e_Y_tmp_tmp * t36 / 2.0) - d81 * t7 * t8 * t9 *
+    t36 / 2.0) + d198 * t7 * t9 * t36 / 2.0) - d150 * t9 * t38 / 2.0) - d201 *
+    t36 / 2.0) + d156 * t9 * t38 / 2.0) + d202 * t7 * t9 * t38 / 2.0) + d165 *
+    t9 * t36 / 2.0) - o_Y_tmp * t9 * t38) - p_Y_tmp * t9 * t38) + d203 * t7 * t8
+    * t9 * t38 / 2.0) - d100 * t5 * t9 * t25 * t36) - d104 * t3 * t4 * t7 * t27 *
+    t36) - d104 * t4 * t6 * t8 * t25 * t38) + d * t2 * t4 * t6 * t8 * t27 * t38)
+    - d113 * t5 * t6 * t7 * t26 * t38 * 2.0) - dq[0] * dq[1] * t5 * t6 * t8 *
+    t9 * t25 * t36) - dq[0] * dq[3] * t3 * t6 * t7 * t8 * t27 * t36) - q_Y_tmp
+    * t26 * t36) + d165 * t24 * t38 * 2.0) + d167 * t24 * t36) + d168 * t26 *
+    t36 * 2.0) - d169 * t26 * t36 * 2.0) + d170 * t25 * t36 * 2.0) + d171 * t27 *
+    t38) - d172 * t27 * t38) - d173 * t27 * t36) + d174 * t27 * t36) - d175 *
+    t27 * t36) - d176 * t26 * t36) - g_Y_tmp * t7 * t9 * t36 / 2.0) - h_Y_tmp *
+    t7 * t8 * t9 * t36 / 2.0) - ddq[0] * t2 * t4 * t5 * t6 * t8 * t25 * t36) +
+                      d186 * t27 * t36 / 2.0) - d87 * t7 * t8 * t9 * t10 * t36 /
+                     4.0) + g_Y_tmp_tmp * t7 * t9 * t10 * t36 / 4.0) - e_Y_tmp *
+                   t36) + d188 * t9 * t38) - d190 * t5 * t6 * t7 * t8 * t36 *
+                 2.0) + i_Y_tmp * t7 * t8 * t9 * t36 / 2.0) - j_Y_tmp * t7 * t9 *
+               t36 / 2.0) + f_Y_tmp * t36) + e_Y_tmp_tmp * t9 * t38) +
+            d_Y_tmp_tmp * t25 * t38 * 2.0) + f_Y_tmp_tmp * t25 * t36) + y_Y_tmp *
+          t27 * t36) + d201 * t26 * t36) - dq[1] * dq[3] * t4 * t5 * t7 * t8 *
+        t9 * t24 * t36) - d157 * t25 * t27 * t38) + d194 * t6 * t7 * t8 * t36 *
+      2.0) - e_Y_tmp * t27 * t36) - f_Y_tmp * t25 * t36;
+  d4 = ddq[1] * q[3];
+  d5 = d4 * t22;
+  d6 = d112 * t5;
+  d10 = d5 * t24;
+  d5 *= t26;
+  d11 = q[3] * t7 * t10;
+  d12 = d11 * t22;
+  d13 = d4 * t5;
+  d14 = d13 * t22;
+  d15 = d4 * t15 * t20;
+  d16 = t2 * t4;
+  d17 = d6 * t22;
+  d18 = d112 * t22;
+  d21 = d16 * t13;
+  d24 = t6 * t8;
+  d26 = d24 * t13;
+  d27 = Y_tmp * q[3];
+  d29 = d27 * t22;
+  d31 = d25 * q[3];
+  d33 = ddq[3] * q[3];
+  d34 = d33 * t2;
+  d35 = d34 * t4;
+  d36 = ddq[0] * q[3];
+  d37 = d36 * t2;
+  d41 = d36 * t4;
+  d42 = ddq[2] * q[3];
+  d13 = d13 * t15 * t20;
+  d43 = q[3] * t2;
+  d44 = d43 * t4;
+  d45 = d44 * t9;
+  d51 = q[3] * t6 * t8 * t9;
+  d52 = q[3] * t3;
+  d53 = d52 * t7;
+  d54 = d53 * t10 * t22;
+  d55 = q[3] * t5;
+  d56 = d55 * t7;
+  d57 = d56 * t10 * t22;
+  d11 = d11 * t15 * t20;
+  d58 = d2 * q[3];
+  d59 = d58 * t7;
+  d60 = d59 * t22;
+  d61 = d112 * q[3];
+  d62 = d61 * t9;
+  d63 = d112 * t15;
+  d64 = d * q[3];
+  d65 = d1 * q[3];
+  d70 = d58 * t5;
+  d73 = d70 * t7 * t22;
+  d59 = d59 * t15 * t20;
+  d78 = d60 * t24;
+  d60 *= t26;
+  d79 = d42 * t2;
+  d82 = d42 * t4;
+  d83 = d37 * t6;
+  d84 = d83 * t7 * t22;
+  d88 = d41 * t7 * t8;
+  d89 = d88 * t22;
+  d90 = d11 * t24;
+  d11 *= t26;
+  d91 = d12 * t24 * t26;
+  d92 = d64 * t4;
+  d93 = d92 * t6;
+  d94 = d65 * t2;
+  d95 = d94 * t8;
+  d96 = d52 * t5;
+  d101 = d96 * t7 * t10;
+  d103 = d101 * t22;
+  d106 = d16 * t5;
+  d109 = t5 * t6;
+  d111 = d33 * t6 * t8;
+  d114 = d106 * t13;
+  d115 = d109 * t8;
+  d116 = d115 * t13;
+  d118 = d45 * t13;
+  d119 = d51 * t13;
+  d120 = d35 * t5;
+  d121 = d33 * t5 * t6 * t8;
+  d122 = d114 * t15;
+  d123 = d116 * t15;
+  d124 = d62 * t22;
+  d126 = d124 * t24;
+  d128 = d104 * t6 * t7 * t22;
+  d129 = d104 * t8 * t9;
+  d130 = d1 * t4;
+  d131 = d130 * t6 * t9;
+  d132 = d27 * t2;
+  d133 = d31 * t2;
+  d134 = d133 * t6 * t22;
+  d135 = d27 * t4;
+  d136 = d135 * t8 * t22;
+  d137 = dq[0] * dq[3] * q[3] * t2;
+  d138 = d137 * t8;
+  d139 = d65 * t4;
+  d140 = d139 * t6;
+  d141 = d * t4;
+  d146 = d141 * t5;
+  d148 = d141 * t7 * t8;
+  d149 = d37 * t5;
+  d150 = d132 * t6;
+  d155 = dq[1] * dq[2] * q[3] * t4;
+  d156 = d155 * t8;
+  d157 = d150 * t22 * t26;
+  d158 = d136 * t24;
+  d163 = d73 * t24;
+  d164 = d134 * t26;
+  d165 = d156 * t22 * t24;
+  d167 = d78 * t26;
+  d113 *= t4;
+  d168 = d104 * t5;
+  d169 = d168 * t6 * t7 * t22;
+  d170 = d146 * t7 * t8 * t22;
+  d171 = d113 * t6 * t8 * t22;
+  d172 = d148 * t15 * t20;
+  d173 = d128 * t26;
+  d148 = d148 * t22 * t24;
+  d174 = d37 * t3;
+  d175 = d36 * t3;
+  d176 = d175 * t4;
+  d184 = d41 * t5;
+  d185 = d7 * t4;
+  d141 *= t6;
+  d186 = d141 * t9;
+  d188 = d107 * t8 * t9;
+  d190 = d185 * t6 * t9;
+  t29 = d44 * t5;
+  d_Y_tmp_tmp = t29 * t9;
+  e_Y_tmp_tmp = d58 * t2;
+  f_Y_tmp_tmp = e_Y_tmp_tmp * t4;
+  y_Y_tmp = d64 * t3;
+  d201 = y_Y_tmp * t4;
+  d204 = d201 * t6;
+  d205 = d61 * t5;
+  bb_Y_tmp = d205 * t9;
+  cb_Y_tmp = bb_Y_tmp * t15 * t20;
+  d206 = d92 * t7 * t8 * t9 * t22;
+  d207 = f_Y_tmp_tmp * t5;
+  d208 = d58 * t3;
+  d209 = d144 * t8 * t9;
+  d210 = d4 * t2;
+  d211 = d210 * t4;
+  d212 = d43 * t3;
+  e_Y_tmp = d101 * t15 * t20;
+  f_Y_tmp = d137 * t6 * t7 * t9;
+  k_Y_tmp = q[3] * t3 * t7 * t10 * t15 * t20 * t24 * t26;
+  Y_tmp_tmp = d61 * t2;
+  m_Y_tmp = Y_tmp_tmp * t4;
+  n_Y_tmp = f_Y_tmp_tmp * t6 * t7 * t8 * t22;
+  h_Y_tmp_tmp = d137 * t5;
+  o_Y_tmp = h_Y_tmp_tmp * t6 * t7 * t9 * t22;
+  i_Y_tmp_tmp = d92 * t5;
+  p_Y_tmp = i_Y_tmp_tmp * t7 * t8 * t9;
+  q_Y_tmp = q[3] * t2 * t3 * t4;
+  u_Y_tmp = q_Y_tmp * t6 * t7 * t8 * t10 * t15 * t20;
+  j_Y_tmp_tmp = d137 * t3;
+  db_Y_tmp = j_Y_tmp_tmp * t8;
+  eb_Y_tmp = m_Y_tmp * t5;
+  q_Y_tmp *= t9;
+  fb_Y_tmp = d52 * t6 * t8 * t9;
+  gb_Y_tmp = d31 * t22;
+  hb_Y_tmp = d17 * t24;
+  ib_Y_tmp = d63 * t20 * t26;
+  jb_Y_tmp = d15 * t24 * t26;
+  kb_Y_tmp = d133 * t5 * t6 * t22;
+  lb_Y_tmp = d149 * t6 * t7 * t22;
+  mb_Y_tmp = d184 * t7 * t8;
+  nb_Y_tmp = d55 * t6 * t8 * t9;
+  b_Y[9] = v_Y_tmp *
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    ((((((((((((((((((((((((((((((((((((((((((((((((d18 * -4.0 + d17 * 4.0) -
+    d14 * 2.0) + d15) - d10) - d5) - d12 * 2.0) - d21 * t22 * 2.0) - d26 * t22 *
+    2.0) + d29 * t28) - d29 * t30) - gb_Y_tmp * t28) + gb_Y_tmp * t30) -
+    hb_Y_tmp * 4.0) - d17 * t26 * 4.0) + dq[1] * dq[3] * t15 * t20 * t24) +
+    ib_Y_tmp) - dq[1] * dq[3] * t22 * t24 * t26 * 4.0) + d35 * t22) + d111 *
+    t22) - d10 * t27) - d5 * t27) + d57 * 4.0) - d12 * t27 * 2.0) - d120 * t22)
+    + d84) + d37 * t8 * t9 * t22) - d41 * t6 * t9 * t22) - d89) - d79 * t8 * t9 *
+    t22) + d82 * t6 * t9 * t22) - d121 * t22) + d13 * t24) + d13 * t26) - d14 *
+    t24 * t26 * 4.0) + jb_Y_tmp) - d103 * 2.0) - d45 * t12 * t22) + d118 * t22)
+    - d51 * t12 * t22) + d119 * t22) - d54 * t24) - d54 * t26) - d57 * t24 * 4.0)
+    - d57 * t26 * 4.0) + d90) + d11) - d91 * 4.0) + d122 * t20) + d123 * t20) -
+    d93 * t22 * 2.0) - d73 * 4.0) - d95 * t22 * 2.0) + d59) + d62 * t15 * t20) -
+    d78 * 2.0) - d60 * 2.0) - d126 * 2.0) - d124 * t26 * 2.0) - d128 * 2.0) -
+    d129 * t22 * 2.0) - d131 * t22 * 2.0) + hb_Y_tmp * t26 * 8.0) + d63 * t20 *
+    t24 * t27) + ib_Y_tmp * t27) - d18 * t24 * t26 * t27 * 4.0) - d132 * t5 * t6
+    * t22 * 4.0) - d64 * t2 * t3 * t8 * t22 * 2.0) + kb_Y_tmp * 4.0) + Y_tmp *
+    q[3] * t4 * t5 * t8 * t22 * 4.0) - d155 * t5 * t8 * t22 * 4.0) + d138 *
+    t15 * t20) + d140 * t15 * t20) - d157 * 4.0) + d158 * 4.0) + d164 * 4.0) +
+    d163 * 4.0) - d134 * t27 * 2.0) - d165 * 4.0) - d136 * t27 * 2.0) + d73 *
+    t26 * 4.0) - d138 * t22 * t27 * 2.0) - d140 * t22 * t27 * 2.0) + d59 * t27)
+    + d167 * 4.0) - d78 * t27 * 2.0) - d60 * t27 * 2.0) + d126 * t26 * 4.0) +
+    d169 * 4.0) - d171 * 4.0) - d190 * t22 * 2.0) - d146 * t6 * t9 * t22 * 2.0)
+    - d170 * 4.0) - d107 * t5 * t8 * t9 * t22 * 2.0) + d186 * t15 * t20) + d172)
+    + d188 * t15 * t20) + d173 * 4.0) - d128 * t27 * 2.0) - d148 * 4.0) -
+    lb_Y_tmp * 2.0) - d174 * t8 * t9 * t22) + d176 * t6 * t9 * t22) - d149 * t8 *
+    t9 * t22) + d184 * t6 * t9 * t22) + d79 * t5 * t8 * t9 * t22) - d82 * t5 *
+    t6 * t9 * t22) - d84 * t26 * 2.0) + d84 * t27) - d89 * t27) + jb_Y_tmp * t27)
+    + d_Y_tmp_tmp * t12 * t22) + nb_Y_tmp * t12 * t22) - d45 * t10 * t22 * t25 *
+    2.0) - d51 * t10 * t22 * t25 * 2.0) + d53 * t10 * t15 * t20 * t27) - d52 *
+    t7 * t10 * t22 * t24 * t27) + d56 * t10 * t22 * t24 * t26 * 8.0) - q[3] *
+    t3 * t7 * t10 * t22 * t26 * t27) + d90 * t27) + d11 * t27) - d91 * t27 * 4.0)
+    - dq[0] * dq[2] * q[3] * t2 * t3 * t4 * t9 * t22 * 2.0) - d207 * t9 *
+    t22 * 2.0) - d208 * t6 * t8 * t9 * t22 * 2.0) + d204 * t15 * t20) +
+    f_Y_tmp_tmp * t9 * t15 * t20) - d70 * t6 * t8 * t9 * t22 * 2.0) - d206 * 2.0)
+    + d58 * t6 * t8 * t9 * t15 * t20) + dq[0] * dq[1] * q[3] * t2 * t5 * t6 *
+    t22 * t26 * 8.0) - d135 * t5 * t8 * t22 * t24 * 8.0) - kb_Y_tmp * t26 * 8.0)
+    - d204 * t22 * t27 * 2.0) + dq[1] * dq[2] * q[3] * t4 * t5 * t8 * t22 *
+    t24 * 8.0) + d150 * t15 * t20 * t27) + d93 * t15 * t20 * t27) + d156 * t15 *
+    t20 * t27) + cb_Y_tmp * t24) + d95 * t15 * t20 * t27) + cb_Y_tmp * t26) -
+    d157 * t27 * 4.0) + d158 * t27 * 4.0) - d163 * t26 * 8.0) + d164 * t27 * 4.0)
+    - d165 * t27 * 4.0) - bb_Y_tmp * t22 * t24 * t26 * 4.0) + d167 * t27 * 4.0)
+    + d113 * t5 * t6 * t8 * t22 * 8.0) - d144 * t5 * t8 * t9 * t22 * 2.0) + d209
+    * t15 * t20) + d168 * t8 * t9 * t15 * t20) + d130 * t5 * t6 * t9 * t15 * t20)
+    - d169 * t26 * 8.0) + d170 * t24 * 8.0) - d171 * t27 * 4.0) + d172 * t27) +
+    d173 * t27 * 4.0) - d148 * t27 * 4.0) - d211 * t5 * t6 * t8 * t22 * 4.0) +
+    d174 * t5 * t8 * t9 * t22) - d176 * t5 * t6 * t9 * t22) + d211 * t6 * t8 *
+    t15 * t20) + mb_Y_tmp * t15 * t20) + lb_Y_tmp * t26 * 4.0) - mb_Y_tmp * t22 *
+    t24 * 4.0) + d88 * t15 * t20 * t24) - d83 * t7 * t22 * t26 * t27 * 2.0) -
+    d212 * t4 * t5 * t9 * t10 * t22 * 2.0) - d44 * t6 * t7 * t8 * t10 * t22 *
+    4.0) + q_Y_tmp * t10 * t15 * t20) - d96 * t6 * t8 * t9 * t10 * t22 * 2.0) +
+    fb_Y_tmp * t10 * t15 * t20) + e_Y_tmp * t24) + e_Y_tmp * t26) - d103 * t24 *
+    t26 * 4.0) + k_Y_tmp) + n_Y_tmp * 4.0) - o_Y_tmp * 2.0) + m_Y_tmp * t6 * t8 *
+    t9 * t22 * 4.0) + f_Y_tmp * t15 * t20) - f_Y_tmp * t22 * t26 * 4.0) + d206 *
+    t24 * 4.0) + db_Y_tmp * t15 * t20 * t27) + d185 * t5 * t6 * t9 * t15 * t20)
+                      + ddq[1] * q[3] * t2 * t4 * t6 * t8 * t15 * t20 * t27) +
+                     ddq[0] * q[3] * t4 * t7 * t8 * t15 * t20 * t24 * t27) +
+                    t29 * t6 * t7 * t8 * t10 * t22 * 8.0) - q[3] * t2 * t4 *
+                   t6 * t7 * t8 * t10 * t22 * t27 * 4.0) + d_Y_tmp_tmp * t10 *
+                  t15 * t20 * t25) + nb_Y_tmp * t10 * t15 * t20 * t25) + k_Y_tmp
+                * t27) - d207 * t6 * t7 * t8 * t22 * 8.0) + e_Y_tmp_tmp * t3 *
+              t4 * t5 * t9 * t15 * t20) - eb_Y_tmp * t6 * t8 * t9 * t22 * 4.0) +
+            d208 * t5 * t6 * t8 * t9 * t15 * t20) + p_Y_tmp * t15 * t20) +
+          n_Y_tmp * t27 * 4.0) + o_Y_tmp * t26 * 4.0) - p_Y_tmp * t22 * t24 *
+        4.0) - q[3] * t2 * t3 * t4 * t5 * t6 * t7 * t8 * t10 * t22 * 4.0) +
+      u_Y_tmp) + u_Y_tmp * t27) / 4.0;
+  d5 = d * t19;
+  d10 = d36 * t19;
+  d11 = d42 * t19;
+  d12 = q[3] * t10 * t19;
+  d1 = d1 * t15 * t18;
+  d13 = d175 * t19;
+  d14 = d36 * t5;
+  d15 = q[3] * t11 * t19;
+  d17 = d43 * t6;
+  d18 = d17 * t10;
+  d29 = d18 * t19;
+  d31 = q[3] * t4;
+  d41 = d31 * t8;
+  d44 = d41 * t10;
+  d45 = d44 * t19;
+  d51 = d41 * t11 * t19;
+  d53 = d27 * t7;
+  d54 = d53 * t19;
+  d57 = d27 * t5 * t7 * t19;
+  d53 = d53 * t15 * t18;
+  d58 = d54 * t24;
+  d54 *= t26;
+  d4 *= t4;
+  d43 = d43 * t5 * t6;
+  d31 = d31 * t5 * t8;
+  d59 = d43 * t10;
+  d60 = d59 * t19;
+  d43 *= t11;
+  d63 = d31 * t10;
+  d31 = d31 * t11 * t19;
+  d17 *= t11;
+  d70 = d61 * t4;
+  d73 = d57 * t24;
+  d78 = d58 * t26;
+  d37 *= t4;
+  d79 = d63 * t19;
+  d82 = d79 * t24;
+  e_Y_tmp = d52 * t4;
+  f_Y_tmp = d18 * t15 * t18 * t25 * t26;
+  k_Y_tmp = d132 * t4;
+  n_Y_tmp = k_Y_tmp * t6 * t7 * t8 * t19;
+  o_Y_tmp = t34 * t38;
+  p_Y_tmp = d7 * t15 * t18;
+  u_Y_tmp = d29 * t26;
+  gb_Y_tmp = d17 * t15 * t18 * t26;
+  hb_Y_tmp = d45 * t24 * t25;
+  ib_Y_tmp = d132 * t3 * t4;
+  b_Y[10] = o_Y_tmp *
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((d5 * -2.0 + d10) - d11) + d9 * t19 * 4.0) - d20
+    * t19 * 4.0) + d1) - d5 * t27 * 2.0) - d13) - d14 * t19 * 2.0) + d10 * t27)
+    - d11 * t27) + d12 * t28 / 2.0) - d15 * t28 / 2.0) - d12 * t30 / 2.0) + d15 *
+    t30 / 2.0) - d65 * t9 * t19 * 2.0) - d64 * t19 * t31) + d65 * t19 * t31) -
+    d19 * t19 * 4.0) + p_Y_tmp) + d1 * t27) + d42 * t5 * t15 * t18) - d13 * t27)
+    + d210 * t8 * t9 * t19) - d4 * t6 * t9 * t19) + d175 * t5 * t15 * t18) - d60
+    * 2.0) - d31 * 2.0) - d29 * t25) - u_Y_tmp * 2.0) + d29 * t27) - d17 * t19 *
+    t27) + d45 * t25) - d51 * t24 * 2.0) - d45 * t27) + d51 * t27) - d57 * 4.0)
+    - y_Y_tmp * t9 * t19 * 2.0) + d53) + d64 * t9 * t15 * t18) - d58 * 2.0) -
+    d54 * 2.0) - d151 * t19 * 2.0) + p_Y_tmp * t27) - d70 * t5 * t6 * t19 * 2.0)
+    + d73 * 4.0) + d57 * t26 * 4.0) - Y_tmp_tmp * t8 * t19 * t27 * 2.0) + d53 *
+    t27) + d78 * 4.0) - d58 * t27 * 2.0) - d54 * t27 * 2.0) - d162 * t19 * 2.0)
+    + d152 * t15 * t18) - d37 * t7 * t9 * t19) - d210 * t5 * t8 * t9 * t19) + d4
+    * t5 * t6 * t9 * t19) - d36 * t6 * t7 * t8 * t9 * t19) + d43 * t15 * t18) +
+    d63 * t15 * t18) + d60 * t26 * 4.0) - d43 * t19 * t26 * 4.0) - d82 * 4.0) -
+    d79 * t25 * 2.0) + d31 * t24 * 4.0) + gb_Y_tmp) + d44 * t15 * t18 * t24) -
+    d18 * t19 * t25 * t27) - u_Y_tmp * t27 * 2.0) - hb_Y_tmp * 2.0) + d41 * t10 *
+    t19 * t25 * t27) - d41 * t11 * t19 * t24 * t27 * 2.0) - ib_Y_tmp * t9 * t19 *
+    2.0) - d64 * t2 * t4 * t5 * t7 * t19 * 2.0) - d27 * t3 * t6 * t8 * t9 * t19 *
+    2.0) - d64 * t5 * t6 * t7 * t8 * t19 * 2.0) + Y_tmp_tmp * t5 * t8 * t15 *
+    t18) + y_Y_tmp * t5 * t9 * t15 * t18) + d70 * t6 * t15 * t18 * t27) - d73 *
+    t26 * 8.0) + d78 * t27 * 4.0) - ab_Y_tmp * t19 * 2.0) - dq[0] * dq[3] * t5
+    * t6 * t7 * t8 * t9 * t19 * 2.0) + r_Y_tmp * t15 * t18) + d177 * t15 * t18)
+    + d178 * t15 * t18) + d37 * t5 * t7 * t9 * t19) + d14 * t6 * t7 * t8 * t9 *
+    t19) - d212 * t7 * t8 * t9 * t10 * t19) + e_Y_tmp * t6 * t7 * t9 * t10 * t19)
+                     + d59 * t15 * t18 * t25) - d60 * t25 * t26 * 4.0) + d82 *
+                   t25 * 4.0) + f_Y_tmp) + gb_Y_tmp * t27) + q[3] * t4 * t8 *
+                t10 * t15 * t18 * t24 * t27) - hb_Y_tmp * t27 * 2.0) + n_Y_tmp *
+              4.0) + d137 * t4 * t7 * t15 * t18 * t27) + d64 * t6 * t7 * t8 *
+            t15 * t18 * t27) + d212 * t5 * t7 * t8 * t9 * t10 * t19) - e_Y_tmp *
+          t5 * t6 * t7 * t9 * t10 * t19) + f_Y_tmp * t27) - k_Y_tmp * t5 * t6 *
+        t7 * t8 * t19 * 8.0) + ib_Y_tmp * t5 * t9 * t15 * t18) + dq[0] * dq[1]
+      * q[3] * t3 * t5 * t6 * t8 * t9 * t15 * t18) + n_Y_tmp * t27 * 4.0) *
+    -0.25;
+  d1 = t5 * t13;
+  d4 = t5 * t10;
+  d5 = t5 * t11;
+  d10 = t9 * t10;
+  d11 = t9 * t11;
+  d12 = t10 * t24;
+  d13 = t11 * t24;
+  d14 = t10 * t26;
+  d15 = t11 * t26;
+  d17 = d2 * t5;
+  d18 = t9 * t13;
+  d20 = ddq[3] * t5;
+  d27 = d28 * t4;
+  d29 = ddq[1] * t6;
+  d31 = d29 * t8;
+  d36 = t3 * t5;
+  d37 = t3 * t9;
+  d41 = t10 * t25;
+  d42 = t5 * t9;
+  d43 = d42 * t10;
+  d42 *= t11;
+  d44 = d4 * t24;
+  d45 = d4 * t25;
+  d51 = d5 * t24;
+  d52 = d10 * t24;
+  d53 = d10 * t25;
+  d54 = d11 * t24;
+  d57 = d12 * t25;
+  d58 = d12 * t26;
+  d59 = d41 * t26;
+  d60 = d13 * t26;
+  d63 = ddq[0] * t4;
+  d64 = d43 * t24;
+  d70 = d43 * t25;
+  d73 = d42 * t24;
+  d78 = d44 * t25;
+  d79 = d52 * t25;
+  d82 = d57 * t26;
+  d83 = d192 * t5;
+  d84 = d63 * t6;
+  d88 = d27 * t5;
+  d89 = d38 * t7 * t8;
+  d90 = ddq[1] * t5;
+  d91 = d90 * t6;
+  d92 = d91 * t8;
+  d96 = d84 * t7;
+  d101 = d38 * t5;
+  d103 = d101 * t7 * t8;
+  d63 = d63 * t5 * t6;
+  d124 = d46 * t4;
+  d126 = d124 * t7;
+  d128 = t6 * t7 * t8;
+  d130 = Y_tmp * t4;
+  d132 = d25 * t4;
+  d133 = d99 * t8;
+  d134 = d130 * t6;
+  d135 = d189 * t8;
+  d136 = d132 * t6;
+  d144 = d99 * t5;
+  d146 = d142 * t8;
+  d148 = d99 * t6 * t7;
+  d149 = b_Y_tmp_tmp * t4;
+  d150 = d149 * t6;
+  d151 = d80 * t4;
+  d152 = d144 * t8;
+  d155 = d130 * t5;
+  d156 = d155 * t6;
+  d130 = d130 * t7 * t8;
+  d157 = d189 * t5;
+  d158 = d157 * t8;
+  d132 = d132 * t5 * t6;
+  d162 = d151 * t7;
+  d109 *= t7;
+  d163 = d109 * t8;
+  d164 = d64 * t25;
+  d165 = d144 * t6 * t7;
+  d167 = d151 * t5;
+  d168 = d167 * t7;
+  d155 = d155 * t7 * t8;
+  d169 = d17 * t6;
+  d170 = d169 * t7 * t8;
+  d171 = d148 * t9;
+  d172 = d130 * t9;
+  d173 = d128 * t10;
+  d174 = d133 * t9;
+  d175 = d134 * t9;
+  d176 = d146 * t9;
+  d177 = d150 * t9;
+  d178 = d16 * t7;
+  d184 = d128 * t9;
+  d185 = d2 * t6;
+  d189 = d185 * t7 * t8;
+  e_Y_tmp = d106 * t6 * t8;
+  t29 = d16 * t6 * t8;
+  f_Y_tmp = t29 * t9;
+  Y_tmp_tmp = t29 * t10;
+  d_Y_tmp_tmp = t3 * t6;
+  k_Y_tmp = d_Y_tmp_tmp * t7 * t8;
+  n_Y_tmp = e_Y_tmp * t9;
+  e_Y_tmp_tmp = d36 * t6;
+  p_Y_tmp = e_Y_tmp_tmp * t7 * t8;
+  r_Y_tmp = e_Y_tmp * t10;
+  u_Y_tmp = f_Y_tmp * t10;
+  gb_Y_tmp = Y_tmp_tmp * t25;
+  hb_Y_tmp = d165 * t9;
+  ib_Y_tmp = d155 * t9;
+  jb_Y_tmp = n_Y_tmp * t10;
+  kb_Y_tmp = t2 * t3 * t4 * t7 * t10;
+  f_Y_tmp_tmp = d106 * t7;
+  lb_Y_tmp = p_Y_tmp * t10;
+  mb_Y_tmp = d142 * t5 * t8;
+  nb_Y_tmp = d149 * t5 * t6;
+  y_Y_tmp = d63 * t7;
+  ab_Y_tmp = f_Y_tmp_tmp * t10;
+  bb_Y_tmp = k_Y_tmp * t10;
+  cb_Y_tmp = d178 * t9;
+  b_Y[11] =
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((ddq[3] * t36 / 4.0 + ddq[3] * t39 / 2.0) + t10 * t38 /
+    2.0) + t11 * t38 / 2.0) + t12 * t38 / 4.0) - t13 * t38 / 4.0) - t13 * t40) -
+    d2 * t38 / 2.0) - d20 * t39 / 2.0) - ddq[3] * t9 * t38 / 2.0) - b_Y_tmp *
+    t38 / 2.0) - d4 * t38 / 2.0) - d5 * t38 / 2.0) - t5 * t12 * t38 / 2.0) - d10
+    * t36 / 4.0) - d1 * t38 / 4.0) - d11 * t36 / 4.0) - t9 * t12 * t36 / 4.0) +
+    d1 * t40) + d18 * t39) + d12 * t38 / 4.0) - d13 * t38 / 4.0) + d14 * t38 /
+    4.0) - d15 * t38 / 4.0) + t12 * t27 * t38 / 4.0) + t12 * t31 * t36 / 8.0) +
+    d192 * t38 / 2.0) + d17 * t38) + d2 * t9 * t36 / 2.0) - d2 * t27 * t38 / 2.0)
+    - d2 * t31 * t36 / 4.0) + d27 * t36 / 4.0) + d31 * t36 / 4.0) + d36 * t10 *
+    t38) + d37 * t10 * t36 / 2.0) - d44 * t38 / 2.0) - b_Y_tmp * t27 * t38 / 2.0)
+    - d45 * t38 / 2.0) + d51 * t38 / 2.0) - d4 * t26 * t38 / 2.0) - d52 * t36 /
+    4.0) + d5 * t26 * t38 / 2.0) - d53 * t36 / 4.0) + d54 * t36 / 4.0) - d10 *
+    t26 * t36 / 4.0) + d11 * t26 * t36 / 4.0) - d57 * t38 / 4.0) - d58 * t38 /
+    2.0) + d12 * t27 * t38 / 4.0) - d59 * t38 / 4.0) + d60 * t38 / 2.0) + d41 *
+    t27 * t38 / 2.0) - d13 * t27 * t38 / 4.0) + d14 * t27 * t38 / 4.0) - d15 *
+    t27 * t38 / 4.0) - d83 * t38) - d192 * t9 * t36 / 2.0) + d192 * t27 * t38 /
+    2.0) - d88 * t36 / 4.0) + d89 * t36 / 4.0) - d96 * t36 / 4.0) - d92 * t36 /
+    4.0) - d36 * t9 * t10 * t36 / 2.0) + d64 * t36 / 4.0) + d70 * t36 / 2.0) -
+    d73 * t36 / 4.0) + d43 * t26 * t36 / 4.0) - d42 * t26 * t36 / 4.0) + d78 *
+    t38 / 2.0) + d44 * t26 * t38) + d45 * t26 * t38 / 2.0) - d51 * t26 * t38) +
+    d79 * t36 / 4.0) + d52 * t26 * t36 / 2.0) + d53 * t26 * t36 / 4.0) - d54 *
+    t26 * t36 / 2.0) + d82 * t38 / 2.0) - d57 * t27 * t38 / 4.0) - d58 * t27 *
+    t38 / 2.0) - d59 * t27 * t38 / 4.0) + d60 * t27 * t38 / 2.0) - d103 * t36 /
+    4.0) + y_Y_tmp * t36 / 4.0) - d126 * t10 * t36 / 4.0) + ab_Y_tmp * t36 / 2.0)
+    - Y_tmp_tmp * t38 / 2.0) + t29 * t11 * t38 / 2.0) - cb_Y_tmp * t10 * t38 /
+    2.0) - t3 * t6 * t7 * t8 * t10 * t36 / 4.0) + d163 * t10 * t36 / 2.0) - d184
+    * t10 * t38 / 2.0) - d178 * t10 * t27 * t36 / 2.0) - d173 * t27 * t36 / 2.0)
+    - d164 * t36 / 4.0) - d64 * t26 * t36 / 2.0) - d70 * t26 * t36 / 4.0) + d73 *
+    t26 * t36 / 2.0) - d78 * t26 * t38) - d79 * t26 * t36 / 2.0) + d82 * t27 *
+    t38 / 2.0) + d146 * t36 / 2.0) - d150 * t36 / 2.0) - d152 * t36 / 2.0) +
+    d156 * t36 / 2.0) + d148 * t38 / 2.0) + d158 * t36 / 2.0) - d132 * t36 / 2.0)
+    + d83 * t9 * t36 / 2.0) + d174 * t38 / 2.0) - d175 * t38 / 2.0) - d130 * t38
+    / 2.0) - d135 * t9 * t38 / 2.0) + d136 * t9 * t38 / 2.0) + d133 * t27 * t36 /
+    2.0) - d134 * t27 * t36 / 2.0) - d135 * t27 * t36 / 2.0) + d136 * t27 * t36 /
+    2.0) - d168 * t36 / 2.0) - d165 * t38) - d176 * t38 / 2.0) - d171 * t36 /
+    2.0) + d177 * t38 / 2.0) + d162 * t9 * t38 / 2.0) - d152 * t9 * t38 / 2.0) +
+    d156 * t9 * t38 / 2.0) + d155 * t38) - d170 * t36 / 2.0) + d172 * t36 / 2.0)
+    + d158 * t9 * t38 / 2.0) - d132 * t9 * t38 / 2.0) + d189 * t9 * t38 / 2.0) -
+    d146 * t27 * t36 / 2.0) + d150 * t27 * t36 / 2.0) + d162 * t27 * t36 / 2.0)
+    - d148 * t26 * t38) + d148 * t27 * t38 / 2.0) + d130 * t24 * t38) - d130 *
+    t27 * t38 / 2.0) + d2 * t6 * t7 * t8 * t27 * t36 / 2.0) - d124 * t5 * t7 *
+    t10 * t36 / 4.0) + d126 * t9 * t10 * t38 / 2.0) + r_Y_tmp * t38) - e_Y_tmp *
+    t11 * t38) + f_Y_tmp_tmp * t9 * t10 * t38 / 2.0) + u_Y_tmp * t36 / 2.0) -
+    lb_Y_tmp * t36 / 4.0) - f_Y_tmp * t11 * t36 / 2.0) + k_Y_tmp * t9 * t10 *
+    t38 / 2.0) + d163 * t9 * t10 * t38 / 2.0) + kb_Y_tmp * t27 * t36 / 2.0) +
+    gb_Y_tmp * t38 / 2.0) - Y_tmp_tmp * t27 * t38 / 2.0) + t29 * t11 * t27 * t38
+    / 2.0) + bb_Y_tmp * t27 * t36 / 2.0) + d164 * t26 * t36 / 2.0) + mb_Y_tmp *
+    t9 * t38 / 2.0) + hb_Y_tmp * t36 / 2.0) - nb_Y_tmp * t9 * t38 / 2.0) - d168 *
+                      t9 * t38 / 2.0) - ib_Y_tmp * t36 / 2.0) - d170 * t9 * t38 /
+                    2.0) + d165 * t26 * t38 * 2.0) + d171 * t26 * t36) - d155 *
+                 t24 * t38 * 2.0) - d172 * t24 * t36) - dq[0] * dq[1] * t2 *
+               t6 * t7 * t26 * t27 * t38) + dq[0] * dq[1] * t4 * t7 * t8 * t24
+              * t27 * t38) - t2 * t3 * t4 * t5 * t7 * t9 * t10 * t38 / 2.0) -
+            jb_Y_tmp * t36 / 2.0) + n_Y_tmp * t11 * t36 / 2.0) - p_Y_tmp * t9 *
+          t10 * t38 / 2.0) - r_Y_tmp * t25 * t38) - u_Y_tmp * t25 * t36 / 2.0) +
+       gb_Y_tmp * t27 * t38 / 2.0) - hb_Y_tmp * t26 * t36) + ib_Y_tmp * t24 *
+     t36) + jb_Y_tmp * t25 * t36 / 2.0;
+  d1 = t2 * t8;
+  d2 = d1 * t11;
+  d4 = d49 * t11;
+  d12 = d40 * t8;
+  d13 = d97 * t8;
+  d14 = d1 * t10;
+  d15 = d49 * t10;
+  d17 = Y_tmp * t9;
+  d41 = d75 * t3;
+  d42 = d41 * t4;
+  d43 = s_Y_tmp * t8;
+  d44 = ddq[1] * t4 * t5 * t6;
+  d45 = d40 * t3;
+  d51 = d45 * t8;
+  d52 = ddq[3] * t3;
+  d53 = d52 * t4;
+  d54 = d53 * t6;
+  d57 = d46 * t8;
+  d58 = d57 * t11;
+  d30 *= t8;
+  d59 = d196 * t11;
+  d60 = d30 * t11;
+  d64 = d32 * t11;
+  d70 = d30 * t13 * t32;
+  d73 = d32 * t13 * t32;
+  d78 = d80 * t8;
+  d79 = d30 * t10;
+  d80 = d32 * t10;
+  d82 = d196 * t10;
+  d97 = dq[0] * dq[3] * t6 * t8;
+  d107 *= t3;
+  d126 = d107 * t4;
+  d130 = d161 * t8;
+  d142 = d8 * t6 * t8;
+  d81 *= t8;
+  d148 = d105 * t9;
+  d149 = dq[0] * dq[1] * t5 * t6 * t8;
+  d155 = d166 * t8;
+  d158 = d97 * t9;
+  d161 = d179 * t7 * t8;
+  d164 = d199 * t8;
+  d87 *= t8;
+  b_Y_tmp = d87 * t13 * t32;
+  e_Y_tmp = g_Y_tmp_tmp * t13 * t32;
+  f_Y_tmp = d153 * t7;
+  k_Y_tmp = dq[0] * dq[1] * t5 * t6 * t7 * t8;
+  n_Y_tmp = d127 * t8;
+  p_Y_tmp = d87 * t11;
+  r_Y_tmp = t3 * t4 * t5 * t6 * t11;
+  s_Y_tmp = d87 * t10;
+  b_Y[12] =
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((d17 * t32 * t35 - d39 * t32 * t35) + d76 * t32 * t35 / 2.0)
+    + d66 * t33 * t35) - d67 * t33 * t35) - d13 * t32 * t35) - d12 * t32 * t36 /
+    2.0) + d68 * t32 * t36 / 2.0) + ddq[0] * t7 * t9 * t32 * t35) + d98 * t8 *
+    t32 * t35 / 2.0) - d14 * t32 * t35 / 2.0) + d15 * t32 * t35 / 2.0) + d2 *
+    t32 * t35 / 2.0) - d4 * t32 * t35 / 2.0) - d1 * t12 * t32 * t35 / 2.0) + d49
+    * t12 * t32 * t35 / 2.0) - d2 * t34 * t35 * 2.0) + d4 * t34 * t35 * 2.0) +
+    d1 * t13 * t32 * t38) - d49 * t13 * t32 * t38) + d182 * t32 * t35 * 2.0) +
+    d183 * t32 * t35) - d42 * t32 * t35 / 2.0) - ddq[2] * t2 * t4 * t5 * t32 *
+    t35 / 2.0) - d72 * t33 * t35) + d74 * t33 * t35) + d43 * t32 * t35 * 2.0) -
+    d77 * t33 * t35) + d44 * t33 * t35) + d51 * t32 * t36 / 2.0) - d54 * t32 *
+    t36 / 2.0) - d28 * t7 * t8 * t32 * t35 / 2.0) + d67 * t7 * t32 * t35 / 2.0)
+    - Y_tmp_tmp_tmp * t7 * t9 * t32 * t35) + ddq[0] * t5 * t6 * t8 * t32 * t35)
+    - d3 * t6 * t8 * t32 * t35 / 2.0) + ddq[3] * t2 * t5 * t8 * t32 * t36 / 2.0)
+    - ddq[3] * t4 * t5 * t6 * t32 * t36 / 2.0) - d195 * t8 * t32 * t35 / 2.0) +
+    d12 * t9 * t32 * t35 / 2.0) - d68 * t9 * t32 * t35 / 2.0) - d39 * t25 * t32 *
+    t35) - d13 * t25 * t32 * t35) + d57 * t10 * t32 * t35) - d82 * t32 * t35) -
+    d58 * t32 * t35 / 2.0) + d59 * t32 * t35 / 2.0) + d57 * t12 * t32 * t35 /
+    2.0) + d79 * t32 * t35 / 2.0) - d196 * t12 * t32 * t35 / 2.0) - d80 * t32 *
+    t35 / 2.0) + d58 * t34 * t35 * 2.0) - d60 * t32 * t35 / 2.0) - d59 * t34 *
+    t35 * 2.0) + d64 * t32 * t35 / 2.0) + d30 * t12 * t32 * t35 / 2.0) - d32 *
+    t12 * t32 * t35 / 2.0) + d60 * t34 * t35 * 2.0) + d70 * t35 / 2.0) - d64 *
+    t34 * t35 * 2.0) - d73 * t35 / 2.0) - d57 * t13 * t32 * t38) + d48 * t11 *
+    t33 * t35) + d196 * t13 * t32 * t38) - d50 * t11 * t33 * t35) - d70 * t38) +
+    d73 * t38) - d1 * t9 * t13 * t32 * t36) + d49 * t9 * t13 * t32 * t36) - d14 *
+    t25 * t32 * t35 / 2.0) + d15 * t25 * t32 * t35 / 2.0) + d100 * t33 * t35) +
+    d105 * t32 * t36) + d78 * t32 * t35) - d110 * t32 * t35) - d108 * t32 * t36)
+    + b_Y_tmp_tmp * t9 * t32 * t35) + d9 * t7 * t32 * t35) + d180 * t33 * t35) -
+    c_Y_tmp_tmp * t9 * t33 * t35) + d125 * t8 * t32 * t36) - d * t7 * t9 * t32 *
+    t36) - n_Y_tmp * t32 * t36) - d17 * t25 * t32 * t35 * 2.0) - d99 * t3 * t4 *
+    t33 * t35 * 2.0) - Y_tmp * t2 * t4 * t5 * t33 * t35) - d * t2 * t3 * t4 *
+    t32 * t36 * 2.0) - Y_tmp * t2 * t4 * t7 * t32 * t35 * 2.0) - d191 * t8 * t32
+    * t35 * 2.0) + d197 * t32 * t35 * 2.0) - d147 * t32 * t36) + d126 * t32 *
+    t36) - d81 * t32 * t35) + d198 * t32 * t35) + d202 * t32 * t36) - d148 * t32
+    * t35) - d19 * t7 * t32 * t35) - d160 * t33 * t35 * 2.0) + d108 * t9 * t32 *
+    t35) + d117 * t9 * t33 * t35) - d149 * t33 * t35) - d130 * t32 * t36 * 2.0)
+    - d161 * t32 * t35 * 2.0) + d7 * t7 * t9 * t32 * t36) - d155 * t32 * t36) +
+    d142 * t32 * t36) + d203 * t8 * t32 * t36) - d158 * t32 * t35) + n_Y_tmp *
+    t9 * t32 * t35) + d100 * t25 * t33 * t35) + d105 * t25 * t32 * t36) + d78 *
+    t25 * t32 * t35) - d110 * t25 * t32 * t35) + d180 * t25 * t33 * t35) + d97 *
+    t25 * t32 * t36) - g_Y_tmp * t32 * t35 * 2.0) + d42 * t5 * t32 * t35 / 2.0)
+    + ddq[1] * t2 * t3 * t5 * t8 * t33 * t35) - t_Y_tmp * t33 * t35) - h_Y_tmp *
+    t8 * t32 * t35 * 2.0) - d45 * t5 * t8 * t32 * t36 / 2.0) + d53 * t5 * t6 *
+    t32 * t36 / 2.0) + d69 * t7 * t8 * t32 * t35 / 2.0) - d44 * t7 * t32 * t35 /
+    2.0) + d22 * t6 * t8 * t32 * t35 / 2.0) - d51 * t9 * t32 * t35 / 2.0) + d54 *
+    t9 * t32 * t35 / 2.0) + d183 * t25 * t32 * t35) + d164 * t25 * t32 * t35) -
+    s_Y_tmp * t32 * t35) + g_Y_tmp_tmp * t10 * t32 * t35) + p_Y_tmp * t32 * t35 /
+    2.0) - g_Y_tmp_tmp * t11 * t32 * t35 / 2.0) - d87 * t12 * t32 * t35 / 2.0) +
+    d47 * t5 * t6 * t12 * t32 * t35 / 2.0) - d46 * t5 * t8 * t11 * t34 * t35 *
+    2.0) - b_Y_tmp * t35 / 2.0) + r_Y_tmp * t34 * t35 * 2.0) + e_Y_tmp * t35 /
+    2.0) + b_Y_tmp * t38) - d85 * t11 * t33 * t35) - e_Y_tmp * t38) + d86 * t11 *
+    t33 * t35) + d57 * t9 * t13 * t32 * t36) - d196 * t9 * t13 * t32 * t36) +
+    d79 * t25 * t32 * t35 / 2.0) - d80 * t25 * t32 * t35 / 2.0) + d194 * t33 *
+    t35 * 2.0) + d143 * t7 * t32 * t35 * 2.0) + d187 * t32 * t36 * 2.0) +
+    f_Y_tmp * t32 * t35 * 2.0) + i_Y_tmp * t8 * t32 * t35 * 2.0) - j_Y_tmp * t32
+    * t35 * 2.0) - d126 * t5 * t32 * t36) + d145 * t9 * t32 * t35 * 2.0) - d126 *
+                     t9 * t32 * t35) + d200 * t33 * t35 * 2.0) + d159 * t7 * t8 *
+                   t32 * t35 * 2.0) + d193 * t8 * t32 * t36 * 2.0) + k_Y_tmp *
+                 t32 * t35 * 2.0) - d23 * t6 * t8 * t32 * t36) + d130 * t9 * t32
+               * t35 * 2.0) - d142 * t9 * t32 * t35) - d153 * t25 * t33 * t35) -
+            d147 * t25 * t32 * t36) - d81 * t25 * t32 * t35) + d198 * t25 * t32 *
+          t35) - d148 * t25 * t32 * t35) - d149 * t25 * t33 * t35) - d155 * t25 *
+       t32 * t36) - d158 * t25 * t32 * t35) - d194 * t7 * t32 * t35 * 2.0) -
+    d102 * t7 * t8 * t32 * t35 * 2.0;
+  d = d18 * t20;
+  d1 = d10 * t20 * t21;
+  d7 = ddq[2] * t4;
+  d9 = d_Y_tmp_tmp * t8;
+  d10 = t7 * t9;
+  d12 = d16 * t10;
+  d13 = d12 * t19 * t21;
+  d15 = d10 * t13;
+  d17 = d24 * t10;
+  d18 = d17 * t19 * t21;
+  d19 = Y_tmp_tmp_tmp * t4;
+  d3 *= t4;
+  d22 = d38 * t8;
+  d23 = d181 * t8;
+  d28 = d19 * t6;
+  d30 = d101 * t8;
+  d32 = t2 * t3 * t4 * t5;
+  d38 = e_Y_tmp_tmp * t8;
+  d39 = d124 * t10;
+  d42 = d61 * t6;
+  d44 = d94 * t3;
+  d46 = d65 * t3 * t4;
+  d47 = i_Y_tmp_tmp * t6;
+  d49 = d115 * t10;
+  d51 = d16 * t11;
+  d53 = d24 * t11;
+  d54 = d10 * t10;
+  d57 = d10 * t11;
+  d65 = d9 * t10;
+  d66 = t3 * t7 * t9 * t10;
+  d68 = d115 * t11;
+  d69 = d205 * t6;
+  d70 = d191 * t4;
+  d34 = d34 * t3 * t4;
+  d73 = d33 * t3;
+  d74 = d112 * t6;
+  d76 = d181 * t5 * t8;
+  d19 = d19 * t5 * t6;
+  d78 = d32 * t10;
+  d79 = d32 * t11;
+  d81 = d38 * t10;
+  d87 = d38 * t11;
+  d97 = d124 * t11;
+  b_Y_tmp = d9 * t11;
+  Y_tmp_tmp = d106 * t10;
+  e_Y_tmp = d144 * t7 * t8;
+  g_Y_tmp = d156 * t7;
+  h_Y_tmp = d106 * t11;
+  i_Y_tmp = d134 * t7;
+  j_Y_tmp = ddq[1] * t9;
+  b_Y[13] = v_Y_tmp *
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((((((((((((((((((((((((((((((((d * 4.0 - d33 * t9 * t20 * 2.0) + j_Y_tmp
+    * t19 * t21 * 4.0) - d55 * t13 * t20 * 4.0) + d21 * t19 * 4.0) + d26 * t19 *
+    4.0) - d15 * t19 * 4.0) - d11 * t18 * t21 * 4.0) - d1 * 2.0) - d * t21 * 2.0)
+    - d62 * t19 * 4.0) + d6 * t19 * t21 * 4.0) - d35 * t19 * 2.0) - d111 * t19 *
+    2.0) - d27 * t20 * t21 * 4.0) + d22 * t19 * t21 * 4.0) - d84 * t19 * t21 *
+    4.0) - d75 * t8 * t19 * t21 * 2.0) - w_Y_tmp * t9 * t19 * t21 * 4.0) - d20 *
+    t7 * t19 * t21 * 2.0) - d31 * t20 * t21 * 4.0) + d20 * t15 * t19 * t21) +
+    d56 * t13 * t19 * 4.0) - d124 * t13 * t19 * 4.0) - d114 * t19 * 4.0) - d9 *
+    t13 * t19 * 4.0) - d116 * t19 * 4.0) - d13 * 6.0) - d16 * t12 * t19 * t21 *
+    2.0) + d37 * t11 * t18 * t21 * 4.0) - t3 * t9 * t10 * t20 * t21 * 2.0) - d18
+    * 6.0) - d24 * t12 * t19 * t21 * 2.0) + d1 * t25 * 4.0) + d33 * t7 * t9 *
+    t15 * t18) - d23 * t19 * t21 * 4.0) + d28 * t19 * t21 * 4.0) + d88 * t20 *
+    t21 * 4.0) + d27 * t7 * t19 * t21 * 4.0) - d30 * t19 * t21 * 4.0) + d63 *
+    t19 * t21 * 4.0) - d3 * t6 * t19 * t21 * 2.0) - d7 * t5 * t6 * t19 * t21 *
+    2.0) - d89 * t20 * t21 * 2.0) + d92 * t20 * t21 * 4.0) + d29 * t7 * t8 * t19
+    * t21 * 4.0) + d7 * t6 * t15 * t18 * t21) - d118 * t19 * 4.0) - d119 * t19 *
+    4.0) + d32 * t13 * t19 * 4.0) + d38 * t13 * t19 * 4.0) + d39 * t19 * t21 *
+    8.0) + Y_tmp_tmp * t19 * t21 * 6.0) - h_Y_tmp * t19 * t21 * 2.0) - d178 *
+    t11 * t18 * t21 * 4.0) + d16 * t7 * t10 * t20 * t21 * 6.0) + d65 * t19 * t21
+    * 8.0) - d66 * t19 * t21 * 2.0) + d49 * t19 * t21 * 6.0) - d68 * t19 * t21 *
+    2.0) + d51 * t15 * t18 * t21) - d128 * t11 * t18 * t21 * 4.0) + d173 * t20 *
+    t21 * 6.0) + d53 * t15 * t18 * t21) + d54 * t15 * t18 * t21) - d13 * t25 *
+    2.0) + d57 * t15 * t18 * t21) + d15 * t15 * t18 * t21) - d18 * t25 * 2.0) +
+    m_Y_tmp * t20 * 4.0) - d138 * t19 * 8.0) + d93 * t19 * 8.0) + d95 * t19 *
+    4.0) - d140 * t19 * 4.0) + d61 * t3 * t9 * t19 * 4.0) + d42 * t8 * t20 * 4.0)
+    + d151 * t19 * t21 * 8.0) - d133 * t20 * t21 * 4.0) + d134 * t20 * t21 * 4.0)
+    - d154 * t5 * t19 * t21 * 4.0) + d135 * t20 * t21 * 4.0) - d136 * t20 * t21 *
+    4.0) + d185 * t8 * t19 * t21 * 8.0) + db_Y_tmp * t19 * 8.0) - d204 * t19 *
+    8.0) - eb_Y_tmp * t20 * 4.0) - m_Y_tmp * t7 * t19 * 4.0) + h_Y_tmp_tmp * t8 *
+    t19 * 8.0) - d47 * t19 * 8.0) - d44 * t8 * t19 * 4.0) + d46 * t6 * t19 * 4.0)
+    - d94 * t5 * t8 * t19 * 4.0) + d139 * t5 * t6 * t19 * 4.0) + d137 * t7 * t8 *
+    t20 * 4.0) - d93 * t7 * t20 * 4.0) - d69 * t8 * t20 * 4.0) - d42 * t7 * t8 *
+    t19 * 4.0) - d70 * t19 * t21 * 8.0) - d167 * t19 * t21 * 8.0) - d162 * t20 *
+    t21 * 4.0) + d152 * t20 * t21 * 4.0) - d156 * t20 * t21 * 4.0) + d99 * t7 *
+    t8 * t19 * t21 * 4.0) - i_Y_tmp * t19 * t21 * 4.0) - d192 * t6 * t8 * t19 *
+    t21 * 8.0) - d25 * t2 * t5 * t8 * t20 * t21 * 4.0) + d25 * t4 * t5 * t6 *
+    t20 * t21 * 4.0) - dq[1] * dq[2] * t2 * t7 * t8 * t19 * t21 * 4.0) + d136 *
+    t7 * t19 * t21 * 4.0) - d113 * t9 * t20 * t21 * 4.0) - d169 * t8 * t19 * t21
+    * 8.0) + d129 * t19 * t21 * 8.0) - d186 * t19 * t21 * 8.0) - d189 * t20 *
+    t21 * 4.0) - d188 * t19 * t21 * 4.0) + d131 * t19 * t21 * 4.0) - d74 * t8 *
+    t9 * t20 * t21 * 4.0) - d34 * t5 * t19 * 2.0) - d73 * t5 * t6 * t8 * t19 *
+    2.0) + d34 * t15 * t18) + d120 * t15 * t18) + d73 * t6 * t8 * t15 * t18) +
+    d121 * t15 * t18) + d76 * t19 * t21 * 4.0) - d19 * t19 * t21 * 4.0) - d88 *
+    t7 * t19 * t21 * 4.0) - d41 * t5 * t8 * t19 * t21 * 2.0) - d45 * t4 * t9 *
+    t19 * t21 * 2.0) - y_Y_tmp * t20 * t21 * 2.0) - d91 * t7 * t8 * t19 * t21 *
+    4.0) + d41 * t8 * t15 * t18 * t21) - d52 * t6 * t8 * t9 * t19 * t21 * 2.0) +
+    d75 * t5 * t8 * t15 * t18 * t21) + d96 * t15 * t19 * t21) + d40 * t4 * t9 *
+    t15 * t18 * t21) + ddq[3] * t6 * t8 * t9 * t15 * t18 * t21) + q_Y_tmp * t13 *
+    t19 * 4.0) + fb_Y_tmp * t13 * t19 * 4.0) - d78 * t19 * t21 * 8.0) - d79 *
+    t19 * t21 * 2.0) - d32 * t12 * t19 * t21 * 2.0) - t2 * t3 * t4 * t5 * t13 *
+    t19 * t21 * 2.0) - kb_Y_tmp * t20 * t21 * 4.0) + f_Y_tmp_tmp * t11 * t18 *
+    t21 * 4.0) - ab_Y_tmp * t20 * t21 * 6.0) - d81 * t19 * t21 * 8.0) - d87 *
+    t19 * t21 * 2.0) + d97 * t15 * t18 * t21) - d38 * t12 * t19 * t21 * 2.0) +
+    d124 * t12 * t15 * t18 * t21) - t3 * t5 * t6 * t8 * t13 * t19 * t21 * 2.0) -
+    bb_Y_tmp * t20 * t21 * 4.0) + d163 * t11 * t18 * t21 * 4.0) + d106 * t12 *
+    t15 * t18 * t21) - d109 * t8 * t10 * t20 * t21 * 6.0) + d122 * t18 * t21) +
+    b_Y_tmp * t15 * t18 * t21) + d9 * t12 * t15 * t18 * t21) + d115 * t12 * t15 *
+    t18 * t21) + d123 * t18 * t21) - j_Y_tmp_tmp * t5 * t8 * t19 * 8.0) + d201 *
+    t5 * t6 * t19 * 8.0) + eb_Y_tmp * t7 * t19 * 4.0) + d44 * t5 * t8 * t19 *
+    4.0) - d46 * t5 * t6 * t19 * 4.0) - h_Y_tmp_tmp * t7 * t8 * t20 * 4.0) + d47
+    * t7 * t20 * 4.0) + d69 * t7 * t8 * t19 * 4.0) + d70 * t5 * t19 * t21 * 8.0)
+    + d168 * t20 * t21 * 4.0) - e_Y_tmp * t19 * t21 * 4.0) + g_Y_tmp * t19 * t21
+                       * 4.0) + d83 * t6 * t8 * t19 * t21 * 8.0) - d209 * t19 *
+                     t21 * 8.0) + d190 * t19 * t21 * 8.0) + d157 * t7 * t8 * t19
+                   * t21 * 4.0) - d132 * t7 * t19 * t21 * 4.0) + d113 * t7 * t9 *
+                 t19 * t21 * 4.0) + d107 * t8 * t9 * t19 * t21 * 4.0) - d8 * t4 *
+               t6 * t9 * t19 * t21 * 4.0) + d170 * t20 * t21 * 4.0) - d104 * t7 *
+             t8 * t9 * t20 * t21 * 4.0) + d141 * t7 * t9 * t20 * t21 * 4.0) +
+           d74 * t7 * t8 * t9 * t19 * t21 * 4.0) + d3 * t5 * t6 * t15 * t18 *
+          t21) + d103 * t15 * t19 * t21) + t2 * t3 * t4 * t5 * t7 * t10 * t20 *
+        t21 * 4.0) + lb_Y_tmp * t20 * t21 * 4.0) + Y_tmp_tmp * t15 * t18 * t21 *
+      t25) + d49 * t15 * t18 * t21 * t25) / 4.0;
+  d = l_Y_tmp * t2;
+  m_Y_tmp = ddq[0] * q[1];
+  Y_tmp *= q[1];
+  n_Y_tmp = Y_tmp * t2;
+  q_Y_tmp = n_Y_tmp * t4;
+  u_Y_tmp = q[1] * t2;
+  db_Y_tmp = q[1] * t4 * t6;
+  n_Y_tmp = n_Y_tmp * t3 * t4;
+  eb_Y_tmp = Y_tmp * t3;
+  fb_Y_tmp = m_Y_tmp * t2;
+  gb_Y_tmp = u_Y_tmp * t5 * t8;
+  b_Y[14] = o_Y_tmp * (((((((((((((((((((((((((((((((((((((((((((((((d2 * t21 *
+    4.0 - d4 * t21 * 4.0) - d * t8 * t21 * 2.0) + d67 * t15 * t21) - d58 * t21 *
+    4.0) + d59 * t21 * 4.0) - d60 * t21 * 4.0) + d64 * t21 * 4.0) - d2 * t18 *
+    t21 * 2.0) - c_Y_tmp * t4 * t6 * t21 * 2.0) - l_Y_tmp * t4 * t5 * t6 * t21 *
+    2.0) + fb_Y_tmp * t4 * t15 * t21) + m_Y_tmp * t6 * t8 * t15 * t21) - d182 *
+    t18 * t21 * 2.0) - d183 * t18 * t21 * 2.0) + d72 * t15 * t21) + d77 * t15 *
+    t21) - d43 * t18 * t21 * 2.0) - d164 * t18 * t21 * 2.0) + db_Y_tmp * t11 *
+    t15 * t21) + p_Y_tmp * t21 * 4.0) - r_Y_tmp * t21 * 4.0) - d82 * t18 * t21 *
+    2.0) - d64 * t18 * t21 * 2.0) - d14 * t18 * t21 * t25 * 2.0) - q_Y_tmp * t21
+    * 4.0) - Y_tmp * t6 * t8 * t21 * 4.0) + n_Y_tmp * t21 * 4.0) + q_Y_tmp * t5 *
+    t21 * 4.0) + eb_Y_tmp * t6 * t8 * t21 * 4.0) + Y_tmp * t5 * t6 * t8 * t21 *
+    4.0) + d100 * t7 * t18 * t21 * 4.0) + d161 * t18 * t21 * 4.0) - d * t3 * t5 *
+    t8 * t21 * 2.0) + t_Y_tmp * t15 * t21) + u_Y_tmp * t3 * t8 * t10 * t15 * t21)
+    + gb_Y_tmp * t11 * t15 * t21) + db_Y_tmp * t10 * t15 * t21 * t25) - s_Y_tmp *
+    t18 * t21 * 2.0) - d80 * t18 * t21 * t25 * 2.0) - n_Y_tmp * t5 * t21 * 4.0)
+    - eb_Y_tmp * t5 * t6 * t8 * t21 * 4.0) - f_Y_tmp * t18 * t21 * 4.0) -
+    k_Y_tmp * t18 * t21 * 4.0) + fb_Y_tmp * t3 * t4 * t5 * t15 * t21) + m_Y_tmp *
+    t3 * t5 * t6 * t8 * t15 * t21) + x_Y_tmp * t4 * t5 * t6 * t10 * t15 * t21) +
+                       gb_Y_tmp * t10 * t15 * t21 * t25) / 4.0;
+  d = t5 * t7;
+  d1 = d71 * t4;
+  d2 = w_Y_tmp * t6 * t8;
+  d3 = d16 * t9;
+  d4 = d3 * t11;
+  d6 = d24 * t9;
+  Y_tmp = d124 * t9;
+  c_Y_tmp = d9 * t9;
+  f_Y_tmp = dq[0] * dq[1] * t2 * t7 * t8;
+  b_Y[15] =
+    (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+    (((((d90 * t32 * t35 / 2.0 - j_Y_tmp * t32 * t36 / 2.0) - d5 * t33 * t35) +
+    d11 * t33 * t36) - d27 * t33 * t36 / 2.0) - d22 * t32 * t36 / 2.0) + d84 *
+    t32 * t36 / 2.0) - d90 * t7 * t33 * t35 / 2.0) - d31 * t33 * t36 / 2.0) +
+    d_Y_tmp * t9 * t33 * t36 / 2.0) - d51 * t32 * t36 / 2.0) + d51 * t34 * t36)
+    - d * t10 * t32 * t35 / 2.0) + d * t11 * t34 * t35) - d53 * t32 * t36 / 2.0)
+    + d54 * t32 * t36 / 2.0) + d53 * t34 * t36) - d57 * t34 * t36) + d1 * t33 *
+    t36 / 2.0) + d23 * t32 * t36 / 2.0) - d28 * t32 * t36 / 2.0) + d88 * t33 *
+    t36 / 2.0) + d30 * t32 * t36 / 2.0) - d63 * t32 * t36 / 2.0) + d27 * t9 *
+    t33 * t35 / 2.0) + d22 * t9 * t32 * t35 / 2.0) - d84 * t9 * t32 * t35 / 2.0)
+    + d2 * t33 * t36 / 2.0) + d92 * t33 * t36 / 2.0) + d31 * t9 * t33 * t35 /
+    2.0) + d39 * t32 * t36 / 2.0) - d97 * t34 * t36) + h_Y_tmp * t32 * t36 / 2.0)
+    - h_Y_tmp * t34 * t36) + d36 * t7 * t10 * t32 * t35 / 2.0) + d4 * t32 * t35 /
+    2.0) - d4 * t34 * t35) + d65 * t32 * t36 / 2.0) - d66 * t32 * t36 / 2.0) -
+    b_Y_tmp * t34 * t36) + d68 * t32 * t36 / 2.0) - d68 * t34 * t36) + d6 * t11 *
+    t32 * t35 / 2.0) - d24 * t9 * t11 * t34 * t35) - d12 * t25 * t32 * t36 / 2.0)
+    - d17 * t25 * t32 * t36 / 2.0) + d133 * t33 * t36) - d134 * t33 * t36) -
+    d146 * t33 * t36) + d150 * t33 * t36) - d152 * t33 * t36) + d156 * t33 * t36)
+    - f_Y_tmp * t32 * t36) + i_Y_tmp * t32 * t36) - d174 * t33 * t35) + d175 *
+    t33 * t35) - d1 * t5 * t33 * t36 / 2.0) - d76 * t32 * t36 / 2.0) + d19 * t32
+    * t36 / 2.0) - d1 * t9 * t33 * t35 / 2.0) - d23 * t9 * t32 * t35 / 2.0) +
+    d28 * t9 * t32 * t35 / 2.0) - w_Y_tmp * t5 * t6 * t8 * t33 * t36 / 2.0) - d2
+    * t9 * t33 * t35 / 2.0) - d78 * t32 * t36 / 2.0) + d79 * t34 * t36) - Y_tmp *
+                     t10 * t32 * t35 / 2.0) + Y_tmp * t11 * t34 * t35) - d81 *
+                   t32 * t36 / 2.0) + d87 * t34 * t36) - c_Y_tmp * t10 * t32 *
+                 t35 / 2.0) + c_Y_tmp * t11 * t34 * t35) + Y_tmp_tmp * t25 * t32
+               * t36 / 2.0) + d3 * t10 * t25 * t32 * t35 / 2.0) + d49 * t25 *
+             t32 * t36 / 2.0) + d6 * t10 * t25 * t32 * t35 / 2.0) + mb_Y_tmp *
+           t33 * t36) - nb_Y_tmp * t33 * t36) + d176 * t33 * t35) + e_Y_tmp *
+        t32 * t36) - d177 * t33 * t35) - g_Y_tmp * t32 * t36) + f_Y_tmp * t9 *
+     t32 * t35) - i_Y_tmp * t9 * t32 * t35;
+  b_Y[16] = 0.0;
+  Y_tmp = t3 * t20 * t23;
+  b_Y_tmp = t7 * t19 * t23;
+  b_Y[17] = v_Y_tmp * (Y_tmp * 19.614 - b_Y_tmp * 19.614) * -0.25;
+  b_Y[18] = 0.0;
+  b_Y[19] = 0.0;
+  b_Y[20] = 0.0;
+  b_Y[21] = v_Y_tmp * (Y_tmp * 39.228 - b_Y_tmp * 39.228) * -0.25;
+  b_Y[22] = 0.0;
+  b_Y[23] = 0.0;
+  b_Y[24] = ((d48 * t35 * 4.9035 - d50 * t35 * 4.9035) - d85 * t35 * 4.9035) +
+    d86 * t35 * 4.9035;
+  b_Y[25] = v_Y_tmp * ((((d10 * t21 * t22 * 19.614 + d124 * t21 * t22 * 19.614)
+    + d9 * t21 * t22 * 19.614) - d32 * t21 * t22 * 19.614) - d38 * t21 * t22 *
+                       19.614) / 4.0;
+  b_Y[26] = o_Y_tmp * (((d48 * t19 * t21 * 19.614 - d50 * t19 * t21 * 19.614) -
+                        d85 * t19 * t21 * 19.614) + d86 * t19 * t21 * 19.614) *
+    -0.25;
+  b_Y[27] = ((((((d36 * t35 * -4.9035 + d37 * t36 * 4.9035) - d178 * t36 *
+                 4.9035) - d128 * t36 * 4.9035) + f_Y_tmp_tmp * t36 * 4.9035) +
+              cb_Y_tmp * t35 * 4.9035) + d163 * t36 * 4.9035) + d184 * t35 *
+    4.9035;
+  b_Y[28] = dq[0] * t18;
+  b_Y[29] = dq[1];
+  b_Y[30] = 0.0;
+  b_Y[31] = 0.0;
+  b_Y[32] = 0.0;
+  b_Y[33] = 0.0;
+  b_Y[34] = dq[2] * t21;
+  b_Y[35] = dq[3];
+  b_Y[36] = 0.0;
+  b_Y[37] = q[1];
+  b_Y[38] = 0.0;
+  b_Y[39] = 0.0;
+  b_Y[40] = 0.0;
+  b_Y[41] = 0.0;
+  b_Y[42] = 0.0;
+  b_Y[43] = q[3];
+  Map<MatrixXd> dummy(b_Y,4,11);
+  Y = dummy;
+}
+
+
 void Lagrange::update(const srl::State &state)
 {
     Lagrange::A_update(MatrixXd::Identity(4,4)*state.q);
@@ -2146,6 +3731,8 @@ void Lagrange::update(const srl::State &state)
     Lagrange::p_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::J_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::JDot_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);
+    Lagrange::Y_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq,MatrixXd::Identity(4,4)*state.ddq);
+
     //std::cout << "q:\n" << q << std::endl;
     //Map<VectorXd> q(data);
 }
