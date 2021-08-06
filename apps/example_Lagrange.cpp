@@ -55,11 +55,15 @@ int main()
     st_params_l.finalize(); // run sanity check and finalize parameters
     Lagrange lag(st_params_l);
     srl::State state = st_params_l.getBlankState(); // get blank state with appropriate size
+    srl::State state_r = st_params_l.getBlankState(); // get blank state with appropriate size
     srand((unsigned int)time(0));
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
     state.ddq = VectorXd::Random(4);
-    lag.update(state);
+    state_r.q = VectorXd::Random(4);
+    state_r.dq = VectorXd::Random(4);
+    state_r.ddq = VectorXd::Random(4);   
+    lag.update(state,state_r);
 
     std::cout << "q:\n"
               << state.q << std::endl;
@@ -88,5 +92,6 @@ int main()
     //std::cout << "par:\n" << st_params.masses << std::endl;
     std::cout << "Y:\n"
               << lag.Y << std::endl;
+    //std::cout << X << std::endl;
     return 1;
 }

@@ -30,7 +30,7 @@ public:
     Lagrange(const SoftTrunkParameters &st_params);
 
     /** @brief update the member variables based on current PCC value */
-    void update(const srl::State &state);
+    void update(const srl::State &state, const srl::State &state_r);
 
     /** @brief torque mapping matrix */
     MatrixXd A;
