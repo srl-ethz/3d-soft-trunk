@@ -60,23 +60,32 @@ int main()
     state.dq = VectorXd::Random(4);
     state.ddq = VectorXd::Random(4);
     lag.update(state);
-    /*
-    std::cout << "q:\n" << state.q << std::endl;
-    std::cout << "dq:\n" << state.dq << std::endl;
-    std::cout << "A:\n" << lag.A << std::endl;
-    std::cout << "Cdq:\n" << lag.Cdq << std::endl;
-    std::cout << "M:\n" << lag.M << std::endl;
-    std::cout << "g:\n" << lag.g << std::endl;
-    std::cout << "k:\n" << lag.k << std::endl;
-    std::cout << "d:\n" << lag.d << std::endl;
-    std::cout << "p:\n" << lag.p << std::endl;
-    std::cout << "J:\n" << lag.J << std::endl;
-    std::cout << "JDot:\n" << lag.JDot << std::endl;
+
+    std::cout << "q:\n"
+              << state.q << std::endl;
+    std::cout << "dq:\n"
+              << state.dq << std::endl;
+    std::cout << "ddq:\n"
+              << state.ddq << std::endl;
+    std::cout << "A:\n"
+              << lag.A << std::endl;
+    std::cout << "Cdq:\n"
+              << lag.Cdq << std::endl;
+    std::cout << "M:\n"
+              << lag.M << std::endl;
+    std::cout << "g:\n"
+              << lag.g << std::endl;
+    std::cout << "k:\n"
+              << lag.k << std::endl;
+    std::cout << "d:\n"
+              << lag.d << std::endl;
+    std::cout << "p:\n"
+              << lag.p << std::endl;
+    std::cout << "J:\n"
+              << lag.J << std::endl;
+    std::cout << "JDot:\n"
+              << lag.JDot << std::endl;
     //std::cout << "par:\n" << st_params.masses << std::endl;
-    */
-    std::cout << "q:\n" << state.q << std::endl;
-    std::cout << "dq:\n" << state.dq << std::endl;
-    std::cout << "ddq:\n" << state.ddq << std::endl;
     std::cout << "Y:\n"
               << lag.Y << std::endl;
     return 1;
