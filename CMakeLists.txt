@@ -100,6 +100,9 @@ target_link_libraries(Characterize ControllerPCC)
 add_library(IDCon src/IDCon.cpp)
 target_link_libraries(IDCon ControllerPCC)
 
+add_library(Adaptive src/Adaptive.cpp)
+target_link_libraries(Adaptive ControllerPCC)
+
 
 if(${roscpp_FOUND})
     add_library(VisualizerROS src/VisualizerROS.cpp)

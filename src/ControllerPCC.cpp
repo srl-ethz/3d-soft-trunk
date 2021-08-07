@@ -17,10 +17,8 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
     f = VectorXd::Zero(2 * st_params.num_segments);
 
     filename = "defaultController_log";
-    if (st_params.model == "augmented")
-        stm = std::make_unique<SoftTrunkModel>(st_params);
-    if (st_params.model == "lagrange")
-        lag = std::make_unique<Lagrange>(st_params);
+    stm = std::make_unique<SoftTrunkModel>(st_params);
+    lag = std::make_unique<Lagrange>(st_params);
     // +X, +Y, -X, -Y
     std::vector<int> map = {0,6,5,3,4,2,1};
     
