@@ -143,7 +143,8 @@ protected:
     Vector3d dx;
     Vector3d dx_ref;
     Vector3d ddx_ref;
-
+    Vector3d ddx_d;
+    VectorXd tau_ref;
     bool gripping = false;
 
     //actuation vectors, p is pressures and f is torques

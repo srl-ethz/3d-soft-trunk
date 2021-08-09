@@ -367,7 +367,7 @@ void Lagrange::p_update(VectorXd q)
     t14 * (t3 - 1.0) * (t5 - 1.0) / 2.0;
   p_FK[2] = ((-L[0] * t7 * t13 - L[1] * t3 * t9 * t14) - t6 * t4 * t7 * t14 *
              (t5 - 1.0)) - c_p_FK_tmp * t8 * t14 * (t5 - 1.0);
-  Map<VectorXd> dummy(p_FK,4);
+  Map<VectorXd> dummy(p_FK,3);
   p = dummy;
 }
 

@@ -1,8 +1,13 @@
-#include "3d-soft-trunk/SoftTrunk_common.h"
-#include "3d-soft-trunk/ControllerPCC.h"
-#include "3d-soft-trunk/Lagrange.h"
+#include "3d-soft-trunk/Adaptive.h"
 
-#include "Eigen/Dense"
+bool freedom = false;
+Vector3d x_ref;
+Vector3d x;
+Vector3d dx_ref = Vector3d::Zero();
+Vector3d ddx_ref = Vector3d::Zero();
+Vector3d circle = Vector3d::Zero();
+Vector3d d_circle = Vector3d::Zero();
+Vector3d dd_circle = Vector3d::Zero();
 
 
 int main(){
@@ -15,38 +20,35 @@ int main(){
     st_params.finalize();
     Lagrange lag(st_params_l);
     ControllerPCC cpcc(st_params, CurvatureCalculator::SensorType::qualisys);
-    srl::State state = st_params_l.getBlankState(); // get blank state with appropriate size
-    srl::State state_r = st_params_l.getBlankState();
-    VectorXd p = VectorXd::Zero(6);
-    VectorXd t = VectorXd::Zero(4);
-    double dt = 1./100;
-    srl::Rate r{1./dt};
-    VectorXd k_a;
-    VectorXd k_p;
-    k_a << 1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.;
-    k_p << 1.,1.,1.,1.;
-    // theta_1 = 0.3;
-    VectorXd q_des = VectorXd::Random(4);
-    VectorXd dq_des = VectorXd::Random(4);
-    VectorXd ddq_des = VectorXd::Random(4);
+    Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 1);
 
-    state_r.dq  = dq_des + k_p.asDiagonal()* (q_des - state.q);
-    state_r.ddq = ddq_des + k_p.asDiagonal()* (dq_des - state.dq);
-    MatrixXd Y = lag.Y;
-    t = k_a.asDiagonal() * Y.transpose() * (state_r.dq - state.dq);
+    double t = 0;
+    double dt = 0.1;
+    x_ref << 0.15,0,-0.2;
+    double amplitude = 0.2;
+    double coef = 2 * 3.1415 / 16;
+    bool freedom = false;
+    ad.set_ref(x_ref,dx_ref,ddx_ref);
+    srl::sleep(3);
 
-    while(true){
-    r.sleep();    
-    cpcc.cc->get_curvature(state);
-    lag.update(state,state_r);
-
-    //da = 
-
-    //a += da*dt;
-
-    p = cpcc.stm->pseudo2real(cpcc.stm->A_pseudo.inverse()*t);
-    cpcc.actuate(p);
-
+    ad.toggle_log();
+    while (t<10){
+        
+        double r = 0.12;
+        circle << r*cos(coef*t), r*sin(coef*t), -0.2;
+        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
+        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
+        x_ref = circle;
+        dx_ref = d_circle;
+        ddx_ref = dd_circle;
+        //x_ref = ad.get_objects()[0];
+        ad.set_ref(x_ref,dx_ref,ddx_ref);
+        
+        
+        t+=dt;
+        srl::sleep(dt);
     }
-    return 1;
+    ad.toggle_log();
+
+    srl::sleep(2);
 }

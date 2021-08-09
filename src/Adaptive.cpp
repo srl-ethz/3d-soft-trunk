@@ -10,6 +10,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps = 1e-1;
     lambda = 0.5e-1;
     control_thread = std::thread(&Adaptive::control_loop, this);
+    a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
     fmt::print("Adaptive initialized.\n");
 }
 
@@ -40,9 +41,9 @@ void Adaptive::control_loop()
 
         x = lag.p;
         dx = lag.J * state.dq;
-        VectorXd ddx_d = ddx_ref + Kp * (x_ref - x) + Kd * (dx_ref - dx);
+        ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
         J_inv = computePinv(lag.J, eps, lambda);
-        state_ref.dq = J_inv * (dx_ref + Kp * (x_ref - x));
+        state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
         state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq); // + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * J)) * (-kd * state.dq);
 
         aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
@@ -87,13 +88,13 @@ Eigen::MatrixXd Adaptive::computePinv(Eigen::MatrixXd j, double e, double lambda
     return pJacobian;
 }
 
-void Adaptive::avoid_singularity(srl::State state)
+void Adaptive::avoid_singularity(srl::State &state)
 {
     double r;
-    double eps_custom = 0.00001;
+    double eps_custom = 0.0001;
     for (int idx = 0; idx < state.q.size(); idx++)
     {
-        r = std::fmod(state.q(idx), 6.2831853071795862); //remainder of division by 2*pi
+        r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
         state.q[idx] = (r < eps_custom) ? eps_custom : state.q[idx];
     }
 }

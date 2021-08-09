@@ -13,6 +13,16 @@ double fRand(double fMin, double fMax)
     double f = (double)rand() / RAND_MAX;
     return fMin + f * (fMax - fMin);
 }
+void avoid_singularity(srl::State &state)
+{
+    double r;
+    double eps_custom = 0.0001;
+    for (int idx = 0; idx < state.q.size(); idx++)
+    {
+        r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
+        state.q[idx] = (r < eps_custom) ? eps_custom : state.q[idx];
+    }
+}
 int main()
 {
     /*
@@ -62,9 +72,11 @@ int main()
     state.ddq = VectorXd::Random(4);
     state_r.q = VectorXd::Random(4);
     state_r.dq = VectorXd::Random(4);
-    state_r.ddq = VectorXd::Random(4);   
+    state_r.ddq = VectorXd::Random(4);
+    std::cout << "q:\n"
+              << state.q << std::endl;
+    avoid_singularity(state);
     lag.update(state,state_r);
-
     std::cout << "q:\n"
               << state.q << std::endl;
     std::cout << "dq:\n"

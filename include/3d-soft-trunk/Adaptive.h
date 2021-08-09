@@ -13,7 +13,7 @@ public:
   
 private:
     void control_loop();
-    void avoid_singularity(srl::State state);
+    void avoid_singularity(srl::State &state);
     MatrixXd computePinv(MatrixXd j, double e, double lambda);
     VectorXd Ka;
     VectorXd Kp;
