@@ -123,7 +123,7 @@ protected:
     const int p_max = 700; // 400 for DS 10, 1200 for DS 30
     VectorXd tau;
 
-    double dt = 1. / 30.;
+    double dt = 1. / 100.; //change from 30 to 100
     double t;
 
     bool is_initial_ref_received = false;

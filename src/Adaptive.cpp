@@ -8,9 +8,9 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp << 1., 1., 1.;
     Kd << 0.1, 0.1, 0.1;
 
-    dt = 1. / 10;
-    eps = 1e-1;
-    lambda = 0.5e-1;
+    dt = 1. / 100;
+    eps = 1e-3;
+    lambda = 0.5e-3;
     control_thread = std::thread(&Adaptive::control_loop, this);
 
     a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
@@ -34,22 +34,24 @@ void Adaptive::control_loop()
         //update the internal visualization
         cc->get_curvature(state);
         avoid_singularity(state);
-        avoid_singularity(state_ref);
         lag.update(state, state_ref);
 
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
-
+        // Todo: check x with x_tip
         x = lag.p;
         dx = lag.J * state.dq;
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
         state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq); // + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * J)) * (-kd * state.dq);
-
+        
+        lag.update(state, state_ref); //update again for state_ref to get Y
+        
         aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
         a += dt * aDot;
-
+        // Todo: check the mapping
+        // TOdo: check the rate
         tau = lag.A.inverse() * lag.Y * a;
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
 
