@@ -1,18 +1,27 @@
 #pragma once
 
-#include "SoftTrunk_common.h"
 #include "3d-soft-trunk/ControllerPCC.h"
-
+#include <Eigen/Core>
+#include <Eigen/QR>
+#include <Eigen/LU>
+#include <Eigen/Dense>
+#include <Eigen/SVD>
+#include <iostream>
 class Adaptive: public ControllerPCC {
 public:
     Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type = CurvatureCalculator::SensorType::qualisys, int objects = 0);
-    
-    
-    VectorXd k_a;
-    VectorXd k_p;
-
+  
 private:
     void control_loop();
-
-    srl::State state_r;
+    void avoid_singularity(srl::State state);
+    MatrixXd computePinv(MatrixXd j, double e, double lambda);
+    VectorXd Ka;
+    VectorXd Kp;
+    VectorXd Kd;
+    MatrixXd J_inv;
+    VectorXd aDot;
+    VectorXd a;
+    VectorXd tau;
+    double eps;
+    double lambda;
 };
