@@ -11,22 +11,18 @@ Vector3d dd_circle = Vector3d::Zero();
 
 
 int main(){
-    SoftTrunkParameters st_params_l{};
-    st_params_l.load_yaml("softtrunkparams_Lagrange.yaml");
-    st_params_l.finalize();  // run sanity check and finalize parameters
+    
 
     SoftTrunkParameters st_params{};
     st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
-    Lagrange lag(st_params_l);
-    ControllerPCC cpcc(st_params, CurvatureCalculator::SensorType::qualisys);
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 1);
 
     double t = 0;
     double dt = 0.1;
     x_ref << 0.15,0,-0.2;
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 16;
+    double coef = 2 * 3.1415 / 128;
     bool freedom = false;
     ad.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(3);
@@ -42,7 +38,7 @@ int main(){
         dx_ref = d_circle;
         ddx_ref = dd_circle;
         //x_ref = ad.get_objects()[0];
-        ad.set_ref(x_ref,dx_ref,ddx_ref);
+        //ad.set_ref(x_ref,dx_ref,ddx_ref);
         
         
         t+=dt;

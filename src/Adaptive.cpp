@@ -2,36 +2,37 @@
 
 Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects)
 {
+    
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
     Kp << 1., 1., 1.;
     Kd << 0.1, 0.1, 0.1;
-    dt = 1. / 100;
+
+    dt = 1. / 10;
     eps = 1e-1;
     lambda = 0.5e-1;
     control_thread = std::thread(&Adaptive::control_loop, this);
+
     a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
+
     fmt::print("Adaptive initialized.\n");
 }
 
 void Adaptive::control_loop()
 {
+    
     SoftTrunkParameters st_params_l{};
     st_params_l.load_yaml("softtrunkparams_Lagrange.yaml");
-    st_params_l.finalize(); // run sanity check and finalize parameters
+    st_params_l.finalize();  // run sanity check and finalize parameters
 
-    SoftTrunkParameters st_params{};
-    st_params.load_yaml("softtrunkparams_example.yaml");
-    st_params.finalize();
     Lagrange lag(st_params_l);
-    ControllerPCC cpcc(st_params, CurvatureCalculator::SensorType::qualisys);
     srl::Rate r{1. / dt};
     while (true)
     {
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
         //update the internal visualization
-        cpcc.cc->get_curvature(state);
+        cc->get_curvature(state);
         avoid_singularity(state);
         avoid_singularity(state_ref);
         lag.update(state, state_ref);

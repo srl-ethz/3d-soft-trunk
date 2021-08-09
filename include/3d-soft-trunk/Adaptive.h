@@ -15,12 +15,12 @@ private:
     void control_loop();
     void avoid_singularity(srl::State &state);
     MatrixXd computePinv(MatrixXd j, double e, double lambda);
-    VectorXd Ka;
-    VectorXd Kp;
-    VectorXd Kd;
+    VectorXd Ka = VectorXd::Zero(11);
+    VectorXd Kp = VectorXd::Zero(3);
+    VectorXd Kd = VectorXd::Zero(3);
     MatrixXd J_inv;
-    VectorXd aDot;
-    VectorXd a;
+    VectorXd aDot = VectorXd::Zero(11);;
+    VectorXd a = VectorXd::Zero(11);
     VectorXd tau;
     double eps;
     double lambda;
