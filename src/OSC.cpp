@@ -45,7 +45,7 @@ void OSC::control_loop() {
         //this x is from forward kinematics, use when using bendlabs sensors
         Vector3d gripperl = Vector3d::Zero();
         gripperl(2) = 0.06;
-        //x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
+        x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
         
         
@@ -55,8 +55,8 @@ void OSC::control_loop() {
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
-        if ((x_ref - x).norm() > 0.038) {                                   //deal with super high distances
-            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.038 + kd*(dx_ref - dx);  
+        if ((x_ref - x).norm() > 0.05) {                                   //deal with super high distances
+            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.05 + kd*(dx_ref - dx);  
         }
 
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
@@ -81,8 +81,8 @@ void OSC::control_loop() {
         f = B_op*ddx_des;
         
         //f_null = B_op_null*ddx_null;
-        //f(0) += loadAttached;
-        f(2) += loadAttached + 0.24*gripperAttached; //the gripper weights 0.24 Newton
+        f(0) += loadAttached;
+        f(2) += /*loadAttached +*/ 0.24*gripperAttached; //the gripper weights 0.24 Newton
 
         tau_null = -kd *0.0001 * state.dq;//J_mid.transpose()*f_null;
         

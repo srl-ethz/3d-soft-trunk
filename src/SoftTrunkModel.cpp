@@ -66,7 +66,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
+        if (pressure_pseudo.segment(2*i,2).norm() > 550) pressure_pseudo.segment(2*i,2) *= 550/pressure_pseudo.segment(2*i,2).norm();
 
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
@@ -78,9 +78,9 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
-        if (0 < angle && angle <= 120) angle +=1.9950243417278783e-05*pow(angle-0,3) + -0.0027904648600991003*pow(angle-0,2) + 0.0846736785595351*(angle-0) + 1.9504785489381562;
-        else if (120 < angle && angle <= 240) angle += 6.377006411641244e-07*pow(angle-120,3) + -0.0007141817202493613*pow(angle-120,2) + 0.041808659212423535*(angle-120) + 8.432360817838601;
-        else if (240 < angle && angle <= 360) angle += 4.355660749206038e-05*pow(angle-240,3) + -0.009142024051903792*pow(angle-240,2) + 0.44372562426590073*(angle-240) + 4.56731999846652;
+        if (0 < angle && angle <= 120) angle += 1.5208465639258374e-05*pow(angle-0,3) + -0.0014106747386411912*pow(angle-0,2) + -0.04963544029275246*(angle-0) + -0.41626978280302795;
+        else if (120 < angle && angle <= 240) angle += 9.162724016307725e-07*pow(angle-120,3) + -0.0005839470655404693*pow(angle-120,2) + 0.05121749437424086*(angle-120) + 0.9713252780945655;
+        else if (240 < angle && angle <= 360) angle += 3.82072854208998e-05*pow(angle-240,3) + -0.00899474351195959*pow(angle-240,2) + 0.5147871756197278*(angle-240) + 0.052084080351953416;
         
         angle += 5; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.
@@ -101,7 +101,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-2.6232553509100617e-08*pow(angle-0,3) + -1.3280522053797335e-06*pow(angle-0,2) + 0.0006048202064267852*(angle-0) + 0.1155691110607423);
         else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(6.057943690280016e-08*pow(angle-120,3) + -1.697271123676189e-05*pow(angle-120,2) + 0.0011161469814386048*(angle-120) + 0.13122825220829032);
         else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(1.0541480021563933e-08*pow(angle-240,3) + -2.9366899073751324e-06*pow(angle-240,2) + 0.00011347572819645066*(angle-240) + 0.13088248674324263);
-        
+         
     }
     return output;
 }
