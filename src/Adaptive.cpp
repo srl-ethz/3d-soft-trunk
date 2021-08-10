@@ -43,7 +43,7 @@ void Adaptive::control_loop()
         //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
         Vector3d x_qualiszs = cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-        //std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+        std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
         std::cout << "x_kinematic \n" << x << "\n\n";
         dx = lag.J * state.dq;
         //std::cout << "dx \n" << dx << "\n\n";
@@ -70,6 +70,7 @@ void Adaptive::control_loop()
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
         cout << "\n pressure_control \n " << p << "\n\n";
+        /*
             for (int i = 0; i < 3; i++)
             {
                 p(i) = 500 * pow(sin( i * 2 * PI / 3), 2);
@@ -78,6 +79,13 @@ void Adaptive::control_loop()
             {
                 p(3 + i) = 500 * pow(sin( i * 2 * PI / 3), 2);
             }
+        */
+        p(0) = 0;
+        p(1) = 400;
+        p(2) = 400;
+        p(3) = 0;
+        p(4) = 400;
+        p(5) = 400;
         cout << "\n pressure_feedforward \n " << p << "\n\n";
         actuate(p);
     }

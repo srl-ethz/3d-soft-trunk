@@ -69,11 +69,11 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
         if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
-        /*
+        
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;        
         
         //shift coordinates to start at the same spot as the characterization program
-        angle = angle - 90; 
+        /*angle = angle - 90; 
         if (angle < 0) angle += 360;       
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
@@ -85,8 +85,8 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.
         
-        //pressure_pseudo(2*i) = r*cos(angle*deg2rad);
-        //pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
+        pressure_pseudo(2*i) = r*cos(angle*deg2rad);
+        pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
         */
         output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //invert back onto real chambers
 
