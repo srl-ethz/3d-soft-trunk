@@ -21,7 +21,7 @@ private:
     MatrixXd J_inv;
     VectorXd aDot = VectorXd::Zero(11);;
     VectorXd a = VectorXd::Zero(11);
-    VectorXd tau;
+    VectorXd tau = VectorXd::Zero(4);;
     double eps;
     double lambda;
 };

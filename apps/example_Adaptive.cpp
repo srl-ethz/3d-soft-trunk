@@ -20,7 +20,7 @@ int main(){
 
     double t = 0;
     double dt = 0.1;
-    x_ref << 0.06, 0.09,-0.25;
+    x_ref << 0.1, 0,-0.2;
 
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;

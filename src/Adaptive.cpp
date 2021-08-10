@@ -6,8 +6,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    Kp << 35., 35., 35.;
-    Kd << 5, 5, 5;
+    Kp << 25., 25., 25.;
+    Kd << .5, .5, .5;
 
     dt = 1. / 100;
     eps = 1e-5;
@@ -44,7 +44,7 @@ void Adaptive::control_loop()
         x = lag.p;
         Vector3d x_qualiszs = cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
-        //std::cout << "x_kinematic \n" << x << "\n\n";
+        std::cout << "x_kinematic \n" << x << "\n\n";
         dx = lag.J * state.dq;
         //std::cout << "dx \n" << dx << "\n\n";
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
@@ -54,13 +54,18 @@ void Adaptive::control_loop()
         //std::cout << "\n q: \n" << state.q << "\n\n";
         lag.update(state, state_ref); //update again for state_ref to get Y
         
-        aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
-        a += 0.001* dt * aDot;
+        //aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
+        //a += 0.001* dt * aDot;
         //cout << "\na \n " << a << "\n\n";
         //tau = lag.A.inverse() * lag.Y * a;
-        state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-5.5*state.dq);
-
-        tau = computePinv(lag.A, eps, lambda) * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k * state.q + lag.d*state.dq);
+        MatrixXd Ainv;
+        Ainv = computePinv(lag.A, eps, lambda);
+        cout << "\n map \n" << Ainv << "\n";
+        //tau = Ainv * lag.Y * a;
+        state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-0.5*state.dq);
+        //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
+        //cout << dumm;
+        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k  + lag.d);
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
         //cout << "\n pressure_control \n " << p << "\n\n";
