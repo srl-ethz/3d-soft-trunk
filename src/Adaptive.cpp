@@ -34,6 +34,8 @@ void Adaptive::control_loop()
         std::lock_guard<std::mutex> lock(mtx);
         //update the internal visualization
         cc->get_curvature(state);
+        stm->updateState(state);
+        std::cout << "\n q: \n" << state.q << "\n\n";
         avoid_singularity(state);
         lag.update(state, state_ref);
 
@@ -51,7 +53,7 @@ void Adaptive::control_loop()
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
-        std::cout << "\n q: \n" << state.q << "\n\n";
+        
         lag.update(state, state_ref); //update again for state_ref to get Y
         
         //aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
@@ -81,11 +83,11 @@ void Adaptive::control_loop()
             }
         */
         p(0) = 0;
-        p(1) = 400;
-        p(2) = 400;
+        p(1) = 300;
+        p(2) = 300;
         p(3) = 0;
-        p(4) = 400;
-        p(5) = 400;
+        p(4) = 300;
+        p(5) = 300;
         cout << "\n pressure_feedforward \n " << p << "\n\n";
         actuate(p);
     }
