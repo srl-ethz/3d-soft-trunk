@@ -8,7 +8,7 @@ sections_per_segment: 1
 #Masses of segments and connectors, starting at topmost segment
 masses: [0.180, 0.105]
 #Lengths of segments and connectors, starting at topmost segment
-lengths: [0.155, 0.125]
+lengths: [0.14616, 0.1189]
 #Diameters of segment top and bottoms, contains num_seg+1 values
 diameters: [0.035, 0.028, 0.0198]
 #Angle of arm relative to upright position

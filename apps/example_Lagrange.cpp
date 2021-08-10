@@ -67,14 +67,15 @@ int main()
     srl::State state = st_params_l.getBlankState();     // get blank state with appropriate size
     srl::State state_ref = st_params_l.getBlankState(); // get blank state with appropriate size
     srand((unsigned int)time(0));
-    /*
+    
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
-    VectorXd x_ref = VectorXd::Random(3);
-    VectorXd dx_ref = VectorXd::Random(3);
-    VectorXd ddx_ref = VectorXd::Random(3);
-    */
-
+    lag.update(state, state_ref);
+    //VectorXd x_ref = VectorXd::Random(3);
+    //VectorXd dx_ref = VectorXd::Random(3);
+    //VectorXd ddx_ref = VectorXd::Random(3);
+    
+/*
     VectorXd x_ref = VectorXd::Zero(3);
     VectorXd dx_ref = VectorXd::Zero(3);
     VectorXd ddx_ref = VectorXd::Zero(3);
@@ -128,9 +129,11 @@ int main()
 
     VectorXd tau = lag.A.inverse() * lag.Y * a;
     std::cout << "tau:\n" << tau << "\n";
+
     //VectorXd p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
     //cout << "pressure:\n" << p << "\n";
-/*
+    */
+
     std::cout << "q:\n"
               << state.q << std::endl;
     std::cout << "dq:\n"
@@ -160,5 +163,5 @@ int main()
               << lag.Y << std::endl;
     //std::cout << X << std::endl;
     return 1;
-    */
+    
 }

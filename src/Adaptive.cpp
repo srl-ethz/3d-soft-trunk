@@ -6,8 +6,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    Kp << 25., 25., 25.;
-    Kd << .5, .5, .5;
+    Kp << 1., 1., 1.;
+    Kd << .1, .1, .1;
 
     dt = 1. / 100;
     eps = 1e-5;
@@ -44,7 +44,7 @@ void Adaptive::control_loop()
         // Todo: check x with x_tip
         //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
-        Vector3d x_qualiszs = cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        Vector3d x_qualiszs = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
         std::cout << "x_kinematic \n" << x << "\n\n";
         dx = lag.J * state.dq;
@@ -52,8 +52,10 @@ void Adaptive::control_loop()
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
-        //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
-        
+        //state_ref.dq = state.dq; //may also try this for regulation
+        //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-0.1 * state.dq);
+        state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-0.1*state.dq);
+       
         lag.update(state, state_ref); //update again for state_ref to get Y
         
         //aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
@@ -64,7 +66,6 @@ void Adaptive::control_loop()
         Ainv = computePinv(lag.A, eps, lambda);
         //cout << "\n map \n" << Ainv << "\n";
         //tau = Ainv * lag.Y * a;
-        state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-0.5*state.dq);
         //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
         //cout << dumm;
         tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k  + lag.d);
@@ -72,22 +73,12 @@ void Adaptive::control_loop()
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
         cout << "\n pressure_control \n " << p << "\n\n";
-        /*
-            for (int i = 0; i < 3; i++)
-            {
-                p(i) = 500 * pow(sin( i * 2 * PI / 3), 2);
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                p(3 + i) = 500 * pow(sin( i * 2 * PI / 3), 2);
-            }
-        */
         p(0) = 0;
-        p(1) = 300;
-        p(2) = 300;
+        p(1) = 400;
+        p(2) = 400;
         p(3) = 0;
-        p(4) = 300;
-        p(5) = 300;
+        p(4) = 400;
+        p(5) = 400;
         cout << "\n pressure_feedforward \n " << p << "\n\n";
         actuate(p);
     }
