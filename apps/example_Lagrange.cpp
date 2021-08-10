@@ -128,7 +128,8 @@ int main()
 
     VectorXd tau = lag.A.inverse() * lag.Y * a;
     std::cout << "tau:\n" << tau << "\n";
-    //p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
+    //VectorXd p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
+    //cout << "pressure:\n" << p << "\n";
 /*
     std::cout << "q:\n"
               << state.q << std::endl;

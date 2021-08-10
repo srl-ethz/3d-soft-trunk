@@ -52,6 +52,7 @@ void Adaptive::control_loop()
         a += dt * aDot;
         // Todo: check the mapping
         // TOdo: check the rate
+        // Todo: tune the damping coef
         tau = lag.A.inverse() * lag.Y * a;
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
 

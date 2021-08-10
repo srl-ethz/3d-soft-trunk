@@ -29,7 +29,8 @@ int main(){
 
     // example of converting between pseudopressure to real pressure
     VectorXd v = VectorXd::Zero(2*st_params.num_segments);
-    v(0) = 200;
-
+    v << 1, 1, 1, 1;
+    VectorXd p = stm.pseudo2real(v);
+    std::cout << "pressure final: " << p << "\n";
     return 1;
 }
