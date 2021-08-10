@@ -15,6 +15,8 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     J.resize(st_params.num_segments);
 
     chamberMatrix <<  0, sqrt(3) / 2, -sqrt(3) / 2, -1, 0.5, 0.5;
+    //chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
         int segment_id = section_id / st_params.sections_per_segment;

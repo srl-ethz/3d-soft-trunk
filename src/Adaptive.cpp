@@ -6,8 +6,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    Kp << 3., 3., 3.;
-    Kd << 0.1, 0.1, 0.1;
+    Kp << 35., 35., 35.;
+    Kd << 5, 5, 5;
 
     dt = 1. / 100;
     eps = 1e-5;
@@ -50,17 +50,17 @@ void Adaptive::control_loop()
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
-        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
+        //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
         //std::cout << "\n q: \n" << state.q << "\n\n";
         lag.update(state, state_ref); //update again for state_ref to get Y
         
         aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
-        a += 0.0001* dt * aDot;
-        cout << "\na \n " << a << "\n\n";
-        // Todo: check the mapping
-        // TOdo: check the rate
-        // Todo: tune the damping coef
-        tau = lag.A.inverse() * lag.Y * a;
+        a += 0.001* dt * aDot;
+        //cout << "\na \n " << a << "\n\n";
+        //tau = lag.A.inverse() * lag.Y * a;
+        state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-5.5*state.dq);
+
+        tau = computePinv(lag.A, eps, lambda) * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k * state.q + lag.d*state.dq);
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
         //cout << "\n pressure_control \n " << p << "\n\n";

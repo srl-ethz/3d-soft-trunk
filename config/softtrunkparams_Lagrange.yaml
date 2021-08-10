@@ -8,7 +8,7 @@ sections_per_segment: 1
 #Masses of segments and connectors, starting at topmost segment
 masses: [0.180, 0.105]
 #Lengths of segments and connectors, starting at topmost segment
-lengths: [155.0e-3, 125.0e-3]
+lengths: [0.155, 0.125]
 #Diameters of segment top and bottoms, contains num_seg+1 values
 diameters: [0.035, 0.028, 0.0198]
 #Angle of arm relative to upright position
@@ -18,8 +18,8 @@ shear_modulus: [35000,62000]
 #Drag coefficients of the segments
 drag_coef: [28000,8000]
 #Drag coefficients for phi,theta representation
-d_vect: [2.17377e-05,0.00249225]
+d_vect: [0.01,0.01]
 #Stiffness coefs for phi,theta representation (?)
-k_vect: [0.000108688,0.0772599]
+k_vect: [0.15,0.07]
 model: augmented
 ...
