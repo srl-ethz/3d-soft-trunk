@@ -51,7 +51,7 @@ void Adaptive::control_loop()
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
-        //std::cout << "\n q: \n" << state.q << "\n\n";
+        std::cout << "\n q: \n" << state.q << "\n\n";
         lag.update(state, state_ref); //update again for state_ref to get Y
         
         //aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
@@ -60,23 +60,24 @@ void Adaptive::control_loop()
         //tau = lag.A.inverse() * lag.Y * a;
         MatrixXd Ainv;
         Ainv = computePinv(lag.A, eps, lambda);
-        cout << "\n map \n" << Ainv << "\n";
+        //cout << "\n map \n" << Ainv << "\n";
         //tau = Ainv * lag.Y * a;
         state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-0.5*state.dq);
         //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
         //cout << dumm;
         tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k  + lag.d);
+        cout << "\n tau: \n" << tau << "\n\n";
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
-        //cout << "\n pressure_control \n " << p << "\n\n";
-            /*for (int i = 0; i < 3; i++)
+        cout << "\n pressure_control \n " << p << "\n\n";
+            for (int i = 0; i < 3; i++)
             {
                 p(i) = 500 * pow(sin( i * 2 * PI / 3), 2);
             }
             for (int i = 0; i < 3; i++)
             {
                 p(3 + i) = 500 * pow(sin( i * 2 * PI / 3), 2);
-            }*/
+            }
         cout << "\n pressure_feedforward \n " << p << "\n\n";
         actuate(p);
     }
