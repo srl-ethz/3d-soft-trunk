@@ -125,7 +125,7 @@ int main(){
 
     double coef = 2 * 3.1415 / 8;
     osc.gripperAttached = true;
-    osc.loadAttached = 0.24;
+    osc.loadAttached = 0.54;
     getchar();
     osc.toggleGripper();
 

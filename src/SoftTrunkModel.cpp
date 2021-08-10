@@ -82,7 +82,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         else if (120 < angle && angle <= 240) angle += 6.377006411641244e-07*pow(angle-120,3) + -0.0007141817202493613*pow(angle-120,2) + 0.041808659212423535*(angle-120) + 8.432360817838601;
         else if (240 < angle && angle <= 360) angle += 4.355660749206038e-05*pow(angle-240,3) + -0.009142024051903792*pow(angle-240,2) + 0.44372562426590073*(angle-240) + 4.56731999846652;
         
-        angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
+        angle += 5; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.
         
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
@@ -97,11 +97,11 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
-        /*
-        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-2.8610559752479565e-08*pow(angle-0,3) + -3.819332337486156e-07*pow(angle-0,2) + 0.0005867085469548302*(angle-0) + 0.11222816093585594);
-        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(3.642597156416525e-08*pow(angle-120,3) + -1.4011215247800451e-05*pow(angle-120,2) + 0.0011687164321906441*(angle-120) + 0.1240794815782879);
-        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(2.5550116444811846e-08*pow(angle-240,3) + -5.475897884994563e-06*pow(angle-240,2) + 0.00024465687724805306*(angle-240) + 0.12991122641245811);
-        */
+        
+        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-2.6232553509100617e-08*pow(angle-0,3) + -1.3280522053797335e-06*pow(angle-0,2) + 0.0006048202064267852*(angle-0) + 0.1155691110607423);
+        else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(6.057943690280016e-08*pow(angle-120,3) + -1.697271123676189e-05*pow(angle-120,2) + 0.0011161469814386048*(angle-120) + 0.13122825220829032);
+        else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(1.0541480021563933e-08*pow(angle-240,3) + -2.9366899073751324e-06*pow(angle-240,2) + 0.00011347572819645066*(angle-240) + 0.13088248674324263);
+        
     }
     return output;
 }
