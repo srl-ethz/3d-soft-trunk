@@ -1,19 +1,20 @@
 #include "3d-soft-trunk/Adaptive.h"
+using namespace std;
 
 Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects)
 {
     
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    Kp << 1., 1., 1.;
+    Kp << 3., 3., 3.;
     Kd << 0.1, 0.1, 0.1;
 
     dt = 1. / 100;
-    eps = 1e-3;
-    lambda = 0.5e-3;
+    eps = 1e-5;
+    lambda = 0.5e-5;
     control_thread = std::thread(&Adaptive::control_loop, this);
 
-    a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
+    //a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
 
     fmt::print("Adaptive initialized.\n");
 }
@@ -39,23 +40,39 @@ void Adaptive::control_loop()
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         // Todo: check x with x_tip
+        //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
+        Vector3d x_qualiszs = cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        //std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+        //std::cout << "x_kinematic \n" << x << "\n\n";
         dx = lag.J * state.dq;
+        //std::cout << "dx \n" << dx << "\n\n";
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
-        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq); // + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * J)) * (-kd * state.dq);
-        
+        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
+        //std::cout << "\n q: \n" << state.q << "\n\n";
         lag.update(state, state_ref); //update again for state_ref to get Y
         
         aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
-        a += dt * aDot;
+        a += 0.0001* dt * aDot;
+        cout << "\na \n " << a << "\n\n";
         // Todo: check the mapping
         // TOdo: check the rate
         // Todo: tune the damping coef
         tau = lag.A.inverse() * lag.Y * a;
+        cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
-
+        //cout << "\n pressure_control \n " << p << "\n\n";
+            /*for (int i = 0; i < 3; i++)
+            {
+                p(i) = 500 * pow(sin( i * 2 * PI / 3), 2);
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                p(3 + i) = 500 * pow(sin( i * 2 * PI / 3), 2);
+            }*/
+        cout << "\n pressure_feedforward \n " << p << "\n\n";
         actuate(p);
     }
 }

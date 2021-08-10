@@ -20,15 +20,16 @@ int main(){
 
     double t = 0;
     double dt = 0.1;
-    x_ref << 0.15,0,-0.2;
+    x_ref << 0.06, 0.09,-0.25;
+
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 128;
+    double coef = 2 * 3.1415 / 8;
     bool freedom = false;
     ad.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(3);
 
     ad.toggle_log();
-    while (t<10){
+    while (t<32){
         
         double r = 0.12;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
@@ -39,7 +40,6 @@ int main(){
         ddx_ref = dd_circle;
         //x_ref = ad.get_objects()[0];
         //ad.set_ref(x_ref,dx_ref,ddx_ref);
-        
         
         t+=dt;
         srl::sleep(dt);

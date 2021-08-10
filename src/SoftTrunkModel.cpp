@@ -14,7 +14,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     A_pseudo = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 2*st_params.num_segments);
     J.resize(st_params.num_segments);
 
-    chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+    chamberMatrix <<  0, sqrt(3) / 2, -sqrt(3) / 2, -1, 0.5, 0.5;
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
         int segment_id = section_id / st_params.sections_per_segment;
@@ -67,34 +67,32 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
         if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
-
+        /*
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;        
-        std::cout << "angle: " << angle << "\n";
+        
         //shift coordinates to start at the same spot as the characterization program
         angle = angle - 90; 
         if (angle < 0) angle += 360;       
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
-        /*
+        
         if (0 < angle && angle <= 120) angle += 1.2638383065618627e-05*pow(angle-0,3) + -0.001849258999274803*pow(angle-0,2) + 0.1168440485360759*(angle-0) + 3.842584647783369;
         else if (120 < angle && angle < 240) angle += 1.2918080084614576e-05*pow(angle-120,3) + -0.002692029382766064*pow(angle-120,2) + 0.06647396593747526*(angle-120) + 15.272700751804658;
         else if (240 < angle && angle <= 360) angle += 3.5857253321680275e-05*pow(angle-240,3) + -0.00788494201423625*pow(angle-240,2) + 0.3946753563660461*(angle-240) + 8.05360332597899;
-        */
+        
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.
-        std::cout << "angle: " << angle << "\n";
-        std::cout << "pressure_pseudo: " << pressure_pseudo << "\n"; 
-        pressure_pseudo(2*i) = r*cos(angle*deg2rad);
-        pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
-        std::cout << "pressure_pseudo: " << pressure_pseudo << "\n"; 
-
+        
+        //pressure_pseudo(2*i) = r*cos(angle*deg2rad);
+        //pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
+        */
         output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //invert back onto real chambers
 
         double min_p = output.segment(3*i, 3).minCoeff();
         if (min_p < 0)
             output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
 
-        if (angle < 0) angle += 360;
+        //if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
         /*
         if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(-2.534887594811526e-10*pow(angle-0,3) + -7.531728545619462e-06*pow(angle-0,2) + 0.0008937042916654311*(angle-0) + 0.11442213620279766);
