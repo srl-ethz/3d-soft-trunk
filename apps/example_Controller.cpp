@@ -114,7 +114,7 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.18,0.07,-0.245;
+    x_ref << 0.15,0.00,-0.2;
     std::thread print_thread(printer, std::ref(osc));
 
     
@@ -138,7 +138,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(osc));
     
     osc.toggle_log();
-    while (true){
+    while (false){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
@@ -157,6 +157,15 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
+    x_ref << -0.15,0.00,-0.2;
+    dx_ref(0) = -10;
+    osc.set_ref(x_ref,dx_ref);
+    srl::sleep(0.2);
+    osc.toggleGripper();
+    srl::sleep(0.1);
+    dx_ref(0) = 0;
+    osc.set_ref(x_ref,dx_ref);
+    srl::sleep(3);
     osc.toggle_log();
     srl::sleep(2);
     return 1;

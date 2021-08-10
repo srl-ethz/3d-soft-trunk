@@ -45,7 +45,7 @@ void OSC::control_loop() {
         //this x is from forward kinematics, use when using bendlabs sensors
         Vector3d gripperl = Vector3d::Zero();
         gripperl(2) = 0.06;
-        x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
+        //x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
         
         
