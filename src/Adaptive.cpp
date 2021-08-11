@@ -6,8 +6,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    Kp << 20., 20., 20.;
-    Kd << 2, 2, 2;
+    Kp << 5.0, 5.0, 5.0;
+    Kd << 1.1, 1.1, 1.1;
 
     dt = 1. / 50;
     eps = 1e-5;
@@ -19,7 +19,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     control_thread = std::thread(&Adaptive::control_loop, this);
 
     //a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
-    a << 0.0038 ,   0.0022 ,   0.0015  ,  0.0018 ,   0.0263 ,   0.0153  ,  0.0125 ,   0.0100 ,   0.0100 ,   0.0800  ,  0.0800;
+    a << 0.0038 ,   0.0022 ,   0.0015  ,  0.0018 ,   0.0263 ,   0.0153  ,  0.0125 ,   0.0100 ,   0.0100 ,   0.100  ,  0.100;
     fmt::print("Adaptive initialized.\n");
 }
 
@@ -47,7 +47,8 @@ void Adaptive::control_loop()
         // Todo: check x with x_tip
         //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
-        Vector3d x_qualiszs = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        x_qualiszs = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+
         //std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
         //std::cout << "x_kinematic \n" << x << "\n\n";
         dx = lag.J * state.dq;
@@ -60,23 +61,25 @@ void Adaptive::control_loop()
         //state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-0.1*state.dq);
        
         lag.update(state, state_ref); //update again for state_ref to get Y
-        
-        aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
-        a += 0.0001* dt * aDot;
-        cout << "\na \n " << a << "\n\n";
+        s = state_ref.dq - state.dq;
+        //s = s.cwiseAbs();
+
+        aDot = Ka.asDiagonal() * lag.Y.transpose() * s;
+        a += 0.00000001* dt * aDot;
+        //cout << "\na \n " << a << "\n\n";
         //tau = lag.A.inverse() * lag.Y * a;
         MatrixXd Ainv;
         //Ainv = lag.A.inverse();
         Ainv = computePinv(lag.A, eps, lambda);
         //cout << "\n map \n" << Ainv << "\n";
-        //tau = Ainv * lag.Y * a;
+        tau = Ainv * lag.Y * a;
         //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
         //cout << dumm;
         damp_vec(0) = damp_coef(0)*state.q(1)*state.q(1);
         damp_vec(1) = damp_coef(0);
         damp_vec(2) = damp_coef(1)*state.q(3)*state.q(3);
         damp_vec(3) = damp_coef(1);
-        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+        //tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
         //tau = Ainv * (lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
  
         //fmt::print("k: {} \n", stiff_coef);
@@ -143,38 +146,46 @@ void Adaptive::avoid_singularity(srl::State &state)
 void Adaptive::increase_kd(){
     this->Kd = 1.1*this->Kd;
     fmt::print("kd = {}\n", Kd(0));
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 void Adaptive::increase_kp(){
     this->Kp = 1.1*this->Kp;
     fmt::print("kp = {}\n", Kp(0));
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 
 void Adaptive::decrease_kd(){
     this->Kd = 0.9*this->Kd;
     fmt::print("kd = {}\n", Kd(0));
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 
 void Adaptive::decrease_kp(){
     this->Kp = 0.9*this->Kp;
     fmt::print("kp = {}\n", Kp(0));
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 
 void Adaptive::increase_stiffness(int seg){
     this->stiff_coef[seg] = this->stiff_coef[seg] * 1.1;
     fmt::print("k{}: {}", seg, this->stiff_coef[seg]);
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 
 void Adaptive::decrease_stiffness(int seg){
     this->stiff_coef[seg] = this->stiff_coef[seg] * 0.9;
     fmt::print("k{}: {}", seg, this->stiff_coef[seg]);
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 
 void Adaptive::increase_damping(int seg){
     this->damp_coef[seg] = this->damp_coef[seg] * 1.1;
     fmt::print("d{}: {}", seg, this->damp_coef[seg]);
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }
 
 void Adaptive::decrease_damping(int seg){
     this->damp_coef[seg] = this->damp_coef[seg] * 0.9;
     fmt::print("d{}: {}", seg, this->damp_coef[seg]);
+    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
 }

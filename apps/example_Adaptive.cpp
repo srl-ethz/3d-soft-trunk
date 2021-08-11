@@ -68,7 +68,7 @@ int main(){
     x_ref << -0.13, 0,-0.21;
     std::thread gain_thread(gain, std::ref(ad));
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 4;
+    double coef = 2 * 3.1415 / 64;
     fmt::print("first direction\n");
     ad.set_ref(x_ref,dx_ref,ddx_ref);
     //srl::sleep(6);
@@ -89,7 +89,7 @@ int main(){
         
         //std::cout << "ref" << x_ref << "\n";
         //x_ref = ad.get_objects()[0];
-        ad.set_ref(x_ref,dx_ref,ddx_ref);
+       // ad.set_ref(x_ref,dx_ref,ddx_ref);
         
         t+=dt;
         srl::sleep(dt);

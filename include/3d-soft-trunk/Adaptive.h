@@ -20,7 +20,8 @@ public:
 
     void increase_stiffness(int seg);
     void decrease_stiffness(int seg);
- 
+
+    VectorXd x_qualiszs = VectorXd::Zero(3);
 private:
     void control_loop();
     void avoid_singularity(srl::State &state);
@@ -34,7 +35,8 @@ private:
     VectorXd tau = VectorXd::Zero(4);
     VectorXd stiff_coef = VectorXd::Zero(4);
     VectorXd damp_coef = VectorXd::Zero(2);
-    VectorXd damp_vec = VectorXd::Zero(4);   
+    VectorXd damp_vec = VectorXd::Zero(4);
+    VectorXd s = VectorXd::Zero(4);   
     double eps;
     double lambda;
 };
