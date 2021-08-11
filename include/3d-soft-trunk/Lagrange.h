@@ -13,7 +13,7 @@
  */
 class Lagrange {
 private:
-    const SoftTrunkParameters st_params;
+    
     const double g0 = 9.80665;
     void A_update(VectorXd q);
     void M_update(VectorXd q);
@@ -52,4 +52,6 @@ public:
     MatrixXd JDot;   
     /** @brief Regressor Matrix */
     MatrixXd Y;
+
+    SoftTrunkParameters st_params;
 };

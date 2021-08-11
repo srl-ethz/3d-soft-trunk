@@ -38,7 +38,6 @@ void Adaptive::control_loop()
         //std::cout << "\n q: \n" << state.q << "\n\n";
         avoid_singularity(state);
         lag.update(state, state_ref);
-
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         // Todo: check x with x_tip
