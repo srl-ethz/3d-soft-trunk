@@ -38,7 +38,6 @@ void Adaptive::control_loop()
         //std::cout << "\n q: \n" << state.q << "\n\n";
         avoid_singularity(state);
         lag.update(state, state_ref);
-
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         // Todo: check x with x_tip
@@ -150,11 +149,11 @@ void Adaptive::decrease_kp(){
 }
 
 void Adaptive::increase_stiffness(int seg){
-    this->st_params.k_vect[seg] *= 1.1;
+    lag->st_params.k_vect[seg] *= 1.1;
     fmt::print("k{}: {}", seg, this->st_params.k_vect[seg]);
 }
 
 void Adaptive::decrease_stiffness(int seg){
-    this->st_params.k_vect[seg] *= 0.9;
+    lag->st_params.k_vect[seg] *= 0.9;
     fmt::print("k{}: {}", seg, this->st_params.k_vect[seg]);
 }
