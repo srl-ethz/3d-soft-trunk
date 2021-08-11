@@ -20,7 +20,7 @@ int main(){
 
     double t = 0;
     double dt = 0.1;
-    x_ref << 0.1, 0,-0.2;
+    x_ref << -0.13, 0,-0.21;
 
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;
@@ -39,7 +39,7 @@ int main(){
         dx_ref = d_circle;
         ddx_ref = dd_circle;
         //x_ref = ad.get_objects()[0];
-        //ad.set_ref(x_ref,dx_ref,ddx_ref);
+        ad.set_ref(x_ref,dx_ref,ddx_ref);
         
         t+=dt;
         srl::sleep(dt);
