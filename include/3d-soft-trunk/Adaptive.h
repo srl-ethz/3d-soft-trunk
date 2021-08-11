@@ -10,7 +10,10 @@
 class Adaptive: public ControllerPCC {
 public:
     Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type = CurvatureCalculator::SensorType::qualisys, int objects = 0);
-  
+    void increase_kd();
+    void increase_kp();
+    void decrease_kd();
+    void decrease_kp();
 private:
     void control_loop();
     void avoid_singularity(srl::State &state);

@@ -9,6 +9,27 @@ Vector3d circle = Vector3d::Zero();
 Vector3d d_circle = Vector3d::Zero();
 Vector3d dd_circle = Vector3d::Zero();
 
+void gain(Adaptive &ad){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
+    char c;
+    while(true) {
+        c = getchar();
+        switch (c) {
+            case 'q':
+                ad.increase_kd();
+                break;
+            case 'a':
+                ad.decrease_kd();
+                break;
+            case 'e':
+                ad.increase_kp();
+                break;
+            case 'd':
+                ad.decrease_kp();
+                break;
+        }
+    }
+}
+
 
 int main(){
     
@@ -21,15 +42,18 @@ int main(){
     double t = 0;
     double dt = 0.1;
     x_ref << -0.13, 0,-0.21;
-
+    std::thread gain_thread(gain, std::ref(ad));
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 8;
-    bool freedom = false;
+    double coef = 2 * 3.1415 / 4;
+    fmt::print("first direction\n");
     ad.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(3);
-
+    //srl::sleep(6);
+    fmt::print("secnd direction\n");
+    /*x_ref << 0.13, 0,-0.21;
+    ad.set_ref(x_ref);
+*/
     ad.toggle_log();
-    while (t<32){
+    while (true){
         
         double r = 0.12;
         circle << r*cos(coef*t), r*sin(coef*t), -0.2;
@@ -38,8 +62,9 @@ int main(){
         x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
+        //std::cout << "ref" << x_ref << "\n";
         //x_ref = ad.get_objects()[0];
-        ad.set_ref(x_ref,dx_ref,ddx_ref);
+        //ad.set_ref(x_ref,dx_ref,ddx_ref);
         
         t+=dt;
         srl::sleep(dt);

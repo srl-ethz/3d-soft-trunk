@@ -9,7 +9,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp << 20., 20., 20.;
     Kd << 2, 2, 2;
 
-    dt = 1. / 100;
+    dt = 1. / 50;
     eps = 1e-5;
     lambda = 0.5e-5;
     control_thread = std::thread(&Adaptive::control_loop, this);
@@ -35,18 +35,18 @@ void Adaptive::control_loop()
         //update the internal visualization
         cc->get_curvature(state);
         stm->updateState(state);
-        std::cout << "\n q: \n" << state.q << "\n\n";
+        //std::cout << "\n q: \n" << state.q << "\n\n";
         avoid_singularity(state);
         lag.update(state, state_ref);
 
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         // Todo: check x with x_tip
-        std::cout << "ref" << x_ref << "\n";
+        //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
         Vector3d x_qualiszs = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-        std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
-        std::cout << "x_kinematic \n" << x << "\n\n";
+        /*std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+        std::cout << "x_kinematic \n" << x << "\n\n";*/
         dx = lag.J * state.dq;
         //std::cout << "dx \n" << dx << "\n\n";
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
@@ -70,10 +70,10 @@ void Adaptive::control_loop()
         //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
         //cout << dumm;
         tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k  + lag.d);
-        cout << "\n tau: \n" << tau << "\n\n";
-        cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";
+        /*cout << "\n tau: \n" << tau << "\n\n";
+        cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";*/
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
-        cout << "\n pressure_control \n " << p << "\n\n";
+        //cout << "\n pressure_control \n " << p << "\n\n";
         /*
         p(0) = 0;
         p(1) = 400;
@@ -128,4 +128,23 @@ void Adaptive::avoid_singularity(srl::State &state)
         r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
         state.q[idx] = (r < eps_custom) ? eps_custom : state.q[idx];
     }
+}
+
+void Adaptive::increase_kd(){
+    this->Kd = 1.1*this->Kd;
+    fmt::print("kd = {}\n", Kd(0));
+}
+void Adaptive::increase_kp(){
+    this->Kp = 1.1*this->Kp;
+    fmt::print("kp = {}\n", Kp(0));
+}
+
+void Adaptive::decrease_kd(){
+    this->Kd = 0.9*this->Kd;
+    fmt::print("kd = {}\n", Kd(0));
+}
+
+void Adaptive::decrease_kp(){
+    this->Kp = 0.9*this->Kp;
+    fmt::print("kp = {}\n", Kp(0));
 }
