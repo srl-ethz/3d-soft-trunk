@@ -18,7 +18,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     damp_coef(1) = 0.01;
     control_thread = std::thread(&Adaptive::control_loop, this);
 
-    //a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
+    a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
 
     fmt::print("Adaptive initialized.\n");
 }
@@ -42,8 +42,8 @@ void Adaptive::control_loop()
         //std::cout << "\n q: \n" << state.q << "\n\n";
         avoid_singularity(state);
         lag.update(state, state_ref);
-        if (!is_initial_ref_received) //only control after receiving a reference position
-            continue;
+        //if (!is_initial_ref_received) //only control after receiving a reference position
+        //    continue;
         // Todo: check x with x_tip
         //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
@@ -61,9 +61,9 @@ void Adaptive::control_loop()
        
         lag.update(state, state_ref); //update again for state_ref to get Y
         
-        //aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
-        //a += 0.001* dt * aDot;
-        //cout << "\na \n " << a << "\n\n";
+        aDot = Ka.asDiagonal() * lag.Y.transpose() * (state_ref.dq - state.dq);
+        a += 0.0001* dt * aDot;
+        cout << "\na \n " << a << "\n\n";
         //tau = lag.A.inverse() * lag.Y * a;
         MatrixXd Ainv;
         //Ainv = lag.A.inverse();
@@ -76,8 +76,8 @@ void Adaptive::control_loop()
         damp_vec(1) = damp_coef(0);
         damp_vec(2) = damp_coef(1)*state.q(3)*state.q(3);
         damp_vec(3) = damp_coef(1);
-        //tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
-        tau = Ainv * (lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+        //tau = Ainv * (lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
  
         //fmt::print("k: {} \n", stiff_coef);
         /*cout << "\n tau: \n" << tau << "\n\n";
