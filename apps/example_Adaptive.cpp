@@ -27,16 +27,16 @@ void gain(Adaptive &ad){ //change gain with keyboard to avoid recompiling, q/a c
                 ad.decrease_kp();
                 break;
             case 't':
-                ad.increase_stiffness(0);
-                break;
-            case 'g':
-                ad.decrease_stiffness(0);
-                break;
-            case 'z':
                 ad.increase_stiffness(1);
                 break;
-            case 'h':
+            case 'g':
                 ad.decrease_stiffness(1);
+                break;
+            case 'z':
+                ad.increase_stiffness(3);
+                break;
+            case 'h':
+                ad.decrease_stiffness(3);
                 break;
         }
     }
@@ -74,6 +74,7 @@ int main(){
         x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
+        
         //std::cout << "ref" << x_ref << "\n";
         //x_ref = ad.get_objects()[0];
         //ad.set_ref(x_ref,dx_ref,ddx_ref);

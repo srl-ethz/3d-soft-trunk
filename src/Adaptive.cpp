@@ -69,7 +69,11 @@ void Adaptive::control_loop()
         //tau = Ainv * lag.Y * a;
         //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
         //cout << dumm;
-        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + lag.k  + lag.d);
+        damp_vec(0) = damp_coef(0)*state.q(1)*state.q(1);
+        damp_vec(1) = damp_coef(0);
+        damp_vec(2) = damp_coef(1)*state.q(3)*state.q(3);
+        damp_vec(3) = damp_coef(1);
+        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
         /*cout << "\n tau: \n" << tau << "\n\n";
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";*/
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
@@ -150,11 +154,11 @@ void Adaptive::decrease_kp(){
 }
 
 void Adaptive::increase_stiffness(int seg){
-    this->st_params.k_vect[seg] *= 1.1;
-    fmt::print("k{}: {}", seg, this->st_params.k_vect[seg]);
+    this->stiff_coef[seg] = this->stiff_coef[seg] * 1.1;
+    fmt::print("k{}: {}", seg, this->stiff_coef[seg]);
 }
 
 void Adaptive::decrease_stiffness(int seg){
-    this->st_params.k_vect[seg] *= 0.9;
-    fmt::print("k{}: {}", seg, this->st_params.k_vect[seg]);
+    this->stiff_coef[seg] = this->stiff_coef[seg] * 0.9;
+    fmt::print("k{}: {}", seg, this->stiff_coef[seg]);
 }

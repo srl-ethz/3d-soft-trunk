@@ -24,10 +24,14 @@ private:
     VectorXd Ka = VectorXd::Zero(11);
     VectorXd Kp = VectorXd::Zero(3);
     VectorXd Kd = VectorXd::Zero(3);
+    VectorXd stiff_coef = VectorXd::Zero(4);
+    VectorXd damp_coef = VectorXd::Zero(2);
+    VectorXd damp_vec = VectorXd::Zero(4);   
     MatrixXd J_inv;
-    VectorXd aDot = VectorXd::Zero(11);;
+    VectorXd aDot = VectorXd::Zero(11);
     VectorXd a = VectorXd::Zero(11);
-    VectorXd tau = VectorXd::Zero(4);;
+    VectorXd tau = VectorXd::Zero(4);
+
     double eps;
     double lambda;
 };
