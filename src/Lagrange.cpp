@@ -300,6 +300,7 @@ void Lagrange::k_update(VectorXd q)
 {
   double K[4];
   double k_vect[2] = {st_params.k_vect[0],st_params.k_vect[1]};
+  std::cout << "stiff1:  " << k_vect[0];
   K[0] = 0.0;
   K[1] = k_vect[0] * q[1];
   K[2] = 0.0;
