@@ -18,8 +18,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     damp_coef(1) = 0.01;
     control_thread = std::thread(&Adaptive::control_loop, this);
 
-    a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
-
+    //a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
+    a << 0.0038 ,   0.0022 ,   0.0015  ,  0.0018 ,   0.0263 ,   0.0153  ,  0.0125 ,   0.0100 ,   0.0100 ,   0.0800  ,  0.0800;
     fmt::print("Adaptive initialized.\n");
 }
 
