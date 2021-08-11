@@ -55,7 +55,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 ddx_ref = Vector3d::Zero();
                 newx = x_ref;
                 newx(1) *= -1;
-                //newx(0) *= -1;
+                newx(0) *= -1;
                 osc.loadAttached = 0.2;
                 //osc.toggle_log();
                 /*diff = newx - x_ref;
@@ -81,6 +81,9 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
             case 'f': 
                 osc.freeze = !osc.freeze;
                 fmt::print("Freeze status: {}\n", osc.freeze);
+                break;
+            case 'm':
+                osc.toggle_log();
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
@@ -137,8 +140,8 @@ int main(){
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
-    osc.toggle_log();
-    while (false){
+    //osc.toggle_log();
+    while (true){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
