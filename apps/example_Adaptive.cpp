@@ -14,30 +14,42 @@ void gain(Adaptive &ad){ //change gain with keyboard to avoid recompiling, q/a c
     while(true) {
         c = getchar();
         switch (c) {
-            case 'q':
+            case 'w':
                 ad.increase_kd();
                 break;
-            case 'a':
+            case 's':
                 ad.decrease_kd();
                 break;
-            case 'e':
+            case 'q':
                 ad.increase_kp();
                 break;
-            case 'd':
+            case 'a':
                 ad.decrease_kp();
                 break;
-            case 't':
+            case 'e':
                 ad.increase_stiffness(1);
                 break;
-            case 'g':
+            case 'd':
                 ad.decrease_stiffness(1);
                 break;
-            case 'z':
+            case 'r':
                 ad.increase_stiffness(3);
                 break;
-            case 'h':
+            case 'f':
                 ad.decrease_stiffness(3);
                 break;
+            case 't':
+                ad.increase_damping(0);
+                break;
+            case 'g':
+                ad.decrease_damping(0);
+                break;
+            case 'y':
+                ad.increase_damping(1);
+                break;
+            case 'h':
+                ad.decrease_damping(1);
+                break;                
         }
     }
 }
@@ -77,7 +89,7 @@ int main(){
         
         //std::cout << "ref" << x_ref << "\n";
         //x_ref = ad.get_objects()[0];
-        //ad.set_ref(x_ref,dx_ref,ddx_ref);
+        ad.set_ref(x_ref,dx_ref,ddx_ref);
         
         t+=dt;
         srl::sleep(dt);

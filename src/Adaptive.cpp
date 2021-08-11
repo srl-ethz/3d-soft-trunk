@@ -12,6 +12,10 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     dt = 1. / 50;
     eps = 1e-5;
     lambda = 0.5e-5;
+    stiff_coef(1) = 0.085;
+    stiff_coef(3) = 0.1;
+    damp_coef(0) = 0.01;
+    damp_coef(1) = 0.01;
     control_thread = std::thread(&Adaptive::control_loop, this);
 
     //a << 0.0043, 0.0025, 0.0016, 0.0020, 0.0279, 0.0163, 0.0131, 0.0100, 0.0100, 0.1500, 0.0700;
@@ -44,8 +48,8 @@ void Adaptive::control_loop()
         //std::cout << "ref" << x_ref << "\n";
         x = lag.p;
         Vector3d x_qualiszs = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-        /*std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
-        std::cout << "x_kinematic \n" << x << "\n\n";*/
+        //std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+        //std::cout << "x_kinematic \n" << x << "\n\n";
         dx = lag.J * state.dq;
         //std::cout << "dx \n" << dx << "\n\n";
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
@@ -72,7 +76,10 @@ void Adaptive::control_loop()
         damp_vec(1) = damp_coef(0);
         damp_vec(2) = damp_coef(1)*state.q(3)*state.q(3);
         damp_vec(3) = damp_coef(1);
-        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+        //tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+        tau = Ainv * (lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+ 
+        //fmt::print("k: {} \n", stiff_coef);
         /*cout << "\n tau: \n" << tau << "\n\n";
         cout << "\n pxy \n " << stm->A_pseudo.inverse() * tau / 100 << "\n\n";*/
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
@@ -160,4 +167,14 @@ void Adaptive::increase_stiffness(int seg){
 void Adaptive::decrease_stiffness(int seg){
     this->stiff_coef[seg] = this->stiff_coef[seg] * 0.9;
     fmt::print("k{}: {}", seg, this->stiff_coef[seg]);
+}
+
+void Adaptive::increase_damping(int seg){
+    this->damp_coef[seg] = this->damp_coef[seg] * 1.1;
+    fmt::print("d{}: {}", seg, this->damp_coef[seg]);
+}
+
+void Adaptive::decrease_damping(int seg){
+    this->damp_coef[seg] = this->damp_coef[seg] * 0.9;
+    fmt::print("d{}: {}", seg, this->damp_coef[seg]);
 }
