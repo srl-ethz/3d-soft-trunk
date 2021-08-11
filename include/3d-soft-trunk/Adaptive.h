@@ -14,6 +14,9 @@ public:
     void increase_kp();
     void decrease_kd();
     void decrease_kp();
+
+    void increase_stiffness(int seg);
+    void decrease_stiffness(int seg);
 private:
     void control_loop();
     void avoid_singularity(srl::State &state);

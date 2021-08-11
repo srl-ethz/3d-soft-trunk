@@ -26,6 +26,18 @@ void gain(Adaptive &ad){ //change gain with keyboard to avoid recompiling, q/a c
             case 'd':
                 ad.decrease_kp();
                 break;
+            case 't':
+                ad.increase_stiffness(0);
+                break;
+            case 'g':
+                ad.decrease_stiffness(0);
+                break;
+            case 'z':
+                ad.increase_stiffness(1);
+                break;
+            case 'h':
+                ad.decrease_stiffness(1);
+                break;
         }
     }
 }

@@ -92,7 +92,7 @@ public:
     std::unique_ptr<SoftTrunkModel> stm;
 
 protected:
-    const SoftTrunkParameters st_params;
+    SoftTrunkParameters st_params;
 
     /**
      * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)

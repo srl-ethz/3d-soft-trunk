@@ -148,3 +148,13 @@ void Adaptive::decrease_kp(){
     this->Kp = 0.9*this->Kp;
     fmt::print("kp = {}\n", Kp(0));
 }
+
+void Adaptive::increase_stiffness(int seg){
+    this->st_params.k_vect[seg] *= 1.1;
+    fmt::print("k{}: {}", seg, this->st_params.k_vect[seg]);
+}
+
+void Adaptive::decrease_stiffness(int seg){
+    this->st_params.k_vect[seg] *= 0.9;
+    fmt::print("k{}: {}", seg, this->st_params.k_vect[seg]);
+}
