@@ -64,7 +64,7 @@ void OSC::control_loop() {
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             if (!freeze)
                 potfields[i].set_pos(get_objects()[i]);
-            ddx_des += potfields[i].get_ddx(x);
+            ddx_des += potfields[i].get_ddx(x); 
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
