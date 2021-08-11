@@ -104,11 +104,11 @@ int main(){
     Vector3d d_circle;
     Vector3d dd_circle;
 
-    double coef = 2 * 3.1415 / 8;
+    double coef = 2 * 3.1415 / 32;
     qs.gripperAttached = true;
     qs.loadAttached = 0;
     getchar();
-    qs.toggleGripper();
+    //qs.toggleGripper();
 
     getchar();
     qs.set_ref(x_ref, dx_ref, ddx_ref);
@@ -118,16 +118,16 @@ int main(){
     std::thread gain_thread(gain, std::ref(qs));
     
     qs.toggle_log();
-    while (false){
+    while (true){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        /*x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
+        x_ref = circle;
+        /*dx_ref = d_circle;
+        ddx_ref = dd_circle;*/
         //x_ref = qs.get_objects()[0];
-        //qs.set_ref(x_ref,dx_ref, ddx_ref);
+        qs.set_ref(x_ref);
         /*qs.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;

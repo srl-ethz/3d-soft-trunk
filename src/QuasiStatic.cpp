@@ -5,12 +5,12 @@ QuasiStatic::QuasiStatic(const SoftTrunkParameters st_params, CurvatureCalculato
 
 
     //set the gains
-    kp = 170;
+    kp = 10;
     kd = 5.5;
 
 
     //qs
-    dt = 1./10;
+    dt = 1./5;
 
     control_thread = std::thread(&QuasiStatic::control_loop, this);
 }
@@ -38,7 +38,7 @@ void QuasiStatic::control_loop(){
 
         dx = J*state.dq;
         
-        ddx_des = ddx_ref + kp*(x_ref - x);            //desired acceleration from PD controller
+        ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.05;            //desired acceleration from PD controller
 
         if ((x_ref - x).norm() > 0.05) {                                   //deal with super high distances
             ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.05 + kd*(dx_ref - dx);  
@@ -52,7 +52,7 @@ void QuasiStatic::control_loop(){
 
         tau_ref = J.transpose()*ddx_des;
         
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100) + p_prev;
+        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/10000) + p_prev;
         p_prev = p;
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
