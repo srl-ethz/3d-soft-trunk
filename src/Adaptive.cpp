@@ -6,14 +6,14 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     
     filename = "ID_logger";
     Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    Kp << 5.0, 5.0, 5.0;
-    Kd << 1.1, 1.1, 1.1;
+    Kp << 75.0, 75.0, 75.0;
+    Kd << 4.5, 4.5, 4.5;
 
-    dt = 1. / 50;
-    eps = 1e-5;
-    lambda = 0.5e-5;
-    stiff_coef(1) = 0.085;
-    stiff_coef(3) = 0.1;
+    dt = 1. / 100;
+    eps = 0.5e-1;
+    lambda = 0.5e-1;
+    stiff_coef(1) = 0.14;
+    stiff_coef(3) = 0.07;
     damp_coef(0) = 0.01;
     damp_coef(1) = 0.01;
     control_thread = std::thread(&Adaptive::control_loop, this);
@@ -57,29 +57,29 @@ void Adaptive::control_loop()
         J_inv = computePinv(lag.J, eps, lambda);
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
         //state_ref.dq = state.dq; //may also try this for regulation
-        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq);//  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-0.1 * state.dq);
+        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq)  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
         //state_ref.ddq = J_inv*(ddx_d - lag.JDot*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*lag.J))*(-0.1*state.dq);
        
         lag.update(state, state_ref); //update again for state_ref to get Y
         s = state_ref.dq - state.dq;
         //s = s.cwiseAbs();
 
-        aDot = Ka.asDiagonal() * lag.Y.transpose() * s;
-        a += 0.00000001* dt * aDot;
+        //aDot = Ka.asDiagonal() * lag.Y.transpose() * s;
+        //a += 0.00000001* dt * aDot;
         //cout << "\na \n " << a << "\n\n";
         //tau = lag.A.inverse() * lag.Y * a;
         MatrixXd Ainv;
         //Ainv = lag.A.inverse();
         Ainv = computePinv(lag.A, eps, lambda);
         //cout << "\n map \n" << Ainv << "\n";
-        tau = Ainv * lag.Y * a;
+        //tau = Ainv * lag.Y * a;
         //VectorXd dumm = lag.k * state.q + lag.d*state.dq;
         //cout << dumm;
         damp_vec(0) = damp_coef(0)*state.q(1)*state.q(1);
         damp_vec(1) = damp_coef(0);
         damp_vec(2) = damp_coef(1)*state.q(3)*state.q(3);
         damp_vec(3) = damp_coef(1);
-        //tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
+        tau = Ainv * (lag.M*state_ref.ddq + lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
         //tau = Ainv * (lag.Cdq + lag.g + stiff_coef.asDiagonal()*state.q  + damp_vec.asDiagonal()*state.dq);
  
         //fmt::print("k: {} \n", stiff_coef);
