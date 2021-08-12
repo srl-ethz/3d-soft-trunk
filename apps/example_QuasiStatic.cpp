@@ -94,7 +94,7 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.15,0.00,-0.2;
+    x_ref << 0.13,0.00,-0.215;
     std::thread print_thread(printer, std::ref(qs));
 
     
@@ -118,7 +118,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(qs));
     
     qs.toggle_log();
-    while (true){
+    while (t<32){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
@@ -128,16 +128,14 @@ int main(){
         ddx_ref = dd_circle;*/
         //x_ref = qs.get_objects()[0];
         qs.set_ref(x_ref);
-        /*qs.get_x(x);
-        if ((x_ref - x).norm() < 0.07){
-            freedom = true;
-            qs.toggleGripper();
-        }*/
-        
-        t+=dt;
+        qs.get_x(x);
+        if ((x_ref - x).norm() < 0.02){
+            t+=dt;
+        }
         srl::sleep(dt);
     }
-    x_ref << -0.15,0.00,-0.2;
+    qs.toggle_log();
+    /*x_ref << -0.15,0.00,-0.2;
     dx_ref(0) = -10;
     qs.set_ref(x_ref,dx_ref);
     srl::sleep(0.2);
@@ -147,6 +145,6 @@ int main(){
     qs.set_ref(x_ref,dx_ref);
     srl::sleep(3);
     qs.toggle_log();
-    srl::sleep(2);
+    srl::sleep(2);*/
     return 1;
 }

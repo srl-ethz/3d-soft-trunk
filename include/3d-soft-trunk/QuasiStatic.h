@@ -24,7 +24,7 @@ private:
     void control_loop();
     double kp;
     double kd;
-    VectorXd p_prev = VectorXd::Zero(3*st_params.num_segments);
+    VectorXd p_prev = VectorXd::Zero(2*st_params.num_segments);
     MatrixXd J;
     Vector3d ddx_des;
     VectorXd tau_ref;
