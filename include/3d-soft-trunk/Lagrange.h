@@ -24,7 +24,7 @@ private:
     void p_update(VectorXd q);
     void J_update(VectorXd q);
     void JDot_update(VectorXd q, VectorXd dq);
-    void Y_update(VectorXd q, VectorXd dq, VectorXd ddq);
+    void Y_update(VectorXd q, VectorXd dq, VectorXd dqr, VectorXd ddqr);
 
 public:
     Lagrange(const SoftTrunkParameters &st_params);

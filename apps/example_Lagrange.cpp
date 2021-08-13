@@ -58,6 +58,11 @@ Eigen::MatrixXd computePinv(Eigen::MatrixXd j, double e, double lambda)
     return pJacobian;
 }
 
+VectorXd sat(VectorXd s, double delta)
+{
+    VectorXd Delta = VectorXd::Ones(s.size())*delta;
+    return s.array()/(s.array().abs()+Delta.array());
+}
 int main()
 {
     SoftTrunkParameters st_params_l{};
@@ -70,7 +75,12 @@ int main()
     
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
+    state_ref.dq = VectorXd::Random(4);
+    state_ref.ddq = VectorXd::Random(4);
     lag.update(state, state_ref);
+    VectorXd s;
+    s = sat(state.q,0.1);
+    cout << "s: \n" << s << "\n";
     //VectorXd x_ref = VectorXd::Random(3);
     //VectorXd dx_ref = VectorXd::Random(3);
     //VectorXd ddx_ref = VectorXd::Random(3);
