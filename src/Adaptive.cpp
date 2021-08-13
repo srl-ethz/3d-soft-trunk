@@ -18,7 +18,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     lambda = 0.05;
 
     gamma1 = 0.0;
-    gamma2 = 0.0;
+    gamma2 = 0.01;
 
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
@@ -58,7 +58,7 @@ void Adaptive::control_loop()
        
         lag.update(state, state_ref); //update again for state_ref to get Y
         s = state_ref.dq - state.dq;
-        /*
+        
         aDot = Ka.asDiagonal() * lag.Y.transpose() * s;
         a = a + 0.000001* dt * aDot;
 
@@ -71,7 +71,7 @@ void Adaptive::control_loop()
             else
                 Ka(i) = Ka_(i);
         }
-*/
+
         //cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);
         tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s,0.1);
