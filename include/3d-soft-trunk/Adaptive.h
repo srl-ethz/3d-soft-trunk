@@ -18,18 +18,19 @@ public:
     VectorXd sat(VectorXd s, double delta);
 
     VectorXd x_qualiszs = VectorXd::Zero(3);
+    VectorXd Ka = VectorXd::Ones(11);
+    VectorXd a = VectorXd::Zero(11);
+
 private:
     void control_loop();
     void avoid_singularity(srl::State &state);
     MatrixXd computePinv(MatrixXd j, double e, double lambda);
-    VectorXd Ka = VectorXd::Ones(11);
     VectorXd Ka_ = VectorXd::Ones(11);
     VectorXd Kp = VectorXd::Zero(3);
     VectorXd Kd = VectorXd::Zero(3);   
     MatrixXd J_inv;
     MatrixXd Ainv;
     VectorXd aDot = VectorXd::Zero(11);
-    VectorXd a = VectorXd::Zero(11);
     VectorXd a_min = VectorXd::Zero(11);
     VectorXd a_max = 0.2*VectorXd::Ones(11);    
     VectorXd tau = VectorXd::Zero(4);
