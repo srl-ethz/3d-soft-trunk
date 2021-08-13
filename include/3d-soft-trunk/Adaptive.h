@@ -32,7 +32,7 @@ private:
     MatrixXd Ainv;
     VectorXd aDot = VectorXd::Zero(11);
     VectorXd a_min = VectorXd::Zero(11);
-    VectorXd a_max = 0.2*VectorXd::Ones(11);    
+    VectorXd a_max = 1*VectorXd::Ones(11);    
     VectorXd tau = VectorXd::Zero(4);
     VectorXd s = VectorXd::Zero(4);   
     double eps;

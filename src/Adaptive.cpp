@@ -10,15 +10,15 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     //Ka_ << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
 
     Kp << 165.0, 165.0, 165.0;
-    Kd << 0.05, 0.05, 0.05;
+    Kd << 0.1, 0.1, 0.1;
 
     dt = 1. / 100;
 
     eps = 0.1;
     lambda = 0.05;
 
-    gamma1 = 0.0;
-    gamma2 = 0.01;
+    gamma1 = 0.01;
+    gamma2 = 2*0.5;
 
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
@@ -60,7 +60,8 @@ void Adaptive::control_loop()
         s = state_ref.dq - state.dq;
         
         aDot = Ka.asDiagonal() * lag.Y.transpose() * s;
-        a = a + 0.000001* dt * aDot;
+        //a = a + 0.000001* dt * aDot;
+        a = a + 0.0001* dt * aDot;
 
         for (int i=0; i< Ka.size(); i++)
         {
@@ -72,7 +73,7 @@ void Adaptive::control_loop()
                 Ka(i) = Ka_(i);
         }
 
-        //cout << "\na \n " << a << "\n\n";
+        cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);
         tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s,0.1);
 
