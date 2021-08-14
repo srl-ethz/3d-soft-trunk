@@ -3,35 +3,37 @@ using namespace std;
 
 Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects)
 {
-    
+
     filename = "ID_logger";
 
-    //Ka << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
-    //Ka_ << 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.;
+    Kp << 165.0, 165.0, 165.0; //control gains
+    Kd << 0.1, 0.1, 0.1;       //control gains
+    knd = 10.0;                //null space damping gain
+    dt = 1. / 100;             //controller's rate
 
-    Kp << 165.0, 165.0, 165.0;
-    Kd << 0.1, 0.1, 0.1;
+    eps = 0.1;     //for pinv of Jacobian
+    lambda = 0.05; //for pinv of Jacobian
 
-    dt = 1. / 100;
+    gamma1 = 0.01;    //control gains
+    gamma2 = 2 * 0.5; //control gains
 
-    eps = 0.1;
-    lambda = 0.05;
+    delta = 0.1; //boundary layer tickness
 
-    gamma1 = 0.01;
-    gamma2 = 2*0.5;
+    rate = 0.0001; //variation rate of estimates
+    // maybe use a diag matrix instead of double to decrease this rate for inertia params.
+    // already included in Ka
 
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038  ,  0.0022  ,  0.0015 ,   0.0018 ,   0.0263 ,   0.0153  ,  0.0125 ,   0.0100  ,  0.0100   , 0.1400 ,   0.0700;
-    fmt::print("Adaptive initialized.\n");
+    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.1400, 0.0700;
 }
 
 void Adaptive::control_loop()
 {
-    
+
     SoftTrunkParameters st_params_l{};
     st_params_l.load_yaml("softtrunkparams_Lagrange.yaml");
-    st_params_l.finalize();  // run sanity check and finalize parameters
+    st_params_l.finalize(); // run sanity check and finalize parameters
 
     Lagrange lag(st_params_l);
     srl::Rate r{1. / dt};
@@ -39,46 +41,38 @@ void Adaptive::control_loop()
     {
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
-        //update the internal visualization
         cc->get_curvature(state);
         stm->updateState(state);
+
         avoid_singularity(state);
         lag.update(state, state_ref);
         //if (!is_initial_ref_received) //only control after receiving a reference position
         //    continue;
         x = lag.p;
-        x_qualiszs = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        x_qualiszs = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
 
-        //std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
         dx = lag.J * state.dq;
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
-        J_inv = computePinv(lag.J, eps, lambda);
-        state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
-        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq)  + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv * lag.J)) * (-10 * state.dq);
-       
-        lag.update(state, state_ref); //update again for state_ref to get Y
-        s = state_ref.dq - state.dq;
-        
-        aDot = Ka.asDiagonal() * lag.Y.transpose() * s;
-        //a = a + 0.000001* dt * aDot;
-        a = a + 0.0001* dt * aDot;
 
-        for (int i=0; i< Ka.size(); i++)
-        {
-            if (a(i) < a_min(i) || a(i) > a_max(i)){
-                Ka(i) = 0;
-                a(i) = std::min(a_max(i),std::max(a(i),a_min(i)));
-            }
-            else
-                Ka(i) = Ka_(i);
-        }
+        J_inv = computePinv(lag.J, eps, lambda);
+
+        state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
+        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
+
+        lag.update(state, state_ref); //update again for state_ref to get Y
+
+        s = state_ref.dq - state.dq;     //sliding manifold
+        s_d = s - delta * sat(s, delta); //manifold with boundary layer
+
+        aDot = Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
+        a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
+        avoid_drifting();                                 // keep the dynamic parameters within range
 
         cout << "\na \n " << a << "\n\n";
-        Ainv = computePinv(lag.A, eps, lambda);
-        tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s,0.1);
-
-        p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
-        actuate(p);
+        Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
+        tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s, delta); // compute the desired toque in xy
+        p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
+        actuate(p);                                                   // control the valves
     }
 }
 
@@ -125,31 +119,72 @@ void Adaptive::avoid_singularity(srl::State &state)
     }
 }
 
+void Adaptive::avoid_drifting() //keeps the dynamic parameters within the range
+{
+    for (int i = 0; i < Ka.size(); i++)
+    {
+        if (a(i) < a_min(i) || a(i) > a_max(i))
+        {
+            Ka(i) = 0;
+            a(i) = std::min(a_max(i), std::max(a(i), a_min(i)));
+        }
+        else
+            Ka(i) = Ka_(i);
+    }
+}
+
+/*
 VectorXd Adaptive::sat(VectorXd s, double delta)
 {
     VectorXd Delta = VectorXd::Ones(s.size())*delta;
     return s.array()/(s.array().abs()+Delta.array());
 }
+*/
+VectorXd Adaptive::sat(VectorXd x, double delta)
+{
+    VectorXd s = VectorXd::Zero(x.size());
+    for (int i = 0; i < x.size(); i++)
+        s(i) = (std::abs(x(i)) >= delta) ? sign(x(i)) : x(i) / delta;
+    return s;
+}
 
-void Adaptive::increase_kd(){
-    this->Kd = 1.1*this->Kd;
+double Adaptive::sign(double val)
+{
+    if (val == 0)
+        return 0.0;
+    else if (val > 0)
+        return 1.0;
+    else
+        return -1.0;
+}
+
+void Adaptive::increase_kd()
+{
+    this->Kd = 1.1 * this->Kd;
     fmt::print("kd = {}\n", Kd(0));
-    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+    std::cout << "x_qualisys \n"
+              << x_qualiszs << "\n\n";
 }
-void Adaptive::increase_kp(){
-    this->Kp = 1.1*this->Kp;
+void Adaptive::increase_kp()
+{
+    this->Kp = 1.1 * this->Kp;
     fmt::print("kp = {}\n", Kp(0));
-    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+    std::cout << "x_qualisys \n"
+              << x_qualiszs << "\n\n";
 }
 
-void Adaptive::decrease_kd(){
-    this->Kd = 0.9*this->Kd;
+void Adaptive::decrease_kd()
+{
+    this->Kd = 0.9 * this->Kd;
     fmt::print("kd = {}\n", Kd(0));
-    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+    std::cout << "x_qualisys \n"
+              << x_qualiszs << "\n\n";
 }
 
-void Adaptive::decrease_kp(){
-    this->Kp = 0.9*this->Kp;
+void Adaptive::decrease_kp()
+{
+    this->Kp = 0.9 * this->Kp;
     fmt::print("kp = {}\n", Kp(0));
-    std::cout << "x_qualisys \n" << x_qualiszs << "\n\n";
+    std::cout << "x_qualisys \n"
+              << x_qualiszs << "\n\n";
 }

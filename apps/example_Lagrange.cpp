@@ -5,10 +5,14 @@
 #include "3d-soft-trunk/CurvatureCalculator.h"
 #include "mobilerack-interface/ValveController.h"
 #include "3d-soft-trunk/SoftTrunkModel.h"
+
 /**
  * demo to showcase how to use the SoftTrunkModel class, as well as create a custom arm configuration youself. 
  */
 using namespace std;
+
+double sign(double val);
+VectorXd sat(VectorXd x, double delta);
 
 double fRand(double fMin, double fMax)
 {
@@ -58,11 +62,28 @@ Eigen::MatrixXd computePinv(Eigen::MatrixXd j, double e, double lambda)
     return pJacobian;
 }
 
+/*
 VectorXd sat(VectorXd s, double delta)
 {
     VectorXd Delta = VectorXd::Ones(s.size())*delta;
     return s.array()/(s.array().abs()+Delta.array());
 }
+*/
+
+VectorXd sat(VectorXd x, double delta)
+{
+    VectorXd s = VectorXd::Zero(x.size());
+    for (int i=0; i<x.size();i++)
+        s(i) = (std::abs(x(i))>=delta) ? sign(x(i)) : x(i)/delta;
+    return s;
+}
+
+double sign(double val) {
+    if (val == 0) return 0.0;
+    else if (val > 0) return 1.0;
+    else return -1.0;
+}
+
 int main()
 {
     SoftTrunkParameters st_params_l{};
