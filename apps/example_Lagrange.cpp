@@ -14,6 +14,11 @@ using namespace std;
 double sign(double val);
 VectorXd sat(VectorXd x, double delta);
 
+VectorXd p = VectorXd::Zero(3);
+VectorXd dp = VectorXd::Zero(3);
+VectorXd ddp = VectorXd::Zero(3);
+
+
 double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
@@ -84,6 +89,39 @@ double sign(double val) {
     else return -1.0;
 }
 
+void Task(double t, double T, double a)
+{
+  double b_dpx_tmp_tmp;
+  double dp_tmp;
+  double dpx_tmp_tmp;
+  double dpy_tmp_tmp;
+  double f;
+  double p_tmp;
+  //  a = 0.1;
+  //  a= 0.1;
+  f = 6.2831853071795862 / T;
+  dpx_tmp_tmp = 6.2831853071795862 * t / T;
+  b_dpx_tmp_tmp = std::sin(dpx_tmp_tmp);
+  dpy_tmp_tmp = std::cos(dpx_tmp_tmp);
+  p_tmp = t * f;
+  dpx_tmp_tmp = a * std::cos(2.0 * t * f);
+  p[0] = dpx_tmp_tmp * std::cos(p_tmp);
+  p[1] = dpx_tmp_tmp * std::sin(p_tmp);
+  p[2] = -0.2;
+  dpx_tmp_tmp = 2.0 * a * 3.1415926535897931;
+  p_tmp = pow(b_dpx_tmp_tmp, 3.0);
+  dp[0] = -(dpx_tmp_tmp * (5.0 * b_dpx_tmp_tmp - 6.0 * p_tmp)) / T;
+  dp_tmp = pow(dpy_tmp_tmp, 3.0);
+  dp[1] = -(dpx_tmp_tmp * (5.0 * dpy_tmp_tmp - 6.0 * dp_tmp)) / T;
+  dp[2] = 0.0;
+  dpx_tmp_tmp = 4.0 * a * 9.869604401089358;
+  f = T * T;
+  ddp[0] = dpx_tmp_tmp * (13.0 * dpy_tmp_tmp - 18.0 * dp_tmp) / f;
+  ddp[1] = -(dpx_tmp_tmp * (13.0 * b_dpx_tmp_tmp - 18.0 * p_tmp)) / f;
+  ddp[2] = 0.0;
+}
+
+
 int main()
 {
     SoftTrunkParameters st_params_l{};
@@ -93,7 +131,8 @@ int main()
     srl::State state = st_params_l.getBlankState();     // get blank state with appropriate size
     srl::State state_ref = st_params_l.getBlankState(); // get blank state with appropriate size
     srand((unsigned int)time(0));
-    
+    Task(5.0, 10.0, 0.1);
+    cout << "\n p \n" << p;
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
     state_ref.dq = VectorXd::Random(4);
