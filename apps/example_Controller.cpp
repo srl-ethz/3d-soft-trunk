@@ -146,11 +146,11 @@ int main(){
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        /*x_ref = circle;
+        x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
         //x_ref = osc.get_objects()[0];
-        //osc.set_ref(x_ref,dx_ref, ddx_ref);
+        osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
