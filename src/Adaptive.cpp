@@ -7,19 +7,19 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     filename = "ID_logger";
 
     Kp << 165.0, 165.0, 165.0; //control gains
-    Kd << 0.1, 0.1, 0.1;       //control gains
+    Kd << 0.01, 0.01, 0.01;       //control gains
     knd = 10.0;                //null space damping gain
     dt = 1. / 100;             //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma1 = 0.01;    //control gains
-    gamma2 = 2 * 0.5; //control gains
+    gamma1 = 0.00001;    //control gains
+    gamma2 = 0.00001; //control gains
 
-    delta = 0.1; //boundary layer tickness
+    delta = 0.5; //boundary layer tickness
 
-    rate = 0.0001; //variation rate of estimates
+    rate = 0.00001; //variation rate of estimates
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -46,8 +46,8 @@ void Adaptive::control_loop()
 
         avoid_singularity(state);
         lag.update(state, state_ref);
-        //if (!is_initial_ref_received) //only control after receiving a reference position
-        //    continue;
+        if (!is_initial_ref_received) //only control after receiving a reference position
+            continue;
         x = lag.p;
         x_qualiszs = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
 
@@ -68,7 +68,7 @@ void Adaptive::control_loop()
         a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
         avoid_drifting();                                 // keep the dynamic parameters within range
 
-        cout << "\na \n " << a << "\n\n";
+        //cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
