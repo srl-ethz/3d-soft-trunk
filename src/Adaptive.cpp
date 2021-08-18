@@ -9,7 +9,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp << 70.0, 70.0, 70.0; //control gains
     Kd << 0.002, 0.002, 0.002;       //control gains
     knd = 10.0;                //null space damping gain
-    dt = 1. / 50;             //controller's rate
+    dt = 1. / 100;             //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
