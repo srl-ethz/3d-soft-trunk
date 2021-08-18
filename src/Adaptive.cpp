@@ -6,20 +6,20 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "ID_logger";
 
-    Kp << 165.0, 165.0, 165.0; //control gains
+    Kp << 40.0, 40.0, 40.0; //control gains
     Kd << 0.01, 0.01, 0.01;       //control gains
-    knd = 10.0;                //null space damping gain
+    knd = 1.0;                //null space damping gain
     dt = 1. / 100;             //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma1 = 0.001;    //control gains
-    gamma2 = 0.001; //control gains
+    gamma1 = 0.0001;    //control gains
+    gamma2 = 0.0001; //control gains
 
-    delta = 0.5; //boundary layer tickness
+    delta = 0.05; //boundary layer tickness
 
-    rate = 0.00001; //variation rate of estimates
+    rate = 0.000001; //variation rate of estimates
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -161,34 +161,77 @@ double Adaptive::sign(double val)
 void Adaptive::increase_kd()
 {
     this->Kd = 1.1 * this->Kd;
-    fmt::print("kd = {}\n", Kd(0));
-    std::cout << "x_qualisys \n"
-              << x_qualiszs << "\n\n";
-    std::cout << "x_kin \n"
-              << x << "\n\n";          
+    fmt::print("kd = {}\n", Kd(0));      
 }
 void Adaptive::increase_kp()
 {
     this->Kp = 1.1 * this->Kp;
-    fmt::print("kp = {}\n", Kp(0));
-    std::cout << "x_qualisys \n"
-              << x_qualiszs << "\n\n";
-    std::cout << "x_ref \n"
-              << x_ref << "\n\n";               
+    fmt::print("kp = {}\n", Kp(0));           
 }
 
 void Adaptive::decrease_kd()
 {
     this->Kd = 0.9 * this->Kd;
     fmt::print("kd = {}\n", Kd(0));
-    std::cout << "x_qualisys \n"
-              << x_qualiszs << "\n\n";
 }
 
 void Adaptive::decrease_kp()
 {
     this->Kp = 0.9 * this->Kp;
     fmt::print("kp = {}\n", Kp(0));
-    std::cout << "x_qualisys \n"
-              << x_qualiszs << "\n\n";
 }
+
+void Adaptive::increase_gamma1()
+{
+    this->gamma1 = 1.1 * this->gamma1;
+    fmt::print("gamma1 = {}\n", gamma1);
+}
+
+void Adaptive::decrease_gamma1()
+{
+    this->gamma1 = 0.9 * this->gamma1;
+    fmt::print("gamma1 = {}\n", gamma1);
+}
+
+void Adaptive::increase_gamma2()
+{
+    this->gamma2 = 1.1 * this->gamma2;
+    fmt::print("gamma2 = {}\n", gamma2);
+}
+
+void Adaptive::decrease_gamma2()
+{
+    this->gamma2 = 0.9 * this->gamma2;
+    fmt::print("gamma2 = {}\n", gamma2);
+}
+
+void Adaptive::increase_delta()
+{
+    this->delta = 1.1 * this->delta;
+    fmt::print("delta = {}\n", delta);
+}
+
+void Adaptive::decrease_delta()
+{
+    this->delta = 0.9 * this->delta;
+    fmt::print("delta = {}\n", delta);
+}
+
+void Adaptive::increase_rate()
+{
+    this->rate = 1.1 * this->rate;
+    fmt::print("rate = {}\n", rate);
+}
+
+void Adaptive::decrease_rate()
+{
+    this->rate = 0.9 * this->rate;
+    fmt::print("rate = {}\n", rate);
+}
+
+void Adaptive::show_x()
+{
+    fmt::print("qlysis_position = {}\n", x_qualiszs);
+}
+
+

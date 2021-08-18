@@ -17,17 +17,44 @@ void gain(Adaptive &ad)
         c = getchar();
         switch (c)
         {
+        case 'q':
+            ad.increase_kp();
+            break;
+        case 'a':
+            ad.decrease_kp();
+            break;           
         case 'w':
             ad.increase_kd();
             break;
         case 's':
             ad.decrease_kd();
             break;
-        case 'q':
-            ad.increase_kp();
+        case 'e':
+            ad.increase_gamma1();
             break;
-        case 'a':
-            ad.decrease_kp();
+        case 'd':
+            ad.decrease_gamma1();
+            break;
+        case 'r':
+            ad.increase_gamma2();
+            break;
+        case 'f':
+            ad.decrease_gamma2();
+            break;
+        case 't':
+            ad.increase_delta();
+            break;
+        case 'g':
+            ad.decrease_delta();
+            break;
+        case 'y':
+            ad.increase_rate();
+            break;
+        case 'h':
+            ad.decrease_rate();
+            break;
+        case 'z':
+            ad.show_x();
             break;
         }
     }
