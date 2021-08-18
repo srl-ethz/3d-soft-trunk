@@ -98,7 +98,7 @@ int main()
     //Task_8(t, 20.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
     //Task_Circle(t, 8, 0.15);
-    x_ref << 0.15,0,-0.23;
+    x_ref << 0,-0.14,-0.23;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();

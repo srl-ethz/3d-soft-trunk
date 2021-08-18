@@ -14,8 +14,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma1 = 0.00001;    //control gains
-    gamma2 = 0.00001; //control gains
+    gamma1 = 0.001;    //control gains
+    gamma2 = 0.001; //control gains
 
     delta = 0.5; //boundary layer tickness
 
@@ -48,9 +48,9 @@ void Adaptive::control_loop()
         lag.update(state, state_ref);
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
-        x = lag.p;
+        //x = lag.p;
         x_qualiszs = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
-
+        x = x_qualiszs;
         dx = lag.J * state.dq;
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
 
@@ -164,6 +164,8 @@ void Adaptive::increase_kd()
     fmt::print("kd = {}\n", Kd(0));
     std::cout << "x_qualisys \n"
               << x_qualiszs << "\n\n";
+    std::cout << "x_kin \n"
+              << x << "\n\n";          
 }
 void Adaptive::increase_kp()
 {
@@ -171,6 +173,8 @@ void Adaptive::increase_kp()
     fmt::print("kp = {}\n", Kp(0));
     std::cout << "x_qualisys \n"
               << x_qualiszs << "\n\n";
+    std::cout << "x_ref \n"
+              << x_ref << "\n\n";               
 }
 
 void Adaptive::decrease_kd()
