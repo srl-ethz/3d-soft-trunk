@@ -16,14 +16,18 @@ public:
     void increase_gamma2();
     void increase_delta();
     void increase_rate();
+    void increase_eps();   
+    void increase_lambda(); 
     void decrease_kd();
     void decrease_kp();
     void decrease_gamma1();
     void decrease_gamma2();
     void decrease_delta();
     void decrease_rate();   
+    void decrease_eps();   
+    void decrease_lambda();     
     void show_x();
-    
+
     VectorXd x_qualiszs = VectorXd::Zero(3);
     VectorXd Ka = VectorXd::Ones(11);
     VectorXd a = VectorXd::Zero(11);

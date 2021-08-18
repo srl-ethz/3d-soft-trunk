@@ -229,6 +229,30 @@ void Adaptive::decrease_rate()
     fmt::print("rate = {}\n", rate);
 }
 
+void Adaptive::increase_eps()
+{
+    this->eps = 1.1 * this->eps;
+    fmt::print("eps = {}\n", eps);
+}
+
+void Adaptive::decrease_eps()
+{
+    this->eps = 0.9 * this->eps;
+    fmt::print("eps = {}\n", eps);
+}
+
+void Adaptive::increase_lambda()
+{
+    this->lambda = 1.1 * this->lambda;
+    fmt::print("lambda = {}\n", lambda);
+}
+
+void Adaptive::decrease_lambda()
+{
+    this->lambda = 0.9 * this->lambda;
+    fmt::print("lambda = {}\n", lambda);
+}
+
 void Adaptive::show_x()
 {
     fmt::print("qlysis_position = {}\n", x_qualiszs);
