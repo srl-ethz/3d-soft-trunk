@@ -6,20 +6,20 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "ID_logger";
 
-    Kp << 40.0, 40.0, 40.0; //control gains
-    Kd << 0.01, 0.01, 0.01;       //control gains
-    knd = 1.0;                //null space damping gain
-    dt = 1. / 100;             //controller's rate
+    Kp << 70.0, 70.0, 70.0; //control gains
+    Kd << 0.002, 0.002, 0.002;       //control gains
+    knd = 10.0;                //null space damping gain
+    dt = 1. / 50;             //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma1 = 0.0001;    //control gains
-    gamma2 = 0.0001; //control gains
+    gamma1 = 0.00001;    //control gains
+    gamma2 = 0.00001; //control gains
 
-    delta = 0.05; //boundary layer tickness
+    delta = 0.5; //boundary layer tickness
 
-    rate = 0.000001; //variation rate of estimates
+    rate = 0.0000001; //variation rate of estimates
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -48,9 +48,9 @@ void Adaptive::control_loop()
         lag.update(state, state_ref);
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
-        //x = lag.p;
+        x = lag.p;
         x_qualiszs = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
-        x = x_qualiszs;
+        //x = x_qualiszs;
         dx = lag.J * state.dq;
         ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
 
