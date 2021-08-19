@@ -25,9 +25,13 @@ public:
     void decrease_delta();
     void decrease_rate();   
     void decrease_eps();   
-    void decrease_lambda();     
+    void decrease_lambda();    
+    void increase_damping();
+    void decrease_damping();
+    void increase_stiffness(int seg);
+    void decrease_stiffness(int seg); 
     void show_x();
-
+    void change_ref();
     VectorXd x_qualiszs = VectorXd::Zero(3);
     VectorXd Ka = VectorXd::Ones(11);
     VectorXd a = VectorXd::Zero(11);

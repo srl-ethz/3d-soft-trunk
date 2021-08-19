@@ -65,6 +65,27 @@ void gain(Adaptive &ad)
         case 'k':
             ad.decrease_lambda();
             break;
+        case 'o':
+            ad.increase_stiffness(0);
+            break;
+        case 'l':
+            ad.decrease_stiffness(0);
+            break;
+        case 'p':
+            ad.increase_stiffness(1);
+            break;
+        case ';':
+            ad.decrease_stiffness(1);
+            break;
+        case 'n':
+            ad.increase_damping();
+            break;
+        case 'm':
+            ad.decrease_damping();
+            break;
+         case 'x':
+            ad.change_ref();
+            break;           
         case 'z':
             ad.show_x();
             break;
@@ -136,8 +157,8 @@ int main()
     double dt = 0.1;
     //Task_8(t, 20.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
-    Task_Circle(t, 8, 0.15);
-    //x_ref << 0.0,-0.14,-0.23;
+    //Task_Circle(t, 8, 0.15);
+    x_ref << 0.0,-0.14,-0.23;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();
@@ -145,8 +166,8 @@ int main()
     {
         //Task_8(t, 20.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        Task_Circle(t, 8, 0.15); // circular traj. with radius 0.15m and period 8s
-        ad.set_ref(x_ref, dx_ref, ddx_ref);
+        //Task_Circle(t, 8, 0.15); // circular traj. with radius 0.15m and period 8s
+        //ad.set_ref(x_ref, dx_ref, ddx_ref);
 
         t += dt;
         srl::sleep(dt);

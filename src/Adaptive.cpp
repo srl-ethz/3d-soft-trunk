@@ -17,7 +17,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     gamma1 = 0.00001;    //control gains
     gamma2 = 0.00001; //control gains
 
-    delta = 0.5; //boundary layer tickness
+    delta = 0.1; //boundary layer tickness
 
     rate = 0.0000001; //variation rate of estimates
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
@@ -65,7 +65,7 @@ void Adaptive::control_loop()
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
 
         aDot = Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
-        a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
+        //a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
         avoid_drifting();                                 // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
@@ -251,6 +251,34 @@ void Adaptive::decrease_lambda()
 {
     this->lambda = 0.9 * this->lambda;
     fmt::print("lambda = {}\n", lambda);
+}
+
+void Adaptive::increase_stiffness(int seg){
+    this->a[10+seg] = this->a[10+seg] * 1.1;
+    fmt::print("stiffness{}: {}", seg, this->a[seg]);
+}
+
+void Adaptive::decrease_stiffness(int seg){
+    this->a[10+seg] = this->a[10+seg] * 0.9;
+    fmt::print("stiffness{}: {}", seg, this->a[seg]);
+}
+
+void Adaptive::increase_damping(){
+    this->a[8] = this->a[8] * 1.1;
+    this->a[9] = this->a[9] * 1.1;
+    fmt::print("damping: {}", this->a[8]);
+}
+
+void Adaptive::decrease_damping(){
+    this->a[8] = this->a[8] * 0.9;
+    this->a[9] = this->a[9] * 0.9;
+    fmt::print("damping: {}", this->a[8]);
+}
+
+void Adaptive::change_ref()
+{
+    x_ref << 0.0,0.14,-0.23;
+    fmt::print("position_changed = {}\n", x_ref);
 }
 
 void Adaptive::show_x()
