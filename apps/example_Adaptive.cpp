@@ -53,6 +53,18 @@ void gain(Adaptive &ad)
         case 'h':
             ad.decrease_rate();
             break;
+        case 'u':
+            ad.increase_eps();
+            break;
+        case 'j':
+            ad.decrease_eps();
+            break;
+        case 'i':
+            ad.increase_lambda();
+            break;
+        case 'k':
+            ad.decrease_lambda();
+            break;
         case 'z':
             ad.show_x();
             break;
