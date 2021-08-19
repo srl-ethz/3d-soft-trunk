@@ -50,7 +50,7 @@ private:
     MatrixXd Ainv;
     VectorXd aDot = VectorXd::Zero(11);
     VectorXd a_min = VectorXd::Zero(11);
-    VectorXd a_max = 1*VectorXd::Ones(11);    
+    VectorXd a_max = 0.3*VectorXd::Ones(11);    
     VectorXd tau = VectorXd::Zero(4);
     VectorXd s = VectorXd::Zero(4);   
     VectorXd s_d = VectorXd::Zero(4); //boundary layer manifold

@@ -100,7 +100,7 @@ void Task_8(double t, double T, double a)
   double px_tmp = std::sin(px_tmp_tmp);
   x_ref[0] = 2.0 * a * px_tmp * std::cos(px_tmp_tmp);
   x_ref[1] = a * px_tmp;
-  x_ref[2] = -0.2;
+  x_ref[2] = -0.25;
   px_tmp_tmp = 12.566370614359172 * t / T;
   dx_ref[0] = 4.0 * a * 3.1415926535897931 * std::cos(px_tmp_tmp) / T;
   px_tmp = 6.2831853071795862 * t / T;
@@ -123,7 +123,7 @@ void Task_Rose(double t, double T, double a)
     dpx_tmp_tmp = a * std::cos(2.0 * t * f);
     x_ref[0] = dpx_tmp_tmp * std::cos(p_tmp);
     x_ref[1] = dpx_tmp_tmp * std::sin(p_tmp);
-    x_ref[2] = -0.2;
+    x_ref[2] = -0.23;
     dpx_tmp_tmp = 2.0 * a * 3.1415926535897931;
     p_tmp = pow(b_dpx_tmp_tmp, 3.0);
     dx_ref[0] = -(dpx_tmp_tmp * (5.0 * b_dpx_tmp_tmp - 6.0 * p_tmp)) / T;
@@ -155,7 +155,7 @@ int main()
 
     double t = 0.0;
     double dt = 0.1;
-    //Task_8(t, 20.0, 0.1);
+    //Task_8(t, 12.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
     Task_Circle(t, 8, 0.15);
     //x_ref << 0.0,-0.14,-0.23;
@@ -164,7 +164,7 @@ int main()
     ad.toggle_log();
     while (true)
     {
-        //Task_8(t, 20.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
+        //Task_8(t, 12.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         Task_Circle(t, 8, 0.15); // circular traj. with radius 0.15m and period 8s
         ad.set_ref(x_ref, dx_ref, ddx_ref);

@@ -6,8 +6,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "ID_logger";
 
-    Kp << 120.0, 120.0, 120.0; //control gains
-    Kd << 0.002, 0.002, 0.002;       //control gains
+    Kp << 75.0, 75.0, 75.0; //control gains
+    Kd << 0.05, 0.05, 0.05;       //control gains
     knd = 10.0;                //null space damping gain
     dt = 1. / 100;             //controller's rate
 
@@ -17,7 +17,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     gamma1 = 0.001;    //control gains
     gamma2 = 0.001; //control gains
 
-    delta = 0.15; //boundary layer tickness
+    delta = 0.05; //boundary layer tickness
 
     rate = 0.0000001; //variation rate of estimates
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
@@ -25,7 +25,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.1900, 0.100;
+    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.2500, 0.150;
 }
 
 void Adaptive::control_loop()
@@ -65,10 +65,10 @@ void Adaptive::control_loop()
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
 
         aDot = Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
-        //a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
+        a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
         avoid_drifting();                                 // keep the dynamic parameters within range
 
-        //cout << "\na \n " << a << "\n\n";
+        cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
@@ -111,7 +111,7 @@ Eigen::MatrixXd Adaptive::computePinv(Eigen::MatrixXd j, double e, double lambda
 void Adaptive::avoid_singularity(srl::State &state)
 {
     double r;
-    double eps_custom = 0.05;
+    double eps_custom = 0.02;
     for (int idx = 0; idx < state.q.size(); idx++)
     {
         r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
