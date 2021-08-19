@@ -6,7 +6,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "ID_logger";
 
-    Kp << 70.0, 70.0, 70.0; //control gains
+    Kp << 120.0, 120.0, 120.0; //control gains
     Kd << 0.002, 0.002, 0.002;       //control gains
     knd = 10.0;                //null space damping gain
     dt = 1. / 100;             //controller's rate
@@ -14,10 +14,10 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma1 = 0.00001;    //control gains
-    gamma2 = 0.00001; //control gains
+    gamma1 = 0.001;    //control gains
+    gamma2 = 0.001; //control gains
 
-    delta = 0.1; //boundary layer tickness
+    delta = 0.15; //boundary layer tickness
 
     rate = 0.0000001; //variation rate of estimates
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
@@ -25,7 +25,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.1400, 0.0700;
+    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.1900, 0.100;
 }
 
 void Adaptive::control_loop()
@@ -254,25 +254,25 @@ void Adaptive::decrease_lambda()
 }
 
 void Adaptive::increase_stiffness(int seg){
-    this->a[10+seg] = this->a[10+seg] * 1.1;
-    fmt::print("stiffness{}: {}", seg, this->a[seg]);
+    this->a[9+seg] = this->a[9+seg] * 1.1;
+    fmt::print("stiffness{}: {}\n", seg, this->a[9+seg]);
 }
 
 void Adaptive::decrease_stiffness(int seg){
-    this->a[10+seg] = this->a[10+seg] * 0.9;
-    fmt::print("stiffness{}: {}", seg, this->a[seg]);
+    this->a[9+seg] = this->a[9+seg] * 0.9;
+    fmt::print("stiffness{}: {}\n", seg, this->a[9+seg]);
 }
 
 void Adaptive::increase_damping(){
+    this->a[7] = this->a[7] * 1.1;
     this->a[8] = this->a[8] * 1.1;
-    this->a[9] = this->a[9] * 1.1;
-    fmt::print("damping: {}", this->a[8]);
+    fmt::print("damping: {}\n", this->a[8]);
 }
 
 void Adaptive::decrease_damping(){
+    this->a[7] = this->a[7] * 0.9;
     this->a[8] = this->a[8] * 0.9;
-    this->a[9] = this->a[9] * 0.9;
-    fmt::print("damping: {}", this->a[8]);
+    fmt::print("damping: {}\n", this->a[8]);
 }
 
 void Adaptive::change_ref()
