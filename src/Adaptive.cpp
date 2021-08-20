@@ -58,7 +58,6 @@ void Adaptive::control_loop()
 
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
         state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
-
         lag.update(state, state_ref); //update again for state_ref to get Y
 
         s = state_ref.dq - state.dq;     //sliding manifold
@@ -68,7 +67,7 @@ void Adaptive::control_loop()
         a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
         avoid_drifting();                                 // keep the dynamic parameters within range
 
-        cout << "\na \n " << a << "\n\n";
+        //cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
@@ -111,7 +110,7 @@ Eigen::MatrixXd Adaptive::computePinv(Eigen::MatrixXd j, double e, double lambda
 void Adaptive::avoid_singularity(srl::State &state)
 {
     double r;
-    double eps_custom = 0.02;
+    double eps_custom = 0.05;
     for (int idx = 0; idx < state.q.size(); idx++)
     {
         r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi

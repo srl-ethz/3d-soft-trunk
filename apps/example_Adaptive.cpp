@@ -147,7 +147,7 @@ void Task_Circle(double t, double T, double r)
 
 int main()
 {
-
+    bool gripping = false;
     SoftTrunkParameters st_params{};
     st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
@@ -168,7 +168,11 @@ int main()
         //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         Task_Circle(t, 8, 0.15); // circular traj. with radius 0.15m and period 8s
         ad.set_ref(x_ref, dx_ref, ddx_ref);
-
+        Vector3d x = ad.x_qualiszs;
+        if ((x - ad.get_objects()[0]).norm() < 0.07 && (x - ad.get_objects()[0]).norm() > 0.001 &&  !gripping){
+            ad.toggleGripper();
+            gripping = true;
+        }
         t += dt;
         srl::sleep(dt);
     }
