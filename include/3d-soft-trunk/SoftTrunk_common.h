@@ -92,7 +92,7 @@ public:
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::vector<double> shear_modulus = {37800, 62000.};
+    std::vector<double> shear_modulus = {40686, 59116};
     std::vector<double> drag_coef = {28000., 8000.};
 
     /** @brief degrees of freedom of arm. is set when finalize() is called */

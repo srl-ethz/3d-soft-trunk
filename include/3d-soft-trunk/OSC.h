@@ -71,8 +71,6 @@ private:
     /** @brief gains for OSC*/
     double kp;
     double kd;
-    double ki;
-    double ki_gain;
 
     /** @brief x coordinates of middle segment tip */
     Vector3d x_mid;
