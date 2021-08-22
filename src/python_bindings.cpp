@@ -6,6 +6,7 @@
 #include <3d-soft-trunk/CurvatureCalculator.h>
 #include <3d-soft-trunk/SoftTrunkModel.h>
 #include <3d-soft-trunk/ControllerPCC.h>
+#include <3d-soft-trunk/OSC.h>
 
 namespace py = pybind11;
 
@@ -80,6 +81,22 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     .def("toggle_log", &ControllerPCC::toggle_log)
     .def("simulate", &ControllerPCC::simulate)
     .def("set_frequency", &ControllerPCC::set_frequency);
+
+
+    py::class_<OSC>(m, "OSC")
+    .def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, int>())
+    .def("set_ref", py::overload_cast<const srl::State&>(&OSC::set_ref))
+    .def("set_ref", py::overload_cast<const Vector3d, const Vector3d&, const Vector3d&>(&OSC::set_ref))
+    .def("get_x", [](OSC& osc){
+        Vector3d x;
+        osc.get_x(x);
+        return x;
+    })
+    .def("get_kp", &OSC::get_kp)
+    .def("get_kd", &OSC::get_kd)
+    .def("toggleGripper", &OSC::toggleGripper)
+    .def_property("gripperAttached", [](OSC& osc){return osc.gripperAttached;}, [](OSC& osc, bool b){osc.gripperAttached = b;})
+    .def_property("loadAttached", [](OSC& osc){return osc.loadAttached;}, [](OSC& osc, double d){osc.loadAttached = d;});
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)

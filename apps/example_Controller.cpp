@@ -87,7 +87,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
-        fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
+        //fmt::print("cutoff = {}, strength = {}\n", osc.potfields[0].get_cutoff(), osc.potfields[0].get_strength());
     }
 }
 
@@ -97,8 +97,8 @@ void printer(OSC& osc){
         Vector3d x;
         osc.get_x(x);
         fmt::print("------------------------------------\n");
-        fmt::print("extra object1: {}\n", osc.get_objects()[0].transpose());
-        fmt::print("extra object1: {}\n", osc.get_objects()[1].transpose());
+        //fmt::print("extra object1: {}\n", osc.get_objects()[0].transpose());
+        //fmt::print("extra object1: {}\n", osc.get_objects()[1].transpose());
         fmt::print("x tip: {}\n", x.transpose());
         fmt::print("x error: {}\n", (x_ref-x).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-x).norm());
@@ -109,7 +109,7 @@ void printer(OSC& osc){
 int main(){
     SoftTrunkParameters st_params;
     st_params.finalize();
-    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 2);
+    OSC osc(st_params, CurvatureCalculator::SensorType::qualisys, 0);
     VectorXd p;
     srl::State state = st_params.getBlankState();
 
@@ -117,7 +117,7 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.15,0.00,-0.2;
+    x_ref << 0.15, 0.0, 0.0;
     std::thread print_thread(printer, std::ref(osc));
 
     
@@ -141,7 +141,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(osc));
     
     //osc.toggle_log();
-    while (true){
+    while (false){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
