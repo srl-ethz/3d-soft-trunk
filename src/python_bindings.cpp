@@ -93,10 +93,15 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         return x;
     })
     .def("get_kp", &OSC::get_kp)
+    .def("set_kd", &OSC::set_kp)
     .def("get_kd", &OSC::get_kd)
+    .def("set_kd", &OSC::set_kd)
+    .def("get_objects", &OSC::get_objects)
+    .def("toggle_log", &OSC::toggle_log)
     .def("toggleGripper", &OSC::toggleGripper)
     .def_property("gripperAttached", [](OSC& osc){return osc.gripperAttached;}, [](OSC& osc, bool b){osc.gripperAttached = b;})
-    .def_property("loadAttached", [](OSC& osc){return osc.loadAttached;}, [](OSC& osc, double d){osc.loadAttached = d;});
+    .def_property("loadAttached", [](OSC& osc){return osc.loadAttached;}, [](OSC& osc, double d){osc.loadAttached = d;})
+    .def_property("freeze", [](OSC& osc){return osc.freeze;}, [](OSC& osc, bool b){osc.freeze = b;});
 
     py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
     .value("qualisys", CurvatureCalculator::SensorType::qualisys)

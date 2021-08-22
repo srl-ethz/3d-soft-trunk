@@ -117,7 +117,7 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.15, 0.0, 0.0;
+    x_ref << 0.15, 0.0, -0.2;
     std::thread print_thread(printer, std::ref(osc));
 
     
