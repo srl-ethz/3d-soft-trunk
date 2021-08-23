@@ -61,9 +61,9 @@ void Adaptive::control_loop()
 
         //state_ref.dq = J_inv * (dx_ref + 0.1*Kp.asDiagonal() * (x_ref - x));
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
-        v = 0.1*Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
+        v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
         state_ref.dq = J_inv * (dx_ref + v);
-        vDot = alpha*0.1*Kp.array()*e.array().abs().pow(alpha-1)*eDot.array();
+        vDot = alpha*Kp.array()*e.array().abs().pow(alpha-1)*eDot.array();
         state_ref.ddq = J_inv * (ddx_ref + vDot -lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
 
