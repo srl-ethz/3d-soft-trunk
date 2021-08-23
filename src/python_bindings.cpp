@@ -83,8 +83,8 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     .def("set_frequency", &ControllerPCC::set_frequency);
 
 
-    py::class_<OSC>(m, "OSC")
-    .def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, int>())
+    py::class_<OSC, ControllerPCC>(m, "OSC")
+    .def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, bool>())
     .def("set_ref", py::overload_cast<const srl::State&>(&OSC::set_ref))
     .def("set_ref", py::overload_cast<const Vector3d, const Vector3d&, const Vector3d&>(&OSC::set_ref))
     .def("get_x", [](OSC& osc){
