@@ -23,6 +23,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
+    alpha = 0.75; //Finite time stability
+
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
     a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.2500, 0.150;
@@ -52,12 +54,17 @@ void Adaptive::control_loop()
         x_qualiszs = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         //x = x_qualiszs;
         dx = lag.J * state.dq;
-        ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
-
+        //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
+        e = x_ref - x;
+        eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
 
-        state_ref.dq = J_inv * (dx_ref + 0.1*Kp.asDiagonal() * (x_ref - x));
-        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
+        //state_ref.dq = J_inv * (dx_ref + 0.1*Kp.asDiagonal() * (x_ref - x));
+        //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
+        v = 0.1*Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
+        state_ref.dq = J_inv * (dx_ref + v);
+        vDot = alpha*0.1*Kp.array()*e.array().abs().pow(alpha-1)*eDot.array();
+        state_ref.ddq = J_inv * (ddx_ref + vDot -lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
 
         s = state.dq - state_ref.dq;     //sliding manifold

@@ -203,7 +203,11 @@ int main()
     //VectorXd p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
     //cout << "pressure:\n" << p << "\n";
     */
-
+    VectorXd ee;
+    std::cout << "k:" << lag.k.array() << "\n";
+    ee = lag.k.array()*state.q.array().abs().pow(0.75)*sat(state.q, 0).array();
+    std::cout << ee << "\n";
+    std:cout << "q_sign:" << sat(state.q, 0) << "\n";
     std::cout << "q:\n"
               << state.q << std::endl;
     std::cout << "dq:\n"

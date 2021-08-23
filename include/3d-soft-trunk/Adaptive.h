@@ -54,6 +54,10 @@ private:
     VectorXd tau = VectorXd::Zero(4);
     VectorXd s = VectorXd::Zero(4);   
     VectorXd s_d = VectorXd::Zero(4); //boundary layer manifold
+    VectorXd e = VectorXd::Zero(3);
+    VectorXd eDot = VectorXd::Zero(3);   
+    VectorXd v = VectorXd::Zero(3);
+    VectorXd vDot = VectorXd::Zero(3);       
     double eps;
     double lambda;
     double gamma1;
@@ -61,4 +65,5 @@ private:
     double delta; //boundary layer tickness
     double rate; //variation rate of estimates
     double knd; //nullspace damping gain
+    double alpha;
 };
