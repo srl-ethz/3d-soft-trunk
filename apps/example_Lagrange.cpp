@@ -132,15 +132,28 @@ int main()
     srl::State state_ref = st_params_l.getBlankState(); // get blank state with appropriate size
     srand((unsigned int)time(0));
     Task(5.0, 10.0, 0.1);
-    cout << "\n p \n" << p;
+    //cout << "\n p \n" << p;
     state.q = VectorXd::Random(4);
     state.dq = VectorXd::Random(4);
     state_ref.dq = VectorXd::Random(4);
     state_ref.ddq = VectorXd::Random(4);
     lag.update(state, state_ref);
-    VectorXd s;
-    s = sat(state.q,0.1);
-    cout << "s: \n" << s << "\n";
+    VectorXd v = VectorXd::Zero(3);
+    VectorXd vDot = VectorXd::Zero(3);
+    VectorXd e = VectorXd::Zero(3);
+    VectorXd eDot = VectorXd::Zero(3);
+    VectorXd Kp = VectorXd::Zero(3);
+    e << 0.1, 2, -0.3;
+    eDot << -0.2, -5, 0.5;
+    Kp << 2, 3, 4;
+    double alpha = 0.75;
+    v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
+    vDot = alpha*Kp.array()*e.array().abs().pow(alpha-1)*sat(e, 0).array()*eDot.array();
+    std::cout << "\n v:" << v << "\n";
+    std::cout << "\n v:" << vDot << "\n";
+    //VectorXd s;
+    //s = sat(state.q,0.1);
+    //cout << "s: \n" << s << "\n";
     //VectorXd x_ref = VectorXd::Random(3);
     //VectorXd dx_ref = VectorXd::Random(3);
     //VectorXd ddx_ref = VectorXd::Random(3);
@@ -203,11 +216,7 @@ int main()
     //VectorXd p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);
     //cout << "pressure:\n" << p << "\n";
     */
-    VectorXd ee;
-    std::cout << "k:" << lag.k.array() << "\n";
-    ee = lag.k.array()*state.q.array().abs().pow(0.75)*sat(state.q, 0).array();
-    std::cout << ee << "\n";
-    std:cout << "q_sign:" << sat(state.q, 0) << "\n";
+
     std::cout << "q:\n"
               << state.q << std::endl;
     std::cout << "dq:\n"

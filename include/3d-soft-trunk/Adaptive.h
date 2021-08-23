@@ -32,7 +32,7 @@ public:
     void decrease_stiffness(int seg); 
     void show_x();
     void change_ref();
-    VectorXd x_qualiszs = VectorXd::Zero(3);
+    VectorXd x_qualisys = VectorXd::Zero(3);
     VectorXd Ka = VectorXd::Ones(11);
     VectorXd a = VectorXd::Zero(11);
 
