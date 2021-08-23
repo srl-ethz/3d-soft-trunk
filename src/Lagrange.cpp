@@ -4704,7 +4704,7 @@ void Lagrange::update(const srl::State &state, const srl::State &state_r)
     Lagrange::p_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::J_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::JDot_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);
-    Lagrange::Y_update(state.q,state.dq,state.dq,state_r.ddq);
+    Lagrange::Y_update(state.q,state.dq,state_r.dq,state_r.ddq);
 
     //std::cout << "q:\n" << q << std::endl;
     //Map<VectorXd> q(data);
