@@ -57,19 +57,19 @@ void Adaptive::control_loop()
         J_inv = computePinv(lag.J, eps, lambda);
 
         state_ref.dq = J_inv * (dx_ref + Kp.asDiagonal() * (x_ref - x));
-        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
+        state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
 
-        s = state_ref.dq - state.dq;     //sliding manifold
+        s = state.dq - state_ref.dq;     //sliding manifold
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
 
-        aDot = Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
+        aDot = -Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
         a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
         avoid_drifting();                                 // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
-        tau = Ainv * lag.Y * a + gamma1 * s + gamma2 * sat(s, delta); // compute the desired toque in xy
+        tau = Ainv * lag.Y * a - gamma1 * s - gamma2 * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
         actuate(p);                                                   // control the valves
     }
