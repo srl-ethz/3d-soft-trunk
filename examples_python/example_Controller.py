@@ -10,8 +10,6 @@ import numpy as np
 import threading
 import time
 
-from pynput import keyboard
-
 
 class StoppableThread(threading.Thread):
     """
@@ -35,11 +33,11 @@ class StoppableThread(threading.Thread):
 
 def gain (osc):
     """
-    Keyboard events are handled here. The keyboard listener thread is returned without being started.
+    Keyboard events are handled here. 
     """
-    
-    def on_press (key):
-        c = key.char
+    global stopping
+    while True:
+        c = input('').split(" ")[0]
         if c == 'q':
             osc.set_kp(osc.get_kp()*1.1)
         elif c == 'a':
@@ -65,21 +63,22 @@ def gain (osc):
         elif c == 'f':
             osc.freeze = not osc.freeze
             print("Freeze status: {}".format(osc.freeze))
-        
+
+        elif c == 'x':
+            stopping = True
 
         print("kp = {}, kd = {}".format(osc.get_kp(), osc.get_kd()))
-
-    listener = keyboard.Listener(on_press=on_press)
-
-    return listener
     
 
 
 def printer (osc):
+    """
+    Periodically print information
+    """
     rate = 0.3
 
     while True:
-        x = osc.get_x
+        x = osc.get_x()
 
         print("------------------------------------")
         for i, obj in enumerate(osc.get_objects()):
@@ -102,7 +101,8 @@ if __name__ == '__main__':
 
 
     # Set variables
-    global x_ref, dx_ref, ddx_ref   # TODO: Ideally we don't want global variables
+    global x_ref, dx_ref, ddx_ref, stopping   # TODO: Ideally we don't want global variables
+    stopping = False
     x_ref = np.array([0.15, 0.0, -0.2])
     dx_ref = np.array([0.0, 0.0, 0.0])
     ddx_ref = np.array([0.0, 0.0, 0.0])
@@ -124,16 +124,16 @@ if __name__ == '__main__':
 
     input("Press ENTER for initial x_ref...")
 
-    osc.set_ref(x_ref, dx_ref)
+    osc.set_ref(x_ref, dx_ref, ddx_ref)
 
     input("Press ENTER for starting everything...")
 
     # Start events for receiving and processing keyboard inputs
-    gain_thread = gain(osc)
+    gain_thread = StoppableThread(target=gain, name="Gain", args=(osc,))
     gain_thread.start()
 
     try:
-        while True:
+        while not stopping:
             circle = np.array([r * np.cos(coef*t), r * np.sin(coef*t), -0.215])
             d_circle = np.array([-r * coef * np.sin(coef*t), r * coef * np.cos(coef*t), 0])
             dd_circle = np.array([-r * coef * coef * np.cos(coef*t), -r * coef * coef * np.sin(coef*t), 0])
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         x_ref = np.array([-0.15, 0.0, -0.2])
         dx_ref[0] = -10
 
-        osc.set_ref(x_ref, dx_ref)
+        osc.set_ref(x_ref, dx_ref, ddx_ref)
         time.sleep(0.2)
 
         # Release
@@ -158,7 +158,7 @@ if __name__ == '__main__':
 
         # Reset
         dx_ref[0] = 0
-        osc.set_ref(x_ref, dx_ref)
+        osc.set_ref(x_ref, dx_ref, ddx_ref)
         time.sleep(3)
 
     finally:

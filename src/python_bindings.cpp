@@ -93,7 +93,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         return x;
     })
     .def("get_kp", &OSC::get_kp)
-    .def("set_kd", &OSC::set_kp)
+    .def("set_kp", &OSC::set_kp)
     .def("get_kd", &OSC::get_kd)
     .def("set_kd", &OSC::set_kd)
     .def("get_objects", &OSC::get_objects)
