@@ -12,20 +12,20 @@ public:
     Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type = CurvatureCalculator::SensorType::qualisys, int objects = 0);
     void increase_kd();
     void increase_kp();
-    void increase_gamma1();
-    void increase_gamma2();
+    void increase_gamma();
+    void increase_alpha();
     void increase_delta();
-    void increase_rate();
+    void increase_rate1();
+    void increase_rate2();
     void increase_eps();   
-    void increase_lambda(); 
     void decrease_kd();
     void decrease_kp();
-    void decrease_gamma1();
-    void decrease_gamma2();
+    void decrease_gamma();
+    void decrease_alpha();
     void decrease_delta();
-    void decrease_rate();   
-    void decrease_eps();   
-    void decrease_lambda();    
+    void decrease_rate1();   
+    void decrease_rate2(); 
+    void decrease_eps();      
     void increase_damping();
     void decrease_damping();
     void increase_stiffness(int seg);
@@ -35,6 +35,9 @@ public:
     VectorXd x_qualisys = VectorXd::Zero(3);
     VectorXd Ka = VectorXd::Ones(11);
     VectorXd a = VectorXd::Zero(11);
+    VectorXd Kb = VectorXd::Ones(4);
+    VectorXd b = VectorXd::Zero(4);    
+    double gamma2;
 
 private:
     void control_loop();
@@ -44,13 +47,17 @@ private:
     VectorXd sat(VectorXd x, double delta);
     MatrixXd computePinv(MatrixXd J, double e, double lambda);
     VectorXd Ka_ = VectorXd::Ones(11);
+    VectorXd Kb_ = VectorXd::Ones(4);
     VectorXd Kp = VectorXd::Zero(3);
     VectorXd Kd = VectorXd::Zero(3);   
     MatrixXd J_inv;
     MatrixXd Ainv;
     VectorXd aDot = VectorXd::Zero(11);
-    VectorXd a_min = VectorXd::Zero(11);
+    VectorXd bDot = VectorXd::Zero(4);
+    VectorXd a_min = 0.00001*VectorXd::Ones(11);
+    VectorXd b_min = 0.00001*VectorXd::Ones(4);
     VectorXd a_max = 0.3*VectorXd::Ones(11);    
+    VectorXd b_max = 0.02*VectorXd::Ones(4);      
     VectorXd tau = VectorXd::Zero(4);
     VectorXd s = VectorXd::Zero(4);   
     VectorXd s_d = VectorXd::Zero(4); //boundary layer manifold
@@ -60,10 +67,11 @@ private:
     VectorXd vDot = VectorXd::Zero(3);       
     double eps;
     double lambda;
-    double gamma1;
-    double gamma2;
+    double gamma;
     double delta; //boundary layer tickness
-    double rate; //variation rate of estimates
+    double rate1; //variation rate of estimates
+    double rate2; //variation rate of estimates
     double knd; //nullspace damping gain
     double alpha;
+    double eps_custom; // for singularity
 };

@@ -14,17 +14,19 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma1 = 0.001;    //control gains
-    gamma2 = 0.01; //control gains
+    gamma = 0.001;    //control gains
+    b = 0.001*VectorXd::Ones(4); //control gains
 
     delta = 0.05; //boundary layer tickness
 
-    rate = 0.0000001; //variation rate of estimates; may remove one zero
+    rate1 = 0.0000001; //variation rate of estimates; may remove one zero
+    rate2 = 0.0000001; //variation rate of estimates; may remove one zero
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
     alpha = 0.75; //Finite time stability
 
+    eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
     a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2500, 0.150;
@@ -72,12 +74,14 @@ void Adaptive::control_loop()
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
 
         aDot = -1 * Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
-        a = a + rate * dt * aDot;                         //integrate the estimated dynamic parameters parameters
+        a = a + rate1 * dt * aDot;                         //integrate the estimated dynamic parameters parameters
+        bDot = s_d.array().abs();
+        b = b + rate2 * dt * Kb.asDiagonal() * bDot;
         avoid_drifting();                                 // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
-        tau = Ainv * lag.Y * a - gamma1 * s - gamma2 * sat(s, delta); // compute the desired toque in xy
+        tau = Ainv * lag.Y * a - gamma * s - b.asDiagonal() * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
         actuate(p);                                                   // control the valves
     }
@@ -118,7 +122,6 @@ Eigen::MatrixXd Adaptive::computePinv(Eigen::MatrixXd j, double e, double lambda
 void Adaptive::avoid_singularity(srl::State &state)
 {
     double r;
-    double eps_custom = 0.05;
     for (int idx = 0; idx < state.q.size(); idx++)
     {
         r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
@@ -137,6 +140,16 @@ void Adaptive::avoid_drifting() //keeps the dynamic parameters within the range
         }
         else
             Ka(i) = Ka_(i);
+    }
+    for (int i = 0; i < Kb.size(); i++)
+    {
+        if (b(i) < b_min(i) || b(i) > b_max(i))
+        {
+            Kb(i) = 0;
+            b(i) = std::min(b_max(i), std::max(b(i), b_min(i)));
+        }
+        else
+            Kb(i) = Kb_(i);
     }
 }
 
@@ -188,28 +201,16 @@ void Adaptive::decrease_kp()
     fmt::print("kp = {}\n", Kp(0));
 }
 
-void Adaptive::increase_gamma1()
+void Adaptive::increase_gamma()
 {
-    this->gamma1 = 1.1 * this->gamma1;
-    fmt::print("gamma1 = {}\n", gamma1);
+    this->gamma = 1.1 * this->gamma;
+    fmt::print("gamma = {}\n", gamma);
 }
 
-void Adaptive::decrease_gamma1()
+void Adaptive::decrease_gamma()
 {
-    this->gamma1 = 0.9 * this->gamma1;
-    fmt::print("gamma1 = {}\n", gamma1);
-}
-
-void Adaptive::increase_gamma2()
-{
-    this->gamma2 = 1.1 * this->gamma2;
-    fmt::print("gamma2 = {}\n", gamma2);
-}
-
-void Adaptive::decrease_gamma2()
-{
-    this->gamma2 = 0.9 * this->gamma2;
-    fmt::print("gamma2 = {}\n", gamma2);
+    this->gamma = 0.9 * this->gamma;
+    fmt::print("gamma = {}\n", gamma);
 }
 
 void Adaptive::increase_delta()
@@ -224,40 +225,40 @@ void Adaptive::decrease_delta()
     fmt::print("delta = {}\n", delta);
 }
 
-void Adaptive::increase_rate()
+void Adaptive::increase_rate1()
 {
-    this->rate = 1.1 * this->rate;
-    fmt::print("rate = {}\n", rate);
+    this->rate1 = 1.1 * this->rate1;
+    fmt::print("rate1 = {}\n", rate1);
 }
 
-void Adaptive::decrease_rate()
+void Adaptive::decrease_rate1()
 {
-    this->rate = 0.9 * this->rate;
-    fmt::print("rate = {}\n", rate);
+    this->rate1 = 0.9 * this->rate1;
+    fmt::print("rate1 = {}\n", rate1);
+}
+
+void Adaptive::increase_rate2()
+{
+    this->rate2 = 1.1 * this->rate2;
+    fmt::print("rate2 = {}\n", rate2);
+}
+
+void Adaptive::decrease_rate2()
+{
+    this->rate2 = 0.9 * this->rate2;
+    fmt::print("rate2 = {}\n", rate2);
 }
 
 void Adaptive::increase_eps()
 {
-    this->eps = 1.1 * this->eps;
-    fmt::print("eps = {}\n", eps);
+    this->eps_custom = 1.1 * this->eps_custom;
+    fmt::print("eps_custom = {}\n", eps_custom);
 }
 
 void Adaptive::decrease_eps()
 {
-    this->eps = 0.9 * this->eps;
-    fmt::print("eps = {}\n", eps);
-}
-
-void Adaptive::increase_lambda()
-{
-    this->lambda = 1.1 * this->lambda;
-    fmt::print("lambda = {}\n", lambda);
-}
-
-void Adaptive::decrease_lambda()
-{
-    this->lambda = 0.9 * this->lambda;
-    fmt::print("lambda = {}\n", lambda);
+    this->eps_custom = 0.9 * this->eps_custom;
+    fmt::print("eps_custom = {}\n", eps_custom);
 }
 
 void Adaptive::increase_stiffness(int seg){

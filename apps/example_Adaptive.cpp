@@ -30,29 +30,29 @@ void gain(Adaptive &ad)
             ad.decrease_kd();
             break;
         case 'e':
-            ad.increase_gamma1();
+            ad.increase_gamma();
             break;
         case 'd':
-            ad.decrease_gamma1();
+            ad.decrease_gamma();
             break;
         case 'r':
-            ad.increase_gamma2();
-            break;
-        case 'f':
-            ad.decrease_gamma2();
-            break;
-        case 't':
             ad.increase_delta();
             break;
-        case 'g':
+        case 'f':
             ad.decrease_delta();
             break;
+        case 't':
+            ad.increase_rate1();
+            break;
+        case 'g':
+            ad.decrease_rate1();
+            break;
         case 'y':
-            ad.increase_rate();
+            ad.increase_rate2();
             break;
         case 'h':
-            ad.decrease_rate();
-            break;
+            ad.decrease_rate2();
+            break;            
         case 'u':
             ad.increase_eps();
             break;
@@ -60,27 +60,21 @@ void gain(Adaptive &ad)
             ad.decrease_eps();
             break;
         case 'i':
-            ad.increase_lambda();
-            break;
-        case 'k':
-            ad.decrease_lambda();
-            break;
-        case 'o':
             ad.increase_stiffness(0);
             break;
-        case 'l':
+        case 'k':
             ad.decrease_stiffness(0);
             break;
-        case 'p':
+        case 'o':
             ad.increase_stiffness(1);
             break;
-        case ';':
+        case 'l':
             ad.decrease_stiffness(1);
             break;
-        case 'n':
+        case 'p':
             ad.increase_damping();
             break;
-        case 'm':
+        case ';':
             ad.decrease_damping();
             break;
          case 'x':
