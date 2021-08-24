@@ -51,7 +51,7 @@ void Adaptive::control_loop()
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         x = lag.p;
-        x_qualiszs = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
+        x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
@@ -62,9 +62,16 @@ void Adaptive::control_loop()
         //state_ref.dq = J_inv * (dx_ref + 0.1*Kp.asDiagonal() * (x_ref - x));
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
         v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
+<<<<<<< HEAD
         state_ref.dq = J_inv * (dx_ref + v);
         vDot = alpha*Kp.array()*e.array().abs().pow(alpha-1)*eDot.array();
         state_ref.ddq = J_inv * (ddx_ref + vDot -lag.JDot * state_ref.dq);
+=======
+        //state_ref.dq = J_inv * (dx_ref + 0.1*v);
+        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*Kp.asDiagonal() * (x_ref - x));
+        vDot = alpha*Kd.array()*e.array().abs().pow(alpha-1)*eDot.array();
+        state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
+>>>>>>> b26331e65e310a9dde3a4da6abbb0a90676c1b36
         lag.update(state, state_ref); //update again for state_ref to get Y
 
         s = state.dq - state_ref.dq;     //sliding manifold
@@ -289,7 +296,7 @@ void Adaptive::change_ref()
 
 void Adaptive::show_x()
 {
-    fmt::print("qlysis_position = {}\n", x_qualiszs);
+    fmt::print("qlysis_position = {}\n", x_qualisys);
 }
 
 
