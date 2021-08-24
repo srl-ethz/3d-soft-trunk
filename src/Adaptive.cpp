@@ -7,7 +7,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     filename = "ID_logger";
 
     Kp << 75.0, 75.0, 75.0; //control gains
-    Kd << 0.05, 0.05, 0.05;       //control gains
+    Kd << 0.1, 0.1, 0.1;       //control gains
     knd = 10.0;                //null space damping gain
     dt = 1. / 100;             //controller's rate
 
@@ -15,11 +15,11 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     lambda = 0.05; //for pinv of Jacobian
 
     gamma1 = 0.001;    //control gains
-    gamma2 = 0.001; //control gains
+    gamma2 = 0.01; //control gains
 
     delta = 0.05; //boundary layer tickness
 
-    rate = 0.0000001; //variation rate of estimates
+    rate = 0.0000001; //variation rate of estimates; may remove one zero
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -27,7 +27,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.0100, 0.0100, 0.2500, 0.150;
+    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2500, 0.150;
 }
 
 void Adaptive::control_loop()
@@ -63,7 +63,7 @@ void Adaptive::control_loop()
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
         v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
         //state_ref.dq = J_inv * (dx_ref + 0.1*v);
-        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*1*Kp.asDiagonal() * (x_ref - x));
+        state_ref.dq = J_inv * (dx_ref + 0.3*v + 0.3*1*Kp.asDiagonal() * (x_ref - x));
         vDot = alpha*Kd.array()*e.array().abs().pow(alpha-1)*eDot.array();
         state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + 1*Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
