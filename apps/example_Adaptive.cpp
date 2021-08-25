@@ -134,7 +134,7 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t), r * sin(coef * t), -0.22;
+    x_ref << r * cos(coef * t), r * sin(coef * t), -0.25;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
@@ -152,7 +152,7 @@ int main()
     //Task_8(t, 12.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
     Task_Circle(t, 8, 0.15);
-    //x_ref << 0.0,-0.14,-0.23;
+    //x_ref << 0,-0.14,-0.20;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();

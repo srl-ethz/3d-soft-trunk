@@ -20,7 +20,9 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     delta = 0.05; //boundary layer tickness
 
     rate1 = 0.0000001; //variation rate of estimates; may remove one zero
-    rate2 = 0.0000001; //variation rate of estimates; may remove one zero
+    //rate1 = 0.0;
+    rate2 = 0.00001; //variation rate of estimates; may remove one zero
+    //rate2 = 0.0; //variation rate of estimates; may remove one zero
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -29,7 +31,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2500, 0.150;
+    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2, 0.1;
 }
 
 void Adaptive::control_loop()
@@ -65,7 +67,7 @@ void Adaptive::control_loop()
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
         v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
         //state_ref.dq = J_inv * (dx_ref + 0.1*v);
-        state_ref.dq = J_inv * (dx_ref + 0.3*v + 0.3*1*Kp.asDiagonal() * (x_ref - x));
+        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*1*Kp.asDiagonal() * (x_ref - x));
         vDot = alpha*Kd.array()*e.array().abs().pow(alpha-1)*eDot.array();
         state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + 1*Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
@@ -80,6 +82,7 @@ void Adaptive::control_loop()
         avoid_drifting();                                 // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
+        cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a - gamma * s - b.asDiagonal() * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure

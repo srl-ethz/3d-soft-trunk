@@ -40,7 +40,9 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
 
         double angle = atan2(x(1),x(0))*180/3.14156;
+        angle += 90;
         if (angle < 0) angle+=360;
+        if (angle > 360) angle-=360;
 
         fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
 
