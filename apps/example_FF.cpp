@@ -9,15 +9,17 @@ int main(){
     cpcc.set_log_filename("feedforward_log");
     VectorXd p = VectorXd::Zero(6);
     double time = 0;
-    srl::Rate r{1./0.1};
+    double dt = 0.01;
+    double T = 18;
+    srl::Rate r{1. /dt};
     cpcc.toggle_log();
-    while(time < 36){
+    while(time < 2*T){
         
         for (int i = 0; i < 3; i++){
-            cpcc.p(3+i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
+            cpcc.p(3+i) = 300*pow(sin(time*2*PI/T + i*2*PI/3),2);
         };
         for (int i = 0; i < 3; i++){
-            cpcc.p(i) = 500*pow(sin(time*2*PI/18 + i*2*PI/3),2);
+            cpcc.p(i) = 300*pow(sin(time*2*PI/T + i*2*PI/3),2);
         };
         /*
         cpcc.p(0) = 0;
@@ -29,7 +31,8 @@ int main(){
         */ 
         cpcc.cc->get_curvature(cpcc.state);
         cpcc.actuate(cpcc.p);
-        time += 0.1;
+        time += dt;
+        std::cout << time << "\n";
         r.sleep();
     };
     cpcc.toggle_log();
