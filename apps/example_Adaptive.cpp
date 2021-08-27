@@ -162,11 +162,11 @@ int main()
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 1);
 
     double t = 0.0;
-    double dt = 2./350;
+    double dt = 1./200;
     //Task_8(t, 12.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
     Task_Circle(t, 8, 0.12);
-    //x_ref << 0.12,0.0,-0.22;
+    x_ref << 0.12,0.0,-0.22;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();

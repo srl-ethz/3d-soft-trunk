@@ -67,7 +67,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
+        if (pressure_pseudo.segment(2*i,2).norm() > 550) pressure_pseudo.segment(2*i,2) *= 550/pressure_pseudo.segment(2*i,2).norm();
 /*
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
