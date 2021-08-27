@@ -166,23 +166,23 @@ int main()
     //Task_8(t, 12.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
     Task_Circle(t, 8, 0.12);
-    x_ref << 0.12,0.0,-0.22;
+    //x_ref << 0.12,0.0,-0.22;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();
+    Vector3d x_dum = ad.x_qualisys;
     while (true)
     {
         //Task_8(t, 12.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
         ad.set_ref(x_ref, dx_ref, ddx_ref);
-        /*
-        Vector3d x_dum = ad.x_qualisys;
+        x_dum = ad.x_qualisys;
         if ((x_dum - ad.get_objects()[0]).norm() < 0.07 && (x_dum - ad.get_objects()[0]).norm() > 0.001 &&  !gripping){
             ad.toggleGripper();
             gripping = true;
         }
-        */
+        
         t += dt;
         srl::sleep(dt);
     }
