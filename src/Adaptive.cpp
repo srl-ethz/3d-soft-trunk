@@ -67,7 +67,7 @@ void Adaptive::control_loop()
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
         v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
         //state_ref.dq = J_inv * (dx_ref + 0.1*v);
-        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*1*Kp.asDiagonal() * (x_ref - x));
+        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*Kp.asDiagonal() * (x_ref - x));
         vDot = alpha*Kd.array()*e.array().abs().pow(alpha-1)*eDot.array();
         state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + 1*Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
@@ -286,15 +286,41 @@ void Adaptive::decrease_damping(){
     fmt::print("damping: {}\n", this->a[8]);
 }
 
-void Adaptive::change_ref()
+void Adaptive::increase_alpha(){
+    this->alpha = this->alpha * 1.1;
+    fmt::print("alpha: {}\n", this->alpha);
+}
+
+void Adaptive::decrease_alpha(){
+    this->alpha = this->alpha * 0.9;
+    fmt::print("alpha: {}\n", this->alpha);
+}
+void Adaptive::change_ref1()
 {
-    x_ref << 0.0,0.14,-0.23;
+    x_ref << 0.15,0.0,-0.25;
+    fmt::print("position_changed = {}\n", x_ref);
+}
+void Adaptive::change_ref2()
+{
+    x_ref << 0.0,0.15,-0.25;
+    fmt::print("position_changed = {}\n", x_ref);
+}
+void Adaptive::change_ref3()
+{
+    x_ref << -0.15,0.0,-0.25;
+    fmt::print("position_changed = {}\n", x_ref);
+}
+void Adaptive::change_ref4()
+{
+    x_ref << 0.0,-0.15,-0.25;
     fmt::print("position_changed = {}\n", x_ref);
 }
 
 void Adaptive::show_x()
 {
     fmt::print("qlysis_position = {}\n", x_qualisys);
+    fmt::print("FK_position = {}\n", this->x);
+
 }
 
 
