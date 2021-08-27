@@ -1,5 +1,7 @@
 #include "3d-soft-trunk/Adaptive.h"
+#include <chrono>
 using namespace std;
+
 
 Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects)
 {
@@ -9,7 +11,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp << 75.0, 75.0, 75.0; //control gains
     Kd << 0.1, 0.1, 0.1;       //control gains
     knd = 10.0;                //null space damping gain
-    dt = 1. / 100;             //controller's rate
+    dt = 1. / 200;             //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
@@ -31,7 +33,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2, 0.1;
+    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.16, 0.06;
 }
 
 void Adaptive::control_loop()
@@ -46,12 +48,18 @@ void Adaptive::control_loop()
     while (true)
     {
         r.sleep();
+        
         std::lock_guard<std::mutex> lock(mtx);
+        
         cc->get_curvature(state);
-        stm->updateState(state);
+        //stm->updateState(state);
 
         avoid_singularity(state);
+        //auto start = std::chrono::system_clock::now(); 
         lag.update(state, state_ref);
+        /*auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        cout << elapsed.count() << "s\n";*/
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         x = lag.p;
@@ -67,9 +75,9 @@ void Adaptive::control_loop()
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
         v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
         //state_ref.dq = J_inv * (dx_ref + 0.1*v);
-        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*Kp.asDiagonal() * (x_ref - x));
+        state_ref.dq = J_inv * (dx_ref + 0.1*v + 0.1*0*Kp.asDiagonal() * (x_ref - x));
         vDot = alpha*Kd.array()*e.array().abs().pow(alpha-1)*eDot.array();
-        state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + 1*Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
+        state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + 0*Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
 
         s = state.dq - state_ref.dq;     //sliding manifold
@@ -82,11 +90,12 @@ void Adaptive::control_loop()
         avoid_drifting();                                 // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
-        cout << "\nb \n " << b << "\n\n";
+        //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, eps, lambda);                       // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a - gamma * s - b.asDiagonal() * sat(s, delta); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
         actuate(p);                                                   // control the valves
+        
     }
 }
 
@@ -297,29 +306,30 @@ void Adaptive::decrease_alpha(){
 }
 void Adaptive::change_ref1()
 {
-    x_ref << 0.15,0.0,-0.25;
+    x_ref << 0.12,0.0,-0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref2()
 {
-    x_ref << 0.0,0.15,-0.25;
+    x_ref << 0.0,0.12,-0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref3()
 {
-    x_ref << -0.15,0.0,-0.25;
+    x_ref << -0.12,0.0,-0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref4()
 {
-    x_ref << 0.0,-0.15,-0.25;
+    x_ref << 0.0,-0.12,-0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 
 void Adaptive::show_x()
 {
+    fmt::print("desried_position = {}\n", x_ref);
     fmt::print("qlysis_position = {}\n", x_qualisys);
-    fmt::print("FK_position = {}\n", this->x);
+    fmt::print("FK_position = {}\n", x);
 
 }
 

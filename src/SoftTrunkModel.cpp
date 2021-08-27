@@ -67,8 +67,8 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i,2).norm() > 550) pressure_pseudo.segment(2*i,2) *= 550/pressure_pseudo.segment(2*i,2).norm();
-
+        if (pressure_pseudo.segment(2*i,2).norm() > 500) pressure_pseudo.segment(2*i,2) *= 500/pressure_pseudo.segment(2*i,2).norm();
+/*
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
         angle = angle - 90;
@@ -87,7 +87,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         
         pressure_pseudo(2*i) = r*cos(angle*deg2rad);
         pressure_pseudo(2*i+1) = -r*sin(angle*deg2rad);
-
+*/
         output.segment(3*i, 3) = chamberMatrix_inv * pressure_pseudo.segment(2*i, 2); //invert back onto real chambers
 
         double min_p = output.segment(3*i, 3).minCoeff();
@@ -95,7 +95,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
 
       
-        if (angle < 0) angle += 360;
+        //if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
     /*    
         if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(7.562449547408951e-09*pow(angle-0,3) + -4.714017397413665e-06*pow(angle-0,2) + 0.0008256935837479449*(angle-0) + 0.10016628308507498);

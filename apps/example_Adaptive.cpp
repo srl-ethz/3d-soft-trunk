@@ -148,7 +148,7 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t), r * sin(coef * t), -0.25;
+    x_ref << r * cos(coef * t), r * sin(coef * t), -0.22;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
@@ -162,11 +162,11 @@ int main()
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 1);
 
     double t = 0.0;
-    double dt = 0.1;
+    double dt = 2./350;
     //Task_8(t, 12.0, 0.1);
     //Task_Rose(t, 20.0, 0.1);
-    //Task_Circle(t, 8, 0.15);
-    x_ref << 0.15,0.0,-0.25;
+    Task_Circle(t, 8, 0.12);
+    //x_ref << 0.12,0.0,-0.22;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();
@@ -174,7 +174,7 @@ int main()
     {
         //Task_8(t, 12.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        //Task_Circle(t, 8, 0.15); // circular traj. with radius 0.15m and period 8s
+        Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
         ad.set_ref(x_ref, dx_ref, ddx_ref);
         /*
         Vector3d x_dum = ad.x_qualisys;
