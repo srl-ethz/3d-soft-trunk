@@ -110,23 +110,66 @@ void gain(Adaptive &ad)
     }
 }
 
-void Task_8(double t, double T, double a)
+void Task_8(double t, double T, double r, double offset)
 {
-// a proportional to radious of leafs
-  double px_tmp_tmp = 6.2831853071795862 / T * t;
-  double px_tmp = std::sin(px_tmp_tmp);
-  x_ref[0] = 2.0 * a * px_tmp * std::cos(px_tmp_tmp);
-  x_ref[1] = a * px_tmp;
-  x_ref[2] = -0.22;
-  px_tmp_tmp = 12.566370614359172 * t / T;
-  dx_ref[0] = 4.0 * a * 3.1415926535897931 * std::cos(px_tmp_tmp) / T;
-  px_tmp = 6.2831853071795862 * t / T;
-  dx_ref[1] = 2.0 * a * 3.1415926535897931 * std::cos(px_tmp) / T;
-  dx_ref[2] = 0.0;
-  double ddp_tmp = T * T;
-  ddx_ref[0] = -(16.0 * a * 9.869604401089358 * std::sin(px_tmp_tmp)) / ddp_tmp;
-  ddx_ref[1] = -(4.0 * a * 9.869604401089358 * std::sin(px_tmp)) / ddp_tmp;
-  ddx_ref[2] = 0.0;
+  double dpy_tmp;
+  double dpy_tmp_tmp;
+  double dpz_tmp;
+  double px_tmp_tmp;
+  double px_tmp_tmp_tmp;
+
+  //  offset = 0.03;
+  px_tmp_tmp_tmp = 6.2831853071795862 / T * t;
+  px_tmp_tmp = std::sin(px_tmp_tmp_tmp);
+
+  //  syms x0 y0 z0 s a t T offset
+  //  simplify(expand(diff(dpz,t)))
+  dpy_tmp_tmp = 12.566370614359172 * t / T;
+  dpy_tmp = std::cos(dpy_tmp_tmp);
+  dpz_tmp = std::sin(dpy_tmp_tmp);
+  x_ref[0] = r * px_tmp_tmp;
+  x_ref[1] = 2.0 * r * px_tmp_tmp * std::cos(px_tmp_tmp_tmp);
+  x_ref[2] = offset * (px_tmp_tmp * px_tmp_tmp) + -0.22;
+  dpy_tmp_tmp = 6.2831853071795862 * t / T;
+  dx_ref[0] = 2.0 * r * 3.1415926535897931 * std::cos(dpy_tmp_tmp) / T;
+  dx_ref[1] = 4.0 * r * 3.1415926535897931 * dpy_tmp / T;
+  dx_ref[2] = 2.0 * offset * 3.1415926535897931 * dpz_tmp / T;
+  px_tmp_tmp_tmp = T * T;
+  ddx_ref[0] = -(4.0 * r * 9.869604401089358 * std::sin(dpy_tmp_tmp)) /
+    px_tmp_tmp_tmp;
+  ddx_ref[1] = -(16.0 * r * 9.869604401089358 * dpz_tmp) / px_tmp_tmp_tmp;
+  ddx_ref[2] = 8.0 * offset * 9.869604401089358 * dpy_tmp / px_tmp_tmp_tmp;
+}
+
+void Task_88(double t, double T, double r, double offset)
+{
+  double dpx_tmp;
+  double dpx_tmp_tmp;
+  double dpz_tmp;
+  double px_tmp_tmp;
+  double px_tmp_tmp_tmp;
+
+  //  offset = 0.03;
+  px_tmp_tmp_tmp = 6.2831853071795862 / T * t;
+  px_tmp_tmp = std::sin(px_tmp_tmp_tmp);
+
+  //  syms x0 y0 z0 s r t T offset
+  //  simplify(expand(diff(px,t)))
+  dpx_tmp_tmp = 12.566370614359172 * t / T;
+  dpx_tmp = std::cos(dpx_tmp_tmp);
+  dpz_tmp = std::sin(dpx_tmp_tmp);
+  x_ref[0] = 2.0 * r * px_tmp_tmp * std::cos(px_tmp_tmp_tmp);
+  x_ref[1] = r * px_tmp_tmp;
+  x_ref[2] = offset * (px_tmp_tmp * px_tmp_tmp) + -0.22;
+  dx_ref[0] = 4.0 * r * 3.1415926535897931 * dpx_tmp / T;
+  dpx_tmp_tmp = 6.2831853071795862 * t / T;
+  dx_ref[1] = 2.0 * r * 3.1415926535897931 * std::cos(dpx_tmp_tmp) / T;
+  dx_ref[2] = 2.0 * offset * 3.1415926535897931 * dpz_tmp / T;
+  px_tmp_tmp_tmp = T * T;
+  ddx_ref[0] = -(16.0 * r * 9.869604401089358 * dpz_tmp) / px_tmp_tmp_tmp;
+  ddx_ref[1] = -(4.0 * r * 9.869604401089358 * std::sin(dpx_tmp_tmp)) /
+    px_tmp_tmp_tmp;
+  ddx_ref[2] = 8.0 * offset * 9.869604401089358 * dpx_tmp / px_tmp_tmp_tmp;
 }
 
 void Task_Rose(double t, double T, double a)
@@ -173,7 +216,7 @@ int main()
     double t = 0.0;
     double dt = 1./200;
     std::thread gain_thread(gain, std::ref(ad));
-    Task_8(t, 10.0, 0.1);
+    Task_8(t, 10.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
     //Task_Circle(t, 8, 0.12);
     //x_ref << 0.12,0.0,-0.22;
@@ -183,7 +226,7 @@ int main()
     while (true)
     {
         //std::cout << x_ref << "\n";
-        Task_8(t, 10.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
+        Task_8(t, 10.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
         ad.set_ref(x_ref, dx_ref, ddx_ref);
