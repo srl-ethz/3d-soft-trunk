@@ -72,7 +72,7 @@ void Adaptive::control_loop()
         std::lock_guard<std::mutex> lock(mtx);
 
         cc->get_curvature(state);
-        avoid_singularity(state);
+        //avoid_singularity(state);
         //auto start = std::chrono::system_clock::now();
         lag.update(state, state_ref);
         /*auto end = std::chrono::system_clock::now();
