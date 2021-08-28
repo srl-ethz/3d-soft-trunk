@@ -35,6 +35,8 @@ public:
     void change_ref2();
     void change_ref3();
     void change_ref4();
+    void start_AD();
+    void start_ID();
     VectorXd x_qualisys = VectorXd::Zero(3);
     VectorXd Ka = VectorXd::Ones(11);
     VectorXd a = VectorXd::Zero(11);
@@ -77,4 +79,5 @@ private:
     double knd; //nullspace damping gain
     double alpha;
     double eps_custom; // for singularity
+    double zz; // enable disable ID/AD
 };

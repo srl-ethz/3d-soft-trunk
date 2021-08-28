@@ -20,10 +20,10 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     delta = 0.05; //boundary layer tickness
 
-    rate1 = 0.0000001; //variation rate of estimates; may remove one zero
-    //rate1 = 0.0;
-    rate2 = 0.00001; //variation rate of estimates; may remove one zero
-    //rate2 = 0.0; //variation rate of estimates; may remove one zero
+   // rate1 = 0.0000001; //variation rate of estimates; may remove one zero
+    rate1 = 0.0;
+    //rate2 = 0.000001; //variation rate of estimates; may remove one zero
+    rate2 = 0.0; //variation rate of estimates; may remove one zero
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -34,6 +34,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
     a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.001, 0.001, 0.12, 0.08;
+
+    zz = 1;
     /*
     m1 = 0.18;
     m2 = 0.086+0.025;
@@ -109,7 +111,7 @@ void Adaptive::control_loop()
         //cout << "\na \n " << a << "\n\n";
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.005, 0.001);                             // compute pesudoinverse of mapping matrix
-        tau = Ainv * lag.Y * a - gamma * s - b.asDiagonal() * sat(s, delta); // compute the desired toque in xy
+        tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);           // compute the desired pressure
         actuate(p);                                                          // control the valves
     }
@@ -352,4 +354,21 @@ void Adaptive::show_x()
     fmt::print("desried_position = {}\n", x_ref);
     fmt::print("qlysis_position = {}\n", x_qualisys);
     fmt::print("FK_position = {}\n", x);
+}
+
+void Adaptive::start_AD()
+{
+    fmt::print("Adaptive Controller is activated!\n");
+    this->rate1 = 0.0000001;
+    this->rate2 = 0.000001;
+    this->zz = 1;
+}
+void Adaptive::start_ID()
+{
+    fmt::print("Inverse Dynamics Controller is activated!\n");
+    this->rate1 = 0;
+    this->rate2 = 0;
+    this->gamma = 0;
+    this->zz = 0;
+
 }

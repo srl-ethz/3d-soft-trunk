@@ -103,6 +103,9 @@ void gain(Adaptive &ad)
             break;
         case 'c':
             pause = false;
+            ad.toggle_log();
+            ad.start_AD();
+           // ad.start_ID();
         }
     }
 }
@@ -114,7 +117,7 @@ void Task_8(double t, double T, double a)
   double px_tmp = std::sin(px_tmp_tmp);
   x_ref[0] = 2.0 * a * px_tmp * std::cos(px_tmp_tmp);
   x_ref[1] = a * px_tmp;
-  x_ref[2] = -0.25;
+  x_ref[2] = -0.22;
   px_tmp_tmp = 12.566370614359172 * t / T;
   dx_ref[0] = 4.0 * a * 3.1415926535897931 * std::cos(px_tmp_tmp) / T;
   px_tmp = 6.2831853071795862 * t / T;
@@ -137,7 +140,7 @@ void Task_Rose(double t, double T, double a)
     dpx_tmp_tmp = a * std::cos(2.0 * t * f);
     x_ref[0] = dpx_tmp_tmp * std::cos(p_tmp);
     x_ref[1] = dpx_tmp_tmp * std::sin(p_tmp);
-    x_ref[2] = -0.23;
+    x_ref[2] = -0.22;
     dpx_tmp_tmp = 2.0 * a * 3.1415926535897931;
     p_tmp = pow(b_dpx_tmp_tmp, 3.0);
     dx_ref[0] = -(dpx_tmp_tmp * (5.0 * b_dpx_tmp_tmp - 6.0 * p_tmp)) / T;
@@ -154,7 +157,7 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t) + 0.02, r * sin(coef * t), -0.22;
+    x_ref << r * cos(coef * t) + 0.03, r * sin(coef * t), -0.22;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
@@ -170,22 +173,20 @@ int main()
     double t = 0.0;
     double dt = 1./200;
     std::thread gain_thread(gain, std::ref(ad));
+    Task_8(t, 10.0, 0.1);
+    //Task_Rose(t, 20.0, 0.1);
+    //Task_Circle(t, 8, 0.12);
+    //x_ref << 0.12,0.0,-0.22;
     ad.set_ref(x_ref, dx_ref, ddx_ref);
-    ad.toggle_log();
     Vector3d x_dum = ad.x_qualisys;
-    
-    while (pause){
-        //Task_8(t, 12.0, 0.1);
-        //Task_Rose(t, 20.0, 0.1);
-        //Task_Circle(t, 8, 0.12);
-        x_ref << 0.12,0.0,-0.22;
-    }
+    while (pause){}
     while (true)
     {
-        //Task_8(t, 12.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
-        //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
+        //std::cout << x_ref << "\n";
+        Task_8(t, 10.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
+        //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
-        //ad.set_ref(x_ref, dx_ref, ddx_ref);
+        ad.set_ref(x_ref, dx_ref, ddx_ref);
         /*
         x_dum = ad.x_qualisys;
         if ((x_dum - ad.get_objects()[0]).norm() < 0.07 && (x_dum - ad.get_objects()[0]).norm() > 0.001 &&  !gripping){
