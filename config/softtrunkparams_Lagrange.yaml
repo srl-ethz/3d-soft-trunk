@@ -6,9 +6,9 @@ num_segments: 2
 #PCC sections per segment
 sections_per_segment: 1
 #Masses of segments and connectors, starting at topmost segment
-masses: [0.180, 0.105]
+masses: [0.180, 0.111]
 #Lengths of segments and connectors, starting at topmost segment
-lengths: [0.14616, 0.1189]
+lengths: [0.16, 0.12]
 #Diameters of segment top and bottoms, contains num_seg+1 values
 diameters: [0.035, 0.028, 0.0198]
 #Angle of arm relative to upright position
@@ -18,8 +18,8 @@ shear_modulus: [35000,62000]
 #Drag coefficients of the segments
 drag_coef: [28000,8000]
 #Drag coefficients for phi,theta representation
-d_vect: [0.01,0.01]
+d_vect: [0.001,0.001]
 #Stiffness coefs for phi,theta representation (?)
-k_vect: [0.15,0.07]
+k_vect: [0.12,0.08]
 model: augmented
 ...

@@ -2,22 +2,21 @@
 #include <chrono>
 using namespace std;
 
-
 Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects)
 {
 
     filename = "ID_logger";
 
-    Kp = 126*VectorXd::Ones(3);
-    Kd = 0.032*VectorXd::Ones(3);      //control gains
-    knd = 10.0;                //null space damping gain
-    dt = 1. / 150;             //controller's rate
+    Kp = 126 * VectorXd::Ones(3);
+    Kd = 0.032 * VectorXd::Ones(3); //control gains
+    knd = 10.0;                     //null space damping gain
+    dt = 1. / 150;                  //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
-    gamma = 0.0003;    //control gains
-    b = 0.001*VectorXd::Ones(4); //control gains
+    gamma = 0.0003;                //control gains
+    b = 0.001 * VectorXd::Ones(4); //control gains
 
     delta = 0.05; //boundary layer tickness
 
@@ -33,7 +32,25 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
+    //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
+    a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.001, 0.001, 0.12, 0.08;
+    /*
+    m1 = 0.18;
+    m2 = 0.086+0.025;
+    L1 = 0.16; 
+    L2 = 0.12;
+    a_(1) = m1*L1^2;
+    a_(2) = m2*L1^2;
+    a_(3) = m2*L2^2;
+    a_(4) = m2*L1*L2;
+    a_(5) = m1*L1;
+    a_(6) = m2*L1;
+    a_(7) = m2*L2;
+    a_(8) = d_vect1;
+    a_(9) = d_vect2;
+    a_(10) = k_vect1;
+    a_(11) = k_vect2;
+    */
 }
 
 void Adaptive::control_loop()
@@ -45,17 +62,16 @@ void Adaptive::control_loop()
 
     Lagrange lag(st_params_l);
     srl::Rate r{1. / dt};
+    stm->updateState(state);
     while (true)
     {
         r.sleep();
-        
-        std::lock_guard<std::mutex> lock(mtx);
-        
-        cc->get_curvature(state);
-        //stm->updateState(state);
 
+        std::lock_guard<std::mutex> lock(mtx);
+
+        cc->get_curvature(state);
         avoid_singularity(state);
-        //auto start = std::chrono::system_clock::now(); 
+        //auto start = std::chrono::system_clock::now();
         lag.update(state, state_ref);
         /*auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed = end - start;
@@ -64,40 +80,38 @@ void Adaptive::control_loop()
             continue;
         x = lag.p;
 
-        x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
+        //x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
-        x_ref(0) = x_ref(0) + 0.02;
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
 
         //state_ref.dq = J_inv * (dx_ref + 0.1*Kp.asDiagonal() * (x_ref - x));
         //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
-        v = Kp.array()*e.array().abs().pow(alpha)*sat(e, 0).array();
+        v = Kp.array() * e.array().abs().pow(alpha) * sat(e, 0).array();
         //state_ref.dq = J_inv * (dx_ref + 0.1*v);
-        state_ref.dq = J_inv * (dx_ref + 0.05*v + 0.05*1*Kp.asDiagonal() * e);
-        vDot = alpha*Kd.array()*e.array().abs().pow(alpha-1)*eDot.array();
-        state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal()*e + 1*Kd.asDiagonal() * eDot + vDot -lag.JDot * state_ref.dq);
+        state_ref.dq = J_inv * (dx_ref + 0.05 * v + 0.05 * 1 * Kp.asDiagonal() * e);
+        vDot = alpha * Kd.array() * e.array().abs().pow(alpha - 1) * eDot.array();
+        state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal() * e + 1 * Kd.asDiagonal() * eDot + vDot - lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
 
         s = state.dq - state_ref.dq;     //sliding manifold
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
 
         aDot = -1 * Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
-        a = a + rate1 * dt * aDot;                         //integrate the estimated dynamic parameters parameters
+        a = a + rate1 * dt * aDot;                             //integrate the estimated dynamic parameters parameters
         bDot = s_d.array().abs();
         b = b + rate2 * dt * Kb.asDiagonal() * bDot;
-        avoid_drifting();                                 // keep the dynamic parameters within range
+        avoid_drifting(); // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
         //cout << "\nb \n " << b << "\n\n";
-        Ainv = computePinv(lag.A, 0.005, 0.001);                       // compute pesudoinverse of mapping matrix
+        Ainv = computePinv(lag.A, 0.005, 0.001);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a - gamma * s - b.asDiagonal() * sat(s, delta); // compute the desired toque in xy
-        p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);    // compute the desired pressure
-        actuate(p);                                                   // control the valves
-        
+        p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);           // compute the desired pressure
+        actuate(p);                                                          // control the valves
     }
 }
 
@@ -195,12 +209,12 @@ double Adaptive::sign(double val)
 void Adaptive::increase_kd()
 {
     this->Kd = 1.1 * this->Kd;
-    fmt::print("kd = {}\n", Kd(0));      
+    fmt::print("kd = {}\n", Kd(0));
 }
 void Adaptive::increase_kp()
 {
     this->Kp = 1.1 * this->Kp;
-    fmt::print("kp = {}\n", Kp(0));           
+    fmt::print("kp = {}\n", Kp(0));
 }
 
 void Adaptive::decrease_kd()
@@ -275,55 +289,61 @@ void Adaptive::decrease_eps()
     fmt::print("eps_custom = {}\n", eps_custom);
 }
 
-void Adaptive::increase_stiffness(int seg){
-    this->a[9+seg] = this->a[9+seg] * 1.1;
-    fmt::print("stiffness{}: {}\n", seg, this->a[9+seg]);
+void Adaptive::increase_stiffness(int seg)
+{
+    this->a[9 + seg] = this->a[9 + seg] * 1.1;
+    fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
 }
 
-void Adaptive::decrease_stiffness(int seg){
-    this->a[9+seg] = this->a[9+seg] * 0.9;
-    fmt::print("stiffness{}: {}\n", seg, this->a[9+seg]);
+void Adaptive::decrease_stiffness(int seg)
+{
+    this->a[9 + seg] = this->a[9 + seg] * 0.9;
+    fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
 }
 
-void Adaptive::increase_damping(){
+void Adaptive::increase_damping()
+{
     this->a[7] = this->a[7] * 1.1;
     this->a[8] = this->a[8] * 1.1;
     fmt::print("damping: {}\n", this->a[8]);
 }
 
-void Adaptive::decrease_damping(){
+void Adaptive::decrease_damping()
+{
     this->a[7] = this->a[7] * 0.9;
     this->a[8] = this->a[8] * 0.9;
     fmt::print("damping: {}\n", this->a[8]);
 }
 
-void Adaptive::increase_alpha(){
+void Adaptive::increase_alpha()
+{
     this->alpha = this->alpha * 1.1;
     fmt::print("alpha: {}\n", this->alpha);
 }
 
-void Adaptive::decrease_alpha(){
+void Adaptive::decrease_alpha()
+{
     this->alpha = this->alpha * 0.9;
     fmt::print("alpha: {}\n", this->alpha);
 }
 void Adaptive::change_ref1()
 {
-    x_ref << 0.12,0.0,-0.22;
+    x_ref << 0.12, 0.0, -0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref2()
 {
-    x_ref << 0.0,0.12,-0.22;
+    x_ref << 0.0, 0.12, -0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref3()
 {
-    x_ref << -0.12,0.0,-0.22;
+    x_ref << -0.12, 0.0, -0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref4()
 {
-    x_ref << 0.0,-0.12,-0.22;
+    x_ref << 0.0, -0.12, -0.22;
     fmt::print("position_changed = {}\n", x_ref);
 }
 
@@ -332,7 +352,4 @@ void Adaptive::show_x()
     fmt::print("desried_position = {}\n", x_ref);
     fmt::print("qlysis_position = {}\n", x_qualisys);
     fmt::print("FK_position = {}\n", x);
-
 }
-
-

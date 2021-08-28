@@ -1,6 +1,7 @@
 #include "3d-soft-trunk/Adaptive.h"
 
 bool freedom = false;
+bool pause = true;
 Vector3d x_ref;
 Vector3d dx_ref = Vector3d::Zero();
 Vector3d ddx_ref = Vector3d::Zero();
@@ -97,6 +98,11 @@ void gain(Adaptive &ad)
         case 'z':
             ad.show_x();
             break;
+        case 'v':
+            ad.toggleGripper();
+            break;
+        case 'c':
+            pause = false;
         }
     }
 }
@@ -148,7 +154,7 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t), r * sin(coef * t), -0.22;
+    x_ref << r * cos(coef * t) + 0.02, r * sin(coef * t), -0.22;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
@@ -163,26 +169,30 @@ int main()
 
     double t = 0.0;
     double dt = 1./200;
-    //Task_8(t, 12.0, 0.1);
-    //Task_Rose(t, 20.0, 0.1);
-    Task_Circle(t, 8, 0.12);
-    //x_ref << 0.12,0.0,-0.22;
     std::thread gain_thread(gain, std::ref(ad));
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     ad.toggle_log();
     Vector3d x_dum = ad.x_qualisys;
+    
+    while (pause){
+        //Task_8(t, 12.0, 0.1);
+        //Task_Rose(t, 20.0, 0.1);
+        //Task_Circle(t, 8, 0.12);
+        x_ref << 0.12,0.0,-0.22;
+    }
     while (true)
     {
         //Task_8(t, 12.0, 0.1); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 20.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
-        ad.set_ref(x_ref, dx_ref, ddx_ref);
+        //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
+        //ad.set_ref(x_ref, dx_ref, ddx_ref);
+        /*
         x_dum = ad.x_qualisys;
         if ((x_dum - ad.get_objects()[0]).norm() < 0.07 && (x_dum - ad.get_objects()[0]).norm() > 0.001 &&  !gripping){
             ad.toggleGripper();
             gripping = true;
         }
-        
+        */
         t += dt;
         srl::sleep(dt);
     }
