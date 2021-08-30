@@ -214,11 +214,11 @@ int main()
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 1);
 
     double t = 0.0;
-    double dt = 1./200;
+    double dt = 1./150;
     std::thread gain_thread(gain, std::ref(ad));
-    Task_8(t, 12.0, 0.12,0.03);
+    //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
-    //Task_Circle(t, 8, 0.12);
+    Task_Circle(t, 8, 0.12);
     //x_ref << 0.12,0.0,-0.22;
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
@@ -226,11 +226,11 @@ int main()
     while (true)
     {
         //std::cout << x_ref << "\n";
-        Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
+        //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
+        Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
         ad.set_ref(x_ref, dx_ref, ddx_ref);
-        /*
+        /**
         x_dum = ad.x_qualisys;
         if ((x_dum - ad.get_objects()[0]).norm() < 0.07 && (x_dum - ad.get_objects()[0]).norm() > 0.001 &&  !gripping){
             ad.toggleGripper();

@@ -10,20 +10,20 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp = 126 * VectorXd::Ones(3);
     Kd = 0.032 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 150;                  //controller's rate
+    dt = 1. / 100;                  //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
-    lambda = 0.05; //for pinv of Jacobian
+    lambda = 0.02; //for pinv of Jacobian
 
     gamma = 0.0003;                //control gains
     b = 0.001 * VectorXd::Ones(4); //control gains
 
     delta = 0.05; //boundary layer tickness
 
-   // rate1 = 0.0000001; //variation rate of estimates; may remove one zero
-    rate1 = 0.0;
-    //rate2 = 0.000001; //variation rate of estimates; may remove one zero
-    rate2 = 0.0; //variation rate of estimates; may remove one zero
+    rate1 = 0.0000001; //variation rate of estimates; may remove one zero
+    //rate1 = 0.0;
+    rate2 = 0.000001; //variation rate of estimates; may remove one zero
+    //rate2 = 0.0; //variation rate of estimates; may remove one zero
     // maybe use a diag matrix instead of double to decrease this rate for inertia params.
     // already included in Ka
 
@@ -72,7 +72,7 @@ void Adaptive::control_loop()
         std::lock_guard<std::mutex> lock(mtx);
 
         cc->get_curvature(state);
-        //avoid_singularity(state);
+        avoid_singularity(state);
         //auto start = std::chrono::system_clock::now();
         lag.update(state, state_ref);
         /*auto end = std::chrono::system_clock::now();
@@ -82,7 +82,7 @@ void Adaptive::control_loop()
             continue;
         x = lag.p;
 
-        //x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
+        x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
@@ -152,10 +152,10 @@ Eigen::MatrixXd Adaptive::computePinv(Eigen::MatrixXd j, double e, double lambda
 void Adaptive::avoid_singularity(srl::State &state)
 {
     double r;
-    for (int idx = 0; idx < state.q.size(); idx++)
+    for (int idx = 0; idx < state.q.size()/2; idx++)
     {
-        r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
-        state.q[idx] = (r < eps_custom) ? eps_custom : state.q[idx];
+        //r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
+        state.q[2*idx+1] = std::max(eps_custom,std::abs(state.q[2*idx+1]))*sign(state.q[2*idx+1]);;
     }
 }
 
