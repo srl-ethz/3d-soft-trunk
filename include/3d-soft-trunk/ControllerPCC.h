@@ -10,6 +10,7 @@
 #include <mobilerack-interface/ValveController.h>
 #include <mutex>
 #include "Lagrange.h"
+#include <chrono>
 
 /**
  * @brief Implements the PCC controller as described in paper.
@@ -162,6 +163,9 @@ protected:
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
     int objects;
     CurvatureCalculator::SensorType sensor_type;
+
+    double model_time;
+    double tot_time;
 
 private:
     /** @brief forward simulate using beeman method

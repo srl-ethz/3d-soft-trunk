@@ -5,7 +5,7 @@ using namespace std;
 Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects)
 {
 
-    filename = "ID_logger";
+    filename = "Adaptive_logger";
 
     Kp = 126 * VectorXd::Ones(3);
     Kd = 0.032 * VectorXd::Ones(3); //control gains
@@ -70,14 +70,14 @@ void Adaptive::control_loop()
         r.sleep();
 
         std::lock_guard<std::mutex> lock(mtx);
-
+        auto start_tot = std::chrono::system_clock::now();
         cc->get_curvature(state);
         avoid_singularity(state);
-        //auto start = std::chrono::system_clock::now();
+        auto start_mod = std::chrono::system_clock::now();
         lag.update(state, state_ref);
-        /*auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        cout << elapsed.count() << "s\n";*/
+        auto end_mod = std::chrono::system_clock::now();
+        
+    
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         x = lag.p;
@@ -113,7 +113,14 @@ void Adaptive::control_loop()
         Ainv = computePinv(lag.A, 0.005, 0.001);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);           // compute the desired pressure
+        auto end_tot = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
+        std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
+        model_time = elapsed_mod.count();
+        tot_time = elapsed_tot.count();
         actuate(p);                                                          // control the valves
+
+        
     }
 }
 

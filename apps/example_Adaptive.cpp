@@ -211,7 +211,7 @@ int main()
     SoftTrunkParameters st_params{};
     st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
-    Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 1);
+    Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 0);
 
     double t = 0.0;
     double dt = 1./150;
@@ -222,8 +222,9 @@ int main()
     //x_ref << 0.12,0.0,-0.22;
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
-    while (pause){}
-    while (true)
+    getchar();
+    ad.toggle_log();
+    while (t<10)
     {
         //std::cout << x_ref << "\n";
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
