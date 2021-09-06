@@ -5,7 +5,7 @@ import math
 import time
 
 # valve 5 is the gripper. skip
-valves = list(range(6))
+valves = list(range(7))
 max_pressure = 500
 pressure = 300
 num_segments = 3
