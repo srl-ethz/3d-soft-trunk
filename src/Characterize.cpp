@@ -39,19 +39,21 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         stm->updateState(state);
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
 
-        double angle = atan2(x(1),x(0))*180/3.14156;
+        double angle = atan2(state.q(1),-state.q(0))*180/3.14156;
+        angle -= 180;
         if (angle < 0) angle+=360;
+        if (angle > 360) angle -= 360;
 
-        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
+        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(state.q(1)*state.q(1) + state.q(0)*state.q(0)));
 
-        log_file << fmt::format("{},{},{}", (double) i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        log_file << fmt::format("{},{},{}", (double) i, angle, sqrt(state.q(0)*state.q(0)+state.q(1)*state.q(1)));
         ang_err(i) = i - angle;
         if (abs(ang_err(i)) > 180) ang_err(i) -= ((ang_err(i) > 0) - (ang_err(i) < 0))*360;
         angle_vals(i,0) = i*i*i;
         angle_vals(i,1) = i*i;
         angle_vals(i,2) = i;
         angle_vals(i,3) = 1;
-        radii(i) = sqrt(x(0)*x(0)+x(1)*x(1));
+        radii(i) = sqrt(state.q(1)*state.q(1) + state.q(0)*state.q(0));
 
         log_file << "\n";
         r.sleep();
