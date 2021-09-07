@@ -200,7 +200,7 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t) + 0.03, r * sin(coef * t), -0.22;
+    x_ref << r * cos(coef * t)+0.03, r * sin(coef * t), -0.22;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
@@ -215,7 +215,7 @@ int main()
 
     double t = 0.0;
     double dt = 1./150;
-    std::thread gain_thread(gain, std::ref(ad));
+    
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
     Task_Circle(t, 8, 0.12);
@@ -224,7 +224,9 @@ int main()
     Vector3d x_dum = ad.x_qualisys;
     getchar();
     ad.toggle_log();
-    while (t<10)
+    ad.toggleGripper();
+    std::thread gain_thread(gain, std::ref(ad));
+    while (t<40)
     {
         //std::cout << x_ref << "\n";
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s

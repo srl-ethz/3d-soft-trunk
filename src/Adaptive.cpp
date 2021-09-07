@@ -7,15 +7,15 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "Adaptive_logger";
 
-    Kp = 126 * VectorXd::Ones(3);
-    Kd = 0.032 * VectorXd::Ones(3); //control gains
+    Kp = 65 * VectorXd::Ones(3);
+    Kd = 0.12 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 100;                  //controller's rate
+    dt = 1. / 70;                  //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
     lambda = 0.02; //for pinv of Jacobian
 
-    gamma = 0.0003;                //control gains
+    gamma = 0.0001;                //control gains
     b = 0.001 * VectorXd::Ones(4); //control gains
 
     delta = 0.05; //boundary layer tickness
