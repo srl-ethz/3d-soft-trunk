@@ -163,9 +163,9 @@ int main(){
     x_ref << -0.15,0.00,-0.2;
     dx_ref(0) = -10;
     osc.set_ref(x_ref,dx_ref);
-    srl::sleep(0.1);
+    srl::sleep(0.2);
     osc.toggleGripper();
-    srl::sleep(0.22);
+    srl::sleep(0.1);
     dx_ref(0) = 0;
     osc.set_ref(x_ref,dx_ref);
     srl::sleep(5);
