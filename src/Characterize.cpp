@@ -108,3 +108,14 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
     
     fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
 }
+
+void Characterize::ffChDir(){
+    for (int i = 0; i < 3; i++){
+        vc->setSinglePressure(i,500);
+        srl::sleep(10);
+        cc->get_curvature(state);
+        fmt::print("Angle {}: {}\n",i,360*atan2(state.q(0),state.q(1))/(2*3.14156));
+        log(i);
+        vc->setSinglePressure(i,0);
+    }
+}
