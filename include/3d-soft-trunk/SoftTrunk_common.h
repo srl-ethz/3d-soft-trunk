@@ -16,13 +16,43 @@
 #include <fmt/core.h>
 
 using namespace Eigen;
-
 enum class ControllerType {
+    /** @brief as described in katzschmann2019dynamic */
     dynamic,
-    pid,        // for PID control, error is directly converted to pressure (i.e. alpha not used)
-    gravcomp,   //attempts to hold current position, msubmake arm compliant
-    lqr,        //LQR controller, directly to pressure
-    osc,        //OSC controller, coordinates are task space
+    /** @brief PID curvature controller */
+    pid, 
+    /** @brief compensates for gravity, does not accept reference positions */
+    gravcomp,
+    /** @brief LQR curvature controller */
+    lqr,
+    /** @brief operation space controller in task space */
+    osc,    
+};
+
+
+enum class ModelType {
+    /** @brief creates augmented rigid arm equivalent of soft body in drake*/
+    augmentedrigidarm, 
+    /** @brief uses lagrangian dynamics to derive equation of motion */
+    lagrange,
+};
+
+enum class CoordType {
+    /** @brief thetax,thetay parametrization as proposed in toshimitsu2021sopra */
+    thetax,
+    /** @brief classic PCC theta phi config */
+    phi_theta,
+};
+
+enum class SensorType {
+    /** @brief qualisys motion capture system, needs QTM server */
+    qualisys,
+    /** @brief bendlabs bend sensor, needs arduino */
+    bendlabs,
+};
+
+enum class FilterType {
+
 };
 
 namespace srl{
@@ -50,13 +80,41 @@ namespace srl{
     };
 }
 
+/** @brief parameters used in the dynamic equation of the arm */
+
+struct DynamicParams{
+    /** @brief coordinates the parameters are in */
+    CoordType coordtype;
+    /** @brief actuation matrix, maps pressures to torque */
+    MatrixXd A;
+    /** @brief actuation matrix simplified to 2 coordinates (x,y "pseudopressures") */
+    MatrixXd A_pseudo;
+    /** @brief inertia matrix, maps 2nd derivative of coordinate to torque */
+    MatrixXd B;
+    /** @brief vector containing coriolis and related torques*/
+    VectorXd c;
+    /** @brief damping matrix, maps 1st derivative of coordinate to torque*/
+    MatrixXd D;
+    /** @brief gravity vector, contains gravity torques*/
+    VectorXd g;
+    /** @brief stiffness matrix, maps coordinate to torque */
+    MatrixXd K;
+    /** @brief coriolis matrix, maps 1st derivative of coordinate to torque */
+    MatrixXd S;
+    /** @brief vector containing jacobians of all segment tips */
+    std::vector<MatrixXd> J;
+    /** @brief vector containing jacobian derivatives of all segment tips */
+    std::vector<MatrixXd> dJ;
+    /** @brief vector containing forward kinematic positions of all segment tips */
+    std::vector<Vector3d> x;
+};
+
 /**
  * @brief save various parameters related to the configuration of the soft trunk.
  * The parameters are first populated by their default values. After customizing them by changing the member variables or reading from a YAML file,
  * call finalize() to run sanity checks on the values, and to set other parameters.
  * check apps/example_SoftTrunkModel.cpp to for a demo of how to edit these values
  * @todo the parameters ideally should be private members, and only changeable through functions, to prevent further change after finalize() is called. for now, leave it as is, maybe change when more people start to use it.
- * @todo implement load_yaml function
  */
 class SoftTrunkParameters{
 public:
@@ -90,10 +148,21 @@ public:
 
     /** @brief shear modulus of Dragon Skin 10, in Pa
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
-     * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
     std::vector<double> shear_modulus = {40686, 59116};
     std::vector<double> drag_coef = {28000., 8000.};
+
+    /** @brief model used to derive the parameters of the dynamic equation */
+    ModelType model_type = ModelType::augmentedrigidarm;
+
+    /** @brief coordinate parametrization of all variables */
+    CoordType coord_type = CoordType::thetax;
+
+    /** @brief all sensors which are to be used */
+    std::vector<SensorType> sensors = {SensorType::qualisys};
+
+    /** @brief controller */
+    ControllerType controller_type = ControllerType::osc;
 
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
