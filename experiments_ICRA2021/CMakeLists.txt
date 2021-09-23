@@ -1,5 +1,2 @@
 add_executable(grip_weightcomp grip_weightcomp.cpp)
 target_link_libraries(grip_weightcomp OSC)
-
-add_executable(multiobstacleavoid multiobstacleavoid.cpp)
-target_link_libraries(multiobstacleavoid OSC)

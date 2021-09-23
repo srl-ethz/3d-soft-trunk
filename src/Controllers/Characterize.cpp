@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/Characterize.h"
+#include "3d-soft-trunk/Controllers/Characterize.h"
 
 Characterize::Characterize(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC(st_params, sensor_type){
 

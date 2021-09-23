@@ -67,37 +67,37 @@ find_package(Threads REQUIRED)
 find_package(roscpp) # this is optionally required for VisualizerROS
 
 ### libraries
-ADD_LIBRARY(CurvatureCalculator SHARED src/CurvatureCalculator.cpp)
+ADD_LIBRARY(CurvatureCalculator SHARED src/Sensors/CurvatureCalculator.cpp)
 TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt yaml-cpp)
 
-add_library(AugmentedRigidArm SHARED src/AugmentedRigidArm.cpp)
+add_library(AugmentedRigidArm SHARED src/Models/AugmentedRigidArm.cpp)
 target_link_libraries(AugmentedRigidArm drake::drake yaml-cpp)
 
-add_library(SoftTrunkModel SHARED src/SoftTrunkModel.cpp)
+add_library(SoftTrunkModel SHARED src/Models/SoftTrunkModel.cpp)
 target_link_libraries(SoftTrunkModel AugmentedRigidArm yaml-cpp)
 
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
 target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads yaml-cpp)
 
-add_library(OSC SHARED src/OSC.cpp)
+add_library(OSC SHARED src/Controllers/OSC.cpp)
 target_link_libraries(OSC ControllerPCC)
 
-add_library(PID SHARED src/PID.cpp)
+add_library(PID SHARED src/Controllers/PID.cpp)
 target_link_libraries(PID ControllerPCC MiniPID) 
 
-add_library(LQR SHARED src/LQR.cpp)
+add_library(LQR SHARED src/Controllers/LQR.cpp)
 target_link_libraries(LQR ControllerPCC)
 
-add_library(Dyn src/Dyn.cpp)
+add_library(Dyn src/Controllers/Dyn.cpp)
 target_link_libraries(Dyn ControllerPCC)
 
-add_library(Characterize src/Characterize.cpp)
+add_library(Characterize src/Controllers/Characterize.cpp)
 target_link_libraries(Characterize ControllerPCC)
 
-add_library(IDCon src/IDCon.cpp)
+add_library(IDCon src/Controllers/IDCon.cpp)
 target_link_libraries(IDCon ControllerPCC)
 
-add_library(QuasiStatic src/QuasiStatic.cpp)
+add_library(QuasiStatic src/Controllers/QuasiStatic.cpp)
 target_link_libraries(QuasiStatic ControllerPCC)
 
 

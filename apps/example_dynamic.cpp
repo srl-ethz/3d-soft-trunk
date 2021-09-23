@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/Dyn.h"
+#include "3d-soft-trunk/Controllers/Dyn.h"
 
 int main(){
     SoftTrunkParameters st_params;

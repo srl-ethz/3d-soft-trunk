@@ -1,6 +1,6 @@
 #include <mobilerack-interface/ValveController.h>
-#include <3d-soft-trunk/SoftTrunkModel.h>
-#include <3d-soft-trunk/CurvatureCalculator.h>
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
+#include <3d-soft-trunk/Sensors/CurvatureCalculator.h>
 #include <cmath>
 #include <iostream>
 const double duration = 10;

@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/LQR.h"
+#include "3d-soft-trunk/Controllers/LQR.h"
 
 LQR::LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "LQR_log";

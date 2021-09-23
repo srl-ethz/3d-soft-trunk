@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/IDCon.h"
+#include "3d-soft-trunk/Controllers/IDCon.h"
 
 bool freedom = false;
 Vector3d x_ref;

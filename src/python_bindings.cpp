@@ -2,9 +2,9 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 
-#include <3d-soft-trunk/AugmentedRigidArm.h>
-#include <3d-soft-trunk/CurvatureCalculator.h>
-#include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/Models/AugmentedRigidArm.h>
+#include <3d-soft-trunk/Sensors/CurvatureCalculator.h>
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
 #include <3d-soft-trunk/ControllerPCC.h>
 
 namespace py = pybind11;

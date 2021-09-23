@@ -1,4 +1,4 @@
-#include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
 #include <mobilerack-interface/SerialInterface.h>
 
 /**

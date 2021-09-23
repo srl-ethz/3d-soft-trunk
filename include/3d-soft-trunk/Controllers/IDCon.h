@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ControllerPCC.h"
+#include "3d-soft-trunk/ControllerPCC.h"
 #include <Eigen/Core>
 #include <Eigen/QR>
 #include <Eigen/LU>

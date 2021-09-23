@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ControllerPCC.h"
+#include "3d-soft-trunk/ControllerPCC.h"
 
 class LQR: public ControllerPCC
 {

@@ -1,4 +1,4 @@
-#include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
 
 /**
  * demo to showcase how to use the SoftTrunkModel class, as well as create a custom arm configuration youself. 

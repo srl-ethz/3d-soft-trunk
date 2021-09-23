@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/Dyn.h"
+#include "3d-soft-trunk/Controllers/Dyn.h"
 
 Dyn::Dyn(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "dynamic_log";

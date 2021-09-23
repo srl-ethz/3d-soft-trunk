@@ -2,7 +2,7 @@
 
 #include <mobilerack-interface/QualisysClient.h>
 #include <mobilerack-interface/SerialInterface.h>
-#include "SoftTrunk_common.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
 
 #include <Eigen/Geometry>
 #include <cmath>

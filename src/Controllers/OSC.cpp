@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/OSC.h"
+#include "3d-soft-trunk/Controllers/OSC.h"
 
 OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
     filename = "OSC_logger";

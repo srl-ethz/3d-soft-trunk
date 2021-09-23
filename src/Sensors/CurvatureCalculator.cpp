@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/CurvatureCalculator.h"
+#include "3d-soft-trunk/Sensors/CurvatureCalculator.h"
 
 
 CurvatureCalculator::CurvatureCalculator(const SoftTrunkParameters& st_params, CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames): st_params(st_params), sensor_type(sensor_type), extra_frames(extra_frames) {

@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/QuasiStatic.h"
+#include "3d-soft-trunk/Controllers/QuasiStatic.h"
 
 QuasiStatic::QuasiStatic(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
     filename = "QS_logger";

@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/Characterize.h"
+#include "3d-soft-trunk/Controllers/Characterize.h"
 
 int main(){
     SoftTrunkParameters st_params{};

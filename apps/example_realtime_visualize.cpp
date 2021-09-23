@@ -2,8 +2,8 @@
 // Created by yasu on 21/12/2020.
 //
 
-#include "3d-soft-trunk/CurvatureCalculator.h"
-#include "3d-soft-trunk/AugmentedRigidArm.h"
+#include "3d-soft-trunk/Sensors/CurvatureCalculator.h"
+#include "3d-soft-trunk/Models/AugmentedRigidArm.h"
 
 int main() {
     // obtain data from motion tracking system and update the rigid model visualization in real time.

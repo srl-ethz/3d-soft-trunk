@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/PID.h"
+#include "3d-soft-trunk/Controllers/PID.h"
 
 
 PID::PID(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){

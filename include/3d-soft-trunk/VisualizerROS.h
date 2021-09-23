@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SoftTrunk_common.h"
-#include "SoftTrunkModel.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
+#include "3d-soft-trunk/SoftTrunkModel.h"
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>

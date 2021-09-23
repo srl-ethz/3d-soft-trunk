@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SoftTrunk_common.h"
-#include "AugmentedRigidArm.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
+#include "3d-soft-trunk/Models/AugmentedRigidArm.h"
 #include <fstream>
 
 /**

@@ -1,5 +1,5 @@
 // Copyright 2018 ...
-#include "3d-soft-trunk/AugmentedRigidArm.h"
+#include "3d-soft-trunk/Models/AugmentedRigidArm.h"
 
 AugmentedRigidArm::AugmentedRigidArm(const SoftTrunkParameters &st_params): st_params(st_params)
 {

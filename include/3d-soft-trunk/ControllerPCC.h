@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "SoftTrunk_common.h"
-#include "CurvatureCalculator.h"
-#include "SoftTrunkModel.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
+#include "3d-soft-trunk/Sensors/CurvatureCalculator.h"
+#include "3d-soft-trunk/Models/SoftTrunkModel.h"
 #include <mobilerack-interface/ValveController.h>
 #include <mutex>
 

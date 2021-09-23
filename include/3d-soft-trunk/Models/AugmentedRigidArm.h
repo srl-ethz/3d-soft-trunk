@@ -20,7 +20,7 @@
 #include <drake/common/autodiff_overloads.h>
 #include <drake/math/autodiff.h>
 #include "mdefs.h"
-#include "SoftTrunk_common.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
 
 #include <iostream>
 

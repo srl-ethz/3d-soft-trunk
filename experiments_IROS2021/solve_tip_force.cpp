@@ -1,4 +1,4 @@
-#include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
 #include <3d-soft-trunk/VisualizerROS.h>
 #include <mobilerack-interface/SerialInterface.h>
 #include <mobilerack-interface/ValveController.h>

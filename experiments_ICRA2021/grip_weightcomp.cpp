@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/OSC.h"
+#include "3d-soft-trunk/Controllers/OSC.h"
 
 
 bool freedom = false;
