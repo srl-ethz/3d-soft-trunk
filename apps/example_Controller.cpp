@@ -1,5 +1,6 @@
 
 #include "3d-soft-trunk/OSC.h"
+#include<iostream>
 
 bool freedom = false;
 Vector3d x_ref;
@@ -117,21 +118,21 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.15,0.00,-0.2;
+    x_ref << 0.055,0.11,-0.22;
     std::thread print_thread(printer, std::ref(osc));
 
     
     double t = 0;
-    double dt = 0.1;
+    double dt = 0.01;
     Vector3d circle;
     Vector3d d_circle;
     Vector3d dd_circle;
 
     double coef = 2 * 3.1415 / 8;
-    osc.gripperAttached = true;
+    //osc.gripperAttached = true;
     osc.loadAttached = 0;
-    getchar();
-    osc.toggleGripper();
+    //getchar();
+    //osc.toggleGripper();
 
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
@@ -140,8 +141,11 @@ int main(){
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
+    osc.set_kd(5.5);
+    osc.set_kp(100);
     osc.toggle_log();
-    /*while (true){
+
+    /*while (t<16){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
@@ -160,15 +164,75 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }*/
-    x_ref << -0.15,0.00,-0.2;
-    dx_ref(0) = -10;
-    osc.set_ref(x_ref,dx_ref);
-    srl::sleep(0.2);
-    osc.toggleGripper();
-    srl::sleep(0.1);
-    dx_ref(0) = 0;
-    osc.set_ref(x_ref,dx_ref);
-    srl::sleep(5);
+
+    double leng = 0.11;
+    double period = 8;
+    double velo = leng/period;
+    while (t<period){
+        x_ref << 0.5*leng-velo*t,leng,-0.22;
+        dx_ref << -velo,0,0;
+        ddx_ref << 0,0,0;
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+
+        t+=dt;
+        srl::sleep(dt);
+    }
+    while (period<=t && t<2*period){
+        x_ref << -0.5*leng,leng-velo*t,-0.22;
+        dx_ref << 0,-velo,0;
+        ddx_ref << 0,0,0;
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+
+        t+=dt;
+        srl::sleep(dt);
+    }
+    while (2*period<=t && t<3*period){
+        x_ref << -0.5*leng+velo*t,0,-0.22;
+        dx_ref << velo,0,0;
+        ddx_ref << 0,0,0;
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+
+        t+=dt;
+        srl::sleep(dt);
+    }
+    while (3*period<=t && t<4*period){
+        x_ref << 0.5*leng,-velo*t,-0.22;
+        dx_ref << 0,-velo,0;
+        ddx_ref << 0,0,0;
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+
+        t+=dt;
+        srl::sleep(dt);
+    }
+    while (4*period<=t && t<5*period){
+        x_ref << 0.5*leng-velo*t,-leng,-0.22;
+        dx_ref << -velo,0,0;
+        ddx_ref << 0,0,0;
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+
+        t+=dt;
+        srl::sleep(dt);
+    }/*
+    while (t<2*period){
+        x_ref << -0.5*leng,leng-velo*t,-0.22;
+        dx_ref << 0,velo,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }
+    while (2*period<=t && t<3*period){
+        x_ref << -0.5*leng+velo*t,-leng,-0.22;
+        dx_ref << velo,0,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }*/
+    
     osc.toggle_log();
     return 1;
+    
 }
