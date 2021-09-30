@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         vis.publishState();
         
         if (is_goal_received)
-            osc.set_ref(osc_target, osc_target_d);
+            // osc.set_ref(osc_target, osc_target_d);
         if (!ros::ok())
             break;
     }
