@@ -118,7 +118,7 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.055,0.11,-0.22;
+    x_ref << 0.2*0.11,-0.11,-0.22;
     std::thread print_thread(printer, std::ref(osc));
 
     
@@ -166,10 +166,11 @@ int main(){
     }*/
 
     double leng = 0.11;
-    double period = 8;
+    double period = 6;
     double velo = leng/period;
-    while (t<period){
-        x_ref << 0.5*leng-velo*t,leng,-0.22;
+
+    /*while (t<period){
+        x_ref << 1.0*leng-velo*t,leng,-0.22;
         dx_ref << -velo,0,0;
         ddx_ref << 0,0,0;
         osc.set_ref(x_ref,dx_ref,ddx_ref);
@@ -178,8 +179,8 @@ int main(){
         srl::sleep(dt);
     }
     t= 0;
-    while (t<0.5*period){
-        x_ref << -0.5*leng,leng-velo*t,-0.22;
+    while (t<period){
+        x_ref << 0*leng,leng-velo*t,-0.22;
         dx_ref << 0,-velo,0;
         ddx_ref << 0,0,0;
         osc.set_ref(x_ref,dx_ref,ddx_ref);
@@ -189,7 +190,7 @@ int main(){
     }
     t= 0;
     while (t<period){
-        x_ref << -0.5*leng+velo*t,0,-0.22;
+        x_ref << 0*leng+velo*t,0,-0.22;
         dx_ref << velo,0,0;
         ddx_ref << 0,0,0;
         osc.set_ref(x_ref,dx_ref,ddx_ref);
@@ -198,8 +199,8 @@ int main(){
         srl::sleep(dt);
     }
     t= 0;
-    while (t<*1.5*period){
-        x_ref << 0.5*leng,-velo*t,-0.22;
+    while (t<period){
+        x_ref << 1.0*leng,-velo*t,-0.22;
         dx_ref << 0,-velo,0;
         ddx_ref << 0,0,0;
         osc.set_ref(x_ref,dx_ref,ddx_ref);
@@ -209,25 +210,28 @@ int main(){
     }
     t= 0;
     while (t<period){
-        x_ref << 0.5*leng-velo*t,-leng,-0.22;
+        x_ref << 0*leng-velo*t,-leng,-0.22;
         dx_ref << -velo,0,0;
         ddx_ref << 0,0,0;
         osc.set_ref(x_ref,dx_ref,ddx_ref);
 
         t+=dt;
         srl::sleep(dt);
-    }/*
+    }*/
+    
+    /*
     while (t<2*period){
-        x_ref << -0.5*leng,leng-velo*t,-0.22;
-        dx_ref << 0,velo,0;
+        x_ref << 0.2*leng,leng-velo*t,-0.22;
+        dx_ref << 0,-velo,0;
         ddx_ref << -0,0,0;
 
         osc.set_ref(x_ref,dx_ref,ddx_ref);
         t+=dt;
         srl::sleep(dt);
     }
-    while (2*period<=t && t<3*period){
-        x_ref << -0.5*leng+velo*t,-leng,-0.22;
+    t = 0;
+    while (t<period){
+        x_ref << 0.2*leng+velo*t,-leng,-0.22;
         dx_ref << velo,0,0;
         ddx_ref << -0,0,0;
 
@@ -235,7 +239,57 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }*/
-    
+    while (t<2*period){
+        x_ref << 0.1*leng,-leng+velo*t,-0.24;
+        dx_ref << 0,velo,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }
+    t=0;
+    while (t<period){
+        x_ref << 0.1*leng+velo*t,leng,-0.24;
+        dx_ref << velo,0,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }
+    t=0;    
+    while (t<period){
+        x_ref << 1.1*leng,leng-velo*t,-0.24;
+        dx_ref << 0,-velo,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }
+    t=0;
+    while (t<period){
+        x_ref << 1.1*leng-velo*t,0,-0.24;
+        dx_ref << -velo,0,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }  
+    t=0;
+    while (t<1.414*period){
+        x_ref << 0.1*leng+velo*t,-velo*t,-0.24;
+        dx_ref << velo,-velo,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }  
+    t=0;     
+
     osc.toggle_log();
     return 1;
     
