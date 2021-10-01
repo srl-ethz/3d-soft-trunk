@@ -177,7 +177,8 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    while (period<=t && t<2*period){
+    t= 0;
+    while (t<0.5*period){
         x_ref << -0.5*leng,leng-velo*t,-0.22;
         dx_ref << 0,-velo,0;
         ddx_ref << 0,0,0;
@@ -186,7 +187,8 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    while (2*period<=t && t<3*period){
+    t= 0;
+    while (t<period){
         x_ref << -0.5*leng+velo*t,0,-0.22;
         dx_ref << velo,0,0;
         ddx_ref << 0,0,0;
@@ -195,7 +197,8 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    while (3*period<=t && t<4*period){
+    t= 0;
+    while (t<*1.5*period){
         x_ref << 0.5*leng,-velo*t,-0.22;
         dx_ref << 0,-velo,0;
         ddx_ref << 0,0,0;
@@ -204,7 +207,8 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    while (4*period<=t && t<5*period){
+    t= 0;
+    while (t<period){
         x_ref << 0.5*leng-velo*t,-leng,-0.22;
         dx_ref << -velo,0,0;
         ddx_ref << 0,0,0;
