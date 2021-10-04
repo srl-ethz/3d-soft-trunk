@@ -24,7 +24,7 @@ void QuasiStatic::control_loop(){
         //update the internal visualization
         if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
         
-        stm->updateState(state);
+        stm->set_state(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;

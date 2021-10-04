@@ -13,7 +13,6 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     /** @todo would be better if elements could be set like `state.q[0] = 0.1` in Python */
     py::class_<srl::State>(m, "State", "individual elements in array can be read but not set, see example codes")
     .def(py::init<>())
-    .def(py::init<int>())
     .def("setSize", &srl::State::setSize)
     .def_property("q", [](srl::State& s){return s.q;}, [](srl::State& s, const VectorXd& q){s.q=q;})
     .def_property("dq", [](srl::State& s){return s.dq;}, [](srl::State& s, const VectorXd& dq){s.dq=dq;})
@@ -55,7 +54,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     
     py::class_<SoftTrunkModel> stm(m, "SoftTrunkModel");
     stm.def(py::init<SoftTrunkParameters>())
-    .def("updateState", &SoftTrunkModel::updateState)
+    .def("set_state", &SoftTrunkModel::set_state)
     .def("getModel", [](SoftTrunkModel& stm){
         return std::make_tuple(stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
     })

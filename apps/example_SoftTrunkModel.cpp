@@ -23,7 +23,7 @@ int main(){
     SoftTrunkModel stm = SoftTrunkModel(st_params);
     srl::State state = st_params.getBlankState();  // get blank state with appropriate size
     state.q(0) = 0.2;
-    stm.updateState(state);
+    stm.set_state(state);
     // print parameters of model
     fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n S:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params.num_segments-1], stm.S);
 

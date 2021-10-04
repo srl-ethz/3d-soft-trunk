@@ -36,7 +36,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         
 
         cc->get_curvature(state);
-        stm->updateState(state);
+        stm->set_state(state);
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
 
         double angle = atan2(x(1),x(0))*180/3.14156;
@@ -91,7 +91,7 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
 
             srl::sleep(10); //wait to let swinging subside
             cc->get_curvature(state);
-            stm->updateState(state);
+            stm->set_state(state);
 
             tau(2*verticalsteps*i + 2*j) = pressures(2*segment) - (stm->A_pseudo.inverse()*stm->g/100)(2*segment);
             tau(2*verticalsteps*i + 2*j + 1) = pressures(2*segment+1) - (stm->A_pseudo.inverse()*stm->g/100)(2*segment+1);

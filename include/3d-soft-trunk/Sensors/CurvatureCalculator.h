@@ -50,7 +50,7 @@ public:
 
     ~CurvatureCalculator();
 
-    void get_curvature(srl::State &pose);
+    void get_curvature(srl::State &state);
 
     unsigned long long int get_timestamp(); /** @brief get timestamp (in microsecs) from Qualisys  */
 

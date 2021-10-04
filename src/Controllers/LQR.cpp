@@ -16,7 +16,7 @@ LQR::LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 }
 
 void LQR::relinearize(srl::State state){
-    stm->updateState(state);
+    stm->set_state(state);
     
     //update A, B with new dynamics
     A << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - stm->B.inverse() * stm->K, -stm->B.inverse() * stm->D;
@@ -64,7 +64,7 @@ void LQR::control_loop() {
 
         //update the internal visualization
         cc->get_curvature(state);
-        stm->updateState(state); /* this is optional for LQR but allows arm to be visualized in drake-visualizer */ 
+        stm->set_state(state); /* this is optional for LQR but allows arm to be visualized in drake-visualizer */ 
 
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;

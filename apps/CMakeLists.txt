@@ -24,6 +24,9 @@ target_link_libraries(example_dynamic Dyn)
 add_executable(example_IDCon example_IDCon.cpp)
 target_link_libraries(example_IDCon IDCon)
 
+add_executable(example_Model example_Model.cpp)
+target_link_libraries(example_Model Model)
+
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)
     target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)

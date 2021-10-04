@@ -18,7 +18,7 @@ void Dyn::control_loop(){
         //update the internal visualization
         if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
         
-        stm->updateState(state);
+        stm->set_state(state);
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         
         if (!is_initial_ref_received) //only control after receiving a reference position

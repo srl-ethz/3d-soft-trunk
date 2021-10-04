@@ -359,7 +359,7 @@ void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq)
 
 void AugmentedRigidArm::update(const srl::State &state)
 {
-    assert(state.q.size() == 2 * st_params.num_segments * st_params.sections_per_segment);
+    assert(state.q.size() == st_params.q_size);
     assert(state.dq.size() == state.q.size());
 
     // calculate rigid model pose

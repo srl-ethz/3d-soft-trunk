@@ -45,7 +45,7 @@ void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref, const 
     std::lock_guard<std::mutex> lock(mtx);
     Vector3d x_r = x_ref;
     if (x_ref.norm() > 0.27) {
-        x_r = 0.27*x_ref.normalized(); //What is this???
+        x_r = 0.27*x_ref.normalized(); //constrain reference position to be somewhat reachable
     }
     this->x_ref = x_r;
     this->dx_ref = dx_ref;
@@ -124,7 +124,7 @@ void ControllerPCC::set_log_filename(const std::string s){
 }
 
 bool ControllerPCC::simulate(const VectorXd &p){
-    stm->updateState(state);
+    stm->set_state(state);
     state_prev.ddq = state.ddq;
     VectorXd p_adjusted = 100*p; //convert from mbar
 

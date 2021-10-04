@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/Sensors/CurvatureCalculator.h"
 
 
-CurvatureCalculator::CurvatureCalculator(const SoftTrunkParameters& st_params, CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames): st_params(st_params), sensor_type(sensor_type), extra_frames(extra_frames) {
+CurvatureCalculator::CurvatureCalculator(const SoftTrunkParameters& st_params, CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames) : st_params(st_params), sensor_type(sensor_type), extra_frames(extra_frames) {
     assert(st_params.is_finalized());
     // initialize size of arrays that record transforms
     abs_transforms.resize(st_params.num_segments + 1 + extra_frames);

@@ -32,7 +32,7 @@ int main(){
         {
             log_file << fmt::format(",{},{}", state.q(2*i), state.q(2*i+1));
         }
-        stm.updateState(state);
+        stm.set_state(state);
         log_file << "\n";
         time += 1./30;
         r.sleep();

@@ -20,10 +20,16 @@ public:
     /**
      * @brief update the model's state, and calculate the parameters of the model. Currently has problems when both Lx and Ly are 0.
      */
-    void updateState(const srl::State &state);
+    void set_state(const srl::State &state);
+    
     SoftTrunkParameters getSoftTrunkParameters(){
-        return st_params;
+        return st_params_;
     }
+
+    /** @brief updates handed dyn params with internally stored ones 
+     * TODO: change structure to use dynparams
+    */
+    void get_dynamic_params(DynamicParams& dyn);
 
     /** @brief inertia matrix */
     MatrixXd B;
@@ -76,12 +82,14 @@ public:
     VectorXd pseudo2real(VectorXd pressure_pseudo);
 
 
-    std::unique_ptr<AugmentedRigidArm> ara;
+    
 private:
     
 
 private:
-    const SoftTrunkParameters st_params;
+    const SoftTrunkParameters st_params_;
+    DynamicParams dyn_;
+
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
      * @param radius radius of the chamber. This is the input from which the other values will be calculated.
@@ -101,4 +109,6 @@ private:
     MatrixXd chamberMatrix = MatrixXd::Zero(2, 3); // describes the direction of each chamber
     MatrixXd rc = MatrixXd::Zero(30,5);
     VectorXd rca = VectorXd::Zero(31);
+
+    std::unique_ptr<AugmentedRigidArm> ara;
 };

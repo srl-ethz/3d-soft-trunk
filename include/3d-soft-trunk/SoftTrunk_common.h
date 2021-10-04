@@ -34,7 +34,7 @@ enum class ModelType {
     /** @brief creates augmented rigid arm equivalent of soft body in drake*/
     augmentedrigidarm, 
     /** @brief uses lagrangian dynamics to derive equation of motion */
-    lagrange,
+    lagrange,State
 };
 
 enum class CoordType {
@@ -64,13 +64,18 @@ namespace srl{
         VectorXd q;
         VectorXd dq;
         VectorXd ddq;
+        CoordType coordtype;
         /** @brief initialize and set the size of the vectors at the same time. */
-        State(const int q_size){
+        State(CoordType coordtype, const int q_size) : coordtype(coordtype){
             setSize(q_size);
         }
         /** @brief default constructor, the size of the vectors must be set later with setSize(). */
+        State(CoordType coordtype) : coordtype(coordtype){
+        }
+        /** @brief constructor without coordtype, USE AT OWN RISK, THIS MAY CAUSE ISSUES WITH SAFETY CHECKS */
         State(){
         }
+
         /** @brief designate size of state (i.e. degrees of freedom) */
         void setSize(const int q_size){
             q = VectorXd::Zero(q_size);
@@ -121,7 +126,7 @@ public:
     /** @brief return empty state with appropriate size. */
     srl::State getBlankState() const {
         assert(is_finalized());
-        srl::State state{q_size};
+        srl::State state{coord_type, q_size};
         return state;
     }
     /** @brief name of robot (and of urdf / xacro file) */
@@ -164,6 +169,9 @@ public:
     /** @brief controller */
     ControllerType controller_type = ControllerType::osc;
 
+    /** @brief filtering type between multiple sensor inputs */
+    FilterType filter_type;
+
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
 
@@ -183,7 +191,6 @@ public:
 
     /** @brief populate the parameters by reading from a YAML file
      * @details the YAML file should be placed inside of the config folder to be read
-     * @param filename filename, no need append .yaml as this is done automatically
      */
     void load_yaml(const std::string filename){
         assert(!is_finalized());
