@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from pydrake.math import RigidTransform, RollPitchYaw, RotationMatrix
 from pydrake.common.eigen_geometry import Quaternion
 from collections import defaultdict
+from utils import *
 
 np.set_printoptions(precision=4)
 plt.rcParams["savefig.facecolor"] = "0.8"
