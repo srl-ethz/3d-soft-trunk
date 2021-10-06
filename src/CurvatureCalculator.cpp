@@ -120,7 +120,7 @@ unsigned long long int CurvatureCalculator::get_timestamp(){
 
 Eigen::Transform<double, 3, Eigen::Affine> CurvatureCalculator::get_frame(int id){
     //std::lock_guard<std::mutex> lock(mtx);
-    assert(0 <= id && id < abs_transforms.size());
+    // assert(0 <= id && id < abs_transforms.size());
     assert(sensor_type == SensorType::qualisys);
     return abs_transforms[id];
 }

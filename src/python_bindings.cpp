@@ -39,7 +39,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     });
 
     py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
-    cc.def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, std::string>())
+    cc.def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, std::string, int>())
     .def("get_curvature", [](CurvatureCalculator& cc){
         // return as tuple rather than by reference
         srl::State state;
