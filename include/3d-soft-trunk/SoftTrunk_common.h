@@ -14,6 +14,10 @@
 #include <array>
 #include <yaml-cpp/yaml.h>
 #include <fmt/core.h>
+#include <mutex>
+#include <cmath>
+#include <fstream>
+
 
 using namespace Eigen;
 enum class ControllerType {
@@ -177,6 +181,13 @@ public:
 
     /** @brief extra objects to be tracked by sensors */
     int objects = 0;
+
+    /** @brief sensor refresh rate in hz 
+     * @details some sensors may be restricted to lower polling rates automatically due to hardware restrictions
+    */
+    double sensor_refresh_rate = 100.;
+
+    std::string bendlabs_address = "/dev/ttyACM0";
 
     void finalize(){
         assert(!is_finalized()); // already finalized

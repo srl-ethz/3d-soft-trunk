@@ -10,6 +10,8 @@ MotionCapture::MotionCapture(const SoftTrunkParameters& st_params) : st_params_(
     std::vector<int> emptyCameraList = {};
     optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + st_params_.objects, emptyCameraList, "6D", true);
 
+    state_ = st_params_.getBlankState();
+
     calculatorThread = std::thread(&MotionCapture::calculator_loop, this);
     fmt::print("Motion Capture initialized with {} extra objects.\n", st_params_.objects);
 }
@@ -49,7 +51,11 @@ void MotionCapture::calculator_loop(){
 
     srl::State state_prev = st_params_.getBlankState();
 
-    srl::Rate rate{300}; //default polling rate of 300hz, hardcoded
+    double frequency = 500.;
+    if (st_params_.sensor_refresh_rate < 500.){     //qualisys max refresh rate is 500hz
+        frequency = st_params_.sensor_refresh_rate;                           
+    }
+    srl::Rate rate{frequency};
 
     run = true;
     unsigned long long int last_timestamp;

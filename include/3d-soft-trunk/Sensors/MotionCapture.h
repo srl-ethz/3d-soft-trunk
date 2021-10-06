@@ -2,13 +2,6 @@
 
 #include "3d-soft-trunk/SoftTrunk_common.h"
 #include <mobilerack-interface/QualisysClient.h>
-#include <Eigen/Geometry>
-#include <cmath>
-#include <fstream>
-#include <thread>
-#include <cmath>
-#include <mutex>
-#include <complex>
 
 class MotionCapture{
 public:

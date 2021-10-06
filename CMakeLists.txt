@@ -73,6 +73,9 @@ TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES}
 ADD_LIBRARY(MotionCapture SHARED src/Sensors/MotionCapture.cpp)
 TARGET_LINK_LIBRARIES(MotionCapture ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient fmt yaml-cpp)
 
+ADD_LIBRARY(BendLabs SHARED src/Sensors/BendLabs.cpp)
+TARGET_LINK_LIBRARIES(BendLabs ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} SerialInterface fmt yaml-cpp)
+
 add_library(AugmentedRigidArm SHARED src/Models/AugmentedRigidArm.cpp)
 target_link_libraries(AugmentedRigidArm drake::drake yaml-cpp)
 
