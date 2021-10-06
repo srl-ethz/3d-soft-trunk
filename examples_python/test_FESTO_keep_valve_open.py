@@ -3,8 +3,8 @@ from mobilerack_pybind_module import ValveController, QualisysClient
 import time
 
 
-max_pressure = 500
-pressure = 300
+max_pressure = 2000
+pressure = 2000
 num_segments = 3
 eps = 1e-10
 
