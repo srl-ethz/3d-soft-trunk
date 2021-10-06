@@ -17,7 +17,7 @@ int main(){
     st_params.armAngle = 30;
     st_params.shear_modulus = {30000, 30000, 30000};
     st_params.drag_coef = {10000, 10000, 10000};*/
-    st_params.load_yaml("softtrunkparams_example.yaml");
+    //st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();  // run sanity check and finalize parameters
 
     SoftTrunkModel stm = SoftTrunkModel(st_params);
@@ -25,7 +25,7 @@ int main(){
     state.q(0) = 0.2;
     stm.set_state(state);
     // print parameters of model
-    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:{}\n S:{}\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J[st_params.num_segments-1], stm.S);
+    fmt::print("B:{}\nc:{}\ng:{}\nK:{}\nD:{}\nA:{}\nJ:\n S:\n", stm.B, stm.c, stm.g, stm.K, stm.D, stm.A/*, stm.J[st_params.num_segments-1], stm.S*/);
 
     // example of converting between pseudopressure to real pressure
     VectorXd v = VectorXd::Zero(2*st_params.num_segments);

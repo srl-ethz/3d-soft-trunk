@@ -47,6 +47,11 @@ void SoftTrunkModel::set_state(const srl::State &state)
     dyn_.g = ara->g;
     dyn_.J = ara->J;
     dyn_.S = ara->S;
+    this->B = dyn_.B;
+    this->c = dyn_.c;
+    this->g = dyn_.g;
+    this->J = dyn_.J;
+    this->S = dyn_.S;
     
 }
 

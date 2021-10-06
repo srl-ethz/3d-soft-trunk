@@ -34,14 +34,14 @@ enum class ModelType {
     /** @brief creates augmented rigid arm equivalent of soft body in drake*/
     augmentedrigidarm, 
     /** @brief uses lagrangian dynamics to derive equation of motion */
-    lagrange,State
+    lagrange,
 };
 
 enum class CoordType {
     /** @brief thetax,thetay parametrization as proposed in toshimitsu2021sopra */
     thetax,
     /** @brief classic PCC theta phi config */
-    phi_theta,
+    phitheta,
 };
 
 enum class SensorType {
@@ -174,6 +174,9 @@ public:
 
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;
+
+    /** @brief extra objects to be tracked by sensors */
+    int objects = 0;
 
     void finalize(){
         assert(!is_finalized()); // already finalized

@@ -2,7 +2,7 @@
 
 int main(){
     SoftTrunkParameters st_params;
-    st_params.load_yaml("softtrunkparams_example.yaml");
+    //st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
     Model mdl{st_params, 100};
     srl::State state{CoordType::thetax, st_params.q_size};
