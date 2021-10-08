@@ -1,3 +1,5 @@
+//created by oliver 3.10.21
+
 #include "3d-soft-trunk/Model.h"
 
 Model::Model(const SoftTrunkParameters& st_params, int update_frequency) : st_params_(st_params), update_frequency_(update_frequency){

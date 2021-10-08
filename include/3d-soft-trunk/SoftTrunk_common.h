@@ -53,6 +53,8 @@ enum class SensorType {
     qualisys,
     /** @brief bendlabs bend sensor, needs arduino */
     bendlabs,
+    /** @brief simulate to obtain states */
+    simulator,
 };
 
 enum class FilterType {
@@ -69,6 +71,7 @@ namespace srl{
         VectorXd dq;
         VectorXd ddq;
         CoordType coordtype;
+        double timestamp;
         /** @brief initialize and set the size of the vectors at the same time. */
         State(CoordType coordtype, const int q_size) : coordtype(coordtype){
             setSize(q_size);
@@ -219,6 +222,29 @@ public:
         this->armAngle = params["armAngle"].as<double>();
         this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
         this->drag_coef = params["drag_coef"].as<std::vector<double>>();  
+
+        std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
+        this->sensors.clear();
+        for (int i = 0; i < sensor_vec.size(); i++){
+            if (sensor_vec[i]=="qualisys"){
+                sensors.push_back(SensorType::qualisys);
+                continue;
+            }
+            if (sensor_vec[i]=="bendlabs"){
+                sensors.push_back(SensorType::bendlabs);
+                continue;
+            }
+            if (sensor_vec[i]=="simulator"){
+                sensors.push_back(SensorType::simulator);
+                continue;
+            }
+            fmt::print("Error reading sensors from YAML!\n");
+            assert(false);
+        }
+        this->sensor_refresh_rate = params["sensor refresh rate"].as<double>();
+        this->bendlabs_address = params["bendlabs address"].as<std::string>();
+
+
     }
     
     bool is_finalized() const {
