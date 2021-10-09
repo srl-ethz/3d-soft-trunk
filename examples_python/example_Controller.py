@@ -2,7 +2,8 @@
 # Example for controlling Sopra. Transcription of the C++ example.
 # ------------------------------------------------------------------------------
 
-
+import sys
+sys.path.append('../')
 from softtrunk_pybind_module import OSC, SoftTrunkParameters, CurvatureCalculator
 
 import numpy as np
@@ -11,32 +12,12 @@ import threading
 import time
 
 
-class StoppableThread(threading.Thread):
-    """
-    Thread class with a stop() method. The thread itself has to check
-    regularly for the stopped() condition.
-
-    Solution from StackOverflow: https://stackoverflow.com/questions/323972/is-there-any-way-to-kill-a-thread
-    """
-
-    def __init__(self,  *args, **kwargs):
-        super(StoppableThread, self).__init__(*args, **kwargs)
-        self._stop_event = threading.Event()
-
-    def stop(self):
-        self._stop_event.set()
-
-    def stopped(self):
-        return self._stop_event.is_set()
-
-
-
 def gain (osc):
     """
     Keyboard events are handled here. 
     """
     global stopping
-    while True:
+    while not stopping:
         c = input('').split(" ")[0]
         if c == 'q':
             osc.set_kp(osc.get_kp()*1.1)
@@ -76,8 +57,9 @@ def printer (osc):
     Periodically print information
     """
     rate = 0.3
-
-    while True:
+    
+    global stopping
+    while not stopping:
         x = osc.get_x()
 
         print("------------------------------------")
@@ -115,7 +97,7 @@ if __name__ == '__main__':
     osc.loadAttached = 0
 
     # Start thread for printing out information
-    printer_thread = StoppableThread(target=printer, name="Printer_Thread", args=(osc,))
+    printer_thread = threading.Thread(target=printer, name="Printer_Thread", args=(osc,))
     printer_thread.start()
 
     input("Press ENTER for gripper...")
@@ -129,7 +111,7 @@ if __name__ == '__main__':
     input("Press ENTER for starting everything...")
 
     # Start events for receiving and processing keyboard inputs
-    gain_thread = StoppableThread(target=gain, name="Gain", args=(osc,))
+    gain_thread = threading.Thread(target=gain, name="Gain", args=(osc,))
     gain_thread.start()
 
     try:
@@ -163,9 +145,6 @@ if __name__ == '__main__':
 
     finally:
         # Join the threads
-        printer_thread.stop()
-        gain_thread.stop()
-
         printer_thread.join()
         gain_thread.join()
 
