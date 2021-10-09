@@ -1,4 +1,5 @@
 ### Easy way to pre-load and use Detectron
+import cv2 
 import multiprocessing as mp
 import pyrealsense2 as rs
 import numpy as np
@@ -56,7 +57,7 @@ def loadNetwork ():
 
 
 
-def detectronTargetPosition (demo, pipeline, align, depth_scale):
+def detectronTargetPosition (demo, pipeline, align, depth_scale, visualize=False):
     # The 3D point might be out of reach for the manipulation configuration space of the gripper. Does this cause any issues?
     frames = pipeline.wait_for_frames()
     frames = align.process(frames)
@@ -70,6 +71,63 @@ def detectronTargetPosition (demo, pipeline, align, depth_scale):
     depth_image = np.asanyarray(depth_frame.get_data())
     color_image = np.asanyarray(color_frame.get_data())
 
+    # Process color image
+    predictions, vis_output = demo.run_on_image(color_image)
+    pred_img = color_image
+    try:
+        center = predictions['instances'].pred_boxes.get_centers()[0].detach().cpu().numpy()    # (height, width) by default, need to be transposed for cv visualization
+        center_int = (int(center[1]), int(center[0]))
+        img = cv2.cvtColor(vis_output.get_image(), cv2.COLOR_RGB2BGR)
+        pred_img = cv2.circle(img, (center_int[1], center_int[0]), 5, (0, 0, 255), -1)
+
+        margin = 8
+        depth_center = depth_image[max(0, center_int[0]-margin): center_int[0]+margin, max(0, center_int[1]-margin): center_int[1]+margin].mean() * depth_scale
+
+        #print(f"Depth at {center}: {depth_center}")
+
+        ### Assume that we have the camera right below the sopra arm. x to the down, y is right and z is outward (not a coord system???). Origin of y can be shifted. Measure in meters.
+        depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+        target_point = np.array(rs.rs2_deproject_pixel_to_point(depth_intrin, center_int, depth_center))
+        # up down first coord, negative is up. left neg right pos, then depth outwards.
+        
+        #print(f"3D target: {target_point}")
+        target = np.array(rs.rs2_project_point_to_pixel(depth_intrin, target_point)).astype(np.uint32)
+        pred_img = cv2.circle(pred_img, (min(max(0,target[1]), 480), min(max(0,target[0]), 640)), 5, (0, 255, 0), -1)
+
+    except:
+        print("Prediction skipped")
+        return None
 
 
-    return pos
+    if visualize:
+        # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+
+        depth_colormap_dim = depth_colormap.shape
+        color_colormap_dim = color_image.shape
+
+        # If depth and color resolutions are different, resize color image to match depth image for display
+        if depth_colormap_dim != color_colormap_dim:
+            resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
+            images = np.hstack((pred_img, resized_color_image, depth_colormap))
+        else:
+            images = np.hstack((pred_img, color_image, depth_colormap))
+
+
+        # Show images
+        WINDOW_NAME = "COCO detections"
+        cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_AUTOSIZE)
+        cv2.imshow(WINDOW_NAME, images)
+
+
+
+    ### Normalize just for direction
+    norm_ref = target_point / np.linalg.norm(target_point)
+    # First go to some position in negative direction to "wind-up" prepare for throw
+    neg_ref = -norm_ref
+
+
+    distance_to_soprabase = np.array([0,0,1])
+    target_point -= distance_to_soprabase
+
+    return target_point
