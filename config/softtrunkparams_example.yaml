@@ -26,7 +26,8 @@ drag_coef: [28000,8000]
 #######################
 #speed at which model self-updates, in hz
 model update rate: 100
-
+#model, valid args: augmented, lagrange
+model type: "augmented"
 #########################
 # SENSOR CONFIGURATIONS #
 #########################

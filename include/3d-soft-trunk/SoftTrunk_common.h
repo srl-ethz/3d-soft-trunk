@@ -244,6 +244,14 @@ public:
             fmt::print("Error reading sensors from YAML!\n");
             assert(false);
         }
+        std::string modeltype = params["model type"].as<std::string>();
+        if (modeltype == "augmented"){
+            model_type = ModelType::augmentedrigidarm;
+        }
+        if (modeltype == "lagrange"){
+            model_type = ModelType::lagrange;
+        }
+
         this->sensor_refresh_rate = params["sensor refresh rate"].as<double>();
         this->bendlabs_address = params["bendlabs address"].as<std::string>();
 
