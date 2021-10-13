@@ -4,7 +4,8 @@ int main(){
     SoftTrunkParameters st_params;
     //st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
-    Model mdl{st_params, 100};
+    std::unique_ptr<StateEstimator> ste = std::make_unique<StateEstimator>(st_params);
+    Model mdl{st_params,ste};
     srl::State state{CoordType::thetax, st_params.q_size};
     DynamicParams dyn;
 

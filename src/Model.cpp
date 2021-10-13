@@ -2,7 +2,8 @@
 
 #include "3d-soft-trunk/Model.h"
 
-Model::Model(const SoftTrunkParameters& st_params, int update_frequency) : st_params_(st_params), update_frequency_(update_frequency){
+
+Model::Model(const SoftTrunkParameters& st_params, std::unique_ptr<StateEstimator>& state_est) : st_params_(st_params){
     switch (st_params_.model_type) {
         case ModelType::augmentedrigidarm: 
             stm_ = std::make_unique<SoftTrunkModel>(st_params_);     
@@ -11,22 +12,28 @@ Model::Model(const SoftTrunkParameters& st_params, int update_frequency) : st_pa
             break;
     }
 
-    update_thread = std::thread(&Model::update_loop, this);
-    fmt::print("Model initialized at {}Hz with {} model.\n",update_frequency_,st_params_.model_type);
-}
+    //update_thread = std::thread(&Model::update_loop, state_est);
+    fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
 
-void Model::update_loop(){
-    srl::Rate r{(double) update_frequency_};
-    /*while (true){
-        r.sleep();
+    srl::Rate r{(double) st_params_.model_update_rate};
+
+    while (run){
+        r.sleep(); 
+        state_est->get_state(state_);
         switch (st_params_.model_type){
             case ModelType::augmentedrigidarm: 
                 stm_->set_state(state_);
                 stm_->get_dynamic_params(dyn_);
                 break;
         }
-    }*/
+    }
 }
+
+Model::~Model(){
+    run = false;
+}
+
+
 
 void Model::get_dynamic_params(DynamicParams& dyn){
     dyn = this->dyn_;

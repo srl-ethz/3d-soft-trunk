@@ -1,14 +1,16 @@
 #pragma once
 
 #include "3d-soft-trunk/SoftTrunk_common.h"
+#include "3d-soft-trunk/StateEstimator.h"
 #include "3d-soft-trunk/Models/SoftTrunkModel.h"
 //#include "3d-soft-trunk/Model/Lagrange.h"
 
 class Model{
 public:
-    /** @brief model constructor 
-     * @param update_frequency frequency at which the model self-updates */
-    Model(const SoftTrunkParameters& st_params, int update_frequency);
+    /** @brief model constructor */
+    Model(const SoftTrunkParameters& st_params, std::unique_ptr<StateEstimator>& state_est);
+
+    ~Model();
 
     /** @brief updates given DynamicParameter dyn with new values from model */
     void get_dynamic_params(DynamicParams& dyn);
@@ -35,8 +37,7 @@ public:
      * @param dt timespan which will be simulated for the constant pressure input */
     bool simulate(srl::State& state, const VectorXd& p, double dt);
 
-    /** @brief loop which automatically updates model params */
-    void update_loop();
+   
 
 private:
     srl::State state_;
@@ -48,6 +49,8 @@ private:
     //std::unique_ptr<Lagrange> lag_;
     std::unique_ptr<SoftTrunkModel> stm_;
 
-    std::thread update_thread;
-    int update_frequency_;
+    std::unique_ptr<StateEstimator> state_est_;
+
+    bool run = true;
+
 };

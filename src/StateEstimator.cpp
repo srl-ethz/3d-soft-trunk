@@ -46,6 +46,8 @@ void StateEstimator::get_state_from_ptr(srl::State& state, int i){
             bendlabs->get_state(state);
             assert(state.coordtype==st_params_.coord_type);
             break;
+        case SensorType::simulator:
+            break;
     }
 }
 

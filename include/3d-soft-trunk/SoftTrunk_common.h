@@ -190,6 +190,9 @@ public:
     */
     double sensor_refresh_rate = 100.;
 
+    /** @brief speed at which model self-updates, given in hz */
+    double model_update_rate = 100.;
+
     std::string bendlabs_address = "/dev/ttyACM0";
 
     void finalize(){
@@ -244,7 +247,9 @@ public:
         this->sensor_refresh_rate = params["sensor refresh rate"].as<double>();
         this->bendlabs_address = params["bendlabs address"].as<std::string>();
 
-
+        if (sensor_refresh_rate < model_update_rate){
+            model_update_rate = sensor_refresh_rate;
+        }
     }
     
     bool is_finalized() const {

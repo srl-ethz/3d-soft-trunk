@@ -21,6 +21,12 @@ shear_modulus: [35000,62000]
 #Drag coefficients of the segments
 drag_coef: [28000,8000]
 
+#######################
+# MODEL CONFIGURATION #
+#######################
+#speed at which model self-updates, in hz
+model update rate: 100
+
 #########################
 # SENSOR CONFIGURATIONS #
 #########################

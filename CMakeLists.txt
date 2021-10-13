@@ -86,7 +86,7 @@ add_library(SoftTrunkModel SHARED src/Models/SoftTrunkModel.cpp)
 target_link_libraries(SoftTrunkModel AugmentedRigidArm)
 
 add_library(Model SHARED src/Model.cpp)
-target_link_libraries(Model SoftTrunkModel)
+target_link_libraries(Model StateEstimator SoftTrunkModel)
 
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
 target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads yaml-cpp)
