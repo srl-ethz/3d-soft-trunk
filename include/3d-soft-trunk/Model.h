@@ -8,7 +8,7 @@
 class Model{
 public:
     /** @brief model constructor */
-    Model(const SoftTrunkParameters& st_params, std::unique_ptr<StateEstimator>& state_est);
+    Model(const SoftTrunkParameters& st_params);
 
     ~Model();
 
@@ -52,5 +52,8 @@ private:
     std::unique_ptr<StateEstimator> state_est_;
 
     bool run = true;
+    std::thread update_thread;
+    void update_loop();
 
+    std::mutex mtx;
 };

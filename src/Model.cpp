@@ -3,7 +3,7 @@
 #include "3d-soft-trunk/Model.h"
 
 
-Model::Model(const SoftTrunkParameters& st_params, std::unique_ptr<StateEstimator>& state_est) : st_params_(st_params){
+Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
     switch (st_params_.model_type) {
         case ModelType::augmentedrigidarm: 
             stm_ = std::make_unique<SoftTrunkModel>(st_params_);     
@@ -12,38 +12,33 @@ Model::Model(const SoftTrunkParameters& st_params, std::unique_ptr<StateEstimato
             break;
     }
 
-    //update_thread = std::thread(&Model::update_loop, state_est);
+    state_ = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
 
-    srl::Rate r{(double) st_params_.model_update_rate};
-
-    while (run){
-        r.sleep(); 
-        state_est->get_state(state_);
-        switch (st_params_.model_type){
-            case ModelType::augmentedrigidarm: 
-                stm_->set_state(state_);
-                stm_->get_dynamic_params(dyn_);
-                break;
-        }
-    }
+    update_thread = std::thread(&Model::update_loop,this);
+    
 }
 
 Model::~Model(){
     run = false;
+    update_thread.join();
 }
 
 
 
 void Model::get_dynamic_params(DynamicParams& dyn){
+    mtx.lock();
     dyn = this->dyn_;
+    mtx.unlock();
 }
 
 bool Model::get_x(std::vector<Vector3d>& x){
     if(this->x_.size() <= 0){
         return false;
     }
+    mtx.lock();
     x = this->x_;
+    mtx.unlock();
     return true;
 }
 
@@ -51,21 +46,22 @@ bool Model::get_x(Vector3d& x, int segment){
     if (this->x_.size() > segment){
         return false;
     }
+    mtx.lock();
     x = this->x_[segment];
+    mtx.unlock();
     return true;
 }
 
 void Model::set_state(const srl::State& state){
-    switch (st_params_.model_type){
-            case ModelType::augmentedrigidarm: 
-                stm_->set_state(state);
-                stm_->get_dynamic_params(dyn_);
-                break;
-        }
+    mtx.lock();
+    this->state_ = state;
+    mtx.unlock();
 }
 
 void Model::get_state(srl::State& state){
+    mtx.lock();
     state = this->state_;
+    mtx.unlock();
 }
 
 bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
@@ -91,7 +87,16 @@ bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
 void Model::force_dyn_update(){
     switch (st_params_.model_type){
             case ModelType::augmentedrigidarm: 
+                stm_->set_state(state_);
                 stm_->get_dynamic_params(dyn_);
                 break;
         }
+}
+
+void Model::update_loop(){
+    srl::Rate r{st_params_.model_update_rate};
+    while (run){
+        r.sleep();
+        force_dyn_update();
+    }
 }
