@@ -1,0 +1,2 @@
+add_executable(stateestimator stateestimator.cpp)
+target_link_libraries(stateestimator StateEstimator)

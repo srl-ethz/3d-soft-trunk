@@ -114,9 +114,9 @@ target_link_libraries(QuasiStatic ControllerPCC)
 
 
 if(${roscpp_FOUND})
-    add_library(VisualizerROS src/VisualizerROS.cpp)
-    target_link_libraries(VisualizerROS SoftTrunkModel ${roscpp_LIBRARIES})
-    target_include_directories(VisualizerROS PUBLIC ${roscpp_INCLUDE_DIRS})    
+#    add_library(VisualizerROS src/VisualizerROS.cpp)
+#    target_link_libraries(VisualizerROS SoftTrunkModel ${roscpp_LIBRARIES})
+#    target_include_directories(VisualizerROS PUBLIC ${roscpp_INCLUDE_DIRS})    
 endif(${roscpp_FOUND})
 
 ### set up pybind modules
@@ -125,10 +125,11 @@ target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm Curvature
 
 if(${roscpp_FOUND})
     # pybind modules for classes that require ROS
-    pybind11_add_module(softtrunk_ROS_pybind_module src/python_bindings_ros.cpp)
-    target_link_libraries(softtrunk_ROS_pybind_module PUBLIC VisualizerROS ${roscpp_LIBRARIES})
+#    pybind11_add_module(softtrunk_ROS_pybind_module src/python_bindings_ros.cpp)
+#    target_link_libraries(softtrunk_ROS_pybind_module PUBLIC VisualizerROS ${roscpp_LIBRARIES})
 endif(${roscpp_FOUND})
 
 add_subdirectory(apps)
+add_subdirectory(verification)
 add_subdirectory(experiments_IROS2021)
 add_subdirectory(experiments_ICRA2021)

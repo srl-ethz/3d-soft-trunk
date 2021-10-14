@@ -3,9 +3,22 @@
 StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params_(st_params), sensors(st_params_.sensors), filter_type(st_params_.filter_type) {
     assert(st_params_.is_finalized());
     state_ = st_params_.getBlankState();
+    states_.resize(sensors.size());
+    for (int i = 0; i < sensors.size(); i++){
+        switch (sensors[i]){
+        case SensorType::qualisys:
+            mocap = std::make_unique<MotionCapture>(st_params_);
+            break;
+        case SensorType::bendlabs:
+            bendlabs = std::make_unique<BendLabs>(st_params_);
+            break;
+        case SensorType::simulator:
+            break;
+        }
+    }
 
     polling_thread = std::thread(&StateEstimator::poll_sensors, this);
-    fmt::print("State Estimator initialized.\n");
+    fmt::print("State Estimator initialized with {} sensors.\n",sensors.size());
 }
 
 StateEstimator::~StateEstimator(){

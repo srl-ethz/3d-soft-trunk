@@ -28,8 +28,8 @@ add_executable(example_Model example_Model.cpp)
 target_link_libraries(example_Model Model)
 
 if(${roscpp_FOUND})
-    add_executable(example_VisualizerROS example_VisualizerROS.cpp)
-    target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)
+#    add_executable(example_VisualizerROS example_VisualizerROS.cpp)
+#    target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)
 endif(${roscpp_FOUND})
 
 
@@ -55,6 +55,6 @@ add_executable(example_QuasiStatic example_QuasiStatic.cpp)
 target_link_libraries(example_QuasiStatic QuasiStatic)
 
 if(${roscpp_FOUND})
-    add_executable(ui_controller ui_controller.cpp)
-    target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
+#    add_executable(ui_controller ui_controller.cpp)
+#    target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
 endif(${roscpp_FOUND})
