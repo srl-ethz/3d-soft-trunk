@@ -194,9 +194,9 @@ def sleep(seconds):
     """
     for ii in range(math.floor(seconds)):
         time.sleep(1)
-        print(".", end="", flush=True)
+        # print(".", end="", flush=True)
     time.sleep(seconds % 1)
-    print("-")
+    # print("-")
 
 
 def poses_to_angles_array(X_BI, X_IT):
