@@ -19,8 +19,6 @@ from geometry_msgs.msg import (
     PoseStamped,
     PointStamped,
     PoseWithCovarianceStamped,
-    Point,
-    Quaternion,
     Twist,
 )
 from visualization_msgs.msg import MarkerArray, Marker
@@ -69,8 +67,16 @@ def quat_dist(q1, q2):
     Returns:
         [type]: [description]
     """
+
     q1_dot_q2 = np.dot(q1.wxyz(), q2.wxyz())
-    return np.sqrt(np.power(1 - q1_dot_q2 * q1_dot_q2, 2))
+
+    # https://math.stackexchange.com/a/90098
+
+    # distance w/o trig functions
+    # return np.sqrt(np.power(1 - q1_dot_q2 * q1_dot_q2, 2))
+
+    # angular distance
+    return np.acos(2 * np.power(q1_dot_q2, 2) - 1)
 
 
 def pos_dist(p1, p2):
@@ -125,6 +131,38 @@ def xform_to_xyzrpy(xform):
     xyzrpy[3:] = get_rpy(xform)
     xyzrpy[3:] *= 180 / np.pi  # rad to deg
     return xyzrpy
+
+
+def xform_to_xyzquat(xform):
+    xyzq = np.zeros(7)
+    xyzq[:3] = xform.translation()
+    q_wxyz = get_quat(xform)
+    xyzq[3] = q_wxyz.w()
+    xyzq[4] = q_wxyz.x()
+    xyzq[5] = q_wxyz.y()
+    xyzq[6] = q_wxyz.z()
+    return xyzq
+
+
+def xform_to_pose(X_AB):
+    pose = Pose()
+    xyz_AB = X_AB.translation()
+    pose.position.x = xyz_AB[0]
+    pose.position.y = xyz_AB[1]
+    pose.position.z = xyz_AB[2]
+
+    q_wxyz_AB = get_quat(X_AB)
+    pose.orientation.w = q_wxyz_AB.w()
+    pose.orientation.x = q_wxyz_AB.x()
+    pose.orientation.y = q_wxyz_AB.y()
+    pose.orientation.z = q_wxyz_AB.z()
+    return pose
+
+
+def pose_to_xform(pose):
+    xyz = np.array([pose.position.x, pose.position.y, pose.position.z])
+    q_wxyz = Quaternion(w=pose.orientation.w, x=pose.orientation.x, y=pose.orientation.y, z=pose.orientation.z)
+    return RigidTransform(quaternion=q_wxyz, p=xyz)
 
 
 def rgb_(value):
