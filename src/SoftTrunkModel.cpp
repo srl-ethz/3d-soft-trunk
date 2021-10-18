@@ -78,9 +78,9 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double deg2rad = 0.01745329;
         double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
         
-        if (0 < angle && angle <= 120) angle += -2.0109300531034452e-05*pow(angle-0,3) + 0.0034033954373834524*pow(angle-0,2) + -0.0574561507256382*(angle-0) + 4.490185672961216;
-        else if (120 < angle && angle <= 240) angle += 3.302747572021082e-05*pow(angle-120,3) + -0.007737723678683866*pow(angle-120,2) + 0.42110079979545545*(angle-120) + 11.5808812368046988;
-        else if (240 < angle && angle <= 360) angle += 3.0641519532636516e-06*pow(angle-240,3) + 0.0008649353625212815*pow(angle-240,2) + -0.16777467786129097*(angle-240) + 10.165759663520388;
+        if (0 < angle && angle <= 120) angle += 7.180328116245704e-05*pow(angle-0,3) + -0.011525448021361554*pow(angle-0,2) + 0.26913846274007436*(angle-0) + 5.1833087940117135;
+        else if (120 < angle && angle <= 240) angle += -4.544386634936085e-06*pow(angle-120,3) + 0.0018082884305251293*pow(angle-120,2) + -0.17373971486142298*(angle-120) + -8.682461929498626;
+        else if (240 < angle && angle <= 360) angle += 3.4265437239413646e-05*pow(angle-240,3) + -0.008103243781337127*pow(angle-240,2) + 0.6553496685104785*(angle-240) + -14.000064884597743;
         
         angle += 0; //this to compensate for the qualisys angular offset caused when recalibrating
         //possibly redundant thanks to new char.

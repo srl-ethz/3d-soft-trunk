@@ -78,7 +78,7 @@ void ControllerPCC::get_pressure(VectorXd& p){
 void ControllerPCC::toggleGripper(){
     gripperAttached = true;
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params.num_segments, gripping*350);
+    vc->setSinglePressure(3*st_params.num_segments, gripping*250);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
@@ -181,7 +181,7 @@ void ControllerPCC::log(double time){
     VectorXd x_tip = stm->get_H(st_params.num_segments - 1).translation();
     if (sensor_type == CurvatureCalculator::SensorType::qualisys) x_tip = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
     
-    log_file << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2), (x_tip - x_ref).norm());
+    log_file << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x(0), x(1), x(2), x_ref(0), x_ref(1), x_ref(2), (x - x_ref).norm());
 
     for (int i=0; i < st_params.q_size; i++)               //log q
         log_file << fmt::format(", {}", state.q(i));

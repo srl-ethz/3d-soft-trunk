@@ -68,7 +68,7 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.5 *(i+1)*MatrixXd::Identity(3,2);
+            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.015 *(i+1)*MatrixXd::Identity(3,2);
         }
         
 
@@ -112,7 +112,7 @@ int OSC::singularity(const MatrixXd &J) {
 
     for (int i = 0; i < st_params.num_segments - 1; i++) {                         //check for singularities
         for (int j = 0; j < st_params.num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.995) order+=1;  //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.993) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;
