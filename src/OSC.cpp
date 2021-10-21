@@ -1,5 +1,7 @@
 #include "3d-soft-trunk/OSC.h"
 
+
+
 OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
     filename = "OSC_logger";
 
@@ -43,12 +45,22 @@ void OSC::control_loop() {
         //this x is from qualisys directly
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
+
+        const double mean = 0.0;
+        const double stddev = 0.1;
+        std::default_random_engine generator;
+        std::normal_distribution<double> dist(mean, stddev);
+
+        for (auto a: x)
+            a = a + dist(generator);    
+
+        //(message from Koopman's group: we add a white nosie in the observations)
         Vector3d gripperl = Vector3d::Zero();
         gripperl(2) = 0.06;
         //x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
         
-        
+
         //x_mid = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-2).translation();
 
         dx = J*state.dq;
