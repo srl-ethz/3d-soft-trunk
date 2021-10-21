@@ -145,8 +145,8 @@ int main(){
     osc.set_kp(110);
     osc.toggle_log();
 
-    /*while (t<16){
-        double r = 0.13;
+    while (t<16){
+        double r = 0.10;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
@@ -159,11 +159,11 @@ int main(){
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
             osc.toggleGripper();
-        }
+        }*/
         
         t+=dt;
         srl::sleep(dt);
-    }*/
+    }
 
     double leng = 0.11;
     double period = 6;
@@ -239,7 +239,8 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }*/
-    while (t<2*period){
+    
+    /*while (t<2*period){
         x_ref << -0.5*leng,-leng+velo*t,-0.24;
         dx_ref << 0,velo,0;
         ddx_ref << -0,0,0;
@@ -288,7 +289,7 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }  
-    t=0;     
+    t=0;  */   
 
     osc.toggle_log();
     return 1;
