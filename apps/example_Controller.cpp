@@ -143,11 +143,11 @@ int main(){
     std::thread gain_thread(gain, std::ref(osc));
     
     osc.set_kd(5.5);
-    osc.set_kp(90);
+    osc.set_kp(95);
+    //osc.toggleGripper();
+    srl::sleep(5);
     osc.toggle_log();
 
-    //osc.toggleGripper();
-    //srl::sleep(5);
     while (t<16){
         double r = 0.10;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
