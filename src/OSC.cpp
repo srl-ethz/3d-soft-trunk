@@ -46,15 +46,15 @@ void OSC::control_loop() {
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
 
-        const double mean = 0.0;
+        /*const double mean = 0.0;
         const double stddev = 0.1;
         std::default_random_engine generator;
         std::normal_distribution<double> dist(mean, stddev);
-        std::uniform_real_distribution<> distrib(-0.01, 0.01);
+        std::uniform_real_distribution<> distrib(-0.02, 0.02);
 
         for (int i = 0; i < 3; i++){
             x[0] += distrib(generator);
-        }
+        }*/
 
         /*for (auto a: x){
             a = a + dist(generator);
