@@ -13,6 +13,7 @@ double crosstime;
 Vector3d newx;
 Vector3d diff;
 
+
 void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
@@ -118,7 +119,7 @@ int main(){
     
     x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
     //x_ref = x_ref_center;
-    x_ref << 0.2*0.11,-0.11,-0.22;
+    x_ref << 0.1,0,-0.22;
     std::thread print_thread(printer, std::ref(osc));
 
     
@@ -128,7 +129,7 @@ int main(){
     Vector3d d_circle;
     Vector3d dd_circle;
 
-    double coef = 2 * 3.1415 / 8;
+    double coef = 2 * 3.1415 / 12;
     //osc.gripperAttached = true;
     osc.loadAttached = 0;
     //getchar();
@@ -142,9 +143,11 @@ int main(){
     std::thread gain_thread(gain, std::ref(osc));
     
     osc.set_kd(5.5);
-    osc.set_kp(110);
+    osc.set_kp(90);
     osc.toggle_log();
 
+    osc.toggleGripper();
+    srl::sleep(5);
     while (t<16){
         double r = 0.10;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
@@ -165,16 +168,15 @@ int main(){
         srl::sleep(dt);
     }
 
-    double leng = 0.11;
+    /*double leng = 0.11;
     double period = 6;
     double velo = leng/period;
 
-    /*while (t<period){
+    while (t<period){
         x_ref << 1.0*leng-velo*t,leng,-0.22;
         dx_ref << -velo,0,0;
         ddx_ref << 0,0,0;
         osc.set_ref(x_ref,dx_ref,ddx_ref);
-
         t+=dt;
         srl::sleep(dt);
     }

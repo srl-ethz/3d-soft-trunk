@@ -5,11 +5,11 @@ int main(){
     st_params.finalize();
     Characterize ch{st_params, CurvatureCalculator::SensorType::qualisys};
     //ch.ffChDir();
-    //ch.logRadialPressureDist(0, "topRadialLog500");
+    ch.logRadialPressureDist(0, "topRadialLog500");
 
-    ch.calcK(0,8,5);
-    ch.calcK(1,8,5);
-    //ch.calcK(0,8,5);
+   // ch.calcK(0,8,5);
+   // ch.calcK(1,8,5);
+    
     //ch.logRadialPressureDist(0, "topRadialLog500");
     
 }

@@ -46,14 +46,19 @@ void OSC::control_loop() {
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
 
-        /*const double mean = 0.0;
+        const double mean = 0.0;
         const double stddev = 0.1;
         std::default_random_engine generator;
         std::normal_distribution<double> dist(mean, stddev);
+        std::uniform_real_distribution<> distrib(-0.01, 0.01);
 
-        for (auto a: x)
-            a = a + dist(generator);*/
+        for (int i = 0; i < 3; i++){
+            x[0] += distrib(generator);
+        }
 
+        /*for (auto a: x){
+            a = a + dist(generator);
+        }*/
         //(message from Koopman's group: we add a white nosie in the observations)
         Vector3d gripperl = Vector3d::Zero();
         gripperl(2) = 0.06;
@@ -70,6 +75,7 @@ void OSC::control_loop() {
         if ((x_ref - x).norm() > 0.05) {                                   //deal with super high distances
             ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.05 + kd*(dx_ref - dx);  
         }
+        ddx_des(2) = 0;
 
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
@@ -124,7 +130,7 @@ int OSC::singularity(const MatrixXd &J) {
 
     for (int i = 0; i < st_params.num_segments - 1; i++) {                         //check for singularities
         for (int j = 0; j < st_params.num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.988) order+=1;  //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.993) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;
