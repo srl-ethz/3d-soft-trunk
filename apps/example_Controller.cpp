@@ -122,15 +122,15 @@ int main(){
 
     
     double t = 0;
-    double dt = 0.1;
+    double dt = 0.01;
     Vector3d circle;
     Vector3d d_circle;
     Vector3d dd_circle;
 
     double coef = 2 * 3.1415 / 8;
-    osc.gripperAttached = true;
+    //osc.gripperAttached = true;
     osc.loadAttached = 0;
-    getchar();
+    //getchar();
     osc.toggleGripper();
 
     getchar();
@@ -139,11 +139,12 @@ int main(){
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
-    
-    //osc.toggle_log();
-    while (true){
-        double r = 0.13;
-        circle << r*cos(coef*t), r*sin(coef*t),-0.215;
+    x_ref << 0.1,0,-0.25;
+    osc.set_ref(x_ref,dx_ref, ddx_ref);
+    osc.toggle_log();
+    while (t<12){
+        double r = 0.10;
+        circle << r*cos(coef*t), r*sin(coef*t),-0.25;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
         x_ref = circle;
@@ -160,7 +161,7 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    x_ref << -0.15,0.00,-0.2;
+    /*x_ref << -0.15,0.00,-0.2;
     dx_ref(0) = -10;
     osc.set_ref(x_ref,dx_ref);
     srl::sleep(0.2);
@@ -168,8 +169,8 @@ int main(){
     srl::sleep(0.1);
     dx_ref(0) = 0;
     osc.set_ref(x_ref,dx_ref);
-    srl::sleep(3);
+    srl::sleep(3);*/
     osc.toggle_log();
-    srl::sleep(2);
+    //srl::sleep(2);
     return 1;
 }

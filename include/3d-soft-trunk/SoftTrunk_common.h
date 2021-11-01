@@ -75,7 +75,7 @@ public:
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
      */
-    std::vector<double> masses = {0.160, 0.020, 0.082, 0.023};
+    std::vector<double> masses = {0.160, 0.020, 0.140, 0.023};
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
@@ -84,7 +84,7 @@ public:
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
      */
-    std::vector<double> diameters = {0.035, 0.028, 0.0198};
+    std::vector<double> diameters = {0.035, 0.028, 0.025};
     /** @brief angle of arm rel. to upright */
     double armAngle = 180;
 
@@ -92,7 +92,7 @@ public:
      * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
      * @todo the value for the base segment is fake now, must run characterization on the real segment
      */
-    std::vector<double> shear_modulus = {40686, 59116};
+    std::vector<double> shear_modulus = {40686*2.8112137272542075, 59116*2.109658268144279};
     std::vector<double> drag_coef = {28000., 8000.};
 
     /** @brief degrees of freedom of arm. is set when finalize() is called */
