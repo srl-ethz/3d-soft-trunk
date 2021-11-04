@@ -141,7 +141,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(osc));
     
     //osc.toggle_log();
-    while (true){
+    /*while (true){
         double r = 0.13;
         circle << r*cos(coef*t), r*sin(coef*t),-0.215;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
@@ -155,21 +155,13 @@ int main(){
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
             osc.toggleGripper();
-        }*/
+        }
         
         t+=dt;
         srl::sleep(dt);
-    }
-    x_ref << -0.15,0.00,-0.2;
-    dx_ref(0) = -10;
-    osc.set_ref(x_ref,dx_ref);
-    srl::sleep(0.2);
-    osc.toggleGripper();
-    srl::sleep(0.1);
-    dx_ref(0) = 0;
-    osc.set_ref(x_ref,dx_ref);
-    srl::sleep(3);
+    }*/
+
     osc.toggle_log();
-    srl::sleep(2);
+
     return 1;
 }
