@@ -128,10 +128,10 @@ int main(){
     Vector3d dd_circle;
 
     double coef = 2 * 3.1415 / 8;
-    osc.gripperAttached = true;
+    //osc.gripperAttached = true;
     osc.loadAttached = 0;
-    getchar();
-    osc.toggleGripper();
+    //getchar();
+    //osc.toggleGripper();
 
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
@@ -140,27 +140,69 @@ int main(){
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
-    //osc.toggle_log();
-    /*while (true){
-        double r = 0.13;
-        circle << r*cos(coef*t), r*sin(coef*t),-0.215;
-        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
-        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
-        //x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref, ddx_ref);
-        /*osc.get_x(x);
-        if ((x_ref - x).norm() < 0.07){
-            freedom = true;
-            osc.toggleGripper();
-        }
-        
+    osc.toggle_log();
+
+    double leng = 0.10;
+    double period = 5;
+    double velo = leng/period;
+    
+    x_ref << -leng+velo*t,-0.5*leng,-0.24;
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
+
+    srl::sleep(10);
+
+    while (t<2*period){
+        //x_ref << -0.5*leng,-leng+velo*t,-0.24;
+        x_ref << -leng+velo*t,-0.5*leng,-0.24;
+        dx_ref << velo,0,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
         t+=dt;
         srl::sleep(dt);
-    }*/
+    }
+    t=0;
+    while (t<period){
+       // x_ref << -0.5*leng+velo*t,leng,-0.24;
+        x_ref << leng,-0.5*leng+velo*t,-0.24;
+        dx_ref << 0,velo,0;
+        ddx_ref << -0,0,0;
 
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }
+    t=0;    
+    /*while (t<period){
+        x_ref << 0.5*leng,leng-velo*t,-0.24;
+        dx_ref << 0,-velo,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }
+    t=0;
+    while (t<period){
+        x_ref << 0.5*leng-velo*t,0,-0.24;
+        dx_ref << -velo,0,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }  
+    t=0;
+    while (t<1.414*period){
+        x_ref << -0.5*leng+velo*t,-velo*t,-0.24;
+        dx_ref << velo,-velo,0;
+        ddx_ref << -0,0,0;
+
+        osc.set_ref(x_ref,dx_ref,ddx_ref);
+        t+=dt;
+        srl::sleep(dt);
+    }  */
+    t=0;
     osc.toggle_log();
 
     return 1;
