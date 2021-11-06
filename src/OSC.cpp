@@ -13,8 +13,8 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 100;
-    kd = 5.5;
+    kp = 250;
+    kd = 5;
 
 
     //OSC needs a higher refresh rate than other controllers
@@ -54,7 +54,7 @@ void OSC::control_loop() {
         dx = J*state.dq;
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
-
+        //ddx_des(2) = 0;
         if ((x_ref - x).norm() > 0.05) {                                   //deal with super high distances
             ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.05 + kd*(dx_ref - dx);  
         }
@@ -68,7 +68,7 @@ void OSC::control_loop() {
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.02*(i+1)*MatrixXd::Identity(3,2);
+            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.045*(i+1)*MatrixXd::Identity(3,2);
         }
         
 
@@ -112,7 +112,7 @@ int OSC::singularity(const MatrixXd &J) {
 
     for (int i = 0; i < st_params.num_segments - 1; i++) {                         //check for singularities
         for (int j = 0; j < st_params.num_segments - 1 - i; j++){
-            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.995) order+=1;  //if the planes are more or less the same, we are near a singularity
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.99) order+=1;  //if the planes are more or less the same, we are near a singularity
         }
     }
     return order;

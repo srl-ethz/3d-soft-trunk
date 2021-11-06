@@ -44,8 +44,8 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
 void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref, const Vector3d &ddx_ref){
     std::lock_guard<std::mutex> lock(mtx);
     Vector3d x_r = x_ref;
-    if (x_ref.norm() > 0.27) {
-        x_r = 0.27*x_ref.normalized(); //What is this???
+    if (x_ref.norm() > 0.29) {
+        x_r = 0.29*x_ref.normalized(); //What is this???
     }
     this->x_ref = x_r;
     this->dx_ref = dx_ref;

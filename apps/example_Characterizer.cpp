@@ -4,7 +4,12 @@ int main(){
     SoftTrunkParameters st_params{};
     st_params.finalize();
     Characterize ch{st_params, CurvatureCalculator::SensorType::qualisys};
-    //ch.calcK(0,8,5);
+    //ch.ffChDir();
     ch.logRadialPressureDist(0, "topRadialLog500");
+
+    //ch.calcK(0,8,5);
+    //ch.calcK(1,8,5);
+    
+    //ch.logRadialPressureDist(0, "topRadialLog500");
     
 }

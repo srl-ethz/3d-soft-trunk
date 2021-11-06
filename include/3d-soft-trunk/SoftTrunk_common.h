@@ -75,7 +75,7 @@ public:
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
      */
-    std::vector<double> masses = {0.160, 0.020, 0.140, 0.023};
+    std::vector<double> masses = {0.160, 0.020, 0.120, 0.023};
     /** @brief length of each part, in m
      * account for a bit of stretching under pressure...
      * {length of base segment, length of base connector piece, ..., length of tip segment} */
