@@ -84,7 +84,7 @@ public:
      * @brief outer diameters of semicircular chamber
      * {base of base segment, tip of base segment = base of next segment, ...}
      */
-    std::vector<double> diameters = {0.035, 0.028, 0.025};
+    std::vector<double> diameters = {0.035, 0.028, 0.020};
     /** @brief angle of arm rel. to upright */
     double armAngle = 180;
 
