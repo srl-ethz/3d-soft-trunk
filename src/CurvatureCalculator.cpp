@@ -22,7 +22,8 @@ CurvatureCalculator::CurvatureCalculator(const SoftTrunkParameters& st_params, C
 
 void CurvatureCalculator::setupQualisys() {
     std::vector<int> emptyCameraList = {};
-    optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + extra_frames, emptyCameraList, "6D", true);
+    //optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + extra_frames, emptyCameraList, "6D", true);
+    optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + extra_frames, emptyCameraList, true);
 }
 
 void CurvatureCalculator::setupIntegratedSensor(std::string portname) {

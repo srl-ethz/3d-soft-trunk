@@ -33,8 +33,16 @@ void QuasiStatic::control_loop(){
         //J_mid << stm->J[st_params.num_segments-2], stm->J[st_params.num_segments-1] ; //middle seg jacobian
 
         //this x is from qualisys directly
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        if (sensor_type != CurvatureCalculator::SensorType::simulator){
+            x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        }
+   //     x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
+
+
+        else {
+            x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        }
 
         dx = J*state.dq;
         

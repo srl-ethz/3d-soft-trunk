@@ -51,6 +51,15 @@ target_link_libraries(play_movement SerialInterface ControllerPCC)
 add_executable(example_QuasiStatic example_QuasiStatic.cpp)
 target_link_libraries(example_QuasiStatic QuasiStatic)
 
+add_executable(example_Simulator_test example_Simulator_test.cpp)
+target_link_libraries(example_Simulator_test ControllerPCC QuasiStatic PID)
+
+add_executable(example_casadi example_casadi.cpp)
+target_link_libraries(example_casadi casadi ControllerPCC)
+
+add_executable(example_MPC example_MPC.cpp)
+target_link_libraries(example_MPC casadi ControllerPCC MPC)
+
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)

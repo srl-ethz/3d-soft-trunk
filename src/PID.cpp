@@ -15,9 +15,9 @@ PID::PID(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 MiniPID PID::ZieglerNichols(double Ku, double period, double control_period) {
     // https://en.wikipedia.org/wiki/Ziegler–Nichols_method
     // use P-only control for now
-    double Kp = 0.2 * Ku;
+    double Kp = 0.8 * Ku;
     double Ki = 0;//.4 * Ku / period * control_period;
-    double Kd = 0;//.066 * Ku * period / control_period;
+    double Kd = 0.066 * Ku * period / control_period;
     return MiniPID(Kp, Ki, Kd);
 }
 
@@ -28,7 +28,9 @@ void PID::control_loop(){
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        cc->get_curvature(state);
+        if (sensor_type != CurvatureCalculator::SensorType::simulator){
+            cc->get_curvature(state);
+        }
         stm->updateState(state);
 
 
@@ -40,6 +42,18 @@ void PID::control_loop(){
         
         p = stm->pseudo2real(f + gravity_compensate(state));
 
-        actuate(p);
+
+        if (sensor_type != CurvatureCalculator::SensorType::simulator){
+            x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        }
+        else {
+            x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        }
+
+
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
+        else {
+            assert(simulate(p));
+        }
     }
 }
