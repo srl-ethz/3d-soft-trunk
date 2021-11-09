@@ -32,8 +32,13 @@ void MPC::control_loop(){
         // Define state space system : https://x-engineer.org/graduate-engineering/signals-systems/control-systems/state-space-model-dynamic-system/
         // Define discrete system
 
-        MatrixXd sp_A(2*st_params.q_size, 2*st_params.q_size);
-        MatrixXd sp_B(2*st_params.q_size, 2*st_params.num_segments);  // need a coversion DM to MatrixXd and viceversa
+        sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
+        sp_B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);  
+
+        //MatrixXd sp_A(2*st_params.q_size, 2*st_params.q_size);
+        //MatrixXd sp_B(2*st_params.q_size, 2*st_params.num_segments);   // SS matrices
+
+        // need a coversion DM to MatrixXd and viceversa
         
         get_state_space(stm->B, stm->c, stm->g, stm->K, stm->D, stm->A_pseudo, sp_A, sp_B, dt);
 
@@ -41,10 +46,20 @@ void MPC::control_loop(){
         //https://groups.google.com/g/casadi-users/c/npPcKItdLN8
         // DM <--> Eigen
 
-        DM sp_A_temp(Sparsity::dense(2*st_params.q_size, 2*st_params.q_size));
-        DM sp_B_temp(Sparsity::dense(2*st_params.q_size, 2*st_params.num_segments));
-        DM q_r_temp(Sparsity::dense(st_params.q_size, 1));
-        DM q_dot_r_temp(Sparsity::dense(st_params.q_size, 1));
+        sp_A_temp = DM::nan(2*st_params.q_size, 2*st_params.q_size);
+
+        //std::cout << sp_A_temp << std::endl;
+        //std::cout << sp_A_temp.size() << std::endl;
+
+        sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
+        q_r_temp = DM::nan(st_params.q_size, 1);
+        q_dot_r_temp = DM::nan(st_params.q_size, 1);  // conversion placeholders
+
+
+        // OLD IMPLEMENTATION
+        //DM sp_B_temp(Sparsity::dense(2*st_params.q_size, 2*st_params.num_segments));
+        //DM q_r_temp(Sparsity::dense(st_params.q_size, 1));
+        //DM q_dot_r_temp(Sparsity::dense(st_params.q_size, 1));  // conversion placeholders
 
         std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
         std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
@@ -59,28 +74,38 @@ void MPC::control_loop(){
         ctrl.set_value(q_dot_r, q_dot_r_temp); 
         OptiSol sol = ctrl.solve(); 
 
+        /*
+        std::cout << sol.value(u) << std::endl; 
+        std::cout << "-----------------" << std::endl;
+        std::cout << stm->A_pseudo << std::endl;
+        std::cout << stm-> A << std::endl; */
+
         //auto u_temp = static_cast<std::vector<double>>(sol.value(u));
-        DM u_temp = sol.value(u); 
+        u_temp = sol.value(u)(Slice(),0); 
+
+        std::cout << u_temp << std::endl;
         
-        MatrixXd p_temp(st_params.num_segments,1); 
+        p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
         //std::copy(u_temp.data(), u_temp.data() + u_temp.size(), p_temp);  // <<<<<<<<<<<< error, missing DM to Eigen part
 
-        p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),st_params.num_segments,1 ); 
+        p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),2*st_params.num_segments,1 ); 
 
         ///// DEBUG
-
+        /*
         std::cout << "DEBUG" << std::endl; 
-        std::cout << stm->A_pseudo.size() << std::endl;   // size 2? 
-        std::cout << p_temp.size() << std::endl; 
-
+        std::cout << stm->A_pseudo.size() << std::endl;   // size 16? 
+        std::cout << p_temp.size() << std::endl;   // size 2
+        */
         /////
 
         tau_ref = stm->A_pseudo* p_temp; 
 
-        // apply input                     // need to check how to do this
-        VectorXd pxy = stm->A_pseudo.inverse()*tau_ref/10000;
+        // apply input                     // need to check how to do this, seems really small
+        pxy = stm->A_pseudo.inverse()*tau_ref/10000;
         p = stm->pseudo2real(pxy + p_prev);  // possibly add gravity compensation
         p_prev += pxy;
+
+        std::cout << p << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
@@ -139,7 +164,7 @@ Opti MPC::define_problem(){
     std::cout << "Cost function initialized" << std::endl;
 
     ///////////////// DEBUG STUFF 
-    
+    /*
     std::cout << "DEBUG" << std::endl; 
     std::cout << A.size() << std::endl;
     std::cout << A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)).size() << std::endl;
@@ -148,7 +173,7 @@ Opti MPC::define_problem(){
     std::cout << A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)).size() << std::endl; 
     std::cout << B(Slice(0, st_params.q_size), Slice()).size() << std::endl;
     std::cout << B(Slice(st_params.q_size, 2*st_params.q_size), Slice()).size() << std::endl; 
-
+    */
     //////////////////
 
     // Slice function (0,2) select 0-1 only
