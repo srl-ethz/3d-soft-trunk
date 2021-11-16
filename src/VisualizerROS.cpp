@@ -34,7 +34,7 @@ VisualizerROS::VisualizerROS(SoftTrunkModel& stm) : stm(stm), st_params(stm.getS
 
 void VisualizerROS::publishState(){
     for (int i = 0; i < joint_msg.name.size(); i++)
-        joint_msg.position[i] = stm.ara->xi_(i);
+        joint_msg.position[i] = stm.get_xi()(i);
     joint_msg.header.stamp = ros::Time::now();
     joint_pub.publish(joint_msg);
 }
@@ -42,8 +42,8 @@ void VisualizerROS::publishState(){
 void VisualizerROS::publishArrow(int segment, Vector3d xyz, Vector3d rgb, bool global){
     if (global){
         // rotate xyz from global frame to local frame, since Visualization marker assumes local frame
-        Matrix3d base_to_segment = stm.ara->get_H(segment).matrix().block(0,0,3,3);
-        Matrix3d world_to_base = stm.ara->get_H_base().matrix().block(0,0,3,3);
+        Matrix3d base_to_segment = stm.get_H(segment).matrix().block(0,0,3,3);
+        Matrix3d world_to_base = stm.get_H_base().matrix().block(0,0,3,3);
         xyz = base_to_segment.inverse() * world_to_base.inverse() * xyz;
     }
        

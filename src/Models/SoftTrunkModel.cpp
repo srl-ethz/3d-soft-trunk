@@ -243,3 +243,7 @@ void SoftTrunkModel::generateRobotURDF(){
         throw "error with xacro -> urdf conversion script, aborting program"; // if python program returns anything other than 0, it is error
     fmt::print("URDF file generated.\n");
 }
+
+VectorXd SoftTrunkModel::get_xi(){
+    return ara->xi_;
+}

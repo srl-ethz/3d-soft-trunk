@@ -81,7 +81,7 @@ public:
      */
     VectorXd pseudo2real(VectorXd pressure_pseudo);
 
-
+    VectorXd get_xi();
     
 private:
     
