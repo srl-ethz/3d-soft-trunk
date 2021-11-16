@@ -1,12 +1,12 @@
+#include <3d-soft-trunk/ControllerPCC.h>
 #include <casadi/casadi.hpp>
 using namespace casadi;
 #include <casadi/core/optistack.hpp>
-#include <3d-soft-trunk/ControllerPCC.h>
 
 
 int main(){
 
-
+/*
     MatrixXd M(6,6);
 
     M << MatrixXd::Identity(3,3), MatrixXd::Zero(3,3), MatrixXd::Identity(3,3), MatrixXd::Identity(3,3);
@@ -19,7 +19,7 @@ int main(){
 
     std::cout << M1(Slice(0,5), Slice()) << std::endl; 
 
-
+*/
 /*
     Opti opti = casadi::Opti();
 

@@ -41,6 +41,10 @@ int main(){
     int counter = 0;
     int new_counter;
 
+    int avg = 20;
+
+    VectorXd error_avg = VectorXd::Zero(avg); 
+
 
     mpc.set_state(state);
     const double hz = 1./dt;
@@ -50,28 +54,59 @@ int main(){
 
     while (t < time/2){
 
-        state_ref.q << -0.261782868, -0.669757892, 0.707805025,	-0.390006514;
+        state_ref.q << 0.0121174, 0.10465, 0.0121174, 0.10465;
         mpc.set_ref(state_ref);
 
         mpc.get_state(state); 
 
-        if ( (state.q - state_ref.q).norm() < tol){
-            std::cout << "Convergerged in " << t << std::endl;
+        if (counter >= avg){
+            counter = 0;
         }
+
+        if (counter < avg){
+            error_avg(counter) = (state_ref.q - state.q).norm(); 
+            counter ++; 
+        }
+
+        std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
+        std::cout << "Error vector : " << error_avg.transpose() << std::endl;
+        
+        std::cout << "Error : " << error_avg.mean() << std::endl; 
+
+        // if ( (state.q - state_ref.q).norm() < tol){
+        //     std::cout << "Convergerged in " << t << std::endl;
+        // }
 
         t += dt; 
     }
 
+    counter = 0;
+    error_avg = VectorXd::Zero(avg);
+
     while (t < time){
 
-        state_ref.q << 0.261782868,	0.669757892, -0.707805025, 0.390006514;
+        state_ref.q << -0.0121174, 0.10465, -0.0121174, 0.10465;
         mpc.set_ref(state_ref);
 
         mpc.get_state(state); 
 
-        if ( (state.q - state_ref.q).norm() < tol){
-            std::cout << "Convergerged in " << t << std::endl;
+        if (counter >= avg){
+            counter = 0;
         }
+
+        if (counter < avg){
+            error_avg(counter) = (state_ref.q - state.q).norm(); 
+            counter ++; 
+        }
+
+        std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
+        std::cout << "Error vector : " << error_avg.transpose() << std::endl;
+
+        std::cout << "Error : " << error_avg.mean() << std::endl;
+
+        // if ( (state.q - state_ref.q).norm() < tol){
+        //     std::cout << "Convergerged in " << t << std::endl;
+        // }
 
         t += dt; 
     }
