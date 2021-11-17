@@ -37,7 +37,7 @@ rate = rospy.Rate(50)  # 50hz
 marker_array_pub = rospy.Publisher("/sopra/marker_array", MarkerArray, queue_size=1)
 
 num_segments = 3
-df_columns = [
+plot_labels = [
     "Time (s)",
     "Commanded Pressure #1 (kPa)",
     "Commanded Pressure #2 (kPa)",
@@ -48,13 +48,36 @@ df_columns = [
     "Flex sensor #1",
     "Flex sensor #2",
     "Flex sensor #3",
+    "Quaternion dist from MoCap (rad) * 400 + 1000",
 ]
+
+data_cols = [
+    "time",
+    "cmd_P1",
+    "cmd_P2",
+    "cmd_P3",
+    "meas_P1",
+    "meas_P2",
+    "meas_P3",
+    "flex1",
+    "flex2",
+    "flex3",
+    "q_dist",
+    "X_BT_meas_x",
+    "X_BT_meas_y",
+    "X_BT_meas_z",
+    "X_BT_meas_qw",
+    "X_BT_meas_qx",
+    "X_BT_meas_qy",
+    "X_BT_meas_qz",
+]
+
 vis = visdom.Visdom()
 plot_opts = dict(
     # title="",
-    xlabel=df_columns[0],
+    xlabel=plot_labels[0],
     ylabel="Sensor readings",
-    legend=df_columns[1:],
+    legend=plot_labels[1:],
 )
 plot_start_time = None
 plot = None
@@ -73,7 +96,6 @@ X_BT_meas = None
 
 # flags
 updated_pose = threading.Event()
-updated_pose.set()
 updated_pressure = threading.Event()
 updated_sensor_reading = threading.Event()
 
@@ -101,10 +123,10 @@ def handle_hand_state_msg(hand_state_msg):
 
 
 # finger base id
-B_id = 8
+B_id = 0
 
 # finger tip id
-T_id = 7
+T_id = 1
 
 
 def handle_marker_array(marker_array_msg):
@@ -126,7 +148,7 @@ def clear_flags():
     global updated_pose
     global updated_pressure
     global updated_sensor_reading
-    # updated_pose.clear()
+    updated_pose.clear()
     updated_pressure.clear()
     updated_sensor_reading.clear()
 
@@ -150,17 +172,21 @@ def plot_loop():
         global plot_start_time
 
         time_now = time.time()
-        if plot_start_time is None:
-            plot_start_time = time_now
-
+        qdist = quat_dist(get_quat(X_BT_meas), Quaternion())
         sensor_readings = np.hstack(
-            [cmd_pressure_values, pressure_reading, flex_sensor_reading]
+            [cmd_pressure_values, pressure_reading, flex_sensor_reading, [qdist], xform_to_xyzquat(X_BT_meas)]
         )
         sensor_readings[:6] /= 1e3  # to kPa
 
+        plot_data = np.copy(sensor_readings[:10])
+        plot_data[-1] = 1000 + plot_data[-1] * 400
+        plot_data = plot_data.reshape((-1, 1))
+        if plot is None:
+            plot_start_time = time_now
+
         if plot is not None and vis.win_exists(plot):
             vis.line(
-                Y=sensor_readings.reshape((-1, 1)),
+                Y=plot_data,
                 X=[time_now - plot_start_time],
                 win=plot,
                 opts=plot_opts,
@@ -168,7 +194,7 @@ def plot_loop():
             )  # name="regression"
         else:
             plot = vis.line(
-                Y=sensor_readings.reshape((-1, 1)),
+                Y=plot_data,
                 X=np.array([time_now - plot_start_time]),
                 opts=plot_opts,
             )
@@ -209,7 +235,7 @@ def set_pressures(pressures):
 sleep(2)
 
 finger_idx = 2
-sleep_to_settle_time = 20
+sleep_to_settle_time = 0.5
 
 # set everything to zero and measure initial pose
 pressures = [1e5] * num_valves
@@ -217,80 +243,38 @@ set_pressures(pressures)
 sleep(sleep_to_settle_time)  # HACK
 # measure once it settles
 
-# data_cols = [
-#     "finger_idx",
-#     "P_desired",
-#     "P_measured",
-#     "X_BT_meas.x",
-#     "X_BT_meas.y",
-#     "X_BT_meas.z",
-#     "X_BT_meas.qw",
-#     "X_BT_meas.qx",
-#     "X_BT_meas.qy",
-#     "X_BT_meas.qz",
-#     "quat_dist_BT_meas",
-#     "flex_sensor",
-# ]
 data_list = []
 max_num_iter = 10
 
-
-def data_to_dict(finger_idx, state, Pdesired, Pmeas, X_BT_meas, flex_meas):
-    xyzq = xform_to_xyzquat(X_BT_meas)
-    return {
-        "finger_idx": finger_idx,
-        "P_desired": Pdesired,
-        "P_measured": Pmeas,
-        "X_BT_meas.xyz_qwxyz": xyzq,
-        "quat_dist_BT_meas": quat_dist(get_quat(X_BT_meas), Quaternion()),
-        "flex_sensor": flex_meas,
-    }
-
-
 plot_thread = threading.Thread(target=plot_loop)
 plot_thread.start()
-# csv_fpath = f"/src/3d-soft-trunk/examples_python/20211007-f{finger_idx}-p0to6bar-n{max_num_iter}-v1-wait5secs-test2.csv"
-# csv_fpath = f"/src/3d-soft-trunk/examples_python/20211014-p1to45bar-bidir-wait{sleep_to_settle_time}secs.csv"
 
+time_start = datetime.datetime.now()
+datetime_str = time_start.strftime("%Y%m%d%H%M%S")
+
+finger_idx = 2
 for iter_idx in trange(max_num_iter):
-    for finger_idx in range(3):
-        cmd_pressures = np.arange(1e5, 4.5e5, 5e4).tolist()
-        for _ in trange(2, leave=False):  # ramp up and down
-            for pressure_desired in tqdm(cmd_pressures, leave=False):
-                desired_pressures = [1e5] * num_valves
-                desired_pressures[finger_idx] = pressure_desired
-                set_pressures(desired_pressures)
-                # measure once it settles
-                sleep(sleep_to_settle_time)
-
-                # clear_flags()
-                # wait_for_measurements()
-                # print(
-                #     f"@idx:{finger_idx} Pd:{desired_pressures[:3]} P:{pressure_reading} X_BT_meas:{X_BT_meas} q: {quat_dist(get_quat(X_BT_meas), Quaternion())} flex:{flex_sensor_reading}"
-                # )
-                # data_list.append(
-                #     data_to_dict(
-                #         finger_idx,
-                #         "closed" if pressure_desired > 1e5 else "open",
-                #         desired_pressures[:3],
-                #         pressure_reading,
-                #         X_BT_meas,
-                #         flex_sensor_reading,
-                #     )
-                # )
-
-            pressures = [1e5] * num_valves
-            set_pressures(pressures)
+    cmd_pressures = np.arange(1e5, 4.5e5, 5e4).tolist()
+    for dir in tqdm(["up", "down"], leave=False):  # ramp up and down
+        for pressure_desired in tqdm(cmd_pressures, leave=False):
+            desired_pressures = [1e5] * num_valves
+            desired_pressures[finger_idx] = pressure_desired
+            set_pressures(desired_pressures)
+            # measure once it settles
             sleep(sleep_to_settle_time)
 
-            cmd_pressures = cmd_pressures[::-1]
+        pressures = [1e5] * num_valves
+        set_pressures(pressures)
+        sleep(sleep_to_settle_time)
 
-    with dataframe_lock:
-        df = pd.DataFrame(
-            output_data_list,
-            columns=df_columns,
-        )
-        csv_fpath = f"/src/3d-soft-trunk/examples_python/20211015a-p1to45bar-bidir-wait{sleep_to_settle_time}secs-i{iter_idx}.csv"
-        df.to_csv(csv_fpath)
-        output_data_list = []
-        print(f"Saved to {csv_fpath}")
+        cmd_pressures = cmd_pressures[::-1]
+
+        with dataframe_lock:
+            df = pd.DataFrame(
+                output_data_list,
+                columns=data_cols,
+            )
+            csv_fpath = f"/src/3d-soft-trunk/logs/{datetime_str}-p1to45bar-{dir}-wait{sleep_to_settle_time}secs-f{finger_idx}-i{iter_idx}.csv"
+            df.to_csv(csv_fpath)
+            output_data_list = []
+            print(f"Saved to {csv_fpath}")

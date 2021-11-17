@@ -50,7 +50,7 @@ def publish_marker_array(body_id_to_pose):
 # sleep until data is received from Qualisys (temporary hack solution)
 sleep(2)
 
-body_ids = [7, 8]
+body_ids = [0, 1]
 body_id_to_pose = {body_id:RigidTransform for body_id in body_ids}
 
 st_params = SoftTrunkParameters()
