@@ -25,8 +25,8 @@ from visualization_msgs.msg import MarkerArray, Marker
 from utils import *
 
 
-# constants
-eps = 1e-10
+# Global constants
+eps = np.finfo(float).eps
 
 
 def xform_rot_dist(x1, x2):
@@ -76,7 +76,7 @@ def quat_dist(q1, q2):
     # return np.sqrt(np.power(1 - q1_dot_q2 * q1_dot_q2, 2))
 
     # angular distance
-    return np.acos(2 * np.power(q1_dot_q2, 2) - 1)
+    return np.arccos(2 * np.power(q1_dot_q2, 2) - 1)
 
 
 def pos_dist(p1, p2):
@@ -162,6 +162,12 @@ def xform_to_pose(X_AB):
 def pose_to_xform(pose):
     xyz = np.array([pose.position.x, pose.position.y, pose.position.z])
     q_wxyz = Quaternion(w=pose.orientation.w, x=pose.orientation.x, y=pose.orientation.y, z=pose.orientation.z)
+    return RigidTransform(quaternion=q_wxyz, p=xyz)
+
+
+def xyzquat_to_xform(xyzq):
+    xyz = xyzq[:3]
+    q_wxyz = Quaternion(w=xyzq[3], x=xyzq[4], y=xyzq[5], z=xyzq[6])
     return RigidTransform(quaternion=q_wxyz, p=xyz)
 
 
