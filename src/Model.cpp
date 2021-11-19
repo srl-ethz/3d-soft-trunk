@@ -9,6 +9,7 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             stm_ = std::make_unique<SoftTrunkModel>(st_params_);     
             break;
         case ModelType::lagrange: 
+            lag_ = std::make_unique<Lagrange>(st_params_);
             break;
     }
 
@@ -89,6 +90,10 @@ void Model::force_dyn_update(){
             case ModelType::augmentedrigidarm: 
                 stm_->set_state(state_);
                 stm_->get_dynamic_params(dyn_);
+                break;
+            case ModelType::lagrange:
+                lag_->set_state(state_);
+                lag_->get_dynamic_params(dyn_);
                 break;
         }
 }

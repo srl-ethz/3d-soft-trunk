@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
 #include "mdefs.h"
-#include "SoftTrunk_common.h"
+#include "3d-soft-trunk/SoftTrunk_common.h"
 #include <iostream>
 
 /**
@@ -26,12 +26,6 @@ private:
     void JDot_update(VectorXd q, VectorXd dq);
     void Y_update(VectorXd q, VectorXd dq, VectorXd dqr, VectorXd ddqr);
 
-public:
-    Lagrange(const SoftTrunkParameters &st_params);
-
-    /** @brief update the member variables based on current PCC value */
-    void update(const srl::State &state, const srl::State &state_r);
-
     /** @brief torque mapping matrix */
     MatrixXd A;
     /** @brief inertia matrix */
@@ -52,6 +46,17 @@ public:
     MatrixXd JDot;   
     /** @brief Regressor Matrix */
     MatrixXd Y;
+
+    DynamicParams dyn_;
+
+public:
+    Lagrange(const SoftTrunkParameters &st_params);
+
+    /** @brief update the member variables based on current PCC value */
+    void set_state(const srl::State &state);
+
+    /** @brief fetch dynamic parameters */
+    void get_dynamic_params(DynamicParams& dyn);
 
     SoftTrunkParameters st_params;
 };

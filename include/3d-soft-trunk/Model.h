@@ -3,6 +3,7 @@
 #include "3d-soft-trunk/SoftTrunk_common.h"
 #include "3d-soft-trunk/StateEstimator.h"
 #include "3d-soft-trunk/Models/SoftTrunkModel.h"
+#include "3d-soft-trunk/Models/Lagrange.h"
 //#include "3d-soft-trunk/Model/Lagrange.h"
 
 class Model{
@@ -46,7 +47,7 @@ private:
 
     SoftTrunkParameters st_params_;
 
-    //std::unique_ptr<Lagrange> lag_;
+    std::unique_ptr<Lagrange> lag_;
     std::unique_ptr<SoftTrunkModel> stm_;
 
     std::unique_ptr<StateEstimator> state_est_;
