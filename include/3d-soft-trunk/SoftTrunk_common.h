@@ -71,7 +71,7 @@ namespace srl{
         VectorXd dq;
         VectorXd ddq;
         CoordType coordtype;
-        double timestamp;
+        unsigned long long int timestamp;
         /** @brief initialize and set the size of the vectors at the same time. */
         State(CoordType coordtype, const int q_size) : coordtype(coordtype){
             setSize(q_size);
@@ -163,6 +163,13 @@ public:
      */
     std::vector<double> shear_modulus = {40686, 59116};
     std::vector<double> drag_coef = {28000., 8000.};
+
+    /** @brief maps valves to the manipulator chambers 
+     * scheme: chamber facing towards you, chamber back left, chamber back right
+     * going from topmost segment downwards
+     * final chamber is for the gripper
+    */
+    std::vector<int> valvemap = {3,1,2,4,6,5,0};
 
     /** @brief model used to derive the parameters of the dynamic equation */
     ModelType model_type = ModelType::augmentedrigidarm;

@@ -7,29 +7,22 @@
 
 
 
-ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : st_params(st_params), sensor_type(sensor_type), objects(objects){
-    assert(st_params.is_finalized());
+ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, int objects) : st_params_(st_params), objects(objects){
+    assert(st_params_.is_finalized());
     // set appropriate size for each member
-    state.setSize(st_params.q_size);
-    state_prev.setSize(st_params.q_size);
-    state_ref.setSize(st_params.q_size);
-    p = VectorXd::Zero(3 * st_params.num_segments);
-    f = VectorXd::Zero(2 * st_params.num_segments);
+    state.setSize(st_params_.q_size);
+    state_prev.setSize(st_params_.q_size);
+    state_ref.setSize(st_params_.q_size);
+    p = VectorXd::Zero(3 * st_params_.num_segments);
+    f = VectorXd::Zero(2 * st_params_.num_segments);
 
     filename = "defaultController_log";
 
-    stm = std::make_unique<SoftTrunkModel>(st_params);
-    // +X, +Y, -X, -Y
-    std::vector<int> map = {3,1,2,4,6,5,0};
-    
-    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
+    mdl = std::make_unique<Model>(st_params_);
+    ste = std::make_unique<StateEstimator>(st_params_)
 
-    if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
-        cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, bendlabs_portname);
-    else if (sensor_type == CurvatureCalculator::SensorType::qualisys) {
-        cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, "" , objects);
-        base_transform = cc->get_frame(0);
-    }
+    vc = std::make_unique<ValveController>("192.168.0.100", st_params_.map, p_max)
+
     fmt::print("ControllerPCC object initialized.\n");
 }
 
@@ -66,7 +59,7 @@ void ControllerPCC::get_x(Vector3d &x) {
 
 void ControllerPCC::set_state(const srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
-    assert(sensor_type == CurvatureCalculator::SensorType::simulator);
+    assert(st_params_.sensors == {SensorType::simulator});
     this->state = state;
 }
 
@@ -78,7 +71,7 @@ void ControllerPCC::get_pressure(VectorXd& p){
 void ControllerPCC::toggleGripper(){
     gripperAttached = true;
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params.num_segments, gripping*350);
+    vc->setSinglePressure(3*st_params.num_segments, gripping*350); //350mbar to grip
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
@@ -94,7 +87,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         vc->setSinglePressure(i, p(i));
     }
     if (logging){  
-        log((cc->get_timestamp() - initial_timestamp)/10e5);                     //log once per control timestep
+        log(state_.timestamp/10e6);                     //log once per control timestep
     }
 }
 

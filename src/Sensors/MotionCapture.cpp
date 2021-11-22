@@ -109,6 +109,7 @@ void MotionCapture::calculator_loop(){
         //derivatives are evaluated numerically
         state_.dq = (state_.q - state_prev.q) / interval_measured;
         state_.ddq = (state_.dq - state_prev.dq) / interval_measured;
+        state_.timestamp = timestamp_;
 
         mtx.unlock(); //unlock the mutex after modifying state
 

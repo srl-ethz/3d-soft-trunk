@@ -17,7 +17,6 @@ public:
     /** @brief get all states from estimator, unfiltered */
     void get_states(std::vector<srl::State>& states);
 
-
 private:
     SoftTrunkParameters st_params_;
 

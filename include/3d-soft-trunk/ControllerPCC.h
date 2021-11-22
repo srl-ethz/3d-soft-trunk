@@ -5,9 +5,9 @@
 #pragma once
 
 #include "3d-soft-trunk/SoftTrunk_common.h"
-#include "3d-soft-trunk/Sensors/CurvatureCalculator.h"
-#include "3d-soft-trunk/Models/SoftTrunkModel.h"
-#include <mobilerack-interface/ValveController.h>
+#include "mobilerack-interface/ValveController.h"
+#include "3d-soft-trunk/Model.h"
+#include "3d-soft-trunk/StateEstimator.h"
 #include <mutex>
 
 
@@ -18,7 +18,7 @@
  **/
 class ControllerPCC {
 public:
-    ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
+    ControllerPCC(const SoftTrunkParameters st_params, int objects = 0);
 
     /** @brief set the reference pose (trajectory) of the arm
      */
@@ -76,7 +76,7 @@ public:
 
 protected:
 
-    const SoftTrunkParameters st_params;
+    const SoftTrunkParameters st_params_;
     /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
@@ -98,10 +98,9 @@ protected:
     int singularity(const MatrixXd &J);
 
 
+    std::unique_ptr<Model> mdl;
+    std::unique_ptr<StateEstimator> ste;
     std::unique_ptr<ValveController> vc;
-    std::unique_ptr<SoftTrunkModel> stm;
-    std::unique_ptr<CurvatureCalculator> cc;
-    
 
 
     std::string bendlabs_portname = "/dev/ttyUSB0";

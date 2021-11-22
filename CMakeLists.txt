@@ -92,7 +92,7 @@ add_library(Model SHARED src/Model.cpp)
 target_link_libraries(Model StateEstimator SoftTrunkModel Lagrange)
 
 add_library(ControllerPCC SHARED src/ControllerPCC.cpp)
-target_link_libraries(ControllerPCC CurvatureCalculator ValveController SoftTrunkModel Threads::Threads yaml-cpp)
+target_link_libraries(ControllerPCC Model StateEstimator Threads::Threads yaml-cpp)
 
 add_library(OSC SHARED src/Controllers/OSC.cpp)
 target_link_libraries(OSC ControllerPCC)

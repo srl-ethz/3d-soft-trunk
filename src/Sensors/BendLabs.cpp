@@ -56,7 +56,7 @@ void BendLabs::calculator_loop(){
             }
         }
 
-        if (same_as_prev){  //assumption that no two datapoints will be same due to noies
+        if (same_as_prev){  //assumption that no two datapoints will be same due to noise
             continue;       //therefore if two following datapoints are equal, there has been no update
         }
 
@@ -78,10 +78,11 @@ void BendLabs::calculator_loop(){
             }
         }
 
-        state_.dq = (state_.q - state_prev_.q) / (interval / 10.e6);
-        state_.ddq = (state_.dq - state_prev_.dq) / (interval / 10.e6);
+        state_.dq = (state_.q - state_prev_.q)*0; //bendlabs has no way of logging time, so set speeds to 0
+        state_.ddq = (state_.dq - state_prev_.dq)*0;
         state_prev_.q = state_.q;
         state_prev_.dq = state_.dq;
+        state_.timestamp = timestamp_;
 
         mtx.unlock();
 

@@ -90,10 +90,13 @@ void Model::force_dyn_update(){
             case ModelType::augmentedrigidarm: 
                 stm_->set_state(state_);
                 stm_->get_dynamic_params(dyn_);
+                assert (st_params_.coord_type == dyn_.coordtype);
                 break;
             case ModelType::lagrange:
                 lag_->set_state(state_);
                 lag_->get_dynamic_params(dyn_);
+                assert (st_params_.coord_type == CoordType::phitheta);
+                assert (st_params_.num_segments == 2);                  //lagrange is hardcoded for a 2seg phitheta robot
                 break;
         }
 }
