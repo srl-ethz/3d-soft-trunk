@@ -1,12 +1,12 @@
 #include "3d-soft-trunk/Adaptive.h"
 
 #ifndef PI
-#define PI	3.1415926535897932384626433832795
+#define PI 3.1415926535897932384626433832795
 #endif
 double sigma = 0.0;
 double dsigma = 0.0;
 double ddsigma = 0.0;
-double T = 30;// final time changes depending on the timing law
+double T = 30;        // final time changes depending on the timing law
 double num_round = 3; // number of circular period
 
 bool freedom = false;
@@ -31,7 +31,7 @@ void gain(Adaptive &ad)
             break;
         case 'a':
             ad.decrease_kp();
-            break;           
+            break;
         case 'w':
             ad.increase_kd();
             break;
@@ -61,7 +61,7 @@ void gain(Adaptive &ad)
             break;
         case 'h':
             ad.decrease_rate2();
-            break;            
+            break;
         case 'u':
             ad.increase_eps();
             break;
@@ -92,18 +92,18 @@ void gain(Adaptive &ad)
         case ']':
             ad.decrease_alpha();
             break;
-         case '1':
+        case '1':
             ad.change_ref1();
-            break;    
-         case '2':
+            break;
+        case '2':
             ad.change_ref2();
-            break;  
-         case '3':
+            break;
+        case '3':
             ad.change_ref3();
-            break;  
-         case '4':
+            break;
+        case '4':
             ad.change_ref4();
-            break;                     
+            break;
         case 'z':
             ad.show_x();
             break;
@@ -114,71 +114,71 @@ void gain(Adaptive &ad)
             pause = false;
             ad.toggle_log();
             ad.start_AD();
-           // ad.start_ID();
+            // ad.start_ID();
         }
     }
 }
 
 void Task_8(double t, double T, double r, double offset)
 {
-  double dpy_tmp;
-  double dpy_tmp_tmp;
-  double dpz_tmp;
-  double px_tmp_tmp;
-  double px_tmp_tmp_tmp;
+    double dpy_tmp;
+    double dpy_tmp_tmp;
+    double dpz_tmp;
+    double px_tmp_tmp;
+    double px_tmp_tmp_tmp;
 
-  //  offset = 0.03;
-  px_tmp_tmp_tmp = 6.2831853071795862 / T * t;
-  px_tmp_tmp = std::sin(px_tmp_tmp_tmp);
+    //  offset = 0.03;
+    px_tmp_tmp_tmp = 6.2831853071795862 / T * t;
+    px_tmp_tmp = std::sin(px_tmp_tmp_tmp);
 
-  //  syms x0 y0 z0 s a t T offset
-  //  simplify(expand(diff(dpz,t)))
-  dpy_tmp_tmp = 12.566370614359172 * t / T;
-  dpy_tmp = std::cos(dpy_tmp_tmp);
-  dpz_tmp = std::sin(dpy_tmp_tmp);
-  x_ref[0] = r * px_tmp_tmp;
-  x_ref[1] = 2.0 * r * px_tmp_tmp * std::cos(px_tmp_tmp_tmp);
-  x_ref[2] = offset * (px_tmp_tmp * px_tmp_tmp) + -0.22;
-  dpy_tmp_tmp = 6.2831853071795862 * t / T;
-  dx_ref[0] = 2.0 * r * 3.1415926535897931 * std::cos(dpy_tmp_tmp) / T;
-  dx_ref[1] = 4.0 * r * 3.1415926535897931 * dpy_tmp / T;
-  dx_ref[2] = 2.0 * offset * 3.1415926535897931 * dpz_tmp / T;
-  px_tmp_tmp_tmp = T * T;
-  ddx_ref[0] = -(4.0 * r * 9.869604401089358 * std::sin(dpy_tmp_tmp)) /
-    px_tmp_tmp_tmp;
-  ddx_ref[1] = -(16.0 * r * 9.869604401089358 * dpz_tmp) / px_tmp_tmp_tmp;
-  ddx_ref[2] = 8.0 * offset * 9.869604401089358 * dpy_tmp / px_tmp_tmp_tmp;
+    //  syms x0 y0 z0 s a t T offset
+    //  simplify(expand(diff(dpz,t)))
+    dpy_tmp_tmp = 12.566370614359172 * t / T;
+    dpy_tmp = std::cos(dpy_tmp_tmp);
+    dpz_tmp = std::sin(dpy_tmp_tmp);
+    x_ref[0] = r * px_tmp_tmp;
+    x_ref[1] = 2.0 * r * px_tmp_tmp * std::cos(px_tmp_tmp_tmp);
+    x_ref[2] = offset * (px_tmp_tmp * px_tmp_tmp) + -0.22;
+    dpy_tmp_tmp = 6.2831853071795862 * t / T;
+    dx_ref[0] = 2.0 * r * 3.1415926535897931 * std::cos(dpy_tmp_tmp) / T;
+    dx_ref[1] = 4.0 * r * 3.1415926535897931 * dpy_tmp / T;
+    dx_ref[2] = 2.0 * offset * 3.1415926535897931 * dpz_tmp / T;
+    px_tmp_tmp_tmp = T * T;
+    ddx_ref[0] = -(4.0 * r * 9.869604401089358 * std::sin(dpy_tmp_tmp)) /
+                 px_tmp_tmp_tmp;
+    ddx_ref[1] = -(16.0 * r * 9.869604401089358 * dpz_tmp) / px_tmp_tmp_tmp;
+    ddx_ref[2] = 8.0 * offset * 9.869604401089358 * dpy_tmp / px_tmp_tmp_tmp;
 }
 
 void Task_88(double t, double T, double r, double offset)
 {
-  double dpx_tmp;
-  double dpx_tmp_tmp;
-  double dpz_tmp;
-  double px_tmp_tmp;
-  double px_tmp_tmp_tmp;
+    double dpx_tmp;
+    double dpx_tmp_tmp;
+    double dpz_tmp;
+    double px_tmp_tmp;
+    double px_tmp_tmp_tmp;
 
-  //  offset = 0.03;
-  px_tmp_tmp_tmp = 6.2831853071795862 / T * t;
-  px_tmp_tmp = std::sin(px_tmp_tmp_tmp);
+    //  offset = 0.03;
+    px_tmp_tmp_tmp = 6.2831853071795862 / T * t;
+    px_tmp_tmp = std::sin(px_tmp_tmp_tmp);
 
-  //  syms x0 y0 z0 s r t T offset
-  //  simplify(expand(diff(px,t)))
-  dpx_tmp_tmp = 12.566370614359172 * t / T;
-  dpx_tmp = std::cos(dpx_tmp_tmp);
-  dpz_tmp = std::sin(dpx_tmp_tmp);
-  x_ref[0] = 2.0 * r * px_tmp_tmp * std::cos(px_tmp_tmp_tmp);
-  x_ref[1] = r * px_tmp_tmp;
-  x_ref[2] = offset * (px_tmp_tmp * px_tmp_tmp) + -0.22;
-  dx_ref[0] = 4.0 * r * 3.1415926535897931 * dpx_tmp / T;
-  dpx_tmp_tmp = 6.2831853071795862 * t / T;
-  dx_ref[1] = 2.0 * r * 3.1415926535897931 * std::cos(dpx_tmp_tmp) / T;
-  dx_ref[2] = 2.0 * offset * 3.1415926535897931 * dpz_tmp / T;
-  px_tmp_tmp_tmp = T * T;
-  ddx_ref[0] = -(16.0 * r * 9.869604401089358 * dpz_tmp) / px_tmp_tmp_tmp;
-  ddx_ref[1] = -(4.0 * r * 9.869604401089358 * std::sin(dpx_tmp_tmp)) /
-    px_tmp_tmp_tmp;
-  ddx_ref[2] = 8.0 * offset * 9.869604401089358 * dpx_tmp / px_tmp_tmp_tmp;
+    //  syms x0 y0 z0 s r t T offset
+    //  simplify(expand(diff(px,t)))
+    dpx_tmp_tmp = 12.566370614359172 * t / T;
+    dpx_tmp = std::cos(dpx_tmp_tmp);
+    dpz_tmp = std::sin(dpx_tmp_tmp);
+    x_ref[0] = 2.0 * r * px_tmp_tmp * std::cos(px_tmp_tmp_tmp);
+    x_ref[1] = r * px_tmp_tmp;
+    x_ref[2] = offset * (px_tmp_tmp * px_tmp_tmp) + -0.22;
+    dx_ref[0] = 4.0 * r * 3.1415926535897931 * dpx_tmp / T;
+    dpx_tmp_tmp = 6.2831853071795862 * t / T;
+    dx_ref[1] = 2.0 * r * 3.1415926535897931 * std::cos(dpx_tmp_tmp) / T;
+    dx_ref[2] = 2.0 * offset * 3.1415926535897931 * dpz_tmp / T;
+    px_tmp_tmp_tmp = T * T;
+    ddx_ref[0] = -(16.0 * r * 9.869604401089358 * dpz_tmp) / px_tmp_tmp_tmp;
+    ddx_ref[1] = -(4.0 * r * 9.869604401089358 * std::sin(dpx_tmp_tmp)) /
+                 px_tmp_tmp_tmp;
+    ddx_ref[2] = 8.0 * offset * 9.869604401089358 * dpx_tmp / px_tmp_tmp_tmp;
 }
 
 void Task_Rose(double t, double T, double a)
@@ -209,76 +209,79 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t)+0.03, r * sin(coef * t), -0.22;
+    x_ref << r * cos(coef * t) + 0.03, r * sin(coef * t), -0.22;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
 
 // Timing Law
-void s_trapezoidal_speed(double n, double t, double* sigma, double* dsigma, double* ddsigma, double* T) {
+void s_trapezoidal_speed(double n, double t, double *sigma, double *dsigma, double *ddsigma, double *T)
+{
 
-	double l, dsigma_max, ddsigma_max, Ts, Tf;
-	double r = 0.12; //radius of the circle
-	l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
-	dsigma_max = 0.06;// maximum velocity
-	ddsigma_max = 0.01;// maximum acc
+    double l, dsigma_max, ddsigma_max, Ts, Tf;
+    double r = 0.12;    //radius of the circle
+    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+    dsigma_max = 0.06;  // maximum velocity
+    ddsigma_max = 0.01; // maximum acc
 
-	Ts = dsigma_max / ddsigma_max;
-	Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
-	*T = Tf;
+    Ts = dsigma_max / ddsigma_max;
+    Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
+    *T = Tf;
 
-	if (t <= Ts) {
+    if (t <= Ts)
+    {
 
-		*sigma = (ddsigma_max * t * t) / 2;
-		*dsigma = ddsigma_max * t;
-		*ddsigma = ddsigma_max;
-	}
+        *sigma = (ddsigma_max * t * t) / 2;
+        *dsigma = ddsigma_max * t;
+        *ddsigma = ddsigma_max;
+    }
 
-	else if (t > Ts && t <= Tf - Ts) {
+    else if (t > Ts && t <= Tf - Ts)
+    {
 
-		*sigma = (dsigma_max * t) - ((dsigma_max * dsigma_max) / (2 * ddsigma_max));
-		*dsigma = dsigma_max;
-		*ddsigma = 0;
-	}
+        *sigma = (dsigma_max * t) - ((dsigma_max * dsigma_max) / (2 * ddsigma_max));
+        *dsigma = dsigma_max;
+        *ddsigma = 0;
+    }
 
-	else if (t > Tf - Ts && t <= Tf) {
+    else if (t > Tf - Ts && t <= Tf)
+    {
 
-		*sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
-		*dsigma = ddsigma_max * (Tf - t);
-		*ddsigma = -ddsigma_max;
-	}
+        *sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
+        *dsigma = ddsigma_max * (Tf - t);
+        *ddsigma = -ddsigma_max;
+    }
 
-	else if (t > Tf)
-	{
-		t = Tf;
-		*sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
-		*dsigma = 0;//;ddsigma_max*(Tf-t);
-		*ddsigma = 0;//-ddsigma_max;
-	}
+    else if (t > Tf)
+    {
+        t = Tf;
+        *sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
+        *dsigma = 0;  //;ddsigma_max*(Tf-t);
+        *ddsigma = 0; //-ddsigma_max;
+    }
 }
 
 void Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
 {
-	// circle parameters
-	double cx = 0.0;
-	double cy = 0.0;
-	double cz = -0.22;
-	double r = 0.12;
-	double h = 0.06;
-	double phi = 0;
+    // circle parameters
+    double cx = 0.0;
+    double cy = 0.0;
+    double cz = -0.22;
+    double r = 0.12;
+    double h = 0.06;
+    double phi = 0;
 
-	x_ref[0] = cx + r * cos(sigma / r + phi);
-	x_ref[1] = cy + r * sin(sigma / r + phi);
-	x_ref[2] = cz + h * cos(sigma / r + phi);
+    x_ref[0] = cx + r * cos(sigma / r + phi);
+    x_ref[1] = cy + r * sin(sigma / r + phi);
+    x_ref[2] = cz + h * cos(sigma / r + phi);
 
-	dx_ref[0] = -sin(sigma / r + phi) * dsigma;
-	dx_ref[1] = cos(sigma / r + phi) * dsigma;
-	dx_ref[2] = -(h * sin(phi + sigma / r)) / r * dsigma;
+    dx_ref[0] = -sin(sigma / r + phi) * dsigma;
+    dx_ref[1] = cos(sigma / r + phi) * dsigma;
+    dx_ref[2] = -(h * sin(phi + sigma / r)) / r * dsigma;
 
-	ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
-	ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
-	ddx_ref[2] = (-(h * cos(phi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(phi + sigma / r)) / r) * ddsigma;
-
+    ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
+    ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
+    ddx_ref[2] = (-(h * cos(phi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(phi + sigma / r)) / r) * ddsigma;
 }
 
 int main()
@@ -290,8 +293,8 @@ int main()
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 0);
 
     double t = 0.0;
-    double dt = 1./80;
-    
+    double dt = 1. / 70;
+
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
     //Task_Circle(t, 8, 0.12);
@@ -305,7 +308,15 @@ int main()
     ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     srl::sleep(5); //wait to get to the initial position
-    while (t<=T)
+    //start adaptation now:
+    ad.Ka[7] = 0;
+    ad.Ka[8] = 0;
+    ad.Ka[9] = 1;
+    ad.Ka[10] = 1;
+    ad.rate1 = 0.000001;
+    ad.rate2 = 0.00001;
+
+    while (t <= T)
     {
         //std::cout << x_ref << "\n";
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s

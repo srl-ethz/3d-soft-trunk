@@ -42,8 +42,9 @@ public:
     VectorXd a = VectorXd::Zero(11);
     VectorXd Kb = VectorXd::Ones(4);
     VectorXd b = VectorXd::Zero(4);    
+    double rate1; //variation rate of estimates
+    double rate2; //variation rate of estimates
     double gamma2;
-
 private:
     void control_loop();
     void avoid_drifting();
@@ -51,7 +52,7 @@ private:
     double sign(double val);
     VectorXd sat(VectorXd x, double delta);
     MatrixXd computePinv(MatrixXd J, double e, double lambda);
-    VectorXd Ka_ = VectorXd::Ones(11);
+    VectorXd Ka_ = VectorXd::Zero(11);
     VectorXd Kb_ = VectorXd::Ones(4);
     VectorXd Kp = VectorXd::Zero(3);
     VectorXd Kd = VectorXd::Zero(3);   
@@ -74,8 +75,6 @@ private:
     double lambda;
     double gamma;
     double delta; //boundary layer tickness
-    double rate1; //variation rate of estimates
-    double rate2; //variation rate of estimates
     double knd; //nullspace damping gain
     double alpha;
     double eps_custom; // for singularity

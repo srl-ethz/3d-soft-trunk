@@ -13,19 +13,16 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     dt = 1. / 70;                  //controller's rate
 
     eps = 0.1;     //for pinv of Jacobian
-    lambda = 0.02; //for pinv of Jacobian
+    lambda = 0.05; //for pinv of Jacobian
 
     gamma = 0.0001;                //control gains
     b = 0.001 * VectorXd::Ones(4); //control gains
 
     delta = 0.05; //boundary layer tickness
 
-    rate1 = 0.0000001; //variation rate of estimates; may remove one zero
-    //rate1 = 0.0;
-    rate2 = 0.000001; //variation rate of estimates; may remove one zero
-    //rate2 = 0.0; //variation rate of estimates; may remove one zero
-    // maybe use a diag matrix instead of double to decrease this rate for inertia params.
-    // already included in Ka
+    rate1 = 0; //variation rate of estimates; may remove one zero
+
+    rate2 = 0; //variation rate of estimates; may remove one zero
 
     alpha = 0.75; //Finite time stability
 
@@ -80,6 +77,7 @@ void Adaptive::control_loop()
     
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
+
         x = lag.p;
 
         x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
@@ -105,7 +103,7 @@ void Adaptive::control_loop()
         aDot = -1 * Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
         a = a + rate1 * dt * aDot;                             //integrate the estimated dynamic parameters parameters
         bDot = s_d.array().abs();
-        b = b + rate2 * dt * Kb.asDiagonal() * bDot;
+        b = b + rate2 * Kb.asDiagonal() * dt * Kb.asDiagonal() * bDot;
         avoid_drifting(); // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
@@ -172,21 +170,21 @@ void Adaptive::avoid_drifting() //keeps the dynamic parameters within the range
     {
         if (a(i) < a_min(i) || a(i) > a_max(i))
         {
-            Ka(i) = 0;
+            ad.Ka(i) = 0;
             a(i) = std::min(a_max(i), std::max(a(i), a_min(i)));
         }
         else
-            Ka(i) = Ka_(i);
+            ad.Ka(i) = Ka_(i);
     }
     for (int i = 0; i < Kb.size(); i++)
     {
         if (b(i) < b_min(i) || b(i) > b_max(i))
         {
-            Kb(i) = 0;
+            ad.Kb(i) = 0;
             b(i) = std::min(b_max(i), std::max(b(i), b_min(i)));
         }
         else
-            Kb(i) = Kb_(i);
+            ad.Kb(i) = Kb_(i);
     }
 }
 
