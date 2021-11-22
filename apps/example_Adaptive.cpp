@@ -1,5 +1,14 @@
 #include "3d-soft-trunk/Adaptive.h"
 
+#ifndef PI
+#define PI	3.1415926535897932384626433832795
+#endif
+double sigma = 0.0;
+double dsigma = 0.0;
+double ddsigma = 0.0;
+double T = 30;// final time changes depending on the timing law
+double num_round = 3; // number of circular period
+
 bool freedom = false;
 bool pause = true;
 Vector3d x_ref;
@@ -205,6 +214,73 @@ void Task_Circle(double t, double T, double r)
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
 
+// Timing Law
+void s_trapezoidal_speed(double n, double t, double* sigma, double* dsigma, double* ddsigma, double* T) {
+
+	double l, dsigma_max, ddsigma_max, Ts, Tf;
+	double r = 0.12; //radius of the circle
+	l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+	dsigma_max = 0.06;// maximum velocity
+	ddsigma_max = 0.01;// maximum acc
+
+	Ts = dsigma_max / ddsigma_max;
+	Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
+	*T = Tf;
+
+	if (t <= Ts) {
+
+		*sigma = (ddsigma_max * t * t) / 2;
+		*dsigma = ddsigma_max * t;
+		*ddsigma = ddsigma_max;
+	}
+
+	else if (t > Ts && t <= Tf - Ts) {
+
+		*sigma = (dsigma_max * t) - ((dsigma_max * dsigma_max) / (2 * ddsigma_max));
+		*dsigma = dsigma_max;
+		*ddsigma = 0;
+	}
+
+	else if (t > Tf - Ts && t <= Tf) {
+
+		*sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
+		*dsigma = ddsigma_max * (Tf - t);
+		*ddsigma = -ddsigma_max;
+	}
+
+	else if (t > Tf)
+	{
+		t = Tf;
+		*sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
+		*dsigma = 0;//;ddsigma_max*(Tf-t);
+		*ddsigma = 0;//-ddsigma_max;
+	}
+}
+
+void Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
+{
+	// circle parameters
+	double cx = 0.0;
+	double cy = 0.0;
+	double cz = -0.22;
+	double r = 0.12;
+	double h = 0.06;
+	double phi = 0;
+
+	x_ref[0] = cx + r * cos(sigma / r + phi);
+	x_ref[1] = cy + r * sin(sigma / r + phi);
+	x_ref[2] = cz + h * cos(sigma / r + phi);
+
+	dx_ref[0] = -sin(sigma / r + phi) * dsigma;
+	dx_ref[1] = cos(sigma / r + phi) * dsigma;
+	dx_ref[2] = -(h * sin(phi + sigma / r)) / r * dsigma;
+
+	ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
+	ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
+	ddx_ref[2] = (-(h * cos(phi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(phi + sigma / r)) / r) * ddsigma;
+
+}
+
 int main()
 {
     bool gripping = false;
@@ -214,24 +290,29 @@ int main()
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 0);
 
     double t = 0.0;
-    double dt = 1./150;
+    double dt = 1./80;
     
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
-    Task_Circle(t, 8, 0.12);
+    //Task_Circle(t, 8, 0.12);
     //x_ref << 0.12,0.0,-0.22;
+    s_trapezoidal_speed(num_round, t, &sigma, &dsigma, &ddsigma, &T);
+    Task_Circle_r2r(sigma, dsigma, ddsigma);
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
     getchar();
     ad.toggle_log();
     ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
-    while (t<40)
+    srl::sleep(5); //wait to get to the initial position
+    while (t<=T)
     {
         //std::cout << x_ref << "\n";
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
+        //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
+        s_trapezoidal_speed(num_round, t, &sigma, &dsigma, &ddsigma, &T);
+        Task_Circle_r2r(sigma, dsigma, ddsigma);
         ad.set_ref(x_ref, dx_ref, ddx_ref);
         /**
         x_dum = ad.x_qualisys;
