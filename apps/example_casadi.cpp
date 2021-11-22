@@ -5,6 +5,20 @@ using namespace casadi;
 
 
 int main(){
+    
+    
+    const double pi = std::acos(-1.0);
+
+    MatrixXd A(3,3);
+    A << 0,    -pi/4, 0,
+        pi/4, 0,     0,
+        0,    0,     0;
+
+    std::cout << "The matrix A is:\n" << A << "\n\n";
+
+
+    MatrixXd Ad = MatrixXd::Identity(3,3) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120; 
+    std::cout << "The matrix exponential of A is:\n" << Ad << "\n\n";
 
 /*
     MatrixXd M(6,6);

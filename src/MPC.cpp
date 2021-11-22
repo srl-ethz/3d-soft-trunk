@@ -29,6 +29,10 @@ void MPC::control_loop(){
             continue;
         } 
 
+        Vector3d ee_x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+
+        std::cout << "End-effector position : " << ee_x.transpose() << std::endl; 
+
         // Define state space system : https://x-engineer.org/graduate-engineering/signals-systems/control-systems/state-space-model-dynamic-system/
         // Define discrete system
 
@@ -126,7 +130,7 @@ void MPC::control_loop(){
 
         p = stm->pseudo2real(p_temp); 
 
-        std::cout << "pressure input :" << p << std::endl; 
+        std::cout << "pressure input : " << p.transpose() << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
@@ -171,7 +175,7 @@ Opti MPC::define_problem(){
     T2 = q_dot_r;  //terminal condition with delta formulation
 
     MX Q = MX::eye(st_params.q_size); 
-    MX R = MX::zeros(2*st_params.num_segments, 2*st_params.num_segments);
+    MX R = MX::eye(2*st_params.num_segments);
 
     std::cout << "Variables initialized" << std::endl; 
 
@@ -235,11 +239,27 @@ void MPC::get_state_space(MatrixXd B, MatrixXd c, MatrixXd g, MatrixXd K, Matrix
     // already discretized
     // missing the constant coriolis + stuff, check paper
 
-    sp_A << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - B.inverse() * K, -B.inverse() * D;
-    sp_B << MatrixXd::Zero(st_params.q_size, 2*st_params.num_segments), B.inverse()*A;
-    sp_w << MatrixXd::Zero(st_params.q_size,1), - B.inverse()*(c+g); 
+    MatrixXd sp_A_c(2*st_params.q_size, 2*st_params.q_size);
+    MatrixXd sp_B_c(2*st_params.q_size, 2*st_params.num_segments); 
+    MatrixXd sp_w_c(2*st_params.q_size, 1);
+
+    sp_A_c << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - B.inverse() * K, -B.inverse() * D;
+    sp_B_c << MatrixXd::Zero(st_params.q_size, 2*st_params.num_segments), B.inverse()*A;
+    sp_w_c << MatrixXd::Zero(st_params.q_size,1), - B.inverse()*(c+g); 
     
-    sp_A = MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size) + Ts*sp_A; 
-    sp_B = Ts*sp_B; 
+    // sp_A = MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size) + Ts*sp_A; 
+    // sp_B = Ts*sp_B; 
+    // sp_w = Ts*sp_w; 
+
+    sp_A = matrix_exponential(sp_A_c*Ts, 2*st_params.q_size); 
+    sp_B = sp_A_c.inverse() * (sp_A - MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size)) * sp_B_c; 
     sp_w = Ts*sp_w; 
+
+}
+
+
+MatrixXd MPC::matrix_exponential(MatrixXd A, int size){
+
+    MatrixXd Ad = MatrixXd::Identity(size,size) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120;   //up to 5th order
+    return Ad; 
 }

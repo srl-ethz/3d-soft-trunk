@@ -53,8 +53,8 @@ int main(){
     auto start = std::chrono::steady_clock::now();
 
     while (t < time/2){
-
-        state_ref.q << 0.0121174, 0.10465, 0.0121174, 0.10465;
+        
+        state_ref.q << -0.440825, 0.373653, -0.0481017, -0.105963;
         mpc.set_ref(state_ref);
 
         mpc.get_state(state); 
@@ -69,9 +69,11 @@ int main(){
         }
 
         std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
-        std::cout << "Error vector : " << error_avg.transpose() << std::endl;
+        // std::cout << "Error vector : " << error_avg.transpose() << std::endl;
         
         std::cout << "Error : " << error_avg.mean() << std::endl; 
+
+        std::cout<< "time : " << t <<std::endl; 
 
         // if ( (state.q - state_ref.q).norm() < tol){
         //     std::cout << "Convergerged in " << t << std::endl;
@@ -85,7 +87,7 @@ int main(){
 
     while (t < time){
 
-        state_ref.q << -0.0121174, 0.10465, -0.0121174, 0.10465;
+        state_ref.q << 0.0633816, 0.290002, 0.655952, -0.0951374;
         mpc.set_ref(state_ref);
 
         mpc.get_state(state); 
@@ -100,10 +102,11 @@ int main(){
         }
 
         std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
-        std::cout << "Error vector : " << error_avg.transpose() << std::endl;
+        // std::cout << "Error vector : " << error_avg.transpose() << std::endl;
 
         std::cout << "Error : " << error_avg.mean() << std::endl;
-
+        
+        std::cout<< "time : " << t <<std::endl; 
         // if ( (state.q - state_ref.q).norm() < tol){
         //     std::cout << "Convergerged in " << t << std::endl;
         // }

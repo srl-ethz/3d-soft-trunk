@@ -63,6 +63,9 @@ void QuasiStatic::control_loop(){
         else {
             assert(simulate(p));
         }
+
+        // std::cout << "pressure input : " << p.transpose() << std::endl; 
+        // std::cout << "curvature : " << state.q.transpose() << std::endl; 
     }
 }
 
