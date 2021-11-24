@@ -16,9 +16,9 @@
 			<geometry>
 				<cylinder length="0.01" radius="0.05"/>
 			</geometry>
-			<origin xyz="0 0 ${length/2}"/>
 			<material name="white"/>
-		</visual>	
+		</visual>
+		<origin xyz="0 0 ${length/2}"/>	
 		<inertial>
 			<mass value="0.00001"/>
 			<inertia ixx="0.00001" ixy="0.0000" ixz="0.0000" iyy="0.00001" iyz="0.0000" izz="0.00001"/>
@@ -36,9 +36,10 @@
 			<geometry>
 				<cylinder length="0.10" radius="0.05"/>
 			</geometry>
-			<origin xyz="0 0 ${length/2}"/>
+			
 			<material name="white"/>
-		</visual>	
+		</visual>
+		<origin xyz="0 0 -${length/2}"/>	
 		<inertial>
 			<mass value="0.1"/>
 			<inertia ixx="0.00001" ixy="0.0000" ixz="0.0000" iyy="0.00001" iyz="0.0000" izz="0.00001"/>
