@@ -39,7 +39,7 @@
 			<geometry>
 				<cylinder length="0.10" radius="0.05"/>
 			</geometry>
-			<origin xyz="0 0 -${length/2}"/>
+			<origin xyz="0 0 ${-length/2}"/>
 			<material name="black"/>
 		</visual>	
 		<inertial>
