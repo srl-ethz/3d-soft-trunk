@@ -18,7 +18,7 @@
  **/
 class ControllerPCC {
 public:
-    ControllerPCC(const SoftTrunkParameters st_params, int objects = 0);
+    ControllerPCC(const SoftTrunkParameters st_params);
 
     /** @brief set the reference pose (trajectory) of the arm
      */
@@ -114,9 +114,7 @@ protected:
     const int p_offset = 0;
     const int p_max = 700; // 400 for DS 10, 1200 for DS 30
 
-    
-
-    double dt = 1./30.;
+    double dt = 1./30;
     double t;
 
     bool is_initial_ref_received = false;
@@ -127,9 +125,11 @@ protected:
     void control_loop();
 
     // arm configuration+target positions
-    srl::State state;
-    srl::State state_ref;
-    srl::State state_prev; //for simulation
+    srl::State state_;
+    srl::State state_ref_;
+    srl::State state_prev_; //for simulation
+
+    DynamicParams dyn_;
     
     Vector3d x;
     Vector3d x_ref;
@@ -152,9 +152,6 @@ protected:
 
     //qualisys variables
     Eigen::Transform<double, 3, Eigen::Affine> base_transform;
-    int objects;
-    CurvatureCalculator::SensorType sensor_type;
-
 
 private:
     /** @brief forward simulate using beeman method

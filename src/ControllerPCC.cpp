@@ -7,21 +7,21 @@
 
 
 
-ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, int objects) : st_params_(st_params), objects(objects){
+ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(st_params){
     assert(st_params_.is_finalized());
     // set appropriate size for each member
-    state.setSize(st_params_.q_size);
-    state_prev.setSize(st_params_.q_size);
-    state_ref.setSize(st_params_.q_size);
+    state_.setSize(st_params_.q_size);
+    state_prev_.setSize(st_params_.q_size);
+    state_ref_.setSize(st_params_.q_size);
     p = VectorXd::Zero(3 * st_params_.num_segments);
     f = VectorXd::Zero(2 * st_params_.num_segments);
 
     filename = "defaultController_log";
 
     mdl = std::make_unique<Model>(st_params_);
-    ste = std::make_unique<StateEstimator>(st_params_)
+    ste = std::make_unique<StateEstimator>(st_params_);
 
-    vc = std::make_unique<ValveController>("192.168.0.100", st_params_.map, p_max)
+    vc = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, p_max);
 
     fmt::print("ControllerPCC object initialized.\n");
 }
@@ -29,7 +29,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, int objects) :
 void ControllerPCC::set_ref(const srl::State &state_ref) {
     std::lock_guard<std::mutex> lock(mtx);
     // assign to member variables
-    this->state_ref = state_ref;
+    this->state_ref_ = state_ref;
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 }
@@ -49,7 +49,7 @@ void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref, const 
 
 void ControllerPCC::get_state(srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
-    state = this->state;
+    state = this->state_;
 }
 
 void ControllerPCC::get_x(Vector3d &x) {
@@ -59,8 +59,8 @@ void ControllerPCC::get_x(Vector3d &x) {
 
 void ControllerPCC::set_state(const srl::State &state) {
     std::lock_guard<std::mutex> lock(mtx);
-    assert(st_params_.sensors == {SensorType::simulator});
-    this->state = state;
+    assert(st_params_.sensors[0] == SensorType::simulator);
+    this->state_ = state;
 }
 
 void ControllerPCC::get_pressure(VectorXd& p){
@@ -71,19 +71,19 @@ void ControllerPCC::get_pressure(VectorXd& p){
 void ControllerPCC::toggleGripper(){
     gripperAttached = true;
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params.num_segments, gripping*350); //350mbar to grip
+    vc->setSinglePressure(3*st_params_.num_segments, gripping*350); //350mbar to grip
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
-    assert(st_params.sections_per_segment == 1);
-    VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
+    assert(st_params_.sections_per_segment == 1);
+    VectorXd gravcomp = dyn_.A_pseudo.inverse() * (dyn_.g + dyn_.K * state.q + dyn_.c);
 
     return gravcomp/100; //to mbar
 }
 
 void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to mapping from header
-    assert(p.size() == 3 * st_params.num_segments);
-    for (int i = 0; i < 3*st_params.num_segments; i++){
+    assert(p.size() == 3 * st_params_.num_segments);
+    for (int i = 0; i < 3*st_params_.num_segments; i++){
         vc->setSinglePressure(i, p(i));
     }
     if (logging){  
@@ -92,24 +92,19 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 }
 
 std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
-    assert(sensor_type == CurvatureCalculator::SensorType::qualisys);
-    std::vector<Eigen::Vector3d> object_vec(objects); 
-    for (int i = 0; i < objects; i++) {
-        object_vec[i] = cc->get_frame(st_params.num_segments + 1 + i).translation(); //read in the extra frame
-        object_vec[i] = object_vec[i] - cc->get_frame(0).translation(); //change from global qualisys coordinates to relative to base
-        object_vec[i] = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*object_vec[i]; //rotate to match the internal coordinates*/
+    bool has_qualisys = false;
+    for (int i = 0; i < st_params_.sensors.size(); i++){
+        if (st_params_.sensors[i] == SensorType::qualisys)
+            has_qualisys = true;
     }
-    
-    return object_vec;
+    assert(has_qualisys);
+
+    return ste->get_objects;
 }
 
 void ControllerPCC::set_frequency(const double hz){
-    assert(sensor_type == CurvatureCalculator::SensorType::simulator);
+    assert(st_params_.sensors[0] == SensorType::simulator);
     this->dt = 1./hz;
-}
-
-void ControllerPCC::newChamberConfig(Vector3d &angles) {
-    stm->newChamberConfig(angles);
 }
 
 void ControllerPCC::set_log_filename(const std::string s){
@@ -117,21 +112,22 @@ void ControllerPCC::set_log_filename(const std::string s){
 }
 
 bool ControllerPCC::simulate(const VectorXd &p){
-    stm->set_state(state);
-    state_prev.ddq = state.ddq;
+    mdl->set_state(state_);
+    mdl->get_dynamic_params(dyn_);
+    state_prev_.ddq = state_.ddq;
     VectorXd p_adjusted = 100*p; //convert from mbar
 
-    VectorXd b_inv_rest = stm->B.inverse() * (stm->A * p_adjusted - stm->c - stm->g - stm->K * state.q);      //set up constant terms to not constantly recalculate
-    MatrixXd b_inv_d = -stm->B.inverse() * stm->D;
+    VectorXd b_inv_rest = dyn_.B.inverse() * (dyn_.A * p_adjusted - dyn_.c - dyn_.g - dyn_.K * state_.q);      //set up constant terms to not constantly recalculate
+    MatrixXd b_inv_d = -dyn_.B.inverse() * dyn_.D;
     VectorXd ddq_prev;
 
     for (int i=0; i < int (dt/0.00001); i++){                                              //forward integrate dq with high resolution
-        ddq_prev = state.ddq;
-        state.ddq = b_inv_rest + b_inv_d*state.dq;
-        state.dq += 0.00001*(2*(2*state.ddq - ddq_prev) + 5*state.ddq - ddq_prev)/6;  
+        ddq_prev = state_.ddq;
+        state_.ddq = b_inv_rest + b_inv_d*state_.dq;
+        state_.dq += 0.00001*(2*(2*state_.ddq - ddq_prev) + 5*state_.ddq - ddq_prev)/6;  
     }
 
-    state.q = state.q + state.dq*dt + (dt*dt*(4*state.ddq - state_prev.ddq) / 6);
+    state_.q = state_.q + state_.dq*dt + (dt*dt*(4*state_.ddq - state_prev_.ddq) / 6);
 
 
     if (logging){                                               //log once per control timestep
@@ -139,13 +135,13 @@ bool ControllerPCC::simulate(const VectorXd &p){
     }
     t+=dt;
 
-    return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
+    return !(abs(state_.ddq[0])>pow(10.0,10.0) or abs(state_.dq[0])>pow(10.0,10.0) or abs(state_.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
 }
 
 void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;
-        if (sensor_type != CurvatureCalculator::SensorType::simulator) {initial_timestamp = cc->get_timestamp();}
+        if (!(st_params_.sensors[0] == SensorType::simulator)) {initial_timestamp = ste->get_timestamp();}
         else {initial_timestamp = 0;}
         this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
         fmt::print("Starting log to {}\n", this->filename);
@@ -155,9 +151,9 @@ void ControllerPCC::toggle_log(){
         //write header
         log_file << fmt::format(", x, y, z, x_ref, y_ref, z_ref, err");
 
-        for (int i=0; i < st_params.q_size; i++)
+        for (int i=0; i < st_params_.q_size; i++)
             log_file << fmt::format(", q_{}", i);
-        for (int i=0; i < st_params.num_segments*3; i++)
+        for (int i=0; i < st_params_.num_segments*3; i++)
             log_file << fmt::format(", p_{}", i);
 
         log_file << "\n";
@@ -170,15 +166,19 @@ void ControllerPCC::toggle_log(){
 
 void ControllerPCC::log(double time){
     log_file << time;
+    Vector3d x_tip;
 
-    VectorXd x_tip = stm->get_H(st_params.num_segments - 1).translation();
-    if (sensor_type == CurvatureCalculator::SensorType::qualisys) x_tip = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-    
+    if (st_params_.sensors[0] == SensorType::qualisys){
+        std::vector<Vector3d> x_qualisys;
+        ste->get_x(x_qualisys);
+        x_tip = x_qualisys[st_params_.num_segments];
+    }
+
     log_file << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2), (x_tip - x_ref).norm());
 
-    for (int i=0; i < st_params.q_size; i++)               //log q
-        log_file << fmt::format(", {}", state.q(i));
-    for (int i=0; i < st_params.num_segments*3; i++)
+    for (int i=0; i < st_params_.q_size; i++)               //log q
+        log_file << fmt::format(", {}", state_.q(i));
+    for (int i=0; i < st_params_.num_segments*3; i++)
         log_file << fmt::format(", {}", p(i));
     log_file << "\n";
 }
