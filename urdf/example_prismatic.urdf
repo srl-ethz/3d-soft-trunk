@@ -8,9 +8,6 @@
 	<material name="white">
 		<color rgba="1 1 1 1"/>
 	</material>
-	<material name="black">
-		<color rgba="0 0 0 1"/>
-	</material>
 	<material name="green">
 		<color rgba="0.2 1 0.2 0.8"/>
 	</material>
@@ -39,7 +36,7 @@
 			<geometry>
 				<cylinder length="0.10" radius="0.05"/>
 			</geometry>
-			<origin xyz="0 0 -${length/2}"/>
+			<origin xyz="0 0 ${length/2}"/>
 			<material name="white"/>
 		</visual>	
 		<inertial>
