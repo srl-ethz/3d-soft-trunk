@@ -7,7 +7,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "Adaptive_logger";
 
-    Kp = 65 * VectorXd::Ones(3);
+    Kp = 120 * VectorXd::Ones(3);
     Kd = 0.12 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
     dt = 1. / 70;                  //controller's rate
@@ -30,7 +30,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
-    a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.001, 0.001, 0.12, 0.08;
+    a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.2, 0.18;
 
     zz = 1;
     /*
@@ -103,7 +103,7 @@ void Adaptive::control_loop()
         aDot = -1 * Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
         a = a + rate1 * dt * aDot;                             //integrate the estimated dynamic parameters parameters
         bDot = s_d.array().abs();
-        b = b + rate2 * Kb.asDiagonal() * dt * Kb.asDiagonal() * bDot;
+        b = b + rate2 * dt * Kb.asDiagonal() * bDot;
         avoid_drifting(); // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
@@ -170,21 +170,21 @@ void Adaptive::avoid_drifting() //keeps the dynamic parameters within the range
     {
         if (a(i) < a_min(i) || a(i) > a_max(i))
         {
-            ad.Ka(i) = 0;
+            this->Ka(i) = 0;
             a(i) = std::min(a_max(i), std::max(a(i), a_min(i)));
         }
         else
-            ad.Ka(i) = Ka_(i);
+            this->Ka(i) = Ka_(i);
     }
     for (int i = 0; i < Kb.size(); i++)
     {
         if (b(i) < b_min(i) || b(i) > b_max(i))
         {
-            ad.Kb(i) = 0;
+            this->Kb(i) = 0;
             b(i) = std::min(b_max(i), std::max(b(i), b_min(i)));
         }
         else
-            ad.Kb(i) = Kb_(i);
+            this->Kb(i) = Kb_(i);
     }
 }
 

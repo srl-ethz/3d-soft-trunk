@@ -20,7 +20,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
     stm = std::make_unique<SoftTrunkModel>(st_params);
     lag = std::make_unique<Lagrange>(st_params);
     // +X, +Y, -X, -Y
-    std::vector<int> map = {4,6,12,5,10,3,11};
+    std::vector<int> map = {11,6,12,5,10,4,3};
     
     if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
 
