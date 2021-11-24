@@ -26,6 +26,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     alpha = 0.75; //Finite time stability
 
+    Ka(7) = 0;
+    Ka(8) = 0;
     Ka(9) = 1;
     Ka(10) = 1;
     eps_custom = 0.05; // for singularity avoidance
@@ -33,7 +35,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
-    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.006, 0.006, 0.1, 0.1;
+    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.006, 0.006, 0.15, 0.12;
     zz = 1;
     /*
     m1 = 0.18;
@@ -108,7 +110,26 @@ void Adaptive::control_loop()
         bDot = s_d.array().abs();
         b = b + rate2 * dt * Kb.asDiagonal() * bDot;
         //avoid_drifting(); // keep the dynamic parameters within range
-
+        if (a(1) <=0.0001)
+            a(1) = 0.0001;
+        if (a(2) <=0.0001)
+            a(2) = 0.0001;
+        if (a(3) <=0.0001)
+            a(3) = 0.0001;
+        if (a(4) <=0.0001)
+            a(4) = 0.0001;                    
+        if (a(5) <=0.0001)
+            a(5) = 0.0001;
+        if (a(6) <=0.0001)
+            a(6) = 0.0001;   
+        if (a(7) <=0.0001)
+            a(7) = 0.0001;
+        if (a(8) <=0.0001)
+            a(8) = 0.0001;                    
+        if (a(9) <=0.0001)
+            a(9) = 0.0001;
+        if (a(10) <=0.0001)
+            a(10) = 0.0001;              
         //cout << "\na \n " << a << "\n\n";
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
@@ -304,13 +325,15 @@ void Adaptive::decrease_eps()
 void Adaptive::increase_stiffness(int seg)
 {
     //this->a[9 + seg] = this->a[9 + seg] * 1.1;
-    std::cout << this->rate1;
+    //std::cout << this->rate1;
     //std::cout << this->Ka(9);
     //std::cout << this->Ka(10);
-    fmt::print("Ka = {}\n", Ka);
+    //fmt::print("Ka = {}\n", Ka);
     fmt::print("aDot = {}\n", aDot);
     fmt::print("a = {}\n", a);
-    fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
+    //fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
+    //fmt::print("damping: {}\n", this->a[7]);
+    //fmt::print("damping: {}\n", this->a[8]);
 }
 
 void Adaptive::decrease_stiffness(int seg)
