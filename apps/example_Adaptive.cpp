@@ -220,16 +220,16 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    //double n = 3; //rounds of circle
-    //double r = 0.12;    //radius of the circle
-    //l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+    double n = 3; //rounds of circle
+    double r = 0.12;    //radius of the circle
+    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
-    Eigen::Vector3d p_i;
-    Eigen::Vector3d p_f;
-    p_i << 0, 0, 0;
-    p_f << 1, 1, 1;
-    Eigen::Vector3d d = p_f - p_i;
-    l = d.norm();
+    //Eigen::Vector3d p_i;
+    //Eigen::Vector3d p_f;
+    //p_i << 0, 0, 0;
+    //p_f << 1, 1, 1;
+    //Eigen::Vector3d d = p_f - p_i;
+    //l = d.norm();
 
     dsigma_max = 0.06;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
@@ -278,7 +278,7 @@ void Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     double cy = 0.0;
     double cz = -0.22;
     double r = 0.12;
-    double h = 0.06;
+    double h = 0.03;
     double phi = 0;
 
     x_ref[0] = cx + r * cos(sigma / r + phi);
@@ -329,13 +329,14 @@ int main()
 
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
-    Task_Circle(t, 12, 0.12);
+    //Task_Circle(t, 12, 0.12);
     //x_ref << 0, -0.12, -0.22;
-    //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-    //Task_Circle_r2r(sigma, dsigma, ddsigma);
+    s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+    Task_Circle_r2r(sigma, dsigma, ddsigma);
     //Task_Linear_r2r(sigma, dsigma, ddsigma);
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
+    fmt::print("a = {}\n", ad.a);
     getchar();
     ad.toggle_log();
     //ad.toggleGripper();
@@ -345,7 +346,8 @@ int main()
 
     //std::cout << ad.Ka(9);
     //std::cout << ad.Ka(10);
-    while (t<=60)
+
+    while (t<=T)
     {
     //ad.Ka(7)= 0;
     //ad.Ka(8) = 0;
@@ -356,10 +358,10 @@ int main()
         //std::cout << x_ref << "\n";
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        Task_Circle(t, 12, 0.12); // circular traj. with radius 0.15m and period 8s
-
-        //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-        //Task_Circle_r2r(sigma, dsigma, ddsigma);
+        //Task_Circle(t, 12, 0.12); // circular traj. with radius 0.15m and period 8s
+        //fmt::print("a = {}\n", ad.a);
+        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+        Task_Circle_r2r(sigma, dsigma, ddsigma);
         ad.set_ref(x_ref, dx_ref, ddx_ref);
         /**
         x_dum = ad.x_qualisys;
