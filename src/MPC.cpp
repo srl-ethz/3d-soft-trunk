@@ -8,6 +8,7 @@ MPC::MPC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
+    solved = 0; 
 
     control_thread = std::thread(&MPC::control_loop, this);
 }
@@ -89,6 +90,10 @@ void MPC::control_loop(){
 
         // solve problem
 
+        if (!solved){
+            u_temp = DM::zeros(2*st_params.num_segments,1); 
+        }
+
         ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
         ctrl.set_value(B, sp_B_temp);
         ctrl.set_value(w, sp_w_temp); 
@@ -96,7 +101,12 @@ void MPC::control_loop(){
         ctrl.set_value(q_dot_r, q_dot_r_temp); 
         ctrl.set_value(q_0, q_0_temp); 
         ctrl.set_value(q_dot_0, q_dot_0_temp); 
+        ctrl.set_value(u_prev, u_temp); 
         OptiSol sol = ctrl.solve(); 
+        
+        if (!solved){
+            solved = TRUE; 
+        }
 
         
         //std::cout << "complete u : " <<sol.value(u) << std::endl; 
@@ -107,7 +117,7 @@ void MPC::control_loop(){
         //auto u_temp = static_cast<std::vector<double>>(sol.value(u));
         u_temp = sol.value(u)(Slice(),0); 
 
-        //std::cout << "solution :" << u_temp << std::endl;
+        std::cout << "solution :" << u_temp << std::endl;
         
         p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
         //std::copy(u_temp.data(), u_temp.data() + u_temp.size(), p_temp);  // <<<<<<<<<<<< error, missing DM to Eigen part
@@ -161,6 +171,8 @@ Opti MPC::define_problem(){
     q_r = prob.parameter(st_params.q_size, 1);
     q_dot_r = prob.parameter(st_params.q_size,1); 
 
+    u_prev = prob.parameter(2*st_params.num_segments,1); 
+
 
 
     MX J = 0;
@@ -170,6 +182,10 @@ Opti MPC::define_problem(){
     MX b2 = MX::ones(st_params.q_size,1);
     MX T1 = MX::zeros(st_params.q_size,1);
     MX T2 = MX::zeros(st_params.q_size,1);
+
+    MX Du = MX::ones(2*st_params.num_segments,1)*500; 
+
+    //std::cout << "Delta u = " << Du << std::endl; 
 
     T1 = q_r; 
     T2 = q_dot_r;  //terminal condition with delta formulation
@@ -220,6 +236,11 @@ Opti MPC::define_problem(){
         //prob.subject_to(mtimes(A1, q(Slice(),k)) <= b1);
         //prob.subject_to(mtimes(A2, q_dot(Slice(),k)) <= b2);
         // some stuff on pressure
+    }
+
+    prob.subject_to(-Du <= (u(Slice(),0)-u_prev) <= Du); 
+    for (int k = 1; k < Horizon/4; k++){
+        prob.subject_to(-Du <= (u(Slice(),k)-u(Slice(),k-1)) <= Du); 
     }
 
     // terminal constraint

@@ -22,6 +22,7 @@ class MPC: public ControllerPCC{
 
         int Horizon;
         Opti ctrl;
+        bool solved; 
         //OptiSol sol; 
 
         MX A;  // state-space
@@ -32,6 +33,7 @@ class MPC: public ControllerPCC{
         MX q_dot_r; 
         MX q_0;
         MX q_dot_0;
+        MX u_prev; 
 
         DM u_temp; // input placeholder
         MatrixXd p_temp; 
