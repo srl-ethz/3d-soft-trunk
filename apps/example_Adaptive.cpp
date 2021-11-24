@@ -209,7 +209,7 @@ void Task_Rose(double t, double T, double a)
 void Task_Circle(double t, double T, double r)
 {
     double coef = 2 * 3.1415 / T;
-    x_ref << r * cos(coef * t) + 0.03, r * sin(coef * t), -0.22;
+    x_ref << r * cos(coef * t) , r * sin(coef * t), -0.22;
     dx_ref << -r * coef * sin(coef * t), r * coef * cos(coef * t), 0;
     ddx_ref << -r * coef * coef * cos(coef * t), -r * coef * coef * sin(coef * t), 0;
 }
@@ -329,8 +329,8 @@ int main()
 
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
-    //Task_Circle(t, 8, 0.12);
-    x_ref << 0.12, 0.0, -0.22;
+    Task_Circle(t, 12, 0.12);
+    //x_ref << 0, -0.12, -0.22;
     //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
     //Task_Circle_r2r(sigma, dsigma, ddsigma);
     //Task_Linear_r2r(sigma, dsigma, ddsigma);
@@ -338,23 +338,25 @@ int main()
     Vector3d x_dum = ad.x_qualisys;
     getchar();
     ad.toggle_log();
-    ad.toggleGripper();
+    //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
-    srl::sleep(5); //wait to get to the initial position
+    //srl::sleep(0); //wait to get to the initial position
     //start adaptation now:
-    ad.Ka[7] = 0;
-    ad.Ka[8] = 0;
-    ad.Ka[9] = 0;
-    ad.Ka[10] = 0;
-    ad.rate1 = 0;
-    ad.rate2 = 0;//0.00001;
 
-    while (t <= T)
+    //std::cout << ad.Ka(9);
+    //std::cout << ad.Ka(10);
+    while (t<=60)
     {
+    //ad.Ka(7)= 0;
+    //ad.Ka(8) = 0;
+    //ad.Ka(9) = 1;
+    //ad.Ka(10) = 1;
+    //ad.rate1 = 0.001;
+    //ad.rate2 = 0;//0.00001;
         //std::cout << x_ref << "\n";
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
-        //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
+        Task_Circle(t, 12, 0.12); // circular traj. with radius 0.15m and period 8s
 
         //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
         //Task_Circle_r2r(sigma, dsigma, ddsigma);

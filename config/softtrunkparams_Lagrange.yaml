@@ -6,9 +6,9 @@ num_segments: 2
 #PCC sections per segment
 sections_per_segment: 1
 #Masses of segments and connectors, starting at topmost segment
-masses: [0.180, 0.111]
+masses: [0.170, 0.163]
 #Lengths of segments and connectors, starting at topmost segment
-lengths: [0.16, 0.12]
+lengths: [0.14, 0.135]
 #Diameters of segment top and bottoms, contains num_seg+1 values
 diameters: [0.035, 0.028, 0.0198]
 #Angle of arm relative to upright position

@@ -8,7 +8,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     filename = "Adaptive_logger";
 
     Kp = 120 * VectorXd::Ones(3);
-    Kd = 0.12 * VectorXd::Ones(3); //control gains
+    Kd = 0.3 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
     dt = 1. / 70;                  //controller's rate
 
@@ -20,18 +20,20 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     delta = 0.05; //boundary layer tickness
 
-    rate1 = 0; //variation rate of estimates; may remove one zero
+    rate1 = 0.001; //variation rate of estimates; may remove one zero
 
     rate2 = 0; //variation rate of estimates; may remove one zero
 
     alpha = 0.75; //Finite time stability
 
+    Ka(9) = 1;
+    Ka(10) = 1;
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
-    a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.2, 0.18;
-
+    //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
+    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.006, 0.006, 0.1, 0.1;
     zz = 1;
     /*
     m1 = 0.18;
@@ -101,16 +103,18 @@ void Adaptive::control_loop()
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
 
         aDot = -1 * Ka.asDiagonal() * lag.Y.transpose() * s_d; //Adaptation law
+
         a = a + rate1 * dt * aDot;                             //integrate the estimated dynamic parameters parameters
         bDot = s_d.array().abs();
         b = b + rate2 * dt * Kb.asDiagonal() * bDot;
-        avoid_drifting(); // keep the dynamic parameters within range
+        //avoid_drifting(); // keep the dynamic parameters within range
 
         //cout << "\na \n " << a << "\n\n";
         //cout << "\nb \n " << b << "\n\n";
-        Ainv = computePinv(lag.A, 0.005, 0.001);                             // compute pesudoinverse of mapping matrix
+        Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
         p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);           // compute the desired pressure
+        //cout << p[4] << "\n";
         auto end_tot = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
         std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
@@ -218,6 +222,7 @@ void Adaptive::increase_kd()
     this->Kd = 1.1 * this->Kd;
     fmt::print("kd = {}\n", Kd(0));
 }
+
 void Adaptive::increase_kp()
 {
     this->Kp = 1.1 * this->Kp;
@@ -298,7 +303,13 @@ void Adaptive::decrease_eps()
 
 void Adaptive::increase_stiffness(int seg)
 {
-    this->a[9 + seg] = this->a[9 + seg] * 1.1;
+    //this->a[9 + seg] = this->a[9 + seg] * 1.1;
+    std::cout << this->rate1;
+    //std::cout << this->Ka(9);
+    //std::cout << this->Ka(10);
+    fmt::print("Ka = {}\n", Ka);
+    fmt::print("aDot = {}\n", aDot);
+    fmt::print("a = {}\n", a);
     fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
 }
 
@@ -336,21 +347,25 @@ void Adaptive::decrease_alpha()
 void Adaptive::change_ref1()
 {
     x_ref << 0.12, 0.0, -0.22;
+    this->set_ref(x_ref, dx_ref, ddx_ref);
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref2()
 {
     x_ref << 0.0, 0.12, -0.22;
+    this->set_ref(x_ref, dx_ref, ddx_ref);
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref3()
 {
     x_ref << -0.12, 0.0, -0.22;
+    this->set_ref(x_ref, dx_ref, ddx_ref);
     fmt::print("position_changed = {}\n", x_ref);
 }
 void Adaptive::change_ref4()
 {
     x_ref << 0.0, -0.12, -0.22;
+    this->set_ref(x_ref, dx_ref, ddx_ref);
     fmt::print("position_changed = {}\n", x_ref);
 }
 

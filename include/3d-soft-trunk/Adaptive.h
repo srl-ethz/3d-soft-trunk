@@ -38,7 +38,7 @@ public:
     void start_AD();
     void start_ID();
     VectorXd x_qualisys = VectorXd::Zero(3);
-    VectorXd Ka = VectorXd::Ones(11);
+    VectorXd Ka = VectorXd::Zero(11);
     VectorXd a = VectorXd::Zero(11);
     VectorXd Kb = VectorXd::Ones(4);
     VectorXd b = VectorXd::Zero(4);    
@@ -62,7 +62,7 @@ private:
     VectorXd bDot = VectorXd::Zero(4);
     VectorXd a_min = 0.000001*VectorXd::Ones(11);
     VectorXd b_min = 0.000001*VectorXd::Ones(4);
-    VectorXd a_max = 0.3*VectorXd::Ones(11);    
+    VectorXd a_max = 0.5*VectorXd::Ones(11);    
     VectorXd b_max = 0.01*VectorXd::Ones(4);      
     VectorXd tau = VectorXd::Zero(4);
     VectorXd s = VectorXd::Zero(4);   
