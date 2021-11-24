@@ -330,9 +330,9 @@ int main()
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
     //Task_Circle(t, 8, 0.12);
-    //x_ref << 0.12,0.0,-0.22;
-    s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-    Task_Circle_r2r(sigma, dsigma, ddsigma);
+    x_ref << 0.12, 0.0, -0.22;
+    //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+    //Task_Circle_r2r(sigma, dsigma, ddsigma);
     //Task_Linear_r2r(sigma, dsigma, ddsigma);
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
@@ -344,10 +344,10 @@ int main()
     //start adaptation now:
     ad.Ka[7] = 0;
     ad.Ka[8] = 0;
-    ad.Ka[9] = 1;
-    ad.Ka[10] = 1;
-    ad.rate1 = 0.000001;
-    ad.rate2 = 0.00001;
+    ad.Ka[9] = 0;
+    ad.Ka[10] = 0;
+    ad.rate1 = 0;
+    ad.rate2 = 0;//0.00001;
 
     while (t <= T)
     {
@@ -355,8 +355,9 @@ int main()
         //Task_8(t, 12.0, 0.12,0.03); // 8 shape traj. with radious 0.1m and period 20s
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         //Task_Circle(t, 8, 0.12); // circular traj. with radius 0.15m and period 8s
-        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-        Task_Circle_r2r(sigma, dsigma, ddsigma);
+
+        //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+        //Task_Circle_r2r(sigma, dsigma, ddsigma);
         ad.set_ref(x_ref, dx_ref, ddx_ref);
         /**
         x_dum = ad.x_qualisys;
