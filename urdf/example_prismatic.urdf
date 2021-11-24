@@ -14,7 +14,7 @@
 	<link name="prism_base_link">
 		<!--since the RBDL needs a inertial info for each link, just assign a really small value to links where we don't have to consider inertia.-->	<visual>
 			<geometry>
-				<cylinder length="0.15" radius="0.04"/>
+				<cylinder length="0.15" radius="0.02"/>
 			</geometry>
 			<material name="white"/>
 		</visual>
@@ -34,7 +34,7 @@
 	<link name="prism_lower_link">
 		<!--since the RBDL needs a inertial info for each link, just assign a really small value to links where we don't have to consider inertia.-->	<visual>
 			<geometry>
-				<cylinder length="0.15" radius="0.02"/>
+				<cylinder length="0.15" radius="0.03"/>
 			</geometry>
 			
 			<material name="white"/>
