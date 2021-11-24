@@ -28,13 +28,13 @@
 	<link name="prism_lower_link">
 		<!--since the RBDL needs a inertial info for each link, just assign a really small value to links where we don't have to consider inertia.-->
 		<inertial>
-			<mass value="0.00001"/>
+			<mass value="0.1"/>
 			<inertia ixx="0.00001" ixy="0.0000" ixz="0.0000" iyy="0.00001" iyz="0.0000" izz="0.00001"/>
 		</inertial>
 	</link>
 	<joint name="fixed_joint" type="fixed">
-		<parent link="prism_lower_link">
-		<child link="base_link">
+		<parent link="prism_lower_link"/>
+		<child link="base_link"/>
 	</joint>
 	<link name="base_link">
 		<!--since the RBDL needs a inertial info for each link, just assign a really small value to links where we don't have to consider inertia.-->
