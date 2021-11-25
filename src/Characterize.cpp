@@ -124,16 +124,17 @@ void Characterize::taskSpaceAnalysis(int points, double speed, double dt){
     
     for (int i = 0; i < points; i++){
         for (int j = 0; j < st_params.q_size; j++){
-            p_des(j) = (double) (rand()) / (double) RAND_MAX;
-            double time = (p_des - p_des_prev).maxCoeff() / (100*speed);
-            double t = 0;
-            while (t<time){
-                actuate(stm->pseudo2real(p_des_prev + (t/time)*(p_des - p_des_prev)));
-                x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-                log_file << fmt::format("{},{},{},{}\n",x(0),x(1),x(2),sqrt(pow(x(0),2)+pow(x(1),2)));
-                t+=dt;
-                srl::sleep(dt);
-            }
+            p_des(j) = (double) (rand()) * 800 / (double) RAND_MAX;
+        }
+        double time = (p_des - p_des_prev).maxCoeff() / (100*speed);
+        fmt::print("Time: {} Desired Pressure Vector: {}",time,p_des.transpose());
+        double t = 0;
+        while (t<time){
+            actuate(stm->pseudo2real(p_des_prev + (t/time)*(p_des - p_des_prev)));
+            x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+            log_file << fmt::format("{},{},{},{}\n",x(0),x(1),x(2),sqrt(pow(x(0),2)+pow(x(1),2)));
+            t+=dt;
+            srl::sleep(dt);
         }
     }
     log_file.close();
