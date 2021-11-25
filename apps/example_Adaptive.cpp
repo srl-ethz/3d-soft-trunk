@@ -338,7 +338,7 @@ int main()
     Vector3d x_dum = ad.x_qualisys;
     fmt::print("a = {}\n", ad.a);
     getchar();
-    ad.toggle_log();
+    //ad.toggle_log();
     //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     //srl::sleep(0); //wait to get to the initial position

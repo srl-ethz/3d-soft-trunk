@@ -37,6 +37,13 @@ public:
     void change_ref4();
     void start_AD();
     void start_ID();
+
+    /** @brief log to memory and print to csv only after finishing 
+     * @param time time for which will be logged
+    */
+    void toggle_fastlog(double time);
+
+
     VectorXd x_qualisys = VectorXd::Zero(3);
     VectorXd Ka = VectorXd::Zero(11);
     VectorXd a = VectorXd::Zero(11);
@@ -79,4 +86,8 @@ private:
     double alpha;
     double eps_custom; // for singularity
     double zz; // enable disable ID/AD
+
+    double t;
+    bool fast_logging;
+    MatrixXd log_matrix;
 };

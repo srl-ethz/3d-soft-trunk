@@ -142,7 +142,22 @@ void Adaptive::control_loop()
         model_time = elapsed_mod.count();
         tot_time = elapsed_tot.count();
         actuate(p);                                                          // control the valves
-
+        if (fast_logging){
+            int c_r = (int) (t/dt); //current row
+            log_matrix(c_r,0) = t;
+            for (int i = 0; i < 3; i++){
+                log_matrix(c_r, 1+i) = x_qualisys(i);
+                log_matrix(c_r, 4+i) = x_ref(i);
+            }
+            log_matrix(c_r,7) = a(9);
+            log_matrix(c_r,8) = a(10);
+            for (int i = 0; i < st_params.q_size; i++){
+                log_matrix(c_r,9+i) = state.q(i);
+            }
+            for (int i = 0; i < 3*st_params.num_segments; i++){
+                log_matrix(c_r,13+i)= p(i);
+            }
+        }
         
     }
 }
@@ -413,5 +428,25 @@ void Adaptive::start_ID()
     this->rate2 = 0;
     this->gamma = 0;
     this->zz = 0;
+}
 
+void Adaptive::toggle_fastlog(double time){
+    if (!fast_logging){
+        fast_logging = true;
+        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),15);
+        t = 0;
+    } else {
+        fast_logging = false;
+        filename = fmt::format("{}/adaptive_fastlog.csv", SOFTTRUNK_PROJECT_DIR);
+        fmt::print("Dumping memory log to {}\n", filename);
+        log_file.open(filename, std::fstream::out);
+        log_file << "t,x,y,z,x_ref,y_ref,z_ref,k1,k2,p0,p1,p2,p3,p4,p5\n";
+        for (int i = 0; i < log_matrix.rows(); i ++){
+            for (int j = 0; j < 15; j++){
+                log_file << log_matrix(i,j);
+            }
+            log_file << "\n";
+        }
+        log_file.close();
+    }
 }
