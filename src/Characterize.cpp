@@ -123,11 +123,13 @@ void Characterize::taskSpaceAnalysis(int points, double speed, double dt){
     log_file << "x,y,z,r\n";
     
     for (int i = 0; i < points; i++){
+        p_des_prev = p_des;
         for (int j = 0; j < st_params.q_size; j++){
-            p_des(j) = (double) (rand()) * 800 / (double) RAND_MAX;
+            p_des(j) = (double) (rand()) * 1600 / (double) RAND_MAX;
+            p_des(j) -= 800;
         }
         double time = (p_des - p_des_prev).maxCoeff() / (100*speed);
-        fmt::print("Time: {} Desired Pressure Vector: {}",time,p_des.transpose());
+        fmt::print("Iteration: {}/{}, Time: {} Desired Pressure Vector: {}\n",i,points,time,p_des.transpose());
         double t = 0;
         while (t<time){
             actuate(stm->pseudo2real(p_des_prev + (t/time)*(p_des - p_des_prev)));

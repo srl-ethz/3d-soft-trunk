@@ -7,5 +7,5 @@ int main(){
     /*ch.calcK(1,8,5,"K_bottom");
     ch.calcK(0,8,5,"K_top");*/
     //ch.logRadialPressureDist(0, "topRadialLog500");
-    ch.taskSpaceAnalysis();
+    ch.taskSpaceAnalysis(1000);
 }
