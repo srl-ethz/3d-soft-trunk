@@ -87,7 +87,9 @@ private:
     double eps_custom; // for singularity
     double zz; // enable disable ID/AD
 
+    VectorXd pprev = VectorXd::Zero(4);
+    VectorXd d_pxy;
     double t;
-    bool fast_logging;
+    bool fast_logging = false;
     MatrixXd log_matrix;
 };

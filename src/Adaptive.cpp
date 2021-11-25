@@ -134,13 +134,18 @@ void Adaptive::control_loop()
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
-        p = stm->pseudo2real(stm->A_pseudo.inverse() * tau / 100);           // compute the desired pressure
-        //cout << p[4] << "\n";
+        VectorXd pxy = stm->A_pseudo.inverse() * tau / 100;
+        d_pxy = pxy - pprev;
+        d_pxy = 30*sat(d_pxy,30);
+        pxy = pprev + d_pxy;
+        p = stm->pseudo2real(pxy);           // compute the desired pressure
+        pprev = pxy;
         auto end_tot = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
         std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
         model_time = elapsed_mod.count();
         tot_time = elapsed_tot.count();
+        
         actuate(p);                                                          // control the valves
         if (fast_logging){
             int c_r = (int) (t/dt); //current row
@@ -157,6 +162,10 @@ void Adaptive::control_loop()
             for (int i = 0; i < 3*st_params.num_segments; i++){
                 log_matrix(c_r,13+i)= p(i);
             }
+            for (int i = 0; i < st_params.q_size; i++){
+                log_matrix(c_r,19+i) = pxy(i);
+            }
+            t+=dt;
         }
         
     }
@@ -344,8 +353,9 @@ void Adaptive::increase_stiffness(int seg)
     //std::cout << this->Ka(9);
     //std::cout << this->Ka(10);
     //fmt::print("Ka = {}\n", Ka);
-    fmt::print("aDot = {}\n", aDot);
+    //fmt::print("aDot = {}\n", aDot);
     fmt::print("a = {}\n", a);
+    fmt::print("pressure = {}\n", d_pxy);
     //fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
     //fmt::print("damping: {}\n", this->a[7]);
     //fmt::print("damping: {}\n", this->a[8]);
@@ -433,17 +443,17 @@ void Adaptive::start_ID()
 void Adaptive::toggle_fastlog(double time){
     if (!fast_logging){
         fast_logging = true;
-        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),15);
+        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),23);
         t = 0;
     } else {
         fast_logging = false;
         filename = fmt::format("{}/adaptive_fastlog.csv", SOFTTRUNK_PROJECT_DIR);
         fmt::print("Dumping memory log to {}\n", filename);
         log_file.open(filename, std::fstream::out);
-        log_file << "t,x,y,z,x_ref,y_ref,z_ref,k1,k2,p0,p1,p2,p3,p4,p5\n";
+        log_file << "t,x,y,z,x_ref,y_ref,z_ref,k1,k2,q0,q1,q2,q3,p0,p1,p2,p3,p4,p5\n";
         for (int i = 0; i < log_matrix.rows(); i ++){
-            for (int j = 0; j < 15; j++){
-                log_file << log_matrix(i,j);
+            for (int j = 0; j < 23; j++){
+                log_file << log_matrix(i,j) << ",";
             }
             log_file << "\n";
         }

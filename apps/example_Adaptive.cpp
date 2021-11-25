@@ -339,6 +339,7 @@ int main()
     fmt::print("a = {}\n", ad.a);
     getchar();
     //ad.toggle_log();
+    
     //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     //srl::sleep(0); //wait to get to the initial position
@@ -346,7 +347,7 @@ int main()
 
     //std::cout << ad.Ka(9);
     //std::cout << ad.Ka(10);
-
+    ad.toggle_fastlog(T);
     while (t<=T)
     {
     //ad.Ka(7)= 0;
@@ -373,7 +374,7 @@ int main()
         t += dt;
         srl::sleep(dt);
     }
-    ad.toggle_log();
+    ad.toggle_fastlog(0);
 
     srl::sleep(2);
 }

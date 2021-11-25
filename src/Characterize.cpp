@@ -16,20 +16,22 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     log_file << fmt::format(", angle_measured, r");
     log_file << "\n"; 
     
-    pressures(2*segment) = 500;
+    pressures(2*segment) = 800;
 
     if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
         else actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
-    srl::Rate r{1};
+    srl::Rate r{220};
 
-    VectorXd ang_err = VectorXd::Zero(360);
-    VectorXd radii = VectorXd::Zero(360);
-    MatrixXd angle_vals = MatrixXd::Zero(360,4);
+    VectorXd ang_err = VectorXd::Zero(3*360);
+    VectorXd radii = VectorXd::Zero(3*360);
+    MatrixXd angle_vals = MatrixXd::Zero(3*360,4);
 
-    for (double i = 0; i < 360; i+=1.){
-        pressures(2*segment) = 500*cos(i*deg2rad);
-        pressures(2*segment+1) = -500*sin(i*deg2rad);
+    for (double i = 0; i < 360*3; i+=1.){
+        pressures(0) = 800*cos(i*deg2rad);
+        pressures(1) = -800*sin(i*deg2rad);
+        pressures(2) = 800*cos(i*deg2rad);
+        pressures(3) = -800*sin(i*deg2rad);
 
         if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
         else actuate(stm->pseudo2real(pressures));
@@ -44,9 +46,12 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         if (angle < 0) angle+=360;
         if (angle > 360) angle-=360;
 
-        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
+        //fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
 
         log_file << fmt::format("{},{},{}", (double) i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        for (int j = 0; j < 6; j++){
+            log_file << "," << stm->pseudo2real(pressures)(j);
+        }
         ang_err(i) = i - angle;
         if (abs(ang_err(i)) > 180) ang_err(i) += 360;
         angle_vals(i,0) = i*i*i;
@@ -120,7 +125,7 @@ void Characterize::taskSpaceAnalysis(int points, double speed, double dt){
     filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
     fmt::print("Starting task space analysis to {}\n", filename);
     log_file.open(filename, std::fstream::out);
-    log_file << "x,y,z,r\n";
+    log_file << "iteration,x,y,z,r,p0,p1,p2,p3,p4,p5,pxy1,pxy2,pxy3,pxy4\n";
     
     for (int i = 0; i < points; i++){
         p_des_prev = p_des;
@@ -128,13 +133,26 @@ void Characterize::taskSpaceAnalysis(int points, double speed, double dt){
             p_des(j) = (double) (rand()) * 1600 / (double) RAND_MAX;
             p_des(j) -= 800;
         }
-        double time = (p_des - p_des_prev).maxCoeff() / (100*speed);
-        fmt::print("Iteration: {}/{}, Time: {} Desired Pressure Vector: {}\n",i,points,time,p_des.transpose());
+        VectorXd ptime = p_des - p_des_prev;
+        for (int j = 0; j < st_params.q_size; j++){
+            ptime(j) = abs(ptime(j));
+        }
+        double time = ptime.maxCoeff() / (100*speed);
+        fmt::print("Iteration: {}/{}, Time: {} Desired Pressure Vector: {}\n",i+1,points,time,p_des.transpose());
         double t = 0;
         while (t<time){
-            actuate(stm->pseudo2real(p_des_prev + (t/time)*(p_des - p_des_prev)));
+            VectorXd p = stm->pseudo2real(p_des_prev + (t/time)*(p_des - p_des_prev));
+            VectorXd p1 = p_des_prev + (t/time)*(p_des - p_des_prev);
+            actuate(p);
             x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-            log_file << fmt::format("{},{},{},{}\n",x(0),x(1),x(2),sqrt(pow(x(0),2)+pow(x(1),2)));
+            log_file << fmt::format("{},{},{},{},{}",i,x(0),x(1),x(2),sqrt(pow(x(0),2)+pow(x(1),2)));
+            for (int j = 0; j < 6; j++){
+                log_file << "," <<p(j);
+            }
+            for (int j = 0; j < 4; j++){
+                log_file << "," << p1(j);
+            }
+            log_file << "\n";
             t+=dt;
             srl::sleep(dt);
         }

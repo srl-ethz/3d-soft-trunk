@@ -15,7 +15,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     J.resize(st_params.num_segments);
 
     chamberMatrix <<  0, sqrt(3) / 2, -sqrt(3) / 2, -1, 0.5, 0.5; // x and y are swapped and x is -
-
+    chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); 
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
         int segment_id = section_id / st_params.sections_per_segment;
@@ -64,7 +64,7 @@ void SoftTrunkModel::newChamberConfig(Vector3d &angles){ //probably don't use th
 VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     assert(pressure_pseudo.size() == 2 * st_params.num_segments);
     VectorXd output = VectorXd::Zero(3*st_params.num_segments);
-    MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
+    //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
         if (pressure_pseudo.segment(2*i,2).norm() > 1000) pressure_pseudo.segment(2*i,2) *= 1000/pressure_pseudo.segment(2*i,2).norm();

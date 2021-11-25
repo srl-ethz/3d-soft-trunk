@@ -87,7 +87,7 @@ private:
      * @brief thread runs while this is true
      */
     bool run;
-    const bool log = true;
+    const bool log = false;
 
     /**
      * @brief calculates q from the current frame values.
