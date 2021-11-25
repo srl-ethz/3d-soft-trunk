@@ -145,7 +145,18 @@ void Adaptive::control_loop()
         if (fast_logging){
             int c_r = (int) (t/dt); //current row
             log_matrix(c_r,0) = t;
-            
+            for (int i = 0; i < 3; i++){
+                log_matrix(c_r, 1+i) = x_qualisys(i);
+                log_matrix(c_r, 4+i) = x_ref(i);
+            }
+            log_matrix(c_r,7) = a(9);
+            log_matrix(c_r,8) = a(10);
+            for (int i = 0; i < st_params.q_size; i++){
+                log_matrix(c_r,9+i) = state.q(i);
+            }
+            for (int i = 0; i < 3*st_params.num_segments; i++){
+                log_matrix(c_r,13+i)= p(i);
+            }
         }
         
     }
