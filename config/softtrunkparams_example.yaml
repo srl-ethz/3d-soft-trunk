@@ -1,6 +1,6 @@
 ---
 #Soft trunk parameters are defined here
-robot_name: 2segment
+robot_name: example_prismatic
 #Physical segments of the arm
 num_segments: 2
 #PCC sections per segment

@@ -108,7 +108,7 @@ public:
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
 
-        q_size = 2*num_segments*sections_per_segment;
+        q_size = 2*num_segments*sections_per_segment+1;
         finalized = true;
     }
 
