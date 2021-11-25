@@ -51,6 +51,9 @@ target_link_libraries(record_movement SerialInterface ControllerPCC)
 add_executable(play_movement play_movement.cpp)
 target_link_libraries(play_movement SerialInterface ControllerPCC)
 
+add_executable(example_QuasiStatic example_QuasiStatic.cpp)
+target_link_libraries(example_QuasiStatic QuasiStatic)
+
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)

@@ -5,7 +5,7 @@ const double pi = 3.14159265;
 SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(st_params)
 {
     assert(st_params.is_finalized());
-    generateRobotURDF();
+    //generateRobotURDF();
     ara = std::make_unique<AugmentedRigidArm>(st_params);
 
     K = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 2 * st_params.sections_per_segment * st_params.num_segments);

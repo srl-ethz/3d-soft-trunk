@@ -103,6 +103,8 @@ target_link_libraries(IDCon ControllerPCC)
 add_library(Adaptive src/Adaptive.cpp)
 target_link_libraries(Adaptive ControllerPCC)
 
+add_library(QuasiStatic src/QuasiStatic.cpp)
+target_link_libraries(QuasiStatic ControllerPCC)
 
 if(${roscpp_FOUND})
     add_library(VisualizerROS src/VisualizerROS.cpp)
