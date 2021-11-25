@@ -5,20 +5,20 @@ OSC::OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     potfields.resize(objects);
     for (int i = 0; i < objects; i++) {
-        potfields[i].set_cutoff(0.5);
-        potfields[i].set_strength(0.11);
-        potfields[i].set_radius(0.045);
+        potfields[i].set_cutoff(0.2);
+        potfields[i].set_strength(0.1);
+        potfields[i].set_radius(0.047);
     }
 
     J_mid = MatrixXd::Zero(3*st_params.num_segments, st_params.q_size);
 
     //set the gains
-    kp = 170;
+    kp = 100;
     kd = 5.5;
 
 
     //OSC needs a higher refresh rate than other controllers
-    dt = 1./80;
+    dt = 1./100;
 
     control_thread = std::thread(&OSC::control_loop, this);
 }
@@ -43,9 +43,6 @@ void OSC::control_loop() {
         //this x is from qualisys directly
         x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
         //this x is from forward kinematics, use when using bendlabs sensors
-        Vector3d gripperl = Vector3d::Zero();
-        gripperl(2) = 0.06;
-        //x = x + stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).rotation()*gripperl;
         //x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
         
         
@@ -55,22 +52,31 @@ void OSC::control_loop() {
         
         ddx_des = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx);            //desired acceleration from PD controller
 
-        if ((x_ref - x).norm() > 0.05) {                                   //deal with super high distances
-            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.05 + kd*(dx_ref - dx);  
+        if ((x_ref - x).norm() > 0.038) {                                   //deal with super high distances
+            ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.038 + kd*(dx_ref - dx);  
         }
+
+        double distance = (x - x_ref).norm();
+        //if (distance > 0.15) ddx_des = ddx_ref + kp*(x_ref - x).normalized()*0.15 + kd*(dx_ref - dx);
 
         ddx_null = VectorXd::Zero(3*st_params.num_segments);
 
         for (int i = 0; i < potfields.size(); i++) {            //add the potential fields from objects to reference
             if (!freeze)
                 potfields[i].set_pos(get_objects()[i]);
-            ddx_des += potfields[i].get_ddx(x); 
+            ddx_des += potfields[i].get_ddx(x);
+            //ddx_null.segment(0,3) += potfields[i].get_ddx(x_mid);
         }
 
         for (int i = 0; i < singularity(J); i++){               //reduce jacobian order if the arm is in a singularity
-            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.02*(i+1)*MatrixXd::Identity(3,2);
+            J.block(0,(st_params.num_segments-1-i)*2,3,2) += 0.5*(i+1)*MatrixXd::Identity(3,2);
         }
         
+        /*for (int j = 0; j < st_params.num_segments; j++){
+            for (int i = 0; i < singularity(J_mid.block(3*j,0,3,st_params.q_size)); i++){               //reduce jacobian order if the arm is in a singularity
+                J_mid.block(3*j,2*i,3,2) + 0.2*(i+1)*MatrixXd::Identity(3,2);
+            }
+        }*/
 
         B_op = (J*stm->B.inverse()*J.transpose()).inverse();
         //J_inv = stm->B.inverse()*J.transpose()*B_op;

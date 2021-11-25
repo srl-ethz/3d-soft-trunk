@@ -53,7 +53,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
             log_file << "," << stm->pseudo2real(pressures)(j);
         }
         ang_err(i) = i - angle;
-        if (abs(ang_err(i)) > 180) ang_err(i) -= ((ang_err(i) > 0) - (ang_err(i) < 0))*360;
+        if (abs(ang_err(i)) > 180) ang_err(i) += 360;
         angle_vals(i,0) = i*i*i;
         angle_vals(i,1) = i*i;
         angle_vals(i,2) = i;

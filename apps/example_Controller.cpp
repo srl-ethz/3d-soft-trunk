@@ -56,34 +56,29 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 newx = x_ref;
                 newx(1) *= -1;
                 newx(0) *= -1;
-                osc.loadAttached = 0.2;
-                //osc.toggle_log();
                 /*diff = newx - x_ref;
                 
                 for(double tl = 0; tl < crosstime; tl += 0.1){
                     osc.set_ref(x_ref + (tl/crosstime) * diff, dx_ref, ddx_ref);
                     srl::sleep(0.1);
                 }*/
-                x_ref(0) = 0.17;
-                x_ref(1) = 0;
-                x_ref(2) = -0.27;
-                osc.set_ref(x_ref,dx_ref,ddx_ref);
-                //srl::sleep(1);
                 x_ref = newx;
                 osc.set_ref(x_ref,dx_ref,ddx_ref);
-                //srl::sleep(8);
-                //osc.toggle_log();
                 break;
-
+            case 'r':
+                osc.toggle_log();
+                x_ref(1) *= -1;
+                x_ref(0) *= -1;
+                osc.set_ref(x_ref,dx_ref, ddx_ref);
+                srl::sleep(7);
+                osc.toggle_log();
+                break;
             case 'b':
-                osc.loadAttached = .2;
+                osc.loadAttached = -3;
                 break;
             case 'f': 
                 osc.freeze = !osc.freeze;
                 fmt::print("Freeze status: {}\n", osc.freeze);
-                break;
-            case 'm':
-                osc.toggle_log();
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.get_kp(), osc.get_kd());
@@ -92,7 +87,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
 }
 
 void printer(OSC& osc){
-    srl::Rate r{0.3};
+    srl::Rate r{1};
     while(true){
         Vector3d x;
         osc.get_x(x);
@@ -115,11 +110,9 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref_center << 0.15*cos(0*0.01745329),0.15*sin(0*0.01745329),-0.215;
-    //x_ref = x_ref_center;
-    x_ref << 0.15,0.00,-0.2;
-    std::thread print_thread(printer, std::ref(osc));
-
+    x_ref_center << 0.09*cos(-0*0.01745329),0.09*sin(-0*0.01745329),-0.238;
+    x_ref = x_ref_center;
+    
     
     double t = 0;
     double dt = 0.1;
@@ -127,30 +120,29 @@ int main(){
     Vector3d d_circle;
     Vector3d dd_circle;
 
+    double amplitude = 0.2;
     double coef = 2 * 3.1415 / 8;
-    osc.gripperAttached = true;
-    osc.loadAttached = 0;
-    getchar();
-    osc.toggleGripper();
-
+    osc.gripperAttached = false;
+    osc.set_ref(x_ref, dx_ref, ddx_ref);
+    srl::sleep(2);
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
-    getchar();
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
+    std::thread print_thread(printer, std::ref(osc));
     std::thread gain_thread(gain, std::ref(osc));
     
     //osc.toggle_log();
     while (true){
-        double r = 0.13;
-        circle << r*cos(coef*t), r*sin(coef*t),-0.215;
+        double r = 0.15;
+        circle << r*cos(coef*t), r*sin(coef*t), -0.2;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
+        /*x_ref = circle;
         dx_ref = d_circle;
-        ddx_ref = dd_circle;
+        ddx_ref = dd_circle;*/
         //x_ref = osc.get_objects()[0];
-        osc.set_ref(x_ref,dx_ref, ddx_ref);
+        //osc.set_ref(x_ref,dx_ref, ddx_ref);
         /*osc.get_x(x);
         if ((x_ref - x).norm() < 0.07){
             freedom = true;
@@ -160,16 +152,19 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-    x_ref << -0.15,0.00,-0.2;
-    dx_ref(0) = -10;
-    osc.set_ref(x_ref,dx_ref);
-    srl::sleep(0.2);
-    osc.toggleGripper();
-    srl::sleep(0.1);
-    dx_ref(0) = 0;
-    osc.set_ref(x_ref,dx_ref);
-    srl::sleep(3);
     osc.toggle_log();
     srl::sleep(2);
+    /*
+    x_ref << 0.15,0,-0.2;
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
+    srl::sleep(4);
+    x_ref << -0.15,0,-0.2;
+    dx_ref << -10, 0, 0;
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
+    srl::sleep(0.3);
+    osc.toggleGripper();
+    dx_ref << 0, 0, 0;
+    osc.set_ref(x_ref,dx_ref,ddx_ref);
+    */
     return 1;
 }

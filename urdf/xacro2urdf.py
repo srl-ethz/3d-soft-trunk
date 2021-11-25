@@ -8,7 +8,7 @@ need to `pip3 install xacro`
 
 input_filename = sys.argv[1]
 output_filename = sys.argv[2]
-print("converting XACRO: {input_filename} to URDF: {output_filename}")
+print(f"converting XACRO: {input_filename} to URDF: {output_filename}")
 
 output_xml = xacro.process_file(input_filename)
 
