@@ -220,7 +220,7 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 3; //rounds of circle
+    double n = 4; //rounds of circle
     double r = 0.12;    //radius of the circle
     l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
@@ -231,7 +231,7 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
     //Eigen::Vector3d d = p_f - p_i;
     //l = d.norm();
 
-    dsigma_max = 0.06;  // maximum velocity
+    dsigma_max = 0.05;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
 
     Ts = dsigma_max / ddsigma_max;
@@ -276,9 +276,9 @@ void Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     // circle parameters
     double cx = 0.0;
     double cy = 0.0;
-    double cz = -0.22;
+    double cz = -0.25;
     double r = 0.12;
-    double h = 0.03;
+    double h = 0.06;
     double phi = 0;
 
     x_ref[0] = cx + r * cos(sigma / r + phi);
