@@ -339,7 +339,7 @@ int main()
     fmt::print("a = {}\n", ad.a);
     getchar();
     //ad.toggle_log();
-    
+    ad.start_AD();
     //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     //srl::sleep(0); //wait to get to the initial position

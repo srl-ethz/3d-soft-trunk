@@ -20,7 +20,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     delta = 0.05; //boundary layer tickness
 
-    rate1 = 0.001; //variation rate of estimates; may remove one zero
+    rate1 = 0; //0.001 variation rate of estimates; may remove one zero
 
     rate2 = 0; //variation rate of estimates; may remove one zero
 
@@ -427,8 +427,8 @@ void Adaptive::show_x()
 void Adaptive::start_AD()
 {
     fmt::print("Adaptive Controller is activated!\n");
-    this->rate1 = 0.0000001;
-    this->rate2 = 0.000001;
+    this->rate1 = 0.001;
+    this->rate2 = 0;
     this->zz = 1;
 }
 void Adaptive::start_ID()
