@@ -220,7 +220,7 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 4; //rounds of circle
+    double n = 2; //rounds of circle
     double r = 0.12;    //radius of the circle
     l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
@@ -231,8 +231,8 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
     //Eigen::Vector3d d = p_f - p_i;
     //l = d.norm();
 
-    dsigma_max = 0.05;  // maximum velocity
-    ddsigma_max = 0.01; // maximum acc
+    dsigma_max = 0.04;  // maximum velocity
+    ddsigma_max = 0.005; // maximum acc
 
     Ts = dsigma_max / ddsigma_max;
     Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
@@ -339,7 +339,7 @@ int main()
     fmt::print("a = {}\n", ad.a);
     getchar();
     //ad.toggle_log();
-    ad.start_AD();
+    
     //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     //srl::sleep(0); //wait to get to the initial position

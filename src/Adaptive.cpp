@@ -20,7 +20,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     delta = 0.05; //boundary layer tickness
 
-    rate1 = 0; //0.001 variation rate of estimates; may remove one zero
+    rate1 = 0.001; //variation rate of estimates; may remove one zero
 
     rate2 = 0; //variation rate of estimates; may remove one zero
 
@@ -28,22 +28,18 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     Ka(7) = 0;
     Ka(8) = 0;
-    Ka(9) = 10;
-    Ka(10) = 10;
+    Ka(9) = 1;
+    Ka(10) = 1;
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
-    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.15, 0.15;
+    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.2, 0.09;
     zz = 1;
-
-    sigma = 0.0;
-    dsigma = 0.0;
-    ddsigma = 0.0;
-    T = 30;        // final time changes depending on the timing law
     /*
-    m1 = 0.18;
+    m1 = 0.18;i
+
     m2 = 0.086+0.025;
     L1 = 0.16; 
     L2 = 0.12;
@@ -76,12 +72,12 @@ void Adaptive::control_loop()
         r.sleep();
 
         std::lock_guard<std::mutex> lock(mtx);
-        //auto start_tot = std::chrono::system_clock::now();
+        auto start_tot = std::chrono::system_clock::now();
         cc->get_curvature(state);
         avoid_singularity(state);
-        //auto start_mod = std::chrono::system_clock::now();
+        auto start_mod = std::chrono::system_clock::now();
         lag.update(state, state_ref);
-        //auto end_mod = std::chrono::system_clock::now();
+        auto end_mod = std::chrono::system_clock::now();
         
     
         if (!is_initial_ref_received) //only control after receiving a reference position
@@ -92,9 +88,6 @@ void Adaptive::control_loop()
         x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         //x = x_qualiszs;
         dx = lag.J * state.dq;
-        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-        Task_Circle_r2r(sigma, dsigma, ddsigma);
-        set_ref(x_ref, dx_ref, ddx_ref);
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
         e = x_ref - x;
         eDot = dx_ref - dx;
@@ -144,15 +137,15 @@ void Adaptive::control_loop()
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
         VectorXd pxy = stm->A_pseudo.inverse() * tau / 100;
         d_pxy = pxy - pprev;
-        d_pxy = 30*sat(d_pxy,30);
+        d_pxy = 15*sat(d_pxy,15);
         pxy = pprev + d_pxy;
         p = stm->pseudo2real(pxy);           // compute the desired pressure
         pprev = pxy;
-        //auto end_tot = std::chrono::system_clock::now();
-        //std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
-        //std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
-        //model_time = elapsed_mod.count();
-        //tot_time = elapsed_tot.count();
+        auto end_tot = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
+        std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
+        model_time = elapsed_mod.count();
+        tot_time = elapsed_tot.count();
         
         actuate(p);                                                          // control the valves
         if (fast_logging){
@@ -435,8 +428,8 @@ void Adaptive::show_x()
 void Adaptive::start_AD()
 {
     fmt::print("Adaptive Controller is activated!\n");
-    this->rate1 = 0.001;
-    this->rate2 = 0;
+    this->rate1 = 0.0000001;
+    this->rate2 = 0.000001;
     this->zz = 1;
 }
 void Adaptive::start_ID()
@@ -467,84 +460,4 @@ void Adaptive::toggle_fastlog(double time){
         }
         log_file.close();
     }
-}
-
-// Timing Law
-void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigma, double *T)
-{
-
-    double l, dsigma_max, ddsigma_max, Ts, Tf;
-    // circle
-    double n = 4; //rounds of circle
-    double r = 0.12;    //radius of the circle
-    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
-    // linear
-    //Eigen::Vector3d p_i;
-    //Eigen::Vector3d p_f;
-    //p_i << 0, 0, 0;
-    //p_f << 1, 1, 1;
-    //Eigen::Vector3d d = p_f - p_i;
-    //l = d.norm();
-
-    dsigma_max = 0.05;  // maximum velocity
-    ddsigma_max = 0.01; // maximum acc
-
-    Ts = dsigma_max / ddsigma_max;
-    Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
-    *T = Tf;
-
-    if (t <= Ts)
-    {
-
-        *sigma = (ddsigma_max * t * t) / 2;
-        *dsigma = ddsigma_max * t;
-        *ddsigma = ddsigma_max;
-    }
-
-    else if (t > Ts && t <= Tf - Ts)
-    {
-
-        *sigma = (dsigma_max * t) - ((dsigma_max * dsigma_max) / (2 * ddsigma_max));
-        *dsigma = dsigma_max;
-        *ddsigma = 0;
-    }
-
-    else if (t > Tf - Ts && t <= Tf)
-    {
-
-        *sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
-        *dsigma = ddsigma_max * (Tf - t);
-        *ddsigma = -ddsigma_max;
-    }
-
-    else if (t > Tf)
-    {
-        t = Tf;
-        *sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
-        *dsigma = 0;  //;ddsigma_max*(Tf-t);
-        *ddsigma = 0; //-ddsigma_max;
-    }
-}
-
-void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
-{
-    // circle parameters
-    double cx = 0.0;
-    double cy = 0.0;
-    double cz = -0.25;
-    double r = 0.12;
-    double h = 0.06;
-    double phi = 0;
-
-    this->x_ref[0] = cx + r * cos(sigma / r + phi);
-    this->x_ref[1] = cy + r * sin(sigma / r + phi);
-    this->x_ref[2] = cz + h * cos(sigma / r + phi);
-
-    this->dx_ref[0] = -sin(sigma / r + phi) * dsigma;
-    this->dx_ref[1] = cos(sigma / r + phi) * dsigma;
-    this->dx_ref[2] = -(h * sin(phi + sigma / r)) / r * dsigma;
-
-    this->ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
-    this->ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
-    this->ddx_ref[2] = (-(h * cos(phi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(phi + sigma / r)) / r) * ddsigma;
 }
