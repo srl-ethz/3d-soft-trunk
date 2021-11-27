@@ -89,6 +89,9 @@ void Adaptive::control_loop()
         //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
+        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+        Task_Circle_r2r(sigma, dsigma, ddsigma);
+
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
@@ -460,4 +463,84 @@ void Adaptive::toggle_fastlog(double time){
         }
         log_file.close();
     }
+}
+
+// Timing Law
+void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigma, double *T)
+{
+
+    double l, dsigma_max, ddsigma_max, Ts, Tf;
+    // circle
+    double n = 4; //rounds of circle
+    double r = 0.12;    //radius of the circle
+    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+    // linear
+    //Eigen::Vector3d p_i;
+    //Eigen::Vector3d p_f;
+    //p_i << 0, 0, 0;
+    //p_f << 1, 1, 1;
+    //Eigen::Vector3d d = p_f - p_i;
+    //l = d.norm();
+
+    dsigma_max = 0.05;  // maximum velocity
+    ddsigma_max = 0.01; // maximum acc
+
+    Ts = dsigma_max / ddsigma_max;
+    Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
+    *T = Tf;
+
+    if (t <= Ts)
+    {
+
+        *sigma = (ddsigma_max * t * t) / 2;
+        *dsigma = ddsigma_max * t;
+        *ddsigma = ddsigma_max;
+    }
+
+    else if (t > Ts && t <= Tf - Ts)
+    {
+
+        *sigma = (dsigma_max * t) - ((dsigma_max * dsigma_max) / (2 * ddsigma_max));
+        *dsigma = dsigma_max;
+        *ddsigma = 0;
+    }
+
+    else if (t > Tf - Ts && t <= Tf)
+    {
+
+        *sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
+        *dsigma = ddsigma_max * (Tf - t);
+        *ddsigma = -ddsigma_max;
+    }
+
+    else if (t > Tf)
+    {
+        t = Tf;
+        *sigma = (-0.5 * ddsigma_max * (t - Tf) * (t - Tf)) + (dsigma_max * Tf) - (dsigma_max * dsigma_max / ddsigma_max);
+        *dsigma = 0;  //;ddsigma_max*(Tf-t);
+        *ddsigma = 0; //-ddsigma_max;
+    }
+}
+
+void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
+{
+    // circle parameters
+    double cx = 0.0;
+    double cy = 0.0;
+    double cz = -0.25;
+    double r = 0.12;
+    double h = 0.06;
+    double phi = 0;
+
+    this->x_ref[0] = cx + r * cos(sigma / r + phi);
+    this->x_ref[1] = cy + r * sin(sigma / r + phi);
+    this->x_ref[2] = cz + h * cos(sigma / r + phi);
+
+    this->dx_ref[0] = -sin(sigma / r + phi) * dsigma;
+    this->dx_ref[1] = cos(sigma / r + phi) * dsigma;
+    this->dx_ref[2] = -(h * sin(phi + sigma / r)) / r * dsigma;
+
+    this->ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
+    this->ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
+    this->ddx_ref[2] = (-(h * cos(phi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(phi + sigma / r)) / r) * ddsigma;
 }

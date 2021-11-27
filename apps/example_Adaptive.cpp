@@ -220,7 +220,7 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 2; //rounds of circle
+    double n = 4; //rounds of circle
     double r = 0.12;    //radius of the circle
     l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
@@ -231,8 +231,8 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
     //Eigen::Vector3d d = p_f - p_i;
     //l = d.norm();
 
-    dsigma_max = 0.04;  // maximum velocity
-    ddsigma_max = 0.005; // maximum acc
+    dsigma_max = 0.05;  // maximum velocity
+    ddsigma_max = 0.01; // maximum acc
 
     Ts = dsigma_max / ddsigma_max;
     Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
@@ -325,21 +325,21 @@ int main()
     Adaptive ad(st_params, CurvatureCalculator::SensorType::qualisys, 0);
 
     double t = 0.0;
-    double dt = 1. / 70;
+    double dt = 1. / 10;
 
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
     //Task_Circle(t, 12, 0.12);
     //x_ref << 0, -0.12, -0.22;
-    s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-    Task_Circle_r2r(sigma, dsigma, ddsigma);
+    //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+    //Task_Circle_r2r(sigma, dsigma, ddsigma);
     //Task_Linear_r2r(sigma, dsigma, ddsigma);
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
     fmt::print("a = {}\n", ad.a);
     getchar();
     //ad.toggle_log();
-    
+    ad.start_AD();
     //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     //srl::sleep(0); //wait to get to the initial position
@@ -361,9 +361,9 @@ int main()
         //Task_Rose(t, 16.0, 0.1); // Rose shape traj. with radious 0.1m and period 20s
         //Task_Circle(t, 12, 0.12); // circular traj. with radius 0.15m and period 8s
         //fmt::print("a = {}\n", ad.a);
-        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-        Task_Circle_r2r(sigma, dsigma, ddsigma);
-        ad.set_ref(x_ref, dx_ref, ddx_ref);
+        //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+        //Task_Circle_r2r(sigma, dsigma, ddsigma);
+        //ad.set_ref(x_ref, dx_ref, ddx_ref);
         /**
         x_dum = ad.x_qualisys;
         if ((x_dum - ad.get_objects()[0]).norm() < 0.07 && (x_dum - ad.get_objects()[0]).norm() > 0.001 &&  !gripping){
