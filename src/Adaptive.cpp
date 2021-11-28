@@ -8,11 +8,11 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     filename = "Adaptive_logger";
 
     Kp = 120 * VectorXd::Ones(3);
-    Kd = 0.3 * VectorXd::Ones(3); //control gains
+    Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 70;                  //controller's rate
+    dt = 1. / 120;                  //controller's rate
 
-    eps = 0.1;     //for pinv of Jacobian
+    eps = 0.05;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
     gamma = 0.001;                //control gains
@@ -20,22 +20,23 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     delta = 0.05; //boundary layer tickness
 
-    rate1 = 0.001; //variation rate of estimates; may remove one zero
+    rate1 = 0; //variation rate of estimates; may remove one zero
 
     rate2 = 0; //variation rate of estimates; may remove one zero
 
     alpha = 0.75; //Finite time stability
 
-    Ka(7) = 0;
-    Ka(8) = 0;
-    Ka(9) = 1;
-    Ka(10) = 1;
+    Ka(7) = 0.001;
+    Ka(8) = 0.001;
+    Ka(9) = 50;
+    Ka(10) = 50;
+  
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
-    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.2, 0.09;
+    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.23, 0.07;
     zz = 1;
     /*
     m1 = 0.18;i
@@ -79,9 +80,8 @@ void Adaptive::control_loop()
         lag.update(state, state_ref);
         auto end_mod = std::chrono::system_clock::now();
         
-    
-        if (!is_initial_ref_received) //only control after receiving a reference position
-            continue;
+       // if (!is_initial_ref_received) //only control after receiving a reference position
+        //    continue;
 
         x = lag.p;
 
@@ -89,9 +89,11 @@ void Adaptive::control_loop()
         //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
-        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-        Task_Circle_r2r(sigma, dsigma, ddsigma);
 
+        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+        //fmt::print("pass1\n");
+        Task_Circle_r2r(sigma, dsigma, ddsigma);
+        //Task_Linear_r2r(sigma, dsigma, ddsigma);
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
@@ -133,7 +135,15 @@ void Adaptive::control_loop()
         if (a(9) <=0.0001)
             a(9) = 0.0001;
         if (a(10) <=0.0001)
-            a(10) = 0.0001;              
+            a(10) = 0.0001; 
+        if (b(0) <=0.0001)
+            b(0) = 0.0001;
+        if (b(1) <=0.0001)
+            b(1) = 0.0001;
+        if (b(2) <=0.0001)
+            b(2) = 0.0001;
+        if (b(3) <=0.0001)
+            b(3) = 0.0001;                          
         //cout << "\na \n " << a << "\n\n";
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
@@ -155,7 +165,7 @@ void Adaptive::control_loop()
             int c_r = (int) (t/dt); //current row
             log_matrix(c_r,0) = t;
             for (int i = 0; i < 3; i++){
-                log_matrix(c_r, 1+i) = x_qualisys(i);
+                log_matrix(c_r, 1+i) = x(i);
                 log_matrix(c_r, 4+i) = x_ref(i);
             }
             log_matrix(c_r,7) = a(9);
@@ -359,7 +369,9 @@ void Adaptive::increase_stiffness(int seg)
     //fmt::print("Ka = {}\n", Ka);
     //fmt::print("aDot = {}\n", aDot);
     fmt::print("a = {}\n", a);
-    fmt::print("pressure = {}\n", d_pxy);
+    fmt::print("b = {}\n", b);
+    fmt::print("T = {}\n", T);
+    //fmt::print("pressure = {}\n", d_pxy);
     //fmt::print("stiffness{}: {}\n", seg, this->a[9 + seg]);
     //fmt::print("damping: {}\n", this->a[7]);
     //fmt::print("damping: {}\n", this->a[8]);
@@ -431,8 +443,8 @@ void Adaptive::show_x()
 void Adaptive::start_AD()
 {
     fmt::print("Adaptive Controller is activated!\n");
-    this->rate1 = 0.0000001;
-    this->rate2 = 0.000001;
+    this->rate1 = 0.001;
+    this->rate2 = 0.00001;
     this->zz = 1;
 }
 void Adaptive::start_ID()
@@ -471,19 +483,22 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 4; //rounds of circle
+    double n = 2; //rounds of circle
     double r = 0.12;    //radius of the circle
     l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
     //Eigen::Vector3d p_i;
     //Eigen::Vector3d p_f;
-    //p_i << 0, 0, 0;
-    //p_f << 1, 1, 1;
+    //p_i << 0.15, 0.15, -0.15;
+    //p_f << -0.15, 0.0, -0.20;
     //Eigen::Vector3d d = p_f - p_i;
     //l = d.norm();
-
-    dsigma_max = 0.05;  // maximum velocity
+    //fmt::print("L =  {}\n", l);
+    dsigma_max = 0.02;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
+    double l_min =  dsigma_max * dsigma_max / ddsigma_max;
+    //fmt::print("l_min =  {}\n", l_min);
+    assert (l > l_min);
 
     Ts = dsigma_max / ddsigma_max;
     Tf = (l * ddsigma_max + (dsigma_max * dsigma_max)) / (ddsigma_max * dsigma_max); // the total time
@@ -525,22 +540,44 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
 void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
 {
     // circle parameters
-    double cx = 0.0;
+    double cx = 0;
     double cy = 0.0;
-    double cz = -0.25;
+    double cz = -0.22;
     double r = 0.12;
-    double h = 0.06;
+    double h = -0.03;
     double phi = 0;
-
+    double psi = 0;
     this->x_ref[0] = cx + r * cos(sigma / r + phi);
     this->x_ref[1] = cy + r * sin(sigma / r + phi);
-    this->x_ref[2] = cz + h * cos(sigma / r + phi);
+    this->x_ref[2] = cz + h * cos(sigma / r + psi);
 
     this->dx_ref[0] = -sin(sigma / r + phi) * dsigma;
     this->dx_ref[1] = cos(sigma / r + phi) * dsigma;
-    this->dx_ref[2] = -(h * sin(phi + sigma / r)) / r * dsigma;
+    this->dx_ref[2] = -(h * sin(psi + sigma / r)) / r * dsigma;
 
     this->ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
     this->ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
-    this->ddx_ref[2] = (-(h * cos(phi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(phi + sigma / r)) / r) * ddsigma;
+    this->ddx_ref[2] = (-(h * cos(psi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(psi + sigma / r)) / r) * ddsigma;
+}
+
+void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
+{
+    Eigen::Vector3d p_i; //initial point
+    Eigen::Vector3d p_f; //final point
+    p_i << 0.15, 0.15, -0.15;
+    p_f << -0.15, 0.0, -0.20;
+    Eigen::Vector3d d = p_f - p_i;
+    double L = d.norm(); //distance
+
+    this->x_ref[0] = p_i(0) + sigma*(p_f(0)-p_i(0))/L;
+    this->x_ref[1] = p_i(1) + sigma*(p_f(1)-p_i(1))/L;
+    this->x_ref[2] = p_i(2) + sigma*(p_f(2)-p_i(2))/L;
+
+    this->dx_ref[0] = (p_f(0)-p_i(0))/L * dsigma;
+    this->dx_ref[1] = (p_f(1)-p_i(1))/L * dsigma;
+    this->dx_ref[2] = (p_f(2)-p_i(2))/L * dsigma;
+
+    this->ddx_ref[0] = (p_f(0)-p_i(0))/L * ddsigma;
+    this->ddx_ref[1] = (p_f(1)-p_i(1))/L * ddsigma;
+    this->ddx_ref[2] = (p_f(2)-p_i(2))/L * ddsigma;
 }

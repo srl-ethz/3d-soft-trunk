@@ -46,7 +46,7 @@ void CurvatureCalculator::calculator_loop() {
     }
 
     srl::State state_prev = st_params.getBlankState();
-    double interval = 0.01;
+    double interval = 0.001;
     srl::Rate rate{1. / interval};
     run = true;
     unsigned long long int last_timestamp;

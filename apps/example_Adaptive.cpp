@@ -1,4 +1,5 @@
 #include "3d-soft-trunk/Adaptive.h"
+#include <iostream>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -220,8 +221,8 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 4; //rounds of circle
-    double r = 0.12;    //radius of the circle
+    double n = 2; //rounds of circle
+    double r = 0.01;    //radius of the circle
     l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
     //Eigen::Vector3d p_i;
@@ -231,7 +232,7 @@ void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigm
     //Eigen::Vector3d d = p_f - p_i;
     //l = d.norm();
 
-    dsigma_max = 0.05;  // maximum velocity
+    dsigma_max = 0.07;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
 
     Ts = dsigma_max / ddsigma_max;
@@ -276,9 +277,9 @@ void Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     // circle parameters
     double cx = 0.0;
     double cy = 0.0;
-    double cz = -0.25;
-    double r = 0.12;
-    double h = 0.06;
+    double cz = -0.246;
+    double r = 0.15;
+    double h = 0;
     double phi = 0;
 
     x_ref[0] = cx + r * cos(sigma / r + phi);
@@ -338,13 +339,14 @@ int main()
     Vector3d x_dum = ad.x_qualisys;
     fmt::print("a = {}\n", ad.a);
     getchar();
-    //ad.toggle_log();
+    //ad.toggle_log();i
     ad.start_AD();
     //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
-    //srl::sleep(0); //wait to get to the initial position
+    srl::sleep(0.1); //wait to get to the initial position
     //start adaptation now:
-
+    T = ad.T;
+    fmt::print("T = {}\n", T);
     //std::cout << ad.Ka(9);
     //std::cout << ad.Ka(10);
     ad.toggle_fastlog(T);

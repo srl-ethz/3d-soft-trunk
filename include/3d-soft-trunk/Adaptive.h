@@ -52,12 +52,17 @@ public:
     double rate1; //variation rate of estimates
     double rate2; //variation rate of estimates
     double gamma2;
+    double sigma = 0.0;
+    double dsigma = 0.0;
+    double ddsigma = 0.0;
+    double T = 30;        // final time changes depending on the timing law
 private:
     void control_loop();
     void avoid_drifting();
     void avoid_singularity(srl::State &state);
     void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigma, double *T);
     void Task_Circle_r2r(double sigma, double dsigma, double ddsigma);
+    void Task_Linear_r2r(double sigma, double dsigma, double ddsigma);
 
     double sign(double val);
     VectorXd sat(VectorXd x, double delta);
@@ -96,10 +101,6 @@ private:
     bool fast_logging = false;
     MatrixXd log_matrix;
 
-    double sigma = 0.0;
-    double dsigma = 0.0;
-    double ddsigma = 0.0;
-    double T = 30;        // final time changes depending on the timing law
 
     Vector3d x_ref = Vector3d::Zero();;
     Vector3d dx_ref = Vector3d::Zero();
