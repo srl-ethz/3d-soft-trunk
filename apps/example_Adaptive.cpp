@@ -338,10 +338,11 @@ int main()
     ad.set_ref(x_ref, dx_ref, ddx_ref);
     Vector3d x_dum = ad.x_qualisys;
     fmt::print("a = {}\n", ad.a);
+    //ad.toggleGripper();
     getchar();
     //ad.toggle_log();i
     ad.start_AD();
-    //ad.toggleGripper();
+    ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     srl::sleep(0.1); //wait to get to the initial position
     //start adaptation now:

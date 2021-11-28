@@ -10,7 +10,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp = 120 * VectorXd::Ones(3);
     Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 120;                  //controller's rate
+    dt = 1. / 150;                  //controller's rate
 
     eps = 0.05;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
@@ -28,8 +28,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     Ka(7) = 0.001;
     Ka(8) = 0.001;
-    Ka(9) = 50;
-    Ka(10) = 50;
+    Ka(9) = 10;
+    Ka(10) = 10;
   
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
