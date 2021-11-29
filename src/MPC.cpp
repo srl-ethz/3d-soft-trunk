@@ -1,5 +1,7 @@
 #include "3d-soft-trunk/MPC.h"
 
+// works in end-effector space
+
 MPC::MPC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
 
@@ -8,7 +10,7 @@ MPC::MPC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
-    solved = 0; 
+    solved = false; 
 
     control_thread = std::thread(&MPC::control_loop, this);
 }
@@ -201,11 +203,11 @@ Opti MPC::define_problem(){
     {
         J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
         J += mtimes((q_dot(Slice(),k)-q_dot_r).T(), mtimes(Q, (q_dot(Slice(),k)-q_dot_r)));
-        J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
+        J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));     // if want to penalize input, need to use the ss one
     }
 
-    J += mtimes(q(Slice(),Horizon).T(), mtimes(Q, q(Slice(),Horizon))); 
-    J += mtimes(q_dot(Slice(),Horizon).T(), mtimes(Q, q_dot(Slice(),Horizon)));  // terminal cost
+    J += mtimes((q(Slice(),Horizon)-q_r).T(), mtimes(Q, (q(Slice(),Horizon)-q_r))); 
+    J += mtimes((q_dot(Slice(),Horizon)-q_dot_r).T(), mtimes(Q, (q_dot(Slice(),Horizon)-q_dot_r)));  // terminal cost
     
     prob.minimize(J);
 
@@ -251,6 +253,8 @@ Opti MPC::define_problem(){
 
     
     prob.solver("ipopt");
+
+    std::cout<< "MPC problem initialized correctly."<< std::endl; 
 
     return prob; 
 }

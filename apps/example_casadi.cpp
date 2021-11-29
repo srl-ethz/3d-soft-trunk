@@ -5,8 +5,21 @@ using namespace casadi;
 
 
 int main(){
+
+    MX test  = MX::ones(3,1); 
+    test = -test; 
+
+
+    std::cout << test << std::endl; 
+    std::cout << fabs(test) << std::endl; 
+
+/*
+    std::vector<double> lengths = {-0.125, -0.02, -0.125, -0.02};
+
+    std::cout << std::abs(lengths[0]) << std::endl;  
+*/
     
-    
+/*    
     const double pi = std::acos(-1.0);
 
     MatrixXd A(3,3);
@@ -16,9 +29,12 @@ int main(){
 
     std::cout << "The matrix A is:\n" << A << "\n\n";
 
+    //std::cout << "check : " << A(0,1) << std::endl; 
+
 
     MatrixXd Ad = MatrixXd::Identity(3,3) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120; 
     std::cout << "The matrix exponential of A is:\n" << Ad << "\n\n";
+*/
 
 /*
     MatrixXd M(6,6);

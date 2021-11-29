@@ -61,6 +61,7 @@ int main(){
 
         if ( (x_ref - x_act).norm() < tol){
             t += dt;  
+            //std::cout << trajectory.transpose() << std::endl;
             counter = 0;
         }
 
