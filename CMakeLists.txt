@@ -106,6 +106,9 @@ target_link_libraries(QuasiStatic ControllerPCC)
 add_library(MPC src/MPC.cpp)
 target_link_libraries(MPC ControllerPCC casadi)
 
+add_library(MPC_ts src/MPC_ts.cpp)
+target_link_libraries(MPC_ts ControllerPCC casadi)
+
 if(${roscpp_FOUND})
     add_library(VisualizerROS src/VisualizerROS.cpp)
     target_link_libraries(VisualizerROS SoftTrunkModel ${roscpp_LIBRARIES})
