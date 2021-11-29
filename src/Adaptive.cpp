@@ -28,8 +28,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     Ka(7) = 0.001;
     Ka(8) = 0.001;
-    Ka(9) = 10;
-    Ka(10) = 10;
+    Ka(9) = 50;
+    Ka(10) = 50;
   
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
@@ -168,16 +168,20 @@ void Adaptive::control_loop()
                 log_matrix(c_r, 1+i) = x(i);
                 log_matrix(c_r, 4+i) = x_ref(i);
             }
-            log_matrix(c_r,7) = a(9);
-            log_matrix(c_r,8) = a(10);
+            for (int i = 0; i < 11; i++){
+                log_matrix(c_r,7+i) = a(i);
+            }
             for (int i = 0; i < st_params.q_size; i++){
-                log_matrix(c_r,9+i) = state.q(i);
+                log_matrix(c_r,18+i) = b(i);
+            }
+            for (int i = 0; i < st_params.q_size; i++){
+                log_matrix(c_r,22+i) = state.q(i);
             }
             for (int i = 0; i < 3*st_params.num_segments; i++){
-                log_matrix(c_r,13+i)= p(i);
+                log_matrix(c_r,26+i)= p(i);
             }
             for (int i = 0; i < st_params.q_size; i++){
-                log_matrix(c_r,19+i) = pxy(i);
+                log_matrix(c_r,32+i) = pxy(i);
             }
             t+=dt;
         }
@@ -459,16 +463,16 @@ void Adaptive::start_ID()
 void Adaptive::toggle_fastlog(double time){
     if (!fast_logging){
         fast_logging = true;
-        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),23);
+        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),36);
         t = 0;
     } else {
         fast_logging = false;
         filename = fmt::format("{}/adaptive_fastlog.csv", SOFTTRUNK_PROJECT_DIR);
         fmt::print("Dumping memory log to {}\n", filename);
         log_file.open(filename, std::fstream::out);
-        log_file << "t,x,y,z,x_ref,y_ref,z_ref,k1,k2,q0,q1,q2,q3,p0,p1,p2,p3,p4,p5\n";
+        log_file << "t,x,y,z,x_ref,y_ref,z_ref,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,b1,b2,b3,b4,q0,q1,q2,q3,p0,p1,p2,p3,p4,p5,tau1,tau2,tau3,tau4\n";
         for (int i = 0; i < log_matrix.rows(); i ++){
-            for (int j = 0; j < 23; j++){
+            for (int j = 0; j < 36; j++){
                 log_file << log_matrix(i,j) << ",";
             }
             log_file << "\n";
@@ -494,7 +498,7 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
     //Eigen::Vector3d d = p_f - p_i;
     //l = d.norm();
     //fmt::print("L =  {}\n", l);
-    dsigma_max = 0.02;  // maximum velocity
+    dsigma_max = 0.05;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
     double l_min =  dsigma_max * dsigma_max / ddsigma_max;
     //fmt::print("l_min =  {}\n", l_min);
@@ -544,7 +548,7 @@ void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     double cy = 0.0;
     double cz = -0.22;
     double r = 0.12;
-    double h = -0.03;
+    double h = -0.02;
     double phi = 0;
     double psi = 0;
     this->x_ref[0] = cx + r * cos(sigma / r + phi);
