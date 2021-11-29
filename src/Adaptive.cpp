@@ -10,7 +10,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp = 120 * VectorXd::Ones(3);
     Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 150;                  //controller's rate
+    dt = 1. / 100;                  //controller's rate
 
     eps = 0.05;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
@@ -36,7 +36,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
-    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.23, 0.07;
+    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.3, 0.1;
     zz = 1;
     /*
     m1 = 0.18;i
@@ -546,7 +546,7 @@ void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     // circle parameters
     double cx = 0;
     double cy = 0.0;
-    double cz = -0.22;
+    double cz = -0.23;
     double r = 0.12;
     double h = -0.02;
     double phi = 0;
