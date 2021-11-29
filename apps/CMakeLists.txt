@@ -58,7 +58,7 @@ add_executable(example_casadi example_casadi.cpp)
 target_link_libraries(example_casadi casadi ControllerPCC)
 
 add_executable(example_MPC example_MPC.cpp)
-target_link_libraries(example_MPC casadi ControllerPCC MPC)
+target_link_libraries(example_MPC casadi ControllerPCC MPC MPC_ts)
 
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
