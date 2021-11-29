@@ -12,7 +12,8 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             lag_ = std::make_unique<Lagrange>(st_params_);
             break;
     }
-
+    chamber_config << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+    chamber_inv = chamber_config.transpose()*(chamber_config*chamber_config.transpose()).inverse();
     state_ = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
 
@@ -107,4 +108,15 @@ void Model::update_loop(){
         r.sleep();
         force_dyn_update();
     }
+}
+
+VectorXd Model::pseudo2real(VectorXd p_pseudo){
+    assert(p_pseudo.size() == 2 * st_params_.num_segments);
+    VectorXd output = VectorXd::Zero(3*st_params_.num_segments);
+    for (int i = 0; i < st_params_.num_segments; i++){
+        output.segment(3*i, 3) = chamber_inv * p_pseudo.segment(2*i, 2); //invert back onto real chambers
+        double min_p = output.segment(3*i, 3).minCoeff();
+        output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
+    }
+    return output;
 }

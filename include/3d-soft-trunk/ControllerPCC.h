@@ -54,9 +54,9 @@ public:
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
     /**
-     * @brief return transformations of objects in qualisys (objects =/= soft arm)
+     * @brief return transformation of object in qualisys (objects =/= soft arm)
      */
-    std::vector<Eigen::Vector3d> get_objects();
+    Eigen::Transform<double, 3, Eigen::Affine> get_object(int id);
 
     /** @brief forward simulate the stm by dt while inputting pressure p
     *   @return if the simulation was successful (true) or overflowed (false) */

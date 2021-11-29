@@ -91,7 +91,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
     }
 }
 
-std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
+Eigen::Transform<double, 3, Eigen::Affine> ControllerPCC::get_object(int id){
     bool has_qualisys = false;
     for (int i = 0; i < st_params_.sensors.size(); i++){
         if (st_params_.sensors[i] == SensorType::qualisys)
@@ -99,7 +99,7 @@ std::vector<Eigen::Vector3d> ControllerPCC::get_objects(){
     }
     assert(has_qualisys);
 
-    return ste->get_objects;
+    return ste->get_object(id);
 }
 
 void ControllerPCC::set_frequency(const double hz){
@@ -141,7 +141,7 @@ bool ControllerPCC::simulate(const VectorXd &p){
 void ControllerPCC::toggle_log(){
     if(!logging) {
         logging = true;
-        if (!(st_params_.sensors[0] == SensorType::simulator)) {initial_timestamp = ste->get_timestamp();}
+        if (!(st_params_.sensors[0] == SensorType::simulator)) {initial_timestamp = state_.timestamp;}
         else {initial_timestamp = 0;}
         this->filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
         fmt::print("Starting log to {}\n", this->filename);
@@ -170,8 +170,7 @@ void ControllerPCC::log(double time){
 
     if (st_params_.sensors[0] == SensorType::qualisys){
         std::vector<Vector3d> x_qualisys;
-        ste->get_x(x_qualisys);
-        x_tip = x_qualisys[st_params_.num_segments];
+        ste->get_x(x_tip);
     }
 
     log_file << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2), (x_tip - x_ref).norm());

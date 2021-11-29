@@ -19,6 +19,7 @@ public:
      * @param id number of tracked object */
     Eigen::Transform<double, 3, Eigen::Affine> get_object(int id);
 
+    void get_x(Vector3d& x);
 private:
     SoftTrunkParameters st_params_;
 
@@ -35,5 +36,5 @@ private:
     void calculator_loop();
     std::mutex mtx;
     bool run = true;
-    unsigned long int last_timestamp_;
+    unsigned long long int last_timestamp_;
 };

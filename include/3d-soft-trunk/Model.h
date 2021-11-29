@@ -38,7 +38,8 @@ public:
      * @param dt timespan which will be simulated for the constant pressure input */
     bool simulate(srl::State& state, const VectorXd& p, double dt);
 
-   
+    /** @brief takes x,y pseudopressures and transforms them to real pressures */
+    VectorXd pseudo2real(VectorXd p_pseudo);
 
 private:
     srl::State state_;
@@ -46,6 +47,9 @@ private:
     std::vector<Vector3d> x_;
 
     SoftTrunkParameters st_params_;
+
+    MatrixXd chamber_config = MatrixXd::Zero(2,3);
+    MatrixXd chamber_inv;
 
     std::unique_ptr<Lagrange> lag_;
     std::unique_ptr<SoftTrunkModel> stm_;

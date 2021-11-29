@@ -71,3 +71,21 @@ srl::State StateEstimator::get_filtered_state(){
             return states_[0];
     }
 }
+
+/** @TODO: rewrite so it takes primary sensor instead of only qualisys */
+Eigen::Transform<double, 3, Eigen::Affine> StateEstimator::get_object(int id){
+    for (int i = 0; i < sensors.size(); i++){
+        if (sensors[i] == SensorType::qualisys){
+            return mocap->get_object(id);
+        }
+    }
+    assert(false);
+}
+
+void StateEstimator::get_x(Vector3d &x){
+    for (int i = 0; i < sensors.size(); i++) {
+        if (sensors[i] == SensorType::qualisys){
+            mocap->get_x(x);
+        }
+    }
+}

@@ -39,7 +39,7 @@ class OSC: public ControllerPCC
 {
 public:
 
-    OSC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
+    OSC(const SoftTrunkParameters st_params);
 
     /* @brief vector containing all potential fields */
     std::vector<PotentialField> potfields;

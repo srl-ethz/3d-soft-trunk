@@ -17,6 +17,12 @@ public:
     /** @brief get all states from estimator, unfiltered */
     void get_states(std::vector<srl::State>& states);
 
+    /** @brief get n'th object */
+    Eigen::Transform<double, 3, Eigen::Affine> get_object(int id);
+
+    /** @brief fetch x_tip coords if primary sensor supports this */
+    void get_x(Vector3d& x);
+
 private:
     SoftTrunkParameters st_params_;
 

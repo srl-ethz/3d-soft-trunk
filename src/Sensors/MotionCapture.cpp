@@ -30,6 +30,10 @@ Eigen::Transform<double, 3, Eigen::Affine> MotionCapture::get_object(int id){
     return abs_transforms_[st_params_.num_segments-1+id];
 }
 
+void MotionCapture::get_x(Vector3d& x){
+    x = abs_transforms_[0].rotation()*(abs_transforms_[st_params_.num_segments].translation() - abs_transforms_[0].translation());
+}
+
 void MotionCapture::get_state(srl::State& state){
     mtx.lock();
     state = this->state_;
