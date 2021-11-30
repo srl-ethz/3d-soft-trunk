@@ -29,6 +29,7 @@ void q_update(double seconds, srl::State& state) {
 
 int main() {
     SoftTrunkParameters st_params{};
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
     AugmentedRigidArm ara{st_params};
 
