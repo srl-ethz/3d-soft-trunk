@@ -10,7 +10,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Kp = 120 * VectorXd::Ones(3);
     Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 100;                  //controller's rate
+    dt = 1. / 10;                  //controller's rate
 
     eps = 0.05;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
@@ -73,12 +73,13 @@ void Adaptive::control_loop()
         r.sleep();
 
         std::lock_guard<std::mutex> lock(mtx);
-        auto start_tot = std::chrono::system_clock::now();
+        //auto start_tot = std::chrono::system_clock::now();
         cc->get_curvature(state);
+        cc->get_tip_posision(position);
         avoid_singularity(state);
-        auto start_mod = std::chrono::system_clock::now();
+       // auto start_mod = std::chrono::system_clock::now();
         lag.update(state, state_ref);
-        auto end_mod = std::chrono::system_clock::now();
+        //auto end_mod = std::chrono::system_clock::now();
         
        // if (!is_initial_ref_received) //only control after receiving a reference position
         //    continue;
@@ -86,6 +87,11 @@ void Adaptive::control_loop()
         x = lag.p;
 
         x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
+        
+        //fmt::print("qlysis_position = {}\n", x_qualisys);
+        fmt::print("FK_position = {}\n", x);
+        fmt::print("FK_abs = {}\n", position);
+
         //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
@@ -154,13 +160,13 @@ void Adaptive::control_loop()
         pxy = pprev + d_pxy;
         p = stm->pseudo2real(pxy);           // compute the desired pressure
         pprev = pxy;
-        auto end_tot = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
-        std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
-        model_time = elapsed_mod.count();
-        tot_time = elapsed_tot.count();
+        //auto end_tot = std::chrono::system_clock::now();
+        //std::chrono::duration<double> elapsed_mod = end_mod - start_mod;
+        //std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
+        //model_time = elapsed_mod.count();
+        //tot_time = elapsed_tot.count();
         
-        actuate(p);                                                          // control the valves
+        //actuate(p);                                                          // control the valves
         if (fast_logging){
             int c_r = (int) (t/dt); //current row
             log_matrix(c_r,0) = t;

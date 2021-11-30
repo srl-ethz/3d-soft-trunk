@@ -52,6 +52,9 @@ public:
 
     void get_curvature(srl::State &pose);
 
+    void get_tip_posision(VectorXd &position);
+
+
     unsigned long long int get_timestamp(); /** @brief get timestamp (in microsecs) from Qualisys  */
 
     /** @brief get a single frame data from qualisys, only usable when CurvatureCalculator is set to use Qualisys. */

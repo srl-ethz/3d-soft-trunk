@@ -106,4 +106,5 @@ private:
     Vector3d dx_ref = Vector3d::Zero();
     Vector3d ddx_ref = Vector3d::Zero();
 
+    VectorXd position;
 };
