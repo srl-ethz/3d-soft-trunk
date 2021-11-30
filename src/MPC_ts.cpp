@@ -33,7 +33,7 @@ MatrixXd Roty_1(double theta){
     return rot; 
 }
 
-MatrixXd axis_angle(double thetax, double thetay){
+MatrixXd axis_angle_1(double thetax, double thetay){
 
     MatrixXd rot = MatrixXd::Zero(3,3); 
     double theta = sqrt(pow(thetax,2)+pow(thetay,2));
@@ -41,9 +41,9 @@ MatrixXd axis_angle(double thetax, double thetay){
         return rot; 
     }
     if (thetax<0){   // just check this, since cos(phi) should always be positive
-        theta = -theta; 
-
-        //std::cout << "Negative rotation : " << theta << std::endl;  
+        //theta = -theta; 
+    
+        std::cout << "Negative rotation" << std::endl;  
     }
 
     double ux = - thetay / theta; 
@@ -73,7 +73,7 @@ MatrixXd ee_position_1(VectorXd thetax, VectorXd thetay, VectorXd length1, Vecto
 
     //MatrixXd tot_rot = -rotx * roty; 
 
-    MatrixXd tot_rot = axis_angle(thetax(0), thetay(0));
+    MatrixXd tot_rot = axis_angle_1(thetax(0), thetay(0));
 
     MatrixXd len1 = MatrixXd::Zero(3,2);
     MatrixXd len2 = MatrixXd::Zero(3,2);
@@ -102,11 +102,11 @@ MatrixXd ee_position_1(VectorXd thetax, VectorXd thetay, VectorXd length1, Vecto
 
     //std::cout << "Inter step : " << inter << std::endl; 
 
-    tot_rot *= axis_angle(thetax(0), thetay(0));
+    tot_rot *= axis_angle_1(thetax(0), thetay(0));
 
     inter += tot_rot*len2.col(0); 
 
-    tot_rot *= axis_angle(thetax(1), thetay(1)); 
+    tot_rot *= axis_angle_1(thetax(1), thetay(1)); 
 
     inter += tot_rot*len1.col(1);
 
@@ -332,6 +332,11 @@ Opti MPC_ts::define_problem(){
     MX Q2 = MX::eye(st_params.q_size); 
     MX R = MX::eye(2*st_params.num_segments);
 
+    MX thetax = MX::zeros(2,1);
+    MX thetay = MX::zeros(2,1);
+    MX length1 = MX::zeros(2,1);
+    MX length2 = MX::zeros(2,1);
+
     std::cout << "Variables initialized" << std::endl; 
 
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
@@ -344,8 +349,15 @@ Opti MPC_ts::define_problem(){
 
         for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
-            end_effector += ee_position(q(2*kk,k), q(2*kk+1,k), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
+            thetax(kk) = q(2*kk,k); 
+            thetay(kk) = q(2*kk+1,k);
+            length1(kk) = -st_params.lengths[2*kk]; 
+            length2(kk) = -st_params.lengths[2*kk+1];
+            
+            // end_effector += ee_position(q(2*kk,k), q(2*kk+1,k), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
         }
+
+        end_effector = ee_position(thetax, thetay, length1, length2); 
 
         J += mtimes((end_effector-x_r).T(), mtimes(Q, (end_effector-x_r))); 
 
@@ -357,8 +369,15 @@ Opti MPC_ts::define_problem(){
 
     for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
-        end_effector += ee_position(q(2*kk,Horizon), q(2*kk+1,Horizon), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
+        thetax(kk) = q(2*kk,Horizon); 
+        thetay(kk) = q(2*kk+1,Horizon);
+        length1(kk) = -st_params.lengths[2*kk]; 
+        length2(kk) = -st_params.lengths[2*kk+1];
+        
+        //end_effector += ee_position(q(2*kk,Horizon), q(2*kk+1,Horizon), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
     }
+
+    end_effector = ee_position(thetax, thetay, length1, length2);
 
     
     J += mtimes((end_effector-x_r).T(), mtimes(Q, (end_effector-x_r)));
@@ -482,15 +501,89 @@ MX MPC_ts::Roty(MX theta){
     return rot; 
 }
 
-MX MPC_ts::ee_position(MX thetax, MX thetay, double length){    // computes position of end effector for each segment
+// MX MPC_ts::ee_position(MX thetax, MX thetay, double length){    // computes position of end effector for each segment
 
-    MX rotx = Rotx(thetay); 
-    MX roty = Roty(thetax); 
+//     MX rotx = Rotx(thetay); 
+//     MX roty = Roty(thetax); 
 
-    MX tot_rot = mtimes(-rotx, roty); 
-    MX len = MX::zeros(3,1);
-    len(2,0) = length; 
+//     MX tot_rot = mtimes(-rotx, roty); 
+//     MX len = MX::zeros(3,1);
+//     len(2,0) = length; 
 
-    return mtimes(tot_rot, len); 
+//     return mtimes(tot_rot, len); 
+
+// }
+
+MX MPC_ts::axis_angle(MX thetax, MX thetay){
+
+    MX rot = MX::zeros(3,3); 
+    MX theta = sqrt(pow(thetax,2)+pow(thetay,2));
+    if (theta.is_zero()){
+        return rot; 
+    }
+
+    MX ux = - thetay / theta; 
+    MX uy = - thetax / theta; 
+    MX t2 = theta/2; 
+
+    rot(0,0) = cos(t2) + pow(ux,2)*(1-cos(t2)); 
+    rot(0,1) = ux*uy*(1-cos(t2)); 
+    rot(0,2) = uy*sin(t2); 
+    rot(1,0) = rot(0,1); 
+    rot(1,1) = cos(t2) + pow(uy,2)*(1-cos(t2)); 
+    rot(1,2) = -ux*sin(t2);
+    rot(2,0) = - rot(0,2); 
+    rot(2,1) = - rot(1,2);
+    rot(2,2) = cos(t2);
+
+    //std::cout << "Axis-angle matrix :" << rot << std::endl; 
+
+    return rot; 
+
+}
+
+MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // computes position of end effector for each segment
+
+
+    MX tot_rot = axis_angle(thetax(0), thetay(0));
+
+    MX len1 = MX::zeros(3,2);
+    MX len2 = MX::zeros(3,2);
+
+    MX theta(2,1); 
+    theta(0) = sqrt(pow(thetax(0),2)+pow(thetay(0),2));
+    theta(1) = sqrt(pow(thetax(1),2)+pow(thetay(1),2)); 
+
+
+    for (int i = 0; i<2 ; i++){
+
+
+        if (!theta(i).is_zero()){
+        len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+        }
+        else {
+            len1(2,i) = length1(i);
+        }
+
+        len2(2,i) = length2(i); 
+
+    }
+
+    MX inter(3,1);
+    
+    inter = mtimes(tot_rot, len1(Slice(), 0));
+
+    //std::cout << "Inter step : " << inter << std::endl; 
+
+    tot_rot = mtimes(tot_rot, axis_angle(thetax(0), thetay(0)));
+
+    inter += mtimes(tot_rot, len2(Slice(),0));
+
+    tot_rot = mtimes(tot_rot, axis_angle(thetax(1), thetay(1))); 
+
+    inter += mtimes(tot_rot, len1(Slice(),1));
+
+     
+    return inter;  
 
 }

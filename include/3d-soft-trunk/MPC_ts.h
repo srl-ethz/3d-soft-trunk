@@ -18,7 +18,9 @@ class MPC_ts: public ControllerPCC{
         MatrixXd matrix_exponential(MatrixXd A, int size); 
         MX Rotx(MX theta);
         MX Roty(MX theta);
-        MX ee_position(MX thetax, MX thetay, double length); 
+        //MX ee_position(MX thetax, MX thetay, double length); 
+        MX ee_position(MX thetax, MX thetay, MX length1, MX length2);
+        MX axis_angle(MX thetax, MX thetay);
 
         VectorXd p_prev = VectorXd::Zero(2*st_params.num_segments);
         VectorXd tau_ref;
