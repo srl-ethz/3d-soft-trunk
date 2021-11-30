@@ -40,9 +40,14 @@ MatrixXd axis_angle(double thetax, double thetay){
     if (theta == 0){
         return rot; 
     }
+    if (thetax<0){   // just check this, since cos(phi) should always be positive
+        theta = -theta; 
 
-    double ux = -thetay / theta; 
-    double uy = thetax / theta; 
+        //std::cout << "Negative rotation : " << theta << std::endl;  
+    }
+
+    double ux = - thetay / theta; 
+    double uy = - thetax / theta; 
     double t2 = theta/2; 
 
     rot(0,0) = cos(t2) + pow(ux,2)*(1-cos(t2)); 
@@ -55,34 +60,64 @@ MatrixXd axis_angle(double thetax, double thetay){
     rot(2,1) = - rot(1,2);
     rot(2,2) = cos(t2);
 
+    //std::cout << "Axis-angle matrix :" << rot << std::endl; 
+
     return rot; 
 
 }
 
-MatrixXd ee_position_1(double thetax, double thetay, double length1, double length2){    // computes position of end effector for each segment
+MatrixXd ee_position_1(VectorXd thetax, VectorXd thetay, VectorXd length1, VectorXd length2){    // computes position of end effector for each segment
 
-    MatrixXd rotx = Rotx_1(thetay); 
-    MatrixXd roty = Roty_1(thetax); 
+    // MatrixXd rotx = Rotx_1(thetay); 
+    // MatrixXd roty = Roty_1(thetax); 
 
     //MatrixXd tot_rot = -rotx * roty; 
 
-    MatrixXd tot_rot = axis_angle(thetax, thetay);
+    MatrixXd tot_rot = axis_angle(thetax(0), thetay(0));
 
-    MatrixXd len = MatrixXd::Zero(3,1);
-    double theta = sqrt(pow(thetax,2)+pow(thetay,2)); 
-    if (theta != 0){
-        len(2,0) = 2*length1*sin(theta/2)/theta;
-    }
-    else {
-        len(2,0) = length1;
+    MatrixXd len1 = MatrixXd::Zero(3,2);
+    MatrixXd len2 = MatrixXd::Zero(3,2);
+
+    VectorXd theta(2); 
+    theta << sqrt(pow(thetax(0),2)+pow(thetay(0),2)), sqrt(pow(thetax(1),2)+pow(thetay(1),2)); 
+
+
+    for (int i = 0; i<2 ; i++){
+
+
+        if (theta(i) != 0){
+        len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+        }
+        else {
+            len1(2,i) = length1(i);
+        }
+
+        len2(2,i) = length2(i); 
+
     }
 
-    len(2,0) += length2; 
+    MatrixXd inter(3,1);
+    
+    inter = tot_rot * len1.col(0); 
+
+    //std::cout << "Inter step : " << inter << std::endl; 
+
+    tot_rot *= axis_angle(thetax(0), thetay(0));
+
+    inter += tot_rot*len2.col(0); 
+
+    tot_rot *= axis_angle(thetax(1), thetay(1)); 
+
+    inter += tot_rot*len1.col(1);
+
+    //tot_rot *= axis_angle(thetax(1), thetay(1)); 
+
+    //inter += tot_rot*len2.col(1); 
+
      
+    return inter;  
 
-    //std::cout << "Inter step : " << tot_rot*len << std::endl; 
-
-    return tot_rot* len; 
+    //return tot_rot* len; 
 
 }
 
@@ -127,15 +162,24 @@ void MPC_ts::control_loop(){
 
         MatrixXd ee_t = MatrixXd::Zero(3,1); 
 
+        VectorXd thetax(2), thetay(2), length1(2), length2(2); 
+
         for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
-            ee_t += ee_position_1(state.q(2*kk,0), state.q(2*kk+1,0), -st_params.lengths[2*kk], - st_params.lengths[2*kk+1]); 
+            thetax(kk) = state.q(2*kk,0); 
+            thetay(kk) = state.q(2*kk+1,0);
+            length1(kk) = -st_params.lengths[2*kk]; 
+            length2(kk) = -st_params.lengths[2*kk+1]; 
 
-            std::cout << "theta_x : " << state.q(2*kk,0) << std::endl; 
-            std::cout << "theta_y : " << state.q(2*kk+1,0) << std::endl; 
+            //ee_t += ee_position_1(state.q(2*kk,0), state.q(2*kk+1,0), -st_params.lengths[2*kk], - st_params.lengths[2*kk+1]); 
+
+            //std::cout << "theta_x : " << state.q(2*kk,0) << std::endl; 
+            // std::cout << "theta_y : " << state.q(2*kk+1,0) << std::endl; 
 
             //std::cout << "temp = " << ee_t << std::endl; 
         }
+
+        ee_t = ee_position_1(thetax, thetay, length1, length2); 
 
     
         std::cout << "End-effector position mine : " << ee_t.transpose() << std::endl;
