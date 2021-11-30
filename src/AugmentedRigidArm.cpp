@@ -7,6 +7,7 @@ AugmentedRigidArm::AugmentedRigidArm(const SoftTrunkParameters &st_params): st_p
     setup_drake_model();
 }
 
+
 void AugmentedRigidArm::setup_drake_model()
 {
     // load robot model into Drake
