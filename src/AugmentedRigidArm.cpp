@@ -48,7 +48,7 @@ void AugmentedRigidArm::setup_drake_model()
     int num_joints = multibody_plant->num_joints() - 1; //subtract one mystery joint, and one fixed joint at the base
     
     // check that parameters make sense, just in case
-    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1)+1);
+    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1)+2);
 
     // initialize variables
     xi_ = VectorXd::Zero(num_joints);
