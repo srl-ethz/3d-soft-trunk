@@ -7,14 +7,15 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     assert(st_params.is_finalized());
     //generateRobotURDF();
     ara = std::make_unique<AugmentedRigidArm>(st_params);
-
+    
     K = MatrixXd::Zero(st_params.q_size, st_params.q_size);
     D = MatrixXd::Zero(st_params.q_size, st_params.q_size);
-    A = MatrixXd::Zero(st_params.q_size, 3 * st_params.num_segments);
+    A = MatrixXd::Zero(st_params.q_size, 3 * st_params.num_segments+1);
     A_pseudo = MatrixXd::Zero(st_params.q_size, st_params.q_size);
     J.resize(st_params.num_segments);
 
-    chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+    chamberMatrix <<  1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+    fmt::print("Chamber Matrix:\n{}\n", chamberMatrix);
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
         int segment_id = section_id / st_params.sections_per_segment;
@@ -30,11 +31,19 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
         double l = st_params.lengths[2 * segment_id] / st_params.sections_per_segment; // length of section
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
 
-        K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params.shear_modulus[segment_id] * secondMomentOfArea / l;
-        A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
-        D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params.drag_coef[segment_id] / l; /** this is "heuristic" */
-        A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
+        K.block(2 * section_id+1, 2 * section_id+1, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params.shear_modulus[segment_id] * secondMomentOfArea / l;
+        A.block(2 * section_id+1, 3 * segment_id+1, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
+        D.block(2 * section_id+1, 2 * section_id+1, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params.drag_coef[segment_id] / l; /** this is "heuristic" */
+        A_pseudo.block(2 * section_id+1, 2*segment_id+1, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
     }
+    double k;
+    K(0,0) = k;
+    double d;
+    D(0,0) = d;
+    double a;
+    A(0,0) = a;
+    double a_p;
+    A_pseudo(0,0) = a_p;
 }
 
 void SoftTrunkModel::updateState(const srl::State &state)
