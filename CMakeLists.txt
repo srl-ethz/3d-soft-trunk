@@ -101,7 +101,7 @@ add_library(IDCon src/IDCon.cpp)
 target_link_libraries(IDCon ControllerPCC)
 
 add_library(QuasiStatic src/QuasiStatic.cpp)
-target_link_libraries(QuasiStatic ControllerPCC)
+target_link_libraries(QuasiStatic ControllerPCC casadi)
 
 add_library(MPC src/MPC.cpp)
 target_link_libraries(MPC ControllerPCC casadi)

@@ -1,10 +1,18 @@
 #pragma once
 
 #include "3d-soft-trunk/ControllerPCC.h"
+#include <casadi/casadi.hpp>
+#include <casadi/core/optistack.hpp>
+using namespace casadi;
 
 class QuasiStatic: public ControllerPCC{
 public:
     QuasiStatic(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
+    struct optimal_solution
+    {
+        VectorXd pressure;
+        OptiSol solution;
+    };
 
 
     /** @brief get kp gain */    
@@ -28,4 +36,17 @@ private:
     MatrixXd J;
     Vector3d ddx_des;
     VectorXd tau_ref;
+
+
+    Opti define_problem();
+    QuasiStatic::optimal_solution pressure_finder(VectorXd torque, MatrixXd A_real); 
+    QuasiStatic::optimal_solution pressure_finder_warm(VectorXd torque, MatrixXd A_real, DM old_sol);
+    Opti ctrl; 
+    MX A;
+    MX tau;
+    MX u; 
+    MatrixXd chamberMatrix = MatrixXd::Zero(2,3);
+    MatrixXd mapping_matrix = MatrixXd::Zero(4,6);
+    bool solved; 
+    
 };
