@@ -4,21 +4,24 @@
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
+/*
 double sigma = 0.0;
 double dsigma = 0.0;
 double ddsigma = 0.0;
+*/
 double T = 30;        // final time changes depending on the timing law
 double num_round = 3; // number of circular period
 
 bool freedom = false;
-bool pause = true;
+
+/*
 Vector3d x_ref;
 Vector3d dx_ref = Vector3d::Zero();
 Vector3d ddx_ref = Vector3d::Zero();
 Vector3d circle = Vector3d::Zero();
 Vector3d d_circle = Vector3d::Zero();
 Vector3d dd_circle = Vector3d::Zero();
-
+*/
 void gain(Adaptive &ad)
 { //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
@@ -112,14 +115,13 @@ void gain(Adaptive &ad)
             ad.toggleGripper();
             break;
         case 'c':
-            pause = false;
             ad.toggle_log();
             ad.start_AD();
             // ad.start_ID();
         }
     }
 }
-
+/*
 void Task_8(double t, double T, double r, double offset)
 {
     double dpy_tmp;
@@ -316,7 +318,7 @@ void Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
     ddx_ref[1] = (p_f(2)-p_i(2))/L * ddsigma;
     ddx_ref[2] = (p_f(3)-p_i(3))/L * ddsigma;
 }
-
+*/
 int main()
 {
     bool gripping = false;
@@ -331,13 +333,14 @@ int main()
     //Task_8(t, 12.0, 0.12,0.03);
     //Task_Rose(t, 20.0, 0.1);
     //Task_Circle(t, 12, 0.12);
-    //x_ref << 0, -0.12, -0.22;
+    //x_ref << -0.12,0,-0.24;
     //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
     //Task_Circle_r2r(sigma, dsigma, ddsigma);
     //Task_Linear_r2r(sigma, dsigma, ddsigma);
-    ad.set_ref(x_ref, dx_ref, ddx_ref);
-    Vector3d x_dum = ad.x_qualisys;
+    //ad.set_ref(x_ref, dx_ref, ddx_ref);
+    //Vector3d x_dum = ad.x_qualisys;
     fmt::print("a = {}\n", ad.a);
+    //fmt::print("ref = {}\n", x_ref);
     //ad.toggleGripper();
     getchar();
     //ad.toggle_log();i
@@ -346,13 +349,14 @@ int main()
     std::thread gain_thread(gain, std::ref(ad));
     srl::sleep(0.1); //wait to get to the initial position
     //start adaptation now:
-    T = ad.T;
+    T = ad.T*(ad.target_points.size()-1);
     fmt::print("T = {}\n", T);
     //std::cout << ad.Ka(9);
     //std::cout << ad.Ka(10);
     ad.toggle_fastlog(T);
     while (t<=T)
     {
+        //fmt::print("ref = {}\n", x_ref);
     //ad.Ka(7)= 0;
     //ad.Ka(8) = 0;
     //ad.Ka(9) = 1;

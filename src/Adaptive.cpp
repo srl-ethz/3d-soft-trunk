@@ -32,14 +32,14 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     Ka(10) = 20;
   
     eps_custom = 0.05; // for singularity avoidance
-    control_thread = std::thread(&Adaptive::control_loop, this);
+    
     // initialize dynamic parameters
     //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2, 0.07;
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
     //a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.3, 0.1;
     zz = 1;
     double m[2] = {0.180,0.104};
-    double L[2] = {0.144096,0.12718};
+    double L[2] = {0.145052,0.126736};
     double d_vect[2] = {0.001,0.001};
     double k_vect[2] = {0.2,0.1};
 
@@ -56,11 +56,12 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     a(9) = k_vect[0];
     a(10) = k_vect[1];
 
-
-   target_points.resize(2);
-   target_points[0] << 0,0,-0.27;
-   target_points[1] << 0,0.1,-0.27;
-   target_points[2] << -0.1,0.1,-0.27;
+   target_points.resize(4);
+   target_points[0] << 0.12,0,-0.23;
+   target_points[1] << 0,0.12,-0.23;
+   target_points[2] << -0.12,0,-0.23;
+   target_points[3] << 0,-0.12,-0.23;
+   control_thread = std::thread(&Adaptive::control_loop, this);
 }
 
 void Adaptive::control_loop()
@@ -90,21 +91,18 @@ void Adaptive::control_loop()
         //    continue;
 
         x = lag.p;
-
-        x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         
-        //fmt::print("qlysis_position = {}\n", x_qualisys);
         //fmt::print("FK_position = {}\n", x);
         //fmt::print("FK_abs = {}\n", position);
+        //fmt::print("des_pos = {}\n", x_ref);
 
-        //x = x_qualiszs;
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
 
         s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
         //fmt::print("pass1\n");
-        Task_Circle_r2r(sigma, dsigma, ddsigma);
-        //Task_Linear_r2r(sigma, dsigma, ddsigma);
+        //Task_Circle_r2r(sigma, dsigma, ddsigma);
+        Task_Linear_r2r(sigma, dsigma, ddsigma);
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
@@ -180,8 +178,10 @@ void Adaptive::control_loop()
                 log_matrix(c_r,32+i) = pxy(i);
             }
         }
+        if (!pause){
         t+=dt;
         t_internal+=dt;
+        }
         
     }
 }
@@ -220,7 +220,7 @@ Eigen::MatrixXd Adaptive::computePinv(Eigen::MatrixXd j, double e, double lambda
 
 void Adaptive::avoid_singularity(srl::State &state)
 {
-    double r;
+    //double r;
     for (int idx = 0; idx < state.q.size()/2; idx++)
     {
         //r = std::fmod(std::abs(state.q[idx]), 6.2831853071795862); //remainder of division by 2*pi
@@ -437,7 +437,7 @@ void Adaptive::change_ref4()
 void Adaptive::show_x()
 {
     fmt::print("desried_position = {}\n", x_ref);
-    fmt::print("qlysis_position = {}\n", x_qualisys);
+    //fmt::print("qlysis_position = {}\n", x_qualisys);
     fmt::print("FK_position = {}\n", x);
 }
 
@@ -447,6 +447,7 @@ void Adaptive::start_AD()
     this->rate1 = 0.001;
     this->rate2 = 0.00001;
     this->zz = 1;
+    this->pause = false;
 }
 void Adaptive::start_ID()
 {
@@ -484,18 +485,23 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 2; //rounds of circle
-    double r = 0.12;    //radius of the circle
-    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+    //double n = 2; //rounds of circle
+    //double r = 0.12;    //radius of the circle
+    //l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
     //Eigen::Vector3d p_i;
     //Eigen::Vector3d p_f;
     //p_i << 0.15, 0.15, -0.15;
     //p_f << -0.15, 0.0, -0.20;
-    //Eigen::Vector3d d = p_f - p_i;
-    //l = d.norm();
+    //assert(target_point + 1 <= target_points.size());
+    p_i = target_points[0 + target_point]; //initial point
+    //fmt::print("p_i =  {}\n", p_i);
+    p_f = target_points[1 + target_point];//final point
+    //fmt::print("p_f =  {}\n", p_f);
+    Eigen::Vector3d d = p_f - p_i;
+    l = d.norm();
     //fmt::print("L =  {}\n", l);
-    dsigma_max = 0.05;  // maximum velocity
+    dsigma_max = 0.03;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
     double l_min =  dsigma_max * dsigma_max / ddsigma_max;
     //fmt::print("l_min =  {}\n", l_min);
@@ -563,9 +569,9 @@ void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
 
 void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
 {
-    assert(target_point + 2 <= target_points.size());
-    Vector3d p_i = target_points[0 + target_point]; //initial point
-    Vector3d p_f = target_points[1 + target_point];//final point
+    //assert(target_point + 2 <= target_points.size());
+    //p_i = target_points[0 + target_point]; //initial point
+    //p_f = target_points[1 + target_point];//final point
 
     Vector3d d = p_f - p_i;
     double L = d.norm(); //distance

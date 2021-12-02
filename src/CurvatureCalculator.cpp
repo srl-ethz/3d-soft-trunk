@@ -116,7 +116,7 @@ void CurvatureCalculator::get_curvature(srl::State &state) {
 void CurvatureCalculator::get_tip_posision(VectorXd &position) {
     //std::lock_guard<std::mutex> lock(mtx);
     MatrixXd matrix;
-    matrix = (this->abs_transforms[1].inverse() * this->abs_transforms[2]).matrix();
+    matrix = (this->abs_transforms[0].inverse() * this->abs_transforms[2]).matrix();
     position = matrix.block<3,1>(0,3);
 }
 

@@ -56,6 +56,8 @@ public:
     double dsigma = 0.0;
     double ddsigma = 0.0;
     double T = 30;        // final time changes depending on the timing law
+    std::vector<Vector3d> target_points;
+    
 private:
     void control_loop();
     void avoid_drifting();
@@ -103,12 +105,19 @@ private:
     MatrixXd log_matrix;
 
 
-    Vector3d x_ref = Vector3d::Zero();;
+    Vector3d x_ref = Vector3d::Zero();
     Vector3d dx_ref = Vector3d::Zero();
     Vector3d ddx_ref = Vector3d::Zero();
 
-    std::vector<Vector3d> target_points;
+    Vector3d p_i = Vector3d::Zero();
+    Vector3d p_f = Vector3d::Zero();
+
+    
     int target_point = 0;
 
     VectorXd position;
+
+    bool pause = true;
+
+    
 };
