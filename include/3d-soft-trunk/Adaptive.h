@@ -98,6 +98,7 @@ private:
     VectorXd pprev = VectorXd::Zero(4);
     VectorXd d_pxy;
     double t;
+    double t_internal = 0;
     bool fast_logging = false;
     MatrixXd log_matrix;
 

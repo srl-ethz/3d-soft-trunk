@@ -101,7 +101,7 @@ void Adaptive::control_loop()
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
 
-        s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
+        s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
         //fmt::print("pass1\n");
         Task_Circle_r2r(sigma, dsigma, ddsigma);
         //Task_Linear_r2r(sigma, dsigma, ddsigma);
@@ -179,8 +179,9 @@ void Adaptive::control_loop()
             for (int i = 0; i < st_params.q_size; i++){
                 log_matrix(c_r,32+i) = pxy(i);
             }
-            t+=dt;
         }
+        t+=dt;
+        t_internal+=dt;
         
     }
 }
@@ -581,8 +582,8 @@ void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
     this->ddx_ref[1] = (p_f(1)-p_i(1))/L * ddsigma;
     this->ddx_ref[2] = (p_f(2)-p_i(2))/L * ddsigma;
 
-    if (t >= T){
+    if (t_internal >= T){
         target_point += 1;
-        t = 0;
+        t_internal = 0;
     }
 }
