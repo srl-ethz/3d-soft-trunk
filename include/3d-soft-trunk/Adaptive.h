@@ -65,14 +65,16 @@ private:
     void s_trapezoidal_speed(double t, double *sigma, double *dsigma, double *ddsigma, double *T);
     void Task_Circle_r2r(double sigma, double dsigma, double ddsigma);
     void Task_Linear_r2r(double sigma, double dsigma, double ddsigma);
-
+    void Task_Joint(double t);
     double sign(double val);
     VectorXd sat(VectorXd x, double delta);
     MatrixXd computePinv(MatrixXd J, double e, double lambda);
     VectorXd Ka_ = VectorXd::Zero(11);
     VectorXd Kb_ = VectorXd::Ones(4);
-    VectorXd Kp = VectorXd::Zero(3);
-    VectorXd Kd = VectorXd::Zero(3);   
+
+    VectorXd Kp = VectorXd::Zero(4);
+    VectorXd Kd = VectorXd::Zero(4);   
+    
     MatrixXd J_inv;
     MatrixXd Ainv;
     VectorXd aDot = VectorXd::Zero(11);
@@ -84,10 +86,13 @@ private:
     VectorXd tau = VectorXd::Zero(4);
     VectorXd s = VectorXd::Zero(4);   
     VectorXd s_d = VectorXd::Zero(4); //boundary layer manifold
-    VectorXd e = VectorXd::Zero(3);
-    VectorXd eDot = VectorXd::Zero(3);   
+
     VectorXd v = VectorXd::Zero(3);
-    VectorXd vDot = VectorXd::Zero(3);       
+    VectorXd vDot = VectorXd::Zero(3);      
+
+    VectorXd e = VectorXd::Zero(4);
+    VectorXd eDot = VectorXd::Zero(4);   
+
     double eps;
     double lambda;
     double gamma;
@@ -118,6 +123,10 @@ private:
     VectorXd position;
 
     bool pause = true;
+
+    VectorXd q_ref = VectorXd::Zero(4);
+    VectorXd dq_ref = VectorXd::Zero(4);
+    VectorXd ddq_ref = VectorXd::Zero(4);
 
     
 };

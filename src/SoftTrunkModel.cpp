@@ -14,7 +14,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     A_pseudo = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 2*st_params.num_segments);
     J.resize(st_params.num_segments);
 
-    chamberMatrix <<  0, sqrt(3) / 2, -sqrt(3) / 2, -1, 0.5, 0.5; // x and y are swapped and x is -
+    chamberMatrix <<  0, -sqrt(3) / 2, sqrt(3) / 2, -1, 0.5, 0.5; // x and y are swapped and x is -
     chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); 
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
@@ -67,7 +67,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i,2).norm() > 700) pressure_pseudo.segment(2*i,2) *= 700/pressure_pseudo.segment(2*i,2).norm();
+        if (pressure_pseudo.segment(2*i,2).norm() > 600) pressure_pseudo.segment(2*i,2) *= 600/pressure_pseudo.segment(2*i,2).norm();
 /*
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
