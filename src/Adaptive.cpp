@@ -56,6 +56,10 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     a_(10) = k_vect1;
     a_(11) = k_vect2;
     */
+
+   target_points.resize(2);
+   target_points[0] << 0,0,-0.27;
+   target_points[1] << 0,0.1,-0.27;
 }
 
 void Adaptive::control_loop()
@@ -554,11 +558,11 @@ void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
 
 void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
 {
-    Eigen::Vector3d p_i; //initial point
-    Eigen::Vector3d p_f; //final point
-    p_i << 0.15, 0.15, -0.15;
-    p_f << -0.15, 0.0, -0.20;
-    Eigen::Vector3d d = p_f - p_i;
+    assert(target_point + 2 <= target_points.size());
+    Vector3d p_i = target_points[0 + target_point]; //initial point
+    Vector3d p_f = target_points[1 + target_point];//final point
+
+    Vector3d d = p_f - p_i;
     double L = d.norm(); //distance
 
     this->x_ref[0] = p_i(0) + sigma*(p_f(0)-p_i(0))/L;
@@ -572,4 +576,9 @@ void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
     this->ddx_ref[0] = (p_f(0)-p_i(0))/L * ddsigma;
     this->ddx_ref[1] = (p_f(1)-p_i(1))/L * ddsigma;
     this->ddx_ref[2] = (p_f(2)-p_i(2))/L * ddsigma;
+
+    if (t >= T){
+        target_point += 1;
+        t = 0;
+    }
 }

@@ -106,5 +106,8 @@ private:
     Vector3d dx_ref = Vector3d::Zero();
     Vector3d ddx_ref = Vector3d::Zero();
 
+    std::vector<Vector3d> target_points;
+    int target_point = 0;
+
     VectorXd position;
 };
