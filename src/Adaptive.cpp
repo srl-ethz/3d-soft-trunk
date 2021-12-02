@@ -142,8 +142,8 @@ void Adaptive::control_loop()
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
         VectorXd pxy = stm->A_pseudo.inverse() * tau / 100;
-        pxy[1] += 300 * sin(sigma / 0.12 + 0);
-        pxy[3] += 300 * sin(sigma / 0.12 + 0);
+        //pxy[1] += 300 * sin(sigma / 0.12 + 0);
+        //pxy[3] += 300 * sin(sigma / 0.12 + 0);
         d_pxy = pxy - pprev;
         d_pxy = 10*sat(d_pxy,10);
         pxy = pprev + d_pxy;
