@@ -122,34 +122,16 @@ void Adaptive::control_loop()
         bDot = s_d.array().abs();
         b = b + rate2 * dt * Kb.asDiagonal() * bDot;
         //avoid_drifting(); // keep the dynamic parameters within range
-        if (a(1) <=0.0001)
-            a(1) = 0.0001;
-        if (a(2) <=0.0001)
-            a(2) = 0.0001;
-        if (a(3) <=0.0001)
-            a(3) = 0.0001;
-        if (a(4) <=0.0001)
-            a(4) = 0.0001;                    
-        if (a(5) <=0.0001)
-            a(5) = 0.0001;
-        if (a(6) <=0.0001)
-            a(6) = 0.0001;   
-        if (a(7) <=0.0001)
-            a(7) = 0.0001;
-        if (a(8) <=0.0001)
-            a(8) = 0.0001;                    
-        if (a(9) <=0.0001)
-            a(9) = 0.0001;
-        if (a(10) <=0.0001)
-            a(10) = 0.0001; 
-        if (b(0) <=0.0001)
-            b(0) = 0.0001;
-        if (b(1) <=0.0001)
-            b(1) = 0.0001;
-        if (b(2) <=0.0001)
-            b(2) = 0.0001;
-        if (b(3) <=0.0001)
-            b(3) = 0.0001;                          
+        for(int i = 1; i < 11; i++){
+            if (a(i) <= 0.0001){
+                a(i) = 0.0001;
+            }
+        }
+        for (int i = 0; i < 4; i++){
+            if (b(i) <= 0.0001){
+                b(i) = 0.0001;
+            }
+        }                      
         //cout << "\na \n " << a << "\n\n";
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
