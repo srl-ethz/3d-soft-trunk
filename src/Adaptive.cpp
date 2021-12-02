@@ -7,10 +7,10 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "Adaptive_logger";
 
-    Kp = 120 * VectorXd::Ones(3);
+    Kp = 100 * VectorXd::Ones(3);
     Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 10;                  //controller's rate
+    dt = 1. / 150;                  //controller's rate
 
     eps = 0.05;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
@@ -26,40 +26,41 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     alpha = 0.75; //Finite time stability
 
-    Ka(7) = 0.001;
-    Ka(8) = 0.001;
-    Ka(9) = 50;
-    Ka(10) = 50;
+    Ka(7) = 0;//0.001;
+    Ka(8) = 0;//0.001;
+    Ka(9) = 20;
+    Ka(10) = 20;
   
     eps_custom = 0.05; // for singularity avoidance
     control_thread = std::thread(&Adaptive::control_loop, this);
     // initialize dynamic parameters
-    //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.12, 0.08;
+    //a << 0.0038, 0.0022, 0.0015, 0.0018, 0.0263, 0.0153, 0.0125, 0.001, 0.001, 0.2, 0.07;
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
-    a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.3, 0.1;
+    //a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.3, 0.1;
     zz = 1;
-    /*
-    m1 = 0.18;i
+    double m[2] = {0.180,0.104};
+    double L[2] = {0.144096,0.12718};
+    double d_vect[2] = {0.001,0.001};
+    double k_vect[2] = {0.2,0.1};
 
-    m2 = 0.086+0.025;
-    L1 = 0.16; 
-    L2 = 0.12;
-    a_(1) = m1*L1^2;
-    a_(2) = m2*L1^2;
-    a_(3) = m2*L2^2;
-    a_(4) = m2*L1*L2;
-    a_(5) = m1*L1;
-    a_(6) = m2*L1;
-    a_(7) = m2*L2;
-    a_(8) = d_vect1;
-    a_(9) = d_vect2;
-    a_(10) = k_vect1;
-    a_(11) = k_vect2;
-    */
+    //initialize dynamic parameters
+    a(0) = m[0]*L[0]*L[0];
+    a(1) = m[1]*L[0]*L[0];
+    a(2) = m[1]*L[1]*L[1];
+    a(3) = m[1]*L[0]*L[1];
+    a(4) = m[0]*L[0];
+    a(5) = m[1]*L[0];
+    a(6) = m[1]*L[1];
+    a(7) = d_vect[0];
+    a(8) = d_vect[1];
+    a(9) = k_vect[0];
+    a(10) = k_vect[1];
+
 
    target_points.resize(2);
    target_points[0] << 0,0,-0.27;
    target_points[1] << 0,0.1,-0.27;
+   target_points[2] << -0.1,0.1,-0.27;
 }
 
 void Adaptive::control_loop()
@@ -93,8 +94,8 @@ void Adaptive::control_loop()
         x_qualisys = stm->get_H_base().rotation() * cc->get_frame(0).rotation() * (cc->get_frame(st_params.num_segments).translation() - cc->get_frame(0).translation());
         
         //fmt::print("qlysis_position = {}\n", x_qualisys);
-        fmt::print("FK_position = {}\n", x);
-        fmt::print("FK_abs = {}\n", position);
+        //fmt::print("FK_position = {}\n", x);
+        //fmt::print("FK_abs = {}\n", position);
 
         //x = x_qualiszs;
         dx = lag.J * state.dq;
@@ -141,9 +142,12 @@ void Adaptive::control_loop()
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
         VectorXd pxy = stm->A_pseudo.inverse() * tau / 100;
+        pxy[1] += 300 * sin(sigma / 0.12 + 0);
+        pxy[3] += 300 * sin(sigma / 0.12 + 0);
         d_pxy = pxy - pprev;
-        d_pxy = 15*sat(d_pxy,15);
+        d_pxy = 10*sat(d_pxy,10);
         pxy = pprev + d_pxy;
+        
         p = stm->pseudo2real(pxy);           // compute the desired pressure
         pprev = pxy;
         //auto end_tot = std::chrono::system_clock::now();
@@ -152,7 +156,7 @@ void Adaptive::control_loop()
         //model_time = elapsed_mod.count();
         //tot_time = elapsed_tot.count();
         
-        //actuate(p);                                                          // control the valves
+        actuate(p);                                                          // control the valves
         if (fast_logging){
             int c_r = (int) (t/dt); //current row
             log_matrix(c_r,0) = t;
@@ -538,7 +542,7 @@ void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     // circle parameters
     double cx = 0;
     double cy = 0.0;
-    double cz = -0.23;
+    double cz = -0.235;
     double r = 0.12;
     double h = -0.02;
     double phi = 0;

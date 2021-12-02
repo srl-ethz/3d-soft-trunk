@@ -324,7 +324,7 @@ void Lagrange::d_update(VectorXd q, VectorXd dq)
 void Lagrange::p_update(VectorXd q)
 {
   double p_FK[3];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
+  double L[2] = {0.144096,0.12718};
 
   double b_p_FK_tmp;
   double c_p_FK_tmp;
@@ -375,7 +375,7 @@ void Lagrange::p_update(VectorXd q)
 void Lagrange::J_update(VectorXd q)
 {
   double Jac[12];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
+  double L[2] = {0.144096,0.12718};
 
   double b_in2_tmp;
   double c_in2_tmp;
@@ -487,7 +487,7 @@ void Lagrange::J_update(VectorXd q)
 void Lagrange::JDot_update(VectorXd q, VectorXd dq)
 {
   double JacDot[12];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
+  double L[2] = {0.144096,0.12718};
 
   double b_in2_tmp;
   double b_t47_tmp;
