@@ -1,10 +1,11 @@
 #include "3d-soft-trunk/QuasiStatic.h"
+#include <chrono>
 
 Opti QuasiStatic::define_problem(){
     
     Opti prob = casadi::Opti();
 
-    A = prob.parameter(4,6); // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< put all dimensions
+    A = prob.parameter(4,6); 
     tau = prob.parameter(4,1); 
     u = prob.variable(6,1); 
     MX p_min = MX::zeros(6,1);
@@ -28,8 +29,13 @@ Opti QuasiStatic::define_problem(){
 
     std::cout << "Constraints initialized" << std::endl;
 
+    Dict opts_dict=Dict();   // to stop printing out solver data
+    opts_dict["ipopt.print_level"] = 0;
+    opts_dict["ipopt.sb"] = "yes";
+    opts_dict["print_time"] = 0;
+
     
-    prob.solver("ipopt");
+    prob.solver("ipopt", opts_dict);
 
     std::cout<< "Pressure problem initialized correctly."<< std::endl; 
 
@@ -37,6 +43,7 @@ Opti QuasiStatic::define_problem(){
 
 }
 
+// this function is not used, kept here to see how to implement the structure return
 
 QuasiStatic::optimal_solution QuasiStatic::pressure_finder(VectorXd torque, MatrixXd A_real){
 
@@ -70,22 +77,22 @@ QuasiStatic::optimal_solution QuasiStatic::pressure_finder(VectorXd torque, Matr
 
 }
 
-QuasiStatic::optimal_solution QuasiStatic::pressure_finder_warm(VectorXd torque, MatrixXd A_real, DM old_sol){
+VectorXd QuasiStatic::pressure_finder_warm(VectorXd torque, MatrixXd A_real, VectorXd old_sol){
 
     // need to define optimal probelm already in init
 
     DM A_temp = DM::nan(4,6);
     DM tau_temp = DM::nan(4,1);
     DM p_temp = DM::nan(6,1);
-    //DM p_old = DM::nan(6,1); 
+    DM p_old = DM::nan(6,1); 
 
     std::copy(A_real.data(), A_real.data() + A_real.size(), A_temp.ptr());
     std::copy(torque.data(), torque.data() + torque.size(), tau_temp.ptr());
-    //std::copy(old_sol.data(), old_sol.data() + old_sol.size(), p_old.ptr());
+    std::copy(old_sol.data(), old_sol.data() + old_sol.size(), p_old.ptr());
 
     ctrl.set_value(A, A_temp); 
     ctrl.set_value(tau, tau_temp); 
-    ctrl.set_initial(u, old_sol); 
+    ctrl.set_initial(u, p_old); 
 
     OptiSol sol = ctrl.solve(); 
 
@@ -96,12 +103,9 @@ QuasiStatic::optimal_solution QuasiStatic::pressure_finder_warm(VectorXd torque,
     p_temp = sol.value(u)(Slice(),0);  
 
     VectorXd pressure(6,1); 
-
     pressure = Eigen::VectorXd::Map(DM::densify(p_temp).nonzeros().data(),6,1 );
 
-    QuasiStatic::optimal_solution solution = {pressure, sol};
-
-    return solution; 
+    return pressure; 
 
 }
 
@@ -170,20 +174,34 @@ void QuasiStatic::control_loop(){
 
         tau_ref = J.transpose()*ddx_des;
         VectorXd pxy = stm->A_pseudo.inverse()*tau_ref/10000;
-        p = stm->pseudo2real(pxy+ p_prev);
 
-        DM pressure_old(6,1); 
+        auto start = std::chrono::steady_clock::now();
+        p = stm->pseudo2real(pxy+ p_prev);
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        pseudo_avg = (pseudo_avg + elapsed.count()); 
+
+
+        VectorXd pressure_old(6,1); 
         
         if (!solved){
-            pressure_old = DM::zeros(6,1); 
+            pressure_old = VectorXd::Zero(6,1); 
         }
 
-        QuasiStatic::optimal_solution optimization_result = pressure_finder_warm(pxy + p_prev ,mapping_matrix, pressure_old);
+        // QuasiStatic::optimal_solution optimization_result = pressure_finder_warm(pxy + p_prev ,mapping_matrix, pressure_old);
         
-        
-        VectorXd p_new = optimization_result.pressure; 
-        OptiSol old_solution = optimization_result.solution; 
-        pressure_old = old_solution.value(u)(Slice(),0); 
+        start = std::chrono::steady_clock::now();
+        VectorXd p_new = pressure_finder_warm(pxy + p_prev ,mapping_matrix, pressure_old); 
+        end = std::chrono::steady_clock::now();
+        elapsed = end - start;
+
+        opt_avg = (opt_avg + elapsed.count()); 
+
+        //OptiSol old_solution = optimization_result.solution; 
+        //pressure_old = old_solution.value(u)(Slice(),0); 
+
+        pressure_old = p_new; 
 
         MatrixXd temp = mapping_matrix.completeOrthogonalDecomposition().pseudoInverse(); 
 
@@ -192,7 +210,7 @@ void QuasiStatic::control_loop(){
 
         VectorXd p_ls = temp * (pxy+p_prev); 
 
-
+        std::cout << "===============================================" << std::endl; 
         std::cout << "P_old : " << p.transpose() << std::endl;
         std::cout << "P_new : " << p_new.transpose() << std::endl; 
         std::cout << "P_LS : " << p_ls.transpose() << std::endl; 
@@ -201,6 +219,10 @@ void QuasiStatic::control_loop(){
         double error = (pxy+p_prev - mapping_matrix*p_new).transpose() * (pxy+p_prev - mapping_matrix*p_new);
 
         std::cout << "Reconstruction error : " << error << std::endl; 
+
+        avg ++; 
+
+        std::cout << "Pseudo time : " << pseudo_avg/avg << " -- Optimal time : " << opt_avg/avg << std::endl; 
 
         p_prev += pxy;
 
@@ -215,7 +237,7 @@ void QuasiStatic::control_loop(){
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
-            assert(simulate(p));
+            assert(simulate(p_new));
         }
 
         // std::cout << "pressure input : " << p.transpose() << std::endl; 

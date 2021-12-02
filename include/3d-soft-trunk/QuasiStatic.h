@@ -40,7 +40,7 @@ private:
 
     Opti define_problem();
     QuasiStatic::optimal_solution pressure_finder(VectorXd torque, MatrixXd A_real); 
-    QuasiStatic::optimal_solution pressure_finder_warm(VectorXd torque, MatrixXd A_real, DM old_sol);
+    VectorXd pressure_finder_warm(VectorXd torque, MatrixXd A_real, VectorXd old_sol);
     Opti ctrl; 
     MX A;
     MX tau;
@@ -48,5 +48,9 @@ private:
     MatrixXd chamberMatrix = MatrixXd::Zero(2,3);
     MatrixXd mapping_matrix = MatrixXd::Zero(4,6);
     bool solved; 
+
+    int avg = 0;
+    double pseudo_avg = 0; 
+    double opt_avg = 0; 
     
 };
