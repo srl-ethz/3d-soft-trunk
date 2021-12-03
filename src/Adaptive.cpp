@@ -26,10 +26,17 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     alpha = 0.75; //Finite time stability
 
+<<<<<<< HEAD
     Ka(7) = 0.001;
     Ka(8) = 0.001;
     Ka(9) = 80;
     Ka(10) = 80;
+=======
+    Ka(7) = 0;//0.001;
+    Ka(8) = 0;//0.001;
+    Ka(9) = 20;
+    Ka(10) = 20;
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
   
     eps_custom = 0.05; // for singularity avoidance
     
@@ -41,7 +48,11 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     double m[2] = {0.180,0.104};
     double L[2] = {0.145052,0.126736};
     double d_vect[2] = {0.001,0.001};
+<<<<<<< HEAD
     double k_vect[2] = {0.15,0.1};
+=======
+    double k_vect[2] = {0.2,0.1};
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
 
     //initialize dynamic parameters
     a(0) = m[0]*L[0]*L[0];
@@ -101,8 +112,13 @@ void Adaptive::control_loop()
 
         s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
         //fmt::print("pass1\n");
+<<<<<<< HEAD
         Task_Circle_r2r(sigma, dsigma, ddsigma);
         //Task_Linear_r2r(sigma, dsigma, ddsigma);
+=======
+        //Task_Circle_r2r(sigma, dsigma, ddsigma);
+        Task_Linear_r2r(sigma, dsigma, ddsigma);
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
@@ -445,7 +461,11 @@ void Adaptive::start_AD()
 {
     fmt::print("Adaptive Controller is activated!\n");
     this->rate1 = 0.001;
+<<<<<<< HEAD
     this->rate2 = 0.000001;
+=======
+    this->rate2 = 0.00001;
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
     this->zz = 1;
     this->pause = false;
 }
