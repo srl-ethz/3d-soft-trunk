@@ -121,7 +121,7 @@ protected:
      * (not throughly examined- a larger or smaller value may be better)
      */
     const int p_offset = 0;
-    const int p_max = 600; // 400 for DS 10, 1200 for DS 30
+    const int p_max = 700; // 400 for DS 10, 1200 for DS 30
     VectorXd tau;
 
     double dt = 1. / 200.; //change from 30 to 100

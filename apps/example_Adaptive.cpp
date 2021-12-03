@@ -349,9 +349,8 @@ int main()
     std::thread gain_thread(gain, std::ref(ad));
     srl::sleep(0.1); //wait to get to the initial position
     //start adaptation now:
-
-    T = ad.T*(ad.target_points.size()-1);
-    T = 32;
+    T = ad.T; //circle
+    //T = ad.T*(ad.target_points.size()-1); //multiple linear
     fmt::print("T = {}\n", T);
     //std::cout << ad.Ka(9);
     //std::cout << ad.Ka(10);
