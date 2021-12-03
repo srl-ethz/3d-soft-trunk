@@ -56,11 +56,12 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     a(9) = k_vect[0];
     a(10) = k_vect[1];
 
-   target_points.resize(4);
-   target_points[0] << 0.12,0,-0.23;
-   target_points[1] << 0,0.12,-0.23;
-   target_points[2] << -0.12,0,-0.23;
-   target_points[3] << 0,-0.12,-0.23;
+    // this generates a star
+   target_points.resize(5);
+   for(int i = 0; i < 5; i++){
+       target_points[i] << 0.12*cos(144.*PI/180.), 0.12*sin(144.*PI/180.), -0.245;
+   }
+
    control_thread = std::thread(&Adaptive::control_loop, this);
 }
 
@@ -576,17 +577,19 @@ void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
     Vector3d d = p_f - p_i;
     double L = d.norm(); //distance
 
-    this->x_ref[0] = p_i(0) + sigma*(p_f(0)-p_i(0))/L;
-    this->x_ref[1] = p_i(1) + sigma*(p_f(1)-p_i(1))/L;
-    this->x_ref[2] = p_i(2) + sigma*(p_f(2)-p_i(2))/L;
+    this->x_ref(0) = p_i(0) + sigma*(p_f(0)-p_i(0))/L;
+    this->x_ref(1) = p_i(1) + sigma*(p_f(1)-p_i(1))/L;
+    
+    this->dx_ref(0) = (p_f(0)-p_i(0))/L * dsigma;
+    this->dx_ref(1) = (p_f(1)-p_i(1))/L * dsigma;
 
-    this->dx_ref[0] = (p_f(0)-p_i(0))/L * dsigma;
-    this->dx_ref[1] = (p_f(1)-p_i(1))/L * dsigma;
-    this->dx_ref[2] = (p_f(2)-p_i(2))/L * dsigma;
+    this->ddx_ref(0) = (p_f(0)-p_i(0))/L * ddsigma;
+    this->ddx_ref(1) = (p_f(1)-p_i(1))/L * ddsigma;
 
-    this->ddx_ref[0] = (p_f(0)-p_i(0))/L * ddsigma;
-    this->ddx_ref[1] = (p_f(1)-p_i(1))/L * ddsigma;
-    this->ddx_ref[2] = (p_f(2)-p_i(2))/L * ddsigma;
+    double r = sqrt(pow(this->x_ref(0),2) + pow(this->x_ref(1),2));
+    this->x_ref(2) = 5.89*pow(r,3) + 1.21*pow(r,2) - 0.00658*r -0.2737; //this polynomial obtained from task space fit, view Oliver Fischer -> SoPrA General -> Task Space Analyis
+    this->dx_ref(2) = dsigma/L * (3*5.89*pow(r,2) + 2*1.21*r - 0.00658);
+    this->ddx_ref(2) = ddsigma/L * (6*5.89*r + 2*1.21);
 
     if (t_internal >= T){
         target_point += 1;
