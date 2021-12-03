@@ -7,11 +7,10 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "Adaptive_logger";
 
-    Kp = 120 * VectorXd::Ones(4);
-    Kp << 2, 1, 2, 1;
-    Kd = 0.1 * VectorXd::Ones(4); //control gains
+    Kp = 100 * VectorXd::Ones(3);
+    Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 100;                  //controller's rate
+    dt = 1. / 150;                  //controller's rate
 
     eps = 0.05;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
@@ -29,8 +28,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     Ka(7) = 0;//0.001;
     Ka(8) = 0;//0.001;
-    Ka(9) = 0;
-    Ka(10) = 0;
+    Ka(9) = 20;
+    Ka(10) = 20;
   
     eps_custom = 0.05; // for singularity avoidance
     
@@ -42,7 +41,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     double m[2] = {0.180,0.104};
     double L[2] = {0.145052,0.126736};
     double d_vect[2] = {0.001,0.001};
-    double k_vect[2] = {0.15,0.07};
+    double k_vect[2] = {0.2,0.1};
 
     //initialize dynamic parameters
     a(0) = m[0]*L[0]*L[0];
@@ -87,23 +86,34 @@ void Adaptive::control_loop()
        // auto start_mod = std::chrono::system_clock::now();
         lag.update(state, state_ref);
         //auto end_mod = std::chrono::system_clock::now();
- 
-        //x = lag.p;
         
-        //fmt::print("FK_position = {}\n", q);
-        //fmt::print("FK_abs = {}\n", state.q);
+       // if (!is_initial_ref_received) //only control after receiving a reference position
+        //    continue;
+
+        x = lag.p;
+        
+        //fmt::print("FK_position = {}\n", x);
+        //fmt::print("FK_abs = {}\n", position);
         //fmt::print("des_pos = {}\n", x_ref);
-        //s_trapezoidal_speed(t, &sigma, &dsigma, &ddsigma, &T);
-        //s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
+
+        dx = lag.J * state.dq;
+        //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
+
+        s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
+        //fmt::print("pass1\n");
         //Task_Circle_r2r(sigma, dsigma, ddsigma);
-        //Task_Linear_r2r(sigma, dsigma, ddsigma);
+        Task_Linear_r2r(sigma, dsigma, ddsigma);
+        e = x_ref - x;
+        eDot = dx_ref - dx;
+        J_inv = computePinv(lag.J, eps, lambda);
 
-        Task_Joint(t);
-        e = q_ref - state.q;
-        eDot = dq_ref - state.dq;
-        state_ref.dq = dq_ref.array() + 0.05 * Kp.array() * e.array().abs().pow(alpha) * sat(e, 0).array() + 0.05 * Kp.array() * e.array();
-        state_ref.ddq = ddq_ref.array() +  alpha * Kd.array() * e.array().abs().pow(alpha - 1) * eDot.array() + Kd.array() * eDot.array();
-
+        //state_ref.dq = J_inv * (dx_ref + 0.1*Kp.asDiagonal() * (x_ref - x));
+        //state_ref.ddq = J_inv * (ddx_d - lag.JDot * state_ref.dq) + ((MatrixXd::Identity(state.q.size(), state.q.size()) - J_inv * lag.J)) * (-knd * state.dq);
+        v = Kp.array() * e.array().abs().pow(alpha) * sat(e, 0).array();
+        //state_ref.dq = J_inv * (dx_ref + 0.1*v);
+        state_ref.dq = J_inv * (dx_ref + 0.05 * v + 0.05 * 1 * Kp.asDiagonal() * e);
+        vDot = alpha * Kd.array() * e.array().abs().pow(alpha - 1) * eDot.array();
+        state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal() * e + 1 * Kd.asDiagonal() * eDot + vDot - lag.JDot * state_ref.dq);
         lag.update(state, state_ref); //update again for state_ref to get Y
 
         s = state.dq - state_ref.dq;     //sliding manifold
@@ -129,15 +139,13 @@ void Adaptive::control_loop()
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
-        //tau = dq_ref.array() + Kp.array() * e.array();
-        VectorXd pxy = Ainv * (stm->A_pseudo.inverse() * tau / 100);
+        VectorXd pxy = stm->A_pseudo.inverse() * tau / 100;
         //pxy[1] += 300 * sin(sigma / 0.12 + 0);
         //pxy[3] += 300 * sin(sigma / 0.12 + 0);
         d_pxy = pxy - pprev;
         d_pxy = 10*sat(d_pxy,10);
         pxy = pprev + d_pxy;
-        //pxy << 0, -400, 0, -400;
-         
+        
         p = stm->pseudo2real(pxy);           // compute the desired pressure
         pprev = pxy;
         //auto end_tot = std::chrono::system_clock::now();
@@ -145,9 +153,8 @@ void Adaptive::control_loop()
         //std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
         //model_time = elapsed_mod.count();
         //tot_time = elapsed_tot.count();
-        //p << 0,500,500,0,500,5000;
-        actuate(p);     
-        //fmt::print("p = {}\n", p);
+        
+        actuate(p);                                                          // control the valves
         if (fast_logging){
             int c_r = (int) (t/dt); //current row
             log_matrix(c_r,0) = t;
@@ -429,16 +436,16 @@ void Adaptive::change_ref4()
 
 void Adaptive::show_x()
 {
-    fmt::print("desried_position = {}\n", q_ref);
+    fmt::print("desried_position = {}\n", x_ref);
     //fmt::print("qlysis_position = {}\n", x_qualisys);
-    fmt::print("FK_position = {}\n", state.q);
+    fmt::print("FK_position = {}\n", x);
 }
 
 void Adaptive::start_AD()
 {
     fmt::print("Adaptive Controller is activated!\n");
-    this->rate1 = 0;
-    this->rate2 = 0;
+    this->rate1 = 0.001;
+    this->rate2 = 0.00001;
     this->zz = 1;
     this->pause = false;
 }
@@ -585,20 +592,4 @@ void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
         target_point += 1;
         t_internal = 0;
     }
-}
-
-void Adaptive::Task_Joint(double t)
-{
-    double r = 1;
-    double T = 32;
-    double coef = 2 * 3.1415 / T;
-    /*
-    this->q_ref << r * sin(coef * t) , PI/6, r * sin(coef * t), PI/6;
-    this->dq_ref << r * coef * cos(coef * t), 0, r * coef * cos(coef * t), 0;
-    this->ddq_ref << -r * coef * coef * sin(coef * t) , 0, -r * coef * coef * sin(coef * t), 0;
-*/
-    this->q_ref << 0.2, 0.4, 0.2, 0.4;
-    this->dq_ref << 0,0,0,0;
-    this->ddq_ref << 0,0,0,0;
-
 }
