@@ -26,10 +26,17 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     alpha = 0.75; //Finite time stability
 
+<<<<<<< HEAD
+    Ka(7) = 0.001;
+    Ka(8) = 0.001;
+    Ka(9) = 80;
+    Ka(10) = 80;
+=======
     Ka(7) = 0;//0.001;
     Ka(8) = 0;//0.001;
     Ka(9) = 20;
     Ka(10) = 20;
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
   
     eps_custom = 0.05; // for singularity avoidance
     
@@ -41,7 +48,11 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     double m[2] = {0.180,0.104};
     double L[2] = {0.145052,0.126736};
     double d_vect[2] = {0.001,0.001};
+<<<<<<< HEAD
+    double k_vect[2] = {0.15,0.1};
+=======
     double k_vect[2] = {0.2,0.1};
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
 
     //initialize dynamic parameters
     a(0) = m[0]*L[0]*L[0];
@@ -102,8 +113,13 @@ void Adaptive::control_loop()
 
         s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
         //fmt::print("pass1\n");
+<<<<<<< HEAD
+        Task_Circle_r2r(sigma, dsigma, ddsigma);
+        //Task_Linear_r2r(sigma, dsigma, ddsigma);
+=======
         //Task_Circle_r2r(sigma, dsigma, ddsigma);
         Task_Linear_r2r(sigma, dsigma, ddsigma);
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
@@ -144,7 +160,7 @@ void Adaptive::control_loop()
         //pxy[1] += 300 * sin(sigma / 0.12 + 0);
         //pxy[3] += 300 * sin(sigma / 0.12 + 0);
         d_pxy = pxy - pprev;
-        d_pxy = 10*sat(d_pxy,10);
+        d_pxy = 2*sat(d_pxy,2);
         pxy = pprev + d_pxy;
         
         p = stm->pseudo2real(pxy);           // compute the desired pressure
@@ -446,7 +462,11 @@ void Adaptive::start_AD()
 {
     fmt::print("Adaptive Controller is activated!\n");
     this->rate1 = 0.001;
+<<<<<<< HEAD
+    this->rate2 = 0.000001;
+=======
     this->rate2 = 0.00001;
+>>>>>>> 11c16f2325e76b0fece3fb6491e3817b6965aecf
     this->zz = 1;
     this->pause = false;
 }
@@ -486,23 +506,18 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    //double n = 2; //rounds of circle
-    //double r = 0.12;    //radius of the circle
-    //l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+    double n = 2; //rounds of circle
+    double r = 0.12;    //radius of the circle
+    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
-    //Eigen::Vector3d p_i;
-    //Eigen::Vector3d p_f;
-    //p_i << 0.15, 0.15, -0.15;
-    //p_f << -0.15, 0.0, -0.20;
-    //assert(target_point + 1 <= target_points.size());
-    p_i = target_points[0 + target_point]; //initial point
+    //p_i = target_points[0 + target_point]; //initial point
     //fmt::print("p_i =  {}\n", p_i);
-    p_f = target_points[1 + target_point];//final point
+    //p_f = target_points[1 + target_point];//final point
     //fmt::print("p_f =  {}\n", p_f);
-    Eigen::Vector3d d = p_f - p_i;
-    l = d.norm();
+    //Eigen::Vector3d d = p_f - p_i;
+    //l = d.norm();
     //fmt::print("L =  {}\n", l);
-    dsigma_max = 0.03;  // maximum velocity
+    dsigma_max = 0.05;  // maximum velocityii
     ddsigma_max = 0.01; // maximum acc
     double l_min =  dsigma_max * dsigma_max / ddsigma_max;
     //fmt::print("l_min =  {}\n", l_min);
