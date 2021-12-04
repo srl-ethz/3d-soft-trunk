@@ -52,8 +52,8 @@ public:
 
     void get_curvature(srl::State &pose);
 
-    void get_tip_posision(VectorXd &position);
-
+    void get_tip_posision1(VectorXd &position);
+    void get_tip_posision2(VectorXd &position);
 
     unsigned long long int get_timestamp(); /** @brief get timestamp (in microsecs) from Qualisys  */
 

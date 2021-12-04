@@ -115,7 +115,8 @@ private:
     
     int target_point = 0;
 
-    VectorXd position;
+    VectorXd x_tip1;
+    VectorXd x_tip2;
 
     bool pause = true;
 

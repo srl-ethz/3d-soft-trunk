@@ -69,7 +69,13 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
        fmt::print("point {}: {}\n",i,target_points[i].transpose());
    }
     
-
+    for (int i = 0; i < 3; i++){
+            p(3+i) = 800*pow(sin(0*2*PI/18 + i*2*PI/3),2);
+    };
+    for (int i = 0; i < 3; i++){
+            p(i) = 800*pow(sin(0*2*PI/18 + i*2*PI/3),2);
+    };
+    actuate(p);
    control_thread = std::thread(&Adaptive::control_loop, this);
 }
 
@@ -90,7 +96,8 @@ void Adaptive::control_loop()
         std::lock_guard<std::mutex> lock(mtx);
         //auto start_tot = std::chrono::system_clock::now();
         cc->get_curvature(state);
-        cc->get_tip_posision(position);
+        cc->get_tip_posision1(x_tip1);
+        cc->get_tip_posision2(x_tip2);
         avoid_singularity(state);
        // auto start_mod = std::chrono::system_clock::now();
         lag.update(state, state_ref);
@@ -100,11 +107,7 @@ void Adaptive::control_loop()
         //    continue;
 
         x = lag.p;
-        
-        //fmt::print("FK_position = {}\n", x);
-        //fmt::print("FK_abs = {}\n", position);
-        //fmt::print("des_pos = {}\n", x_ref);
-
+        /*
         dx = lag.J * state.dq;
         //ddx_d = ddx_ref + Kp.asDiagonal() * (x_ref - x) + Kd.asDiagonal() * (dx_ref - dx);
 
@@ -162,29 +165,38 @@ void Adaptive::control_loop()
         //std::chrono::duration<double> elapsed_tot = end_tot - start_tot;
         //model_time = elapsed_mod.count();
         //tot_time = elapsed_tot.count();
-        
+        */
+
+        tau << 0,0,0,0;
+        VectorXd pxy = stm->A_pseudo.inverse() * tau / 100;
+        //p = stm->pseudo2real(pxy);
+        //fmt::print("p = {}\n", p);
+        //p << 400,0,0,400,0,0;
+        for (int i = 0; i < 3; i++){
+            p(3+i) = 800*pow(sin(t*2*PI/22 + i*2*PI/3),2);
+        };
+        for (int i = 0; i < 3; i++){
+            p(i) = 800*pow(sin(t*2*PI/22 + i*2*PI/3),2);
+        };
         actuate(p);                                                          // control the valves
+        //fmt::print("FK_pos = {}\n", x_tip1);
+        //fmt::print("abs_pos = {}\n", x_tip2);
         if (fast_logging){
             int c_r = (int) (t/dt); //current row
             log_matrix(c_r,0) = t;
             for (int i = 0; i < 3; i++){
-                log_matrix(c_r, 1+i) = x(i);
-                log_matrix(c_r, 4+i) = x_ref(i);
-            }
-            for (int i = 0; i < 11; i++){
-                log_matrix(c_r,7+i) = a(i);
+                log_matrix(c_r, 1+i) = x_tip1(i);
+                log_matrix(c_r, 4+i) = x_tip2(i);
+                log_matrix(c_r, 7+i) = x(i);
             }
             for (int i = 0; i < st_params.q_size; i++){
-                log_matrix(c_r,18+i) = b(i);
-            }
-            for (int i = 0; i < st_params.q_size; i++){
-                log_matrix(c_r,22+i) = state.q(i);
+                log_matrix(c_r,10+i) = state.q(i);
             }
             for (int i = 0; i < 3*st_params.num_segments; i++){
-                log_matrix(c_r,26+i)= p(i);
+                log_matrix(c_r,14+i)= p(i);
             }
             for (int i = 0; i < st_params.q_size; i++){
-                log_matrix(c_r,32+i) = pxy(i);
+                log_matrix(c_r,20+i) = pxy(i);
             }
         }
         if (!pause){
@@ -470,16 +482,16 @@ void Adaptive::start_ID()
 void Adaptive::toggle_fastlog(double time){
     if (!fast_logging){
         fast_logging = true;
-        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),36);
+        log_matrix = MatrixXd::Zero((int) ((time+1)/dt),24);
         t = 0;
     } else {
         fast_logging = false;
         filename = fmt::format("{}/adaptive_fastlog.csv", SOFTTRUNK_PROJECT_DIR);
         fmt::print("Dumping memory log to {}\n", filename);
         log_file.open(filename, std::fstream::out);
-        log_file << "t,x,y,z,x_ref,y_ref,z_ref,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,b1,b2,b3,b4,q0,q1,q2,q3,p0,p1,p2,p3,p4,p5,tau1,tau2,tau3,tau4\n";
+        log_file << "t,x_t1,y_t1,z_t1,x_t2,y_t2,z_t2,x_fk,y_fk,z_fk,q0,q1,q2,q3,p0,p1,p2,p3,p4,p5,tau1,tau2,tau3,tau4\n";
         for (int i = 0; i < log_matrix.rows(); i ++){
-            for (int j = 0; j < 36; j++){
+            for (int j = 0; j < 24; j++){
                 log_file << log_matrix(i,j) << ",";
             }
             log_file << "\n";

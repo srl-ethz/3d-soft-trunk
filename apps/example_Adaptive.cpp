@@ -339,18 +339,19 @@ int main()
     //Task_Linear_r2r(sigma, dsigma, ddsigma);
     //ad.set_ref(x_ref, dx_ref, ddx_ref);
     //Vector3d x_dum = ad.x_qualisys;
-    fmt::print("a = {}\n", ad.a);
+    //fmt::print("a = {}\n", ad.a);
     //fmt::print("ref = {}\n", x_ref);
     //ad.toggleGripper();
     getchar();
     //ad.toggle_log();i
     ad.start_AD();
-    ad.toggleGripper();
+    //ad.toggleGripper();
     std::thread gain_thread(gain, std::ref(ad));
     srl::sleep(0.1); //wait to get to the initial position
     //start adaptation now:
     T = ad.T; //circle
     //T = ad.T*(ad.target_points.size()-1); //multiple linear
+    T = 22;
     fmt::print("T = {}\n", T);
     //std::cout << ad.Ka(9);
     //std::cout << ad.Ka(10);
