@@ -121,7 +121,7 @@ void Adaptive::control_loop()
         state_ref.dq = J_inv * (dx_ref + 0.05 * v + 0.05 * 1 * Kp.asDiagonal() * e);
         vDot = alpha * Kd.array() * e.array().abs().pow(alpha - 1) * eDot.array();
         state_ref.ddq = J_inv * (ddx_ref + Kp.asDiagonal() * e + 1 * Kd.asDiagonal() * eDot + vDot - lag.JDot * state_ref.dq);
-        lag.update(state, state_ref); //update again for state_ref to get Y
+        lag.update(state, state_ref); //update again for state_ref to get YY
 
         s = state.dq - state_ref.dq;     //sliding manifold
         s_d = s - delta * sat(s, delta); //manifold with boundary layer
