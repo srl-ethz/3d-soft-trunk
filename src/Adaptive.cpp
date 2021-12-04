@@ -7,12 +7,12 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     filename = "Adaptive_logger";
 
-    Kp = 100 * VectorXd::Ones(3);
+    Kp = 120 * VectorXd::Ones(3);
     Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
-    dt = 1. / 150;                  //controller's rate
+    dt = 1. / 30;                  //controller's rate
 
-    eps = 0.05;     //for pinv of Jacobian
+    eps = 0.5;     //for pinv of Jacobian
     lambda = 0.05; //for pinv of Jacobian
 
     gamma = 0.001;                //control gains
@@ -28,8 +28,8 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
 
     Ka(7) = 0.001;
     Ka(8) = 0.001;
-    Ka(9) = 80;
-    Ka(10) = 80;
+    Ka(9) = 2;
+    Ka(10) = 2;
   
     eps_custom = 0.05; // for singularity avoidance
     
@@ -38,10 +38,11 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     //a << 0.0046, 0.0028, 0.0016, 0.0021, 0.0288, 0.0178, 0.0133, 0.006, 0.006, 0.30, 0.15;
     //a << 0.003528, 0.0031948, 0.002971, 0.003081, 0.0252, 0.02282, 0.022, 0.002, 0.002, 0.3, 0.1;
     zz = 1;
-    double m[2] = {0.180,0.104};
-    double L[2] = {0.145052,0.126736};
+    double m[2] = {0.180,0.164};
+    double L[2] = {0.151455,0.124099};
     double d_vect[2] = {0.001,0.001};
-    double k_vect[2] = {0.15,0.1};
+    double k_vect[2] = {0.25,0.2};
+    //double k_vect[2] = {0.25,0.1};
 
     //initialize dynamic parameters
     a(0) = m[0]*L[0]*L[0];
@@ -56,11 +57,17 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     a(9) = k_vect[0];
     a(10) = k_vect[1];
 
-   target_points.resize(4);
-   target_points[0] << 0.12,0,-0.23;
-   target_points[1] << 0,0.12,-0.23;
-   target_points[2] << -0.12,0,-0.23;
-   target_points[3] << 0,-0.12,-0.23;
+    
+   target_points.resize(6);
+   //coordinates_S();
+    // this generates a star
+    
+   for(int i = 0; i < 6; i++){
+       target_points[i] << 0.14*cos(144.*i*PI/180. + 1*PI/2), 0.14*sin(144.*i*PI/180. + 1*PI/2), -0.245;
+       fmt::print("point {}: {}\n",i,target_points[i].transpose());
+   }
+    
+
    control_thread = std::thread(&Adaptive::control_loop, this);
 }
 
@@ -101,8 +108,8 @@ void Adaptive::control_loop()
 
         s_trapezoidal_speed(t_internal, &sigma, &dsigma, &ddsigma, &T);
         //fmt::print("pass1\n");
-        Task_Circle_r2r(sigma, dsigma, ddsigma);
-        //Task_Linear_r2r(sigma, dsigma, ddsigma);
+        //Task_Circle_r2r(sigma, dsigma, ddsigma);
+        Task_Linear_r2r(sigma, dsigma, ddsigma);
         e = x_ref - x;
         eDot = dx_ref - dx;
         J_inv = computePinv(lag.J, eps, lambda);
@@ -135,7 +142,7 @@ void Adaptive::control_loop()
                 b(i) = 0.0001;
             }
         }                      
-        //cout << "\na \n " << a << "\n\n";
+        //cout << "\na \n " << a << "\n\n";i
         //cout << "\nb \n " << b << "\n\n";
         Ainv = computePinv(lag.A, 0.05, 0.05);                             // compute pesudoinverse of mapping matrix
         tau = Ainv * lag.Y * a -zz*(gamma * s - b.asDiagonal() * sat(s, delta)); // compute the desired toque in xy
@@ -143,7 +150,7 @@ void Adaptive::control_loop()
         //pxy[1] += 300 * sin(sigma / 0.12 + 0);
         //pxy[3] += 300 * sin(sigma / 0.12 + 0);
         d_pxy = pxy - pprev;
-        d_pxy = 2*sat(d_pxy,2);
+        d_pxy = 15*sat(d_pxy,15);
         pxy = pprev + d_pxy;
         
         p = stm->pseudo2real(pxy);           // compute the desired pressure
@@ -485,19 +492,19 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
 
     double l, dsigma_max, ddsigma_max, Ts, Tf;
     // circle
-    double n = 2; //rounds of circle
-    double r = 0.12;    //radius of the circle
-    l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
+    //double n = 2; //rounds of circle
+    //double r = 0.12;    //radius of the circle
+    //l = 2 * PI * n * r; //l > v_max ^ 2 / a_max
     // linear
-    //p_i = target_points[0 + target_point]; //initial point
+    p_i = target_points[0 + target_point]; //initial point
     //fmt::print("p_i =  {}\n", p_i);
-    //p_f = target_points[1 + target_point];//final point
+    p_f = target_points[1 + target_point];//final point
     //fmt::print("p_f =  {}\n", p_f);
-    //Eigen::Vector3d d = p_f - p_i;
-    //l = d.norm();
+    Eigen::Vector3d d = p_f - p_i;
+    l = d.norm();
     //fmt::print("L =  {}\n", l);
-    dsigma_max = 0.05;  // maximum velocityii
-    ddsigma_max = 0.01; // maximum acc
+    dsigma_max = 0.11;  // maximum velocity
+    ddsigma_max = 0.05; // maximum acc
     double l_min =  dsigma_max * dsigma_max / ddsigma_max;
     //fmt::print("l_min =  {}\n", l_min);
     assert (l > l_min);
@@ -573,18 +580,86 @@ void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
 
     this->x_ref[0] = p_i(0) + sigma*(p_f(0)-p_i(0))/L;
     this->x_ref[1] = p_i(1) + sigma*(p_f(1)-p_i(1))/L;
-    this->x_ref[2] = p_i(2) + sigma*(p_f(2)-p_i(2))/L;
+    //this->x_ref[2] = p_i(2) + sigma*(p_f(2)-p_i(2))/L;
 
     this->dx_ref[0] = (p_f(0)-p_i(0))/L * dsigma;
     this->dx_ref[1] = (p_f(1)-p_i(1))/L * dsigma;
-    this->dx_ref[2] = (p_f(2)-p_i(2))/L * dsigma;
+    //this->dx_ref[2] = (p_f(2)-p_i(2))/L * dsigma;
 
     this->ddx_ref[0] = (p_f(0)-p_i(0))/L * ddsigma;
     this->ddx_ref[1] = (p_f(1)-p_i(1))/L * ddsigma;
-    this->ddx_ref[2] = (p_f(2)-p_i(2))/L * ddsigma;
+    //this->ddx_ref[2] = (p_f(2)-p_i(2))/L * ddsigma;
 
+     double r = sqrt(pow(this->x_ref(0),2) + pow(this->x_ref(1),2));
+    this->x_ref(2) = 5.89*pow(r,3) + 1.21*pow(r,2) - 0.00658*r -0.2737; //this polynomial obtained from task space fit, view Oliver Fischer -> SoPrA General -> Task Space Analyis
+    this->dx_ref(2) = 0;
+    this->ddx_ref(2) = 0;
+   
     if (t_internal >= T){
         target_point += 1;
         t_internal = 0;
     }
 }
+
+void Adaptive::coordinates_S (double x_max, double y_max, double y_mid, double default_z) {
+    /* Shape defined by 6 waypoints as follows:
+    2(-x_max,  y_max) --- 1(x_max,  y_max) 
+    | 
+    |
+    3(-x_max,  y_mid) --- 4(x_max,  y_mid) 
+                                         |
+                                         |
+    6(-x_max, -y_max) --- 5(x_max, -y_max) 
+    */
+
+    target_points.resize(6);
+    
+    target_points[0] << x_max,  y_max, default_z;
+    target_points[1] << -x_max, y_max, default_z;
+    target_points[2] << -x_max, y_mid, default_z;
+    target_points[3] << x_max,  y_mid, default_z;
+    target_points[4] << x_max, -y_max+y_mid, default_z;
+    target_points[5] << -x_max, -y_max+y_mid, default_z;
+}
+
+
+
+void Adaptive::coordinates_R(double x_max, double y_max, double y_mid, double default_z) {
+    /* Shape defined by 6 waypoints as follows:
+    2(-x_max,  y_max) --- 3(x_max,  y_max) 
+    |                                    |
+    |                                    |
+    5(-x_max,  y_mid) --- 4(x_max,  y_mid) 
+    |                 \                   
+    |                   \          
+    1(-x_max, -y_max) --- 6(x_max, -y_max) 
+    */
+    target_points.resize(6);
+    
+    
+    target_points[0] << -x_max, -y_max, default_z;
+    target_points[1] << -x_max,  y_max, default_z;
+    target_points[2] << x_max,  y_max, default_z;
+    target_points[3] << x_max,  y_mid, default_z;
+    target_points[4] << -x_max, -y_mid, default_z;
+    target_points[5] << x_max, -y_max, default_z;
+
+}
+
+
+
+void Adaptive::coordinates_L (double x_max, double y_max, double default_z) {
+    /* Shape defined by 3 waypoints as follows:
+    1(-x_max,  y_max) 
+    | 
+    |
+    2(-x_max, -y_max) --- 3(x_max, -y_max) 
+    */
+    target_points.resize(3);
+    
+    target_points[0] << -x_max,  y_max, default_z;
+    target_points[1] << -x_max, -y_max, default_z;
+    target_points[2] << x_max, -y_max, default_z;
+
+}
+

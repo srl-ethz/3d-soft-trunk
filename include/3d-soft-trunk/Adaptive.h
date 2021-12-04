@@ -119,5 +119,8 @@ private:
 
     bool pause = true;
 
-    
+    //SRL logo
+    void coordinates_S (double x_max = 0.12, double y_max = 0.12, double y_mid = 0.03, double default_z = -0.25);
+    void coordinates_R (double x_max = 0.1, double y_max = 0.12, double y_mid = 0.03, double default_z = -0.25);
+    void coordinates_L (double x_max = 0.12, double y_max = 0.12, double default_z = -0.25);
 };
