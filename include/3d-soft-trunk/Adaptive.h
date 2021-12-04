@@ -45,7 +45,7 @@ public:
 
 
     VectorXd x_qualisys = VectorXd::Zero(3);
-    VectorXd Ka = 0.0001*VectorXd::Ones(11);
+    VectorXd Ka = 0.0005*VectorXd::Ones(11);
     VectorXd a = VectorXd::Zero(11);
     VectorXd Kb = VectorXd::Ones(4);
     VectorXd b = VectorXd::Zero(4);    
