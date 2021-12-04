@@ -8,7 +8,7 @@ Adaptive::Adaptive(const SoftTrunkParameters st_params, CurvatureCalculator::Sen
     filename = "Adaptive_logger";
 
     Kp = 120 * VectorXd::Ones(3);
-    Kp << 150, 140, 170;
+    Kp << 120, 120, 150;
     Kd = 0.1 * VectorXd::Ones(3); //control gains
     knd = 10.0;                     //null space damping gain
     dt = 1. / 150;                  //controller's rate
@@ -508,7 +508,7 @@ void Adaptive::s_trapezoidal_speed(double t, double *sigma, double *dsigma, doub
     //fmt::print("p_i =  {}\n", p_i);
     //fmt::print("p_f =  {}\n", p_f);
     */
-    dsigma_max = 0.05;  // maximum velocity
+    dsigma_max = 0.02;  // maximum velocity
     ddsigma_max = 0.01; // maximum acc
     double l_min =  dsigma_max * dsigma_max / ddsigma_max;
     //fmt::print("L =  {}\n", l);
@@ -564,15 +564,21 @@ void Adaptive::Task_Circle_r2r(double sigma, double dsigma, double ddsigma)
     double psi = 0;
     this->x_ref[0] = cx + r * cos(sigma / r + phi);
     this->x_ref[1] = cy + r * sin(sigma / r + phi);
-    this->x_ref[2] = cz + h * cos(sigma / r + psi);
+    //this->x_ref[2] = cz + h * cos(sigma / r + psi);
 
     this->dx_ref[0] = -sin(sigma / r + phi) * dsigma;
     this->dx_ref[1] = cos(sigma / r + phi) * dsigma;
-    this->dx_ref[2] = -(h * sin(psi + sigma / r)) / r * dsigma;
+    //this->dx_ref[2] = -(h * sin(psi + sigma / r)) / r * dsigma;
 
     this->ddx_ref[0] = (-cos(phi + sigma / r) / r) * dsigma * dsigma + (-sin(sigma / r + phi)) * ddsigma;
     this->ddx_ref[1] = (-sin(phi + sigma / r) / r) * dsigma * dsigma + (cos(sigma / r + phi)) * ddsigma;
-    this->ddx_ref[2] = (-(h * cos(psi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(psi + sigma / r)) / r) * ddsigma;
+    //this->ddx_ref[2] = (-(h * cos(psi + sigma / r)) / (r * r)) * dsigma * dsigma + (-(h * sin(psi + sigma / r)) / r) * ddsigma;
+
+    double R = sqrt(pow(this->x_ref(0),2) + pow(this->x_ref(1),2));
+    this->x_ref(2) = 5.89*pow(R,3) + 1.21*pow(R,2) - 0.00658*R -0.2737; //this polynomial obtained from task space fit, view Oliver Fischer -> SoPrA General -> Task Space Analyis
+    this->dx_ref(2) = 0;
+    this->ddx_ref(2) = 0;
+
 }
 
 void Adaptive::Task_Linear_r2r(double sigma, double dsigma, double ddsigma)
