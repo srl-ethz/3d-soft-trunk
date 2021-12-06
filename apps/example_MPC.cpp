@@ -5,7 +5,7 @@
 
 int main(){
 
-    bool task_space_control = true;   // set to true to operate in task space   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    bool task_space_control = false;   // set to true to operate in task space   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     std::cout << "Task space control enabled : " << task_space_control << std::endl; 
 
@@ -15,8 +15,8 @@ int main(){
 
     // Choose mpc1 for joint-space control, mpc2 for end-effector space control   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    //MPC mpc1(st_params, CurvatureCalculator::SensorType::simulator);
-    MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
+    MPC mpc1(st_params, CurvatureCalculator::SensorType::simulator);
+    //MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
 
     // if (!task_space_control){
     //     MPC mpc(st_params, CurvatureCalculator::SensorType::simulator);
@@ -65,16 +65,16 @@ int main(){
     VectorXd error_avg = VectorXd::Zero(avg); 
 
 
-    //mpc1.set_state(state);               // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change here to switch between modes
-    mpc2.set_state(state);
+    mpc1.set_state(state);               // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change here to switch between modes
+    //mpc2.set_state(state);
     const double hz = 1./dt;
-    //mpc1.set_frequency(hz);
-    mpc2.set_frequency(hz);
+    mpc1.set_frequency(hz);
+    //mpc2.set_frequency(hz);
 
     auto start = std::chrono::steady_clock::now();
 
     // comment and uncomment each loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-/*
+
     if (!task_space_control){
 
         while (t < time/2){
@@ -139,10 +139,10 @@ int main(){
             t += dt; 
         }
     }
-*/
+
     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    
+/*    
     counter = 0;
     error_avg = VectorXd::Zero(avg);
 
@@ -224,7 +224,7 @@ int main(){
         
 
     }
-    
+*/
     
 
     std::cout << "Simulation end" << std::endl; 

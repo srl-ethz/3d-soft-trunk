@@ -5,7 +5,6 @@
 MPC::MPC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
 
-    Horizon = 20;
     dt = 1./10;
 
     // Take model
@@ -40,18 +39,6 @@ void MPC::control_loop(){
         // Define discrete system
 
 
-        // MatrixXd placeHolder = stm->B.inverse()*(stm->g + stm->c); 
-        // std::cout << "check this stuff : " << placeHolder << std::endl; 
-
-
-
-        sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
-        sp_B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);  
-        sp_w = MatrixXd::Zero(2*st_params.q_size, 1);
-
-        //MatrixXd sp_A(2*st_params.q_size, 2*st_params.q_size);
-        //MatrixXd sp_B(2*st_params.q_size, 2*st_params.num_segments);   // SS matrices
-
         // need a coversion DM to MatrixXd and viceversa
         
         get_state_space(stm->B, stm->c, stm->g, stm->K, stm->D, stm->A_pseudo, sp_A, sp_B, sp_w, dt);
@@ -59,24 +46,6 @@ void MPC::control_loop(){
         //https://github.com/casadi/casadi/issues/2563
         //https://groups.google.com/g/casadi-users/c/npPcKItdLN8
         // DM <--> Eigen
-
-        sp_A_temp = DM::nan(2*st_params.q_size, 2*st_params.q_size);
-
-        //std::cout << sp_A_temp << std::endl;
-        //std::cout << sp_A_temp.size() << std::endl;
-
-        sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
-        sp_w_temp = DM::nan(2*st_params.q_size, 1);
-        q_r_temp = DM::nan(st_params.q_size, 1);
-        q_dot_r_temp = DM::nan(st_params.q_size, 1);  // conversion placeholders
-
-        q_0_temp = DM::nan(st_params.q_size, 1);
-        q_dot_0_temp = DM::nan(st_params.q_size, 1);
-
-        // OLD IMPLEMENTATION
-        //DM sp_B_temp(Sparsity::dense(2*st_params.q_size, 2*st_params.num_segments));
-        //DM q_r_temp(Sparsity::dense(st_params.q_size, 1));
-        //DM q_dot_r_temp(Sparsity::dense(st_params.q_size, 1));  // conversion placeholders
 
         std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
         std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
@@ -86,9 +55,10 @@ void MPC::control_loop(){
         std::copy(state.q.data(), state.q.data() + state.q.size(), q_0_temp.ptr());
         std::copy(state.dq.data(), state.dq.data() + state.dq.size(), q_dot_0_temp.ptr());
 
-        //std::cout << "A matrix" << sp_A_temp << std::endl; 
-        //std::cout << "q reference : " << q_r_temp << std::endl; 
-        //std::cout << "q 0 : " << q_0_temp << std::endl; 
+        for (int i = 0; i < Horizon+1; i++){
+            q_0_large(Slice(),i) = q_0_temp; 
+            q_dot_0_large(Slice(),i) = q_dot_0_temp; 
+        }
 
         // solve problem
 
@@ -104,6 +74,10 @@ void MPC::control_loop(){
         ctrl.set_value(q_0, q_0_temp); 
         ctrl.set_value(q_dot_0, q_dot_0_temp); 
         ctrl.set_value(u_prev, u_temp); 
+
+        ctrl.set_initial(q, q_0_large);
+        ctrl.set_initial(q_dot, q_dot_0_large);
+
         OptiSol sol = ctrl.solve(); 
         
         if (!solved){
@@ -116,13 +90,9 @@ void MPC::control_loop(){
         //std::cout << stm->A_pseudo << std::endl;
         //std::cout << stm-> A << std::endl;
 
-        //auto u_temp = static_cast<std::vector<double>>(sol.value(u));
         u_temp = sol.value(u)(Slice(),0); 
 
         std::cout << "solution :" << u_temp << std::endl;
-        
-        p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
-        //std::copy(u_temp.data(), u_temp.data() + u_temp.size(), p_temp);  // <<<<<<<<<<<< error, missing DM to Eigen part
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),2*st_params.num_segments,1 ); 
 
@@ -157,8 +127,8 @@ Opti MPC::define_problem(){
     
     Opti prob = casadi::Opti();
 
-    MX q = prob.variable(st_params.q_size, Horizon+1);
-    MX q_dot = prob.variable(st_params.q_size, Horizon+1);
+    q = prob.variable(st_params.q_size, Horizon+1);
+    q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
     q_0 = prob.parameter(st_params.q_size,1);
@@ -185,7 +155,10 @@ Opti MPC::define_problem(){
     MX T1 = MX::zeros(st_params.q_size,1);
     MX T2 = MX::zeros(st_params.q_size,1);
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*500; 
+    MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
+    MX p_max = MX::ones(2*st_params.num_segments,1)*500; 
+
+    MX Du = MX::ones(2*st_params.num_segments,1)*100; 
 
     //std::cout << "Delta u = " << Du << std::endl; 
 
@@ -193,7 +166,7 @@ Opti MPC::define_problem(){
     T2 = q_dot_r;  //terminal condition with delta formulation
 
     MX Q = MX::eye(st_params.q_size); 
-    MX R = MX::eye(2*st_params.num_segments);
+    MX R = MX::eye(2*st_params.num_segments)*1e-3;
 
     std::cout << "Variables initialized" << std::endl; 
 
@@ -241,8 +214,9 @@ Opti MPC::define_problem(){
     }
 
     prob.subject_to(-Du <= (u(Slice(),0)-u_prev) <= Du); 
-    for (int k = 1; k < Horizon/4; k++){
-        prob.subject_to(-Du <= (u(Slice(),k)-u(Slice(),k-1)) <= Du); 
+    for (int k = 0; k < Horizon/4; k++){
+        prob.subject_to(-Du <= (u(Slice(),k+1)-u(Slice(),k)) <= Du); 
+        prob.subject_to(p_min < u(Slice(), k) < p_max);   // need to put it here, otherwise with some configurations it doesn't work (since model is fixed along prediction)
     }
 
     // terminal constraint
@@ -251,8 +225,13 @@ Opti MPC::define_problem(){
 
     std::cout << "Constraints initialized" << std::endl;
 
-    
-    prob.solver("ipopt");
+    Dict opts_dict=Dict();   // to stop printing out solver data
+    opts_dict["ipopt.print_level"] = 0;
+    opts_dict["ipopt.sb"] = "yes";
+    opts_dict["print_time"] = 0;
+
+    prob.solver("ipopt", opts_dict);
+    //prob.solver("ipopt"); 
 
     std::cout<< "MPC problem initialized correctly."<< std::endl; 
 
@@ -263,10 +242,6 @@ void MPC::get_state_space(MatrixXd B, MatrixXd c, MatrixXd g, MatrixXd K, Matrix
     // to get state space matrices for state evolution, given dynamics equation
     // already discretized
     // missing the constant coriolis + stuff, check paper
-
-    MatrixXd sp_A_c(2*st_params.q_size, 2*st_params.q_size);
-    MatrixXd sp_B_c(2*st_params.q_size, 2*st_params.num_segments); 
-    MatrixXd sp_w_c(2*st_params.q_size, 1);
 
     sp_A_c << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - B.inverse() * K, -B.inverse() * D;
     sp_B_c << MatrixXd::Zero(st_params.q_size, 2*st_params.num_segments), B.inverse()*A;
@@ -285,6 +260,6 @@ void MPC::get_state_space(MatrixXd B, MatrixXd c, MatrixXd g, MatrixXd K, Matrix
 
 MatrixXd MPC::matrix_exponential(MatrixXd A, int size){
 
-    MatrixXd Ad = MatrixXd::Identity(size,size) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120;   //up to 5th order
+    Ad = MatrixXd::Identity(size,size) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120;   //up to 5th order
     return Ad; 
 }
