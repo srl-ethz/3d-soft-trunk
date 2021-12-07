@@ -22,6 +22,7 @@ int main(){
 
     SoftTrunkModel stm = SoftTrunkModel(st_params);
     srl::State state = st_params.getBlankState();  // get blank state with appropriate size
+    fmt::print("State created\n");
     state.q(0) = 0.2;
     stm.updateState(state);
     // print parameters of model

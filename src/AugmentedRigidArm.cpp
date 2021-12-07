@@ -56,17 +56,19 @@ void AugmentedRigidArm::setup_drake_model()
     B_xi_ = MatrixXd::Zero(num_joints, num_joints);
     c_xi_ = VectorXd::Zero(num_joints);
     g_xi_ = VectorXd::Zero(num_joints);
-    Jm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1));
-    dJm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1));
+    Jm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1)+1);
+    dJm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1)+1);
     Jxi_.resize(st_params.num_segments);
     J.resize(st_params.num_segments);
     for (int i = 0; i < st_params.num_segments; i++)
       Jxi_[i] = MatrixXd::Zero(3, num_joints);
     H_list.resize(st_params.num_segments);
 
-    map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1), 2*st_params.num_segments*st_params.sections_per_segment);
+    map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1)+1, st_params.q_size);
+    
     for (int i = 0; i < st_params.num_segments; i++)
-      map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1), 2*i*st_params.sections_per_segment, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+      map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1)+1, 2*i*st_params.sections_per_segment+1, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+    map_normal2expanded(0,0) = 1;
     fmt::print("Finished loading URDF model.\n");
     update_drake_model();
 }
@@ -109,6 +111,22 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         t0 = t1;
         p0 = p1;
     }
+    fmt::print("xi_:\n{}\n", xi_);
+    fmt::print("Jm_:\n{}\n", Jm_);
+    fmt::print("MapNormal:\n{}\n", map_normal2expanded);
+
+    //xi_.tail(xi_.size()-1) = xi_.head(xi_.size()-1);
+    xi_(0) = 1;
+
+    Eigen::MatrixXd Jm_intermediate;
+    Jm_intermediate = Jm_;
+    Jm_ = MatrixXd::Zero(Jm_intermediate.rows(), Jm_intermediate.cols());
+    Jm_(0,0) = 1;
+    Jm_.bottomRightCorner(Jm_intermediate.rows(),Jm_intermediate.cols()) = Jm_intermediate;
+
+    fmt::print("xi_:\n{}\n", xi_);
+    fmt::print("Jm_:\n{}\n", Jm_);
+    fmt::print("MapNormal:\n{}\n", map_normal2expanded);
 }
 
 void AugmentedRigidArm::update_drake_model()
@@ -144,6 +162,7 @@ void AugmentedRigidArm::update_drake_model()
       
     }
     H_base = multibody_plant->GetFrameByName("softTrunk_base").CalcPoseInWorld(plant_context).GetAsMatrix4();
+    fmt::print("Successfully update drake model\n");
 }
 
 /**
@@ -368,9 +387,11 @@ void AugmentedRigidArm::update(const srl::State &state)
     // calculate Jacobian
     update_Jm(map_normal2expanded * state.q);
     dxi_ = Jm_ * map_normal2expanded * state.dq;
+    fmt::print("xi: {}\n dxi: {}\n",xi_.size(), dxi_.size());
     // calculate dynamic parameters
     update_drake_model();
     // map to q space
+    fmt::print("B_xi: {}\n",B_xi_);
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);

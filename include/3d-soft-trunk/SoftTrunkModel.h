@@ -51,6 +51,12 @@ public:
      * Calculating using pseudopressure may make it easier for some controllers.
     */
     MatrixXd A_pseudo;
+
+    /** variables for the prismatic joint to be determined through parameter identification */
+    double k = 1;
+    double d = 1;
+    double a = 1;
+    double a_p = 1;
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
     std::vector<Eigen::MatrixXd> J;

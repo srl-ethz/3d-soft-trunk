@@ -15,7 +15,6 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     J.resize(st_params.num_segments);
 
     chamberMatrix <<  1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
-    fmt::print("Chamber Matrix:\n{}\n", chamberMatrix);
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
         int segment_id = section_id / st_params.sections_per_segment;
@@ -37,14 +36,15 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
         A_pseudo.block(2 * section_id+1, 2*segment_id+1, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
     
     }
-    double k;
+
     K(0,0) = k;
-    double d;
     D(0,0) = d;
-    double a;
     A(0,0) = a;
-    double a_p;
     A_pseudo(0,0) = a_p;
+    //fmt::print("A:\n{}\n", A);
+    //fmt::print("D:\n{}\n", D);
+    //fmt::print("K:\n{}\n", K);
+    //fmt::print("A_pseudo:\n{}\n", A_pseudo);
 }
 
 void SoftTrunkModel::updateState(const srl::State &state)
