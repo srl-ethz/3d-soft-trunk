@@ -68,7 +68,7 @@ private:
     // these internally used values have extra PCC section at end of each segment, whose values are always set to 0.
 
     
-    MatrixXd dxi_;
+    VectorXd dxi_;
     /** @brief the Jacobian that maps from q_ to xi_ */
     MatrixXd Jm_;
     /** @brief time derivative of Jm_ */
@@ -94,6 +94,8 @@ private:
     /** @brief pose of the base, relative to world */
     Eigen::Transform<double, 3, Eigen::Affine> H_base;
 
+    int num_joints;
+
 public:
     AugmentedRigidArm(const SoftTrunkParameters &st_params);
 
@@ -117,7 +119,7 @@ public:
     /** @brief current joint angles of the augmented rigid arm
      * @todo this is exposed because I want it in solve_tip_force for visualization, figure out more elegant solution....
      */
-    MatrixXd xi_;
+    VectorXd xi_;
 
     /** @brief the pose of the rigid body at the tip of segment i, of the Drake model (relative to base frame), i.e. tip position for segment i calculated with forward kinematics using the PCC approximation. 
      * @param segment segment id. 0 for first segment, and so on

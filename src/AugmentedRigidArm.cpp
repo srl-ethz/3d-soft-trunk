@@ -45,7 +45,7 @@ void AugmentedRigidArm::setup_drake_model()
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    int num_joints = multibody_plant->num_joints() - 2; //subtract one mystery joint, and one fixed joint at the base
+    num_joints = multibody_plant->num_joints() - 2; //subtract one mystery joint, and one fixed joint at the base
     
     // check that parameters make sense, just in case
     assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1)+1);
@@ -84,6 +84,8 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
     double l; // length of current section
     int joint_id_head; // index of first joint in section (5 joints per section)
     int segment_id;
+    double prismatic_value = q_(0);
+    q_.segment(0,q_.size()-1) = q_.segment(1,q_.size()-1);
     for (int section_id = 0; section_id < st_params.num_segments * (st_params.sections_per_segment + 1); ++section_id)
     {
         segment_id = section_id / (st_params.sections_per_segment + 1);
@@ -111,22 +113,9 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         t0 = t1;
         p0 = p1;
     }
-    fmt::print("xi_:\n{}\n", xi_);
-    fmt::print("Jm_:\n{}\n", Jm_);
-    fmt::print("MapNormal:\n{}\n", map_normal2expanded);
 
-    //xi_.tail(xi_.size()-1) = xi_.head(xi_.size()-1);
-    xi_(0) = 1;
-
-    Eigen::MatrixXd Jm_intermediate;
-    Jm_intermediate = Jm_;
-    Jm_ = MatrixXd::Zero(Jm_intermediate.rows(), Jm_intermediate.cols());
-    Jm_(0,0) = 1;
-    Jm_.bottomRightCorner(Jm_intermediate.rows(),Jm_intermediate.cols()) = Jm_intermediate;
-
-    fmt::print("xi_:\n{}\n", xi_);
-    fmt::print("Jm_:\n{}\n", Jm_);
-    fmt::print("MapNormal:\n{}\n", map_normal2expanded);
+    xi_.segment(1,num_joints-1) = xi_.segment(0,num_joints-1);
+    xi_(0) = prismatic_value;
 }
 
 void AugmentedRigidArm::update_drake_model()
@@ -360,6 +349,10 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         p0 = p1;
         t0 = t1;
     }
+    Eigen::MatrixXd Jm_intermediate;
+    Jm_intermediate = Jm_.block(0,0,Jm_.rows()-1,Jm_.cols()-1);
+    Jm_(0,0) = 1;
+    Jm_.bottomRightCorner(Jm_intermediate.rows(),Jm_intermediate.cols()) = Jm_intermediate;
 }
 
 void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq)
@@ -387,11 +380,9 @@ void AugmentedRigidArm::update(const srl::State &state)
     // calculate Jacobian
     update_Jm(map_normal2expanded * state.q);
     dxi_ = Jm_ * map_normal2expanded * state.dq;
-    fmt::print("xi: {}\n dxi: {}\n",xi_.size(), dxi_.size());
     // calculate dynamic parameters
     update_drake_model();
     // map to q space
-    fmt::print("B_xi: {}\n",B_xi_);
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);

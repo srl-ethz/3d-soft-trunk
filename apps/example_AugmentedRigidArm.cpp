@@ -21,8 +21,10 @@ void q_update(double seconds, srl::State& state) {
     // generate nice-looking poses
     int dof = state.q.size();
     for (int i = 0; i < dof/2 ; i++) {
-        state.q(2 * i + 0) = 1.6;// * sin(seconds * (double) i / dof);
-        state.q(2 * i + 1) = 0.8;// * cos(seconds * (double) i / dof);
+        state.q(1) = 1 * sin(seconds * (double) i / dof);
+        state.q(2) = 1 * cos(seconds * (double) i / dof);
+        state.q(3) = 1 * sin(seconds * (double) i / dof);
+        state.q(4) = 1 * cos(seconds * (double) i / dof);
 
     }
 }
@@ -44,14 +46,16 @@ int main() {
         fmt::print("------------\n");
         fmt::print("q:{}\n", state.q.transpose());
         // the rigid model's parameters are a too big to easily comprehend so view them in PCC parameter space
+        /*
         fmt::print("B:{}\n", ara.B);
         fmt::print("g:{}\n", ara.g);
         fmt::print("J:{}\n", ara.J[st_params.num_segments-1]);
         fmt::print("H_tip:{}\n", ara.get_H_tip().matrix());
+        */
         r.sleep();
     }
 
     fmt::print("switching to simulation mode...\n");
-    ara.simulate();
+    //ara.simulate();
     return 1;
 }
