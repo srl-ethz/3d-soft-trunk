@@ -30,6 +30,8 @@ class MPC_ts: public ControllerPCC{
         bool solved; 
         //OptiSol sol; 
 
+        MX q;
+        MX q_dot; 
         MX A;  // state-space
         MX B;
         MX w;  // additional terms not in state-space

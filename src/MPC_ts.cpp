@@ -121,6 +121,47 @@ MatrixXd ee_position_1(VectorXd thetax, VectorXd thetay, VectorXd length1, Vecto
 
 }
 
+MatrixXd ee_position_2(VectorXd thetax, VectorXd thetay, VectorXd length1, VectorXd length2){
+
+    MatrixXd len1 = MatrixXd::Zero(3,2);
+    MatrixXd len2 = MatrixXd::Zero(3,2);
+
+    VectorXd theta(2); 
+    theta << sqrt(pow(thetax(0),2)+pow(thetay(0),2)), sqrt(pow(thetax(1),2)+pow(thetay(1),2)); 
+
+    // std::cout << "~~~~~~~~~~~~~~~~~~~" << std::endl;
+    // std::cout << "theta " << theta(0) << " " << sin(theta(0)/2)/theta(0) << " sin(theta)/theta" << std::endl; 
+    // std::cout << "~~~~~~~~~~~~~~~~~~~" << std::endl;
+    
+
+    for (int i = 0; i<2 ; i++){
+
+
+        // if (theta(i) != 0){
+        // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+        // }
+        // else {
+        //     len1(2,i) = length1(i);
+        // }
+
+        len1(2,i) = 0.98*length1(i); 
+        len2(2,i) = length2(i); 
+
+    }
+
+    MatrixXd totRot = Roty_1(-thetax(0)/2)*Rotx_1(-thetay(0)/2);
+    MatrixXd inter(3,1);
+
+    inter = totRot*len1.col(0); 
+    totRot *= Roty_1(-thetax(0)/2)*Rotx_1(-thetay(0)/2); 
+    inter += totRot*len2.col(0); 
+    totRot *= Roty_1(-thetax(1)/2)*Rotx_1(-thetay(1)/2);  
+    inter += totRot*len1.col(1);
+
+    return inter; 
+    
+}
+
 
 
 
@@ -135,6 +176,8 @@ MPC_ts::MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorT
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
     solved = false; 
+
+    //OptiAdvanced ctrl_deb = ctrl.debug();
 
     control_thread = std::thread(&MPC_ts::control_loop, this);
 }
@@ -158,9 +201,11 @@ void MPC_ts::control_loop(){
 
         Vector3d ee_x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
 
+        std::cout << "=========================================" << std::endl; 
         std::cout << "End-effector position real : " << ee_x.transpose() << std::endl;  
 
         MatrixXd ee_t = MatrixXd::Zero(3,1); 
+        MatrixXd ee_s = MatrixXd::Zero(3,1);
 
         VectorXd thetax(2), thetay(2), length1(2), length2(2); 
 
@@ -180,10 +225,12 @@ void MPC_ts::control_loop(){
         }
 
         ee_t = ee_position_1(thetax, thetay, length1, length2); 
+        ee_s = ee_position_2(thetax, thetay, length1, length2);
 
     
-        std::cout << "End-effector position mine : " << ee_t.transpose() << std::endl;
-
+        std::cout << "End-effector position mine (long): " << ee_t.transpose() << std::endl;
+        std::cout << "End-effector position mine (short): " << ee_s.transpose() << std::endl;
+        std::cout << "=========================================" << std::endl;
 
 
         sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
@@ -209,6 +256,8 @@ void MPC_ts::control_loop(){
 
         q_0_temp = DM::nan(st_params.q_size, 1);
         q_dot_0_temp = DM::nan(st_params.q_size, 1);
+        DM q_0_large = DM::nan(st_params.q_size, Horizon+1);    // needed for warm-start
+        DM q_dot_0_large = DM::nan(st_params.q_size, Horizon+1); 
 
         // OLD IMPLEMENTATION
         //DM sp_B_temp(Sparsity::dense(2*st_params.q_size, 2*st_params.num_segments));
@@ -221,6 +270,11 @@ void MPC_ts::control_loop(){
         std::copy(x_ref.data(), x_ref.data() + x_ref.size(), x_r_temp.ptr()); 
         std::copy(state.q.data(), state.q.data() + state.q.size(), q_0_temp.ptr());
         std::copy(state.dq.data(), state.dq.data() + state.dq.size(), q_dot_0_temp.ptr());
+
+        for (int i = 0; i < Horizon+1; i++){
+            q_0_large(Slice(),i) = q_0_temp; 
+            q_dot_0_large(Slice(),i) = q_dot_0_temp; 
+        }
 
 
         // solve problem
@@ -236,7 +290,12 @@ void MPC_ts::control_loop(){
         ctrl.set_value(q_0, q_0_temp); 
         ctrl.set_value(q_dot_0, q_dot_0_temp); 
         ctrl.set_value(u_prev, u_temp); 
+
+        ctrl.set_initial(q, q_0_large);
+        ctrl.set_initial(q_dot, q_dot_0_large);
+
         OptiSol sol = ctrl.solve(); 
+         
         
         if (!solved){
             solved = TRUE; 
@@ -289,8 +348,8 @@ Opti MPC_ts::define_problem(){
     
     Opti prob = casadi::Opti();
 
-    MX q = prob.variable(st_params.q_size, Horizon+1);
-    MX q_dot = prob.variable(st_params.q_size, Horizon+1);
+    q = prob.variable(st_params.q_size, Horizon+1);
+    q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
     q_0 = prob.parameter(st_params.q_size,1);
@@ -316,7 +375,10 @@ Opti MPC_ts::define_problem(){
     MX T1 = MX::zeros(3,1);
     MX T2 = MX::zeros(st_params.q_size,1);
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*500; 
+    MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
+    MX p_max = MX::ones(2*st_params.num_segments,1)*500;
+
+    MX Du = MX::ones(2*st_params.num_segments,1)*100; 
 
     MX end_effector = MX::zeros(3,1); 
 
@@ -329,8 +391,8 @@ Opti MPC_ts::define_problem(){
     //T2 = q_dot_r;  //terminal condition with delta formulation
 
     MX Q = MX::eye(3); 
-    MX Q2 = MX::eye(st_params.q_size); 
-    MX R = MX::eye(2*st_params.num_segments);
+    MX Q2 = MX::eye(st_params.q_size)*1e-6; 
+    MX R = MX::eye(2*st_params.num_segments)*1e-6;
 
     MX thetax = MX::zeros(2,1);
     MX thetay = MX::zeros(2,1);
@@ -340,12 +402,12 @@ Opti MPC_ts::define_problem(){
     std::cout << "Variables initialized" << std::endl; 
 
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
+    end_effector = MX::zeros(3,1);
 
     for (int k = 0; k < Horizon; k++) 
     {
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
-        J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep lomit on speeds
-        end_effector = MX::zeros(3,1); 
+        //J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
 
         for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
@@ -374,7 +436,7 @@ Opti MPC_ts::define_problem(){
         length1(kk) = -st_params.lengths[2*kk]; 
         length2(kk) = -st_params.lengths[2*kk+1];
         
-        //end_effector += ee_position(q(2*kk,Horizon), q(2*kk+1,Horizon), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
+        // end_effector += ee_position(q(2*kk,Horizon), q(2*kk+1,Horizon), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
     }
 
     end_effector = ee_position(thetax, thetay, length1, length2);
@@ -419,20 +481,24 @@ Opti MPC_ts::define_problem(){
     prob.subject_to(-Du <= (u(Slice(),0)-u_prev) <= Du); 
     for (int k = 1; k < Horizon/4; k++){
         prob.subject_to(-Du <= (u(Slice(),k)-u(Slice(),k-1)) <= Du); 
+        prob.subject_to(p_min < u(Slice(), k) < p_max);
     }
 
     // terminal constraint
 
 
-    //prob.subject_to( fabs(end_effector - x_r) <= 1*T1); 
+    prob.subject_to( fabs(end_effector - x_r) <= 1*T1); 
 
     //prob.subject_to(end_effector == T1);
     // prob.subject_to(q_dot(Slice(),Horizon) == T2);
 
     std::cout << "Constraints initialized" << std::endl;
 
-    
-    prob.solver("ipopt");
+
+    Dict opts_dict=Dict();   // to stop printing out solver data
+    opts_dict["ipopt.acceptable_tol"] = 1e4;
+
+    prob.solver("ipopt", opts_dict);
 
     std::cout<< "MPC problem initialized correctly."<< std::endl; 
 
@@ -542,46 +608,50 @@ MX MPC_ts::axis_angle(MX thetax, MX thetay){
 
 }
 
-MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // computes position of end effector for each segment
+MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // computes position of end effector for each segment (simplified version)
 
 
-    MX tot_rot = axis_angle(thetax(0), thetay(0));
+    //MX tot_rot = axis_angle(thetax(0), thetay(0));
 
     MX len1 = MX::zeros(3,2);
     MX len2 = MX::zeros(3,2);
 
-    MX theta(2,1); 
-    theta(0) = sqrt(pow(thetax(0),2)+pow(thetay(0),2));
-    theta(1) = sqrt(pow(thetax(1),2)+pow(thetay(1),2)); 
+    // MX theta(2,1); 
+    // theta(0) = sqrt(pow(thetax(0),2)+pow(thetay(0),2));
+    // theta(1) = sqrt(pow(thetax(1),2)+pow(thetay(1),2)); 
 
 
     for (int i = 0; i<2 ; i++){
 
 
-        if (!theta(i).is_zero()){
-        len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
-        }
-        else {
-            len1(2,i) = length1(i);
-        }
-
+        // if (!theta(i).is_zero()){
+        // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+        // }
+        // else {
+        //     len1(2,i) = length1(i);
+        // }
+        // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+        len1(2,i) = 0.98*length1(i);
         len2(2,i) = length2(i); 
 
     }
 
-    MX inter(3,1);
+    // MX inter(3,1);
     
-    inter = mtimes(tot_rot, len1(Slice(), 0));
+    // inter = mtimes(tot_rot, len1(Slice(), 0)); 
+    // tot_rot = mtimes(tot_rot, axis_angle(thetax(0), thetay(0)));
+    // inter += mtimes(tot_rot, len2(Slice(),0));
+    // tot_rot = mtimes(tot_rot, axis_angle(thetax(1), thetay(1))); 
+    // inter += mtimes(tot_rot, len1(Slice(),1));
 
-    //std::cout << "Inter step : " << inter << std::endl; 
+    MX totRot = mtimes(Roty(-thetax(0)/2),Rotx(-thetay(0)/2));
+    MX inter(3,1);
 
-    tot_rot = mtimes(tot_rot, axis_angle(thetax(0), thetay(0)));
-
-    inter += mtimes(tot_rot, len2(Slice(),0));
-
-    tot_rot = mtimes(tot_rot, axis_angle(thetax(1), thetay(1))); 
-
-    inter += mtimes(tot_rot, len1(Slice(),1));
+    inter = mtimes(totRot, len1(Slice(),0)); 
+    totRot = mtimes(totRot, mtimes(Roty(-thetax(0)/2), Rotx(-thetay(0)/2))); 
+    inter += mtimes(totRot, len2(Slice(),0)); 
+    totRot = mtimes(totRot, mtimes(Roty(-thetax(1)/2),Rotx(-thetay(1)/2)));  
+    inter += mtimes(totRot, len1(Slice(),1));
 
      
     return inter;  
