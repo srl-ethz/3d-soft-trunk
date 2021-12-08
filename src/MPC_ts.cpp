@@ -68,11 +68,6 @@ MatrixXd axis_angle_1(double thetax, double thetay){
 
 MatrixXd ee_position_1(VectorXd thetax, VectorXd thetay, VectorXd length1, VectorXd length2){    // computes position of end effector for each segment
 
-    // MatrixXd rotx = Rotx_1(thetay); 
-    // MatrixXd roty = Roty_1(thetax); 
-
-    //MatrixXd tot_rot = -rotx * roty; 
-
     MatrixXd tot_rot = axis_angle_1(thetax(0), thetay(0));
 
     MatrixXd len1 = MatrixXd::Zero(3,2);
@@ -170,8 +165,8 @@ MatrixXd ee_position_2(VectorXd thetax, VectorXd thetay, VectorXd length1, Vecto
 MPC_ts::MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
 
-    Horizon = 20;
-    dt = 1./10;
+    Horizon = 5;
+    dt = 1./5;
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
@@ -216,12 +211,6 @@ void MPC_ts::control_loop(){
             length1(kk) = -st_params.lengths[2*kk]; 
             length2(kk) = -st_params.lengths[2*kk+1]; 
 
-            //ee_t += ee_position_1(state.q(2*kk,0), state.q(2*kk+1,0), -st_params.lengths[2*kk], - st_params.lengths[2*kk+1]); 
-
-            //std::cout << "theta_x : " << state.q(2*kk,0) << std::endl; 
-            // std::cout << "theta_y : " << state.q(2*kk+1,0) << std::endl; 
-
-            //std::cout << "temp = " << ee_t << std::endl; 
         }
 
         ee_t = ee_position_1(thetax, thetay, length1, length2); 
@@ -258,11 +247,8 @@ void MPC_ts::control_loop(){
         q_dot_0_temp = DM::nan(st_params.q_size, 1);
         DM q_0_large = DM::nan(st_params.q_size, Horizon+1);    // needed for warm-start
         DM q_dot_0_large = DM::nan(st_params.q_size, Horizon+1); 
-
-        // OLD IMPLEMENTATION
-        //DM sp_B_temp(Sparsity::dense(2*st_params.q_size, 2*st_params.num_segments));
-        //DM q_r_temp(Sparsity::dense(st_params.q_size, 1));
-        //DM q_dot_r_temp(Sparsity::dense(st_params.q_size, 1));  // conversion placeholders
+        DM u_large = DM::nan(2*st_params.num_segments, Horizon); 
+        
 
         std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
         std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
@@ -281,6 +267,10 @@ void MPC_ts::control_loop(){
 
         if (!solved){
             u_temp = DM::zeros(2*st_params.num_segments,1); 
+        }
+
+        for (int i = 0; i < Horizon; i++){
+            u_large(Slice(),i) = u_temp; 
         }
 
         ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
@@ -313,7 +303,6 @@ void MPC_ts::control_loop(){
         std::cout << "solution :" << u_temp << std::endl;
         
         p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
-        //std::copy(u_temp.data(), u_temp.data() + u_temp.size(), p_temp);  // <<<<<<<<<<<< error, missing DM to Eigen part
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),2*st_params.num_segments,1 ); 
 
@@ -382,16 +371,11 @@ Opti MPC_ts::define_problem(){
 
     MX end_effector = MX::zeros(3,1); 
 
-    //std::cout << "Delta u = " << Du << std::endl; 
-
-    // for (int i = 0; i < 3; i++){
-    //     T1(i) == fabs(x_r(i)); 
-    // }
     T1 = fabs(x_r); 
-    //T2 = q_dot_r;  //terminal condition with delta formulation
+    T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
     MX Q = MX::eye(3); 
-    MX Q2 = MX::eye(st_params.q_size)*1e-6; 
+    MX Q2 = MX::eye(st_params.q_size)*1e-8; 
     MX R = MX::eye(2*st_params.num_segments)*1e-6;
 
     MX thetax = MX::zeros(2,1);
@@ -402,12 +386,12 @@ Opti MPC_ts::define_problem(){
     std::cout << "Variables initialized" << std::endl; 
 
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
-    end_effector = MX::zeros(3,1);
+    //end_effector = MX::zeros(3,1);
 
     for (int k = 0; k < Horizon; k++) 
     {
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
-        //J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
+        J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
 
         for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
@@ -427,7 +411,7 @@ Opti MPC_ts::define_problem(){
     }
 
 
-    end_effector = MX::zeros(3,1);    // needed also later for terminal constraint
+    //end_effector = MX::zeros(3,1);    // needed also later for terminal constraint
 
     for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
@@ -479,17 +463,18 @@ Opti MPC_ts::define_problem(){
     }
 
     prob.subject_to(-Du <= (u(Slice(),0)-u_prev) <= Du); 
-    for (int k = 1; k < Horizon/4; k++){
-        prob.subject_to(-Du <= (u(Slice(),k)-u(Slice(),k-1)) <= Du); 
+    for (int k = 0; k < Horizon/4; k++){
+        prob.subject_to(-Du <= (u(Slice(),k+1)-u(Slice(),k)) <= Du); 
         prob.subject_to(p_min < u(Slice(), k) < p_max);
     }
 
     // terminal constraint
 
 
-    prob.subject_to( fabs(end_effector - x_r) <= 1*T1); 
+    //prob.subject_to( fabs(end_effector - x_r) <= 1*T1); 
+    prob.subject_to(q_dot(Slice(),Horizon) == T2); 
 
-    //prob.subject_to(end_effector == T1);
+    // prob.subject_to(end_effector == T1);
     // prob.subject_to(q_dot(Slice(),Horizon) == T2);
 
     std::cout << "Constraints initialized" << std::endl;
@@ -497,6 +482,7 @@ Opti MPC_ts::define_problem(){
 
     Dict opts_dict=Dict();   // to stop printing out solver data
     opts_dict["ipopt.acceptable_tol"] = 1e4;
+    opts_dict["ipopt.print_level"] = 3; 
 
     prob.solver("ipopt", opts_dict);
 
@@ -566,19 +552,6 @@ MX MPC_ts::Roty(MX theta){
 
     return rot; 
 }
-
-// MX MPC_ts::ee_position(MX thetax, MX thetay, double length){    // computes position of end effector for each segment
-
-//     MX rotx = Rotx(thetay); 
-//     MX roty = Roty(thetax); 
-
-//     MX tot_rot = mtimes(-rotx, roty); 
-//     MX len = MX::zeros(3,1);
-//     len(2,0) = length; 
-
-//     return mtimes(tot_rot, len); 
-
-// }
 
 MX MPC_ts::axis_angle(MX thetax, MX thetay){
 
