@@ -194,10 +194,10 @@ void MPC_ts::control_loop(){
             continue;
         } 
 
-        Vector3d ee_x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();  // needed to fill global variable
 
         std::cout << "=========================================" << std::endl; 
-        std::cout << "End-effector position real : " << ee_x.transpose() << std::endl;  
+        std::cout << "End-effector position real : " << x.transpose() << std::endl;  
 
         MatrixXd ee_t = MatrixXd::Zero(3,1); 
         MatrixXd ee_s = MatrixXd::Zero(3,1);

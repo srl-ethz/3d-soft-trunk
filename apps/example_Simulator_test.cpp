@@ -1,6 +1,7 @@
 #include <3d-soft-trunk/ControllerPCC.h>
 #include "3d-soft-trunk/QuasiStatic.h"
 #include "3d-soft-trunk/PID.h"
+#include "3d-soft-trunk/MPC_ts.h"
 #include <chrono>
 
 int main(){
@@ -8,8 +9,9 @@ int main(){
     SoftTrunkParameters st_params;
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
-    QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
+    //QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
     //PID pid(st_params, CurvatureCalculator::SensorType::simulator);
+    MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
     double time = 5.0;
@@ -43,9 +45,9 @@ int main(){
     int new_counter = 0; 
 
     
-    qs.set_state(state);
+    mpc2.set_state(state);
     const double hz = 1./dt;
-    qs.set_frequency(hz);
+    mpc2.set_frequency(hz);
 
     auto start = std::chrono::steady_clock::now();
 
@@ -55,9 +57,9 @@ int main(){
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
         x_ref = trajectory; 
 
-        qs.set_ref(x_ref); 
+        mpc2.set_ref(x_ref); 
 
-        qs.get_x(x_act); 
+        mpc2.get_x(x_act); 
 
         if ( (x_ref - x_act).norm() < tol){
             t += dt;  

@@ -52,7 +52,7 @@ add_executable(example_QuasiStatic example_QuasiStatic.cpp)
 target_link_libraries(example_QuasiStatic QuasiStatic)
 
 add_executable(example_Simulator_test example_Simulator_test.cpp)
-target_link_libraries(example_Simulator_test ControllerPCC QuasiStatic PID)
+target_link_libraries(example_Simulator_test ControllerPCC QuasiStatic PID MPC_ts)
 
 add_executable(example_casadi example_casadi.cpp)
 target_link_libraries(example_casadi casadi ControllerPCC)
