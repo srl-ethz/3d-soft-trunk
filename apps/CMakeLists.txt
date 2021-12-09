@@ -1,4 +1,3 @@
-
 ### examples
 add_executable(example_CurvatureCalculator example_CurvatureCalculator.cpp)
 target_link_libraries(example_CurvatureCalculator CurvatureCalculator)
@@ -50,6 +49,9 @@ target_link_libraries(play_movement SerialInterface ControllerPCC)
 
 add_executable(example_QuasiStatic example_QuasiStatic.cpp)
 target_link_libraries(example_QuasiStatic QuasiStatic)
+
+add_executable(prismatic_datagathering prismatic_datagathering.cpp)
+target_link_libraries(prismatic_datagathering ValveController QualisysClient)
 
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
