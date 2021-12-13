@@ -8,8 +8,13 @@ using namespace casadi;
 class MPC_ts: public ControllerPCC{
     public:
         MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type);
+        void set_ref(const MatrixXd refx);
+        const int Horizon = 5;
 
     protected:
+        MatrixXd traj_ref = MatrixXd::Zero(3, Horizon+1);
+        MatrixXd dtraj_ref = MatrixXd::Zero(3, Horizon+1);
+        MatrixXd ddtraj_ref = MatrixXd::Zero(3, Horizon+1);
 
     private:
         void control_loop(); 
@@ -25,7 +30,7 @@ class MPC_ts: public ControllerPCC{
         VectorXd p_prev = VectorXd::Zero(2*st_params.num_segments);
         VectorXd tau_ref;
 
-        int Horizon;
+        
         Opti ctrl;
         bool solved; 
         //OptiSol sol; 
@@ -37,6 +42,7 @@ class MPC_ts: public ControllerPCC{
         MX w;  // additional terms not in state-space
         MX u; 
         MX x_r; 
+        MX tr_r; 
         MX q_0;
         MX q_dot_0;
         MX u_prev; 
@@ -53,6 +59,7 @@ class MPC_ts: public ControllerPCC{
         DM sp_B_temp;
         DM sp_w_temp; 
         DM x_r_temp;  // conversion placeholders
+        DM tr_r_temp;
         DM q_0_temp;
         DM q_dot_0_temp;
 };

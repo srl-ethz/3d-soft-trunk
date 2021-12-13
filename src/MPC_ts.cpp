@@ -165,7 +165,7 @@ MatrixXd ee_position_2(VectorXd thetax, VectorXd thetay, VectorXd length1, Vecto
 MPC_ts::MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
 
-    Horizon = 5;
+    // Horizon = 5;
     dt = 1./5;
 
     // Take model
@@ -241,7 +241,8 @@ void MPC_ts::control_loop(){
         sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
         sp_w_temp = DM::nan(2*st_params.q_size, 1);
 
-        x_r_temp = DM::nan(3,1);  // conversion placeholders
+        //x_r_temp = DM::nan(3,1);  // conversion placeholders
+        tr_r_temp = DM::nan(3,Horizon+1); 
 
         q_0_temp = DM::nan(st_params.q_size, 1);
         q_dot_0_temp = DM::nan(st_params.q_size, 1);
@@ -253,7 +254,8 @@ void MPC_ts::control_loop(){
         std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
         std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
         std::copy(sp_w.data(), sp_w.data() + sp_w.size(), sp_w_temp.ptr());
-        std::copy(x_ref.data(), x_ref.data() + x_ref.size(), x_r_temp.ptr()); 
+        //std::copy(x_ref.data(), x_ref.data() + x_ref.size(), x_r_temp.ptr());
+        std::copy(traj_ref.data(), traj_ref.data() + traj_ref.size(), tr_r_temp.ptr()); 
         std::copy(state.q.data(), state.q.data() + state.q.size(), q_0_temp.ptr());
         std::copy(state.dq.data(), state.dq.data() + state.dq.size(), q_dot_0_temp.ptr());
 
@@ -276,7 +278,8 @@ void MPC_ts::control_loop(){
         ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
         ctrl.set_value(B, sp_B_temp);
         ctrl.set_value(w, sp_w_temp); 
-        ctrl.set_value(x_r, x_r_temp);
+        //ctrl.set_value(x_r, x_r_temp);
+        ctrl.set_value(tr_r, tr_r_temp);
         ctrl.set_value(q_0, q_0_temp); 
         ctrl.set_value(q_dot_0, q_dot_0_temp); 
         ctrl.set_value(u_prev, u_temp); 
@@ -350,7 +353,8 @@ Opti MPC_ts::define_problem(){
     B = prob.parameter(2*st_params.q_size, 2*st_params.num_segments);
     w = prob.parameter(2*st_params.q_size, 1); 
 
-    x_r = prob.parameter(3,1); 
+    //x_r = prob.parameter(3,1); 
+    tr_r = prob.parameter(3, Horizon+1); 
 
     u_prev = prob.parameter(2*st_params.num_segments,1); 
 
@@ -371,7 +375,7 @@ Opti MPC_ts::define_problem(){
 
     MX end_effector = MX::zeros(3,1); 
 
-    T1 = fabs(x_r); 
+    T1 = fabs(tr_r(Slice(), Horizon)); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
     MX Q = MX::eye(3); 
@@ -405,7 +409,7 @@ Opti MPC_ts::define_problem(){
 
         end_effector = ee_position(thetax, thetay, length1, length2); 
 
-        J += mtimes((end_effector-x_r).T(), mtimes(Q, (end_effector-x_r))); 
+        J += mtimes((end_effector-tr_r(Slice(),k)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k)))); 
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
     }
@@ -426,7 +430,7 @@ Opti MPC_ts::define_problem(){
     end_effector = ee_position(thetax, thetay, length1, length2);
 
     
-    J += mtimes((end_effector-x_r).T(), mtimes(Q, (end_effector-x_r)));
+    J += mtimes((end_effector-tr_r(Slice(),Horizon)).T(), mtimes(Q, (end_effector-tr_r(Slice(), Horizon))));
 
     //J += mtimes(q(Slice(),Horizon).T(), mtimes(Q, q(Slice(),Horizon))); 
     //J += mtimes(q_dot(Slice(),Horizon).T(), mtimes(Q, q_dot(Slice(),Horizon)));  // terminal cost
@@ -482,7 +486,7 @@ Opti MPC_ts::define_problem(){
 
     Dict opts_dict=Dict();   // to stop printing out solver data
     opts_dict["ipopt.acceptable_tol"] = 1e4;
-    opts_dict["ipopt.print_level"] = 3; 
+    opts_dict["ipopt.print_level"] = 1; 
 
     prob.solver("ipopt", opts_dict);
 
@@ -629,4 +633,37 @@ MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // comp
      
     return inter;  
 
+}
+
+void MPC_ts::set_ref(const MatrixXd refx){
+    std::lock_guard<std::mutex> lock(mtx);
+    MatrixXd x_r = refx;
+    // if (x_ref.colwise().norm() > 0.27) {
+    //     x_r = 0.27*x_ref.colwise().normalized();
+    // }
+
+    int length = x_r.cols();
+    int i; 
+    if (length == 0){
+        ; 
+    }
+    else if (length <= Horizon+1){
+        for (i = 0; i < length; i++){
+            this->traj_ref.col(i) = x_r.col(i); 
+        }
+        for (i = length; i< Horizon+1; i++){
+            this->traj_ref.col(i) = x_r.col(length-1); 
+        }
+    }
+    else{
+        for (i = 0; i< Horizon+1; i++){
+            this->traj_ref.col(i) = x_r.col(i);
+        }
+    }
+
+
+    this->x_ref = traj_ref.col(0); 
+
+    if (!is_initial_ref_received)
+        is_initial_ref_received = true;
 }
