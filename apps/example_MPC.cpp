@@ -6,6 +6,7 @@
 int main(){
 
     bool task_space_control = true;   // set to true to operate in task space   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    bool logger = true; 
 
     std::cout << "Task space control enabled : " << task_space_control << std::endl; 
 
@@ -28,7 +29,7 @@ int main(){
     srl::State state = st_params.getBlankState();
     srl::State state_ref = st_params.getBlankState(); 
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 5.0;
+    double time = 10.0;
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -48,7 +49,9 @@ int main(){
     //Vector3d q_ref, q_act; 
     //Vector3d dq_ref;
 
-    Vector3d trajectory, x_act; 
+    Vector3d x_act; 
+    MatrixXd x_ref; 
+    MatrixXd trajectory = MatrixXd::Zero(3, 1);
 
     double coef = 2 * 3.1415 / time;
     double r = 0.1;
@@ -70,6 +73,10 @@ int main(){
     const double hz = 1./dt;
     //mpc1.set_frequency(hz);
     mpc2.set_frequency(hz);
+
+    if (logger){
+        mpc2.toggle_log();
+    }
 
     auto start = std::chrono::steady_clock::now();
 
@@ -150,9 +157,15 @@ int main(){
 
         while (t < time/3){
 
-            trajectory << 0.099968, -0.00253146, -0.215; 
+            // trajectory << 0.099968, -0.00253146, -0.215; 
+            trajectory(0,0) = 0.099968; 
+            trajectory(1,0) = -0.00253146; 
+            trajectory(2,0) = -0.215; 
+    
 
-            mpc2.set_ref(trajectory); 
+            x_ref = trajectory; 
+
+            mpc2.set_ref(x_ref); 
             mpc2.get_x(x_act);
 
             //std::cout << "End_effector other :" << x_act.transpose() << std::endl; 
@@ -162,12 +175,13 @@ int main(){
             }
 
             if (counter < avg){
-                error_avg(counter) = (trajectory - x_act).norm(); 
+                error_avg(counter) = (trajectory.col(0) - x_act).norm(); 
                 counter ++; 
             }
 
             std::cout << "Error : " << error_avg.mean() << std::endl;
 
+            srl::sleep(0.04); 
             t += dt; 
 
         }
@@ -177,9 +191,14 @@ int main(){
 
         while (t < 2*time/3)
         {
-            trajectory << 0.0125192, -0.0992133, -0.215; 
+            // trajectory << 0.0125192, -0.0992133, -0.215; 
+            trajectory(0,0) = 0.0125192; 
+            trajectory(1,0) = -0.0992133; 
+            trajectory(2,0) = -0.215; 
 
-            mpc2.set_ref(trajectory); 
+            x_ref = trajectory;
+
+            mpc2.set_ref(x_ref); 
             mpc2.get_x(x_act);
 
             if (counter >= avg){
@@ -187,12 +206,13 @@ int main(){
             }
 
             if (counter < avg){
-                error_avg(counter) = (trajectory - x_act).norm(); 
+                error_avg(counter) = (trajectory.col(0) - x_act).norm(); 
                 counter ++; 
             }
 
             std::cout << "Error : " << error_avg.mean() << std::endl;
 
+            srl::sleep(0.04); 
             t += dt; 
 
         }
@@ -202,9 +222,14 @@ int main(){
 
         while (t < time)
         {
-            trajectory << -0.0962055, -0.0272855, -0.215;  
+            // trajectory << -0.0962055, -0.0272855, -0.215;  
+            trajectory(0,0) = -0.0962055; 
+            trajectory(1,0) = -0.0272855; 
+            trajectory(2,0) = -0.215; 
 
-            mpc2.set_ref(trajectory); 
+            x_ref = trajectory;
+
+            mpc2.set_ref(x_ref); 
             mpc2.get_x(x_act);
 
             if (counter >= avg){
@@ -212,12 +237,13 @@ int main(){
             }
 
             if (counter < avg){
-                error_avg(counter) = (trajectory - x_act).norm(); 
+                error_avg(counter) = (trajectory.col(0) - x_act).norm(); 
                 counter ++; 
             }
 
             std::cout << "Error : " << error_avg.mean() << std::endl;
 
+            srl::sleep(0.04); 
             t += dt; 
 
         }
@@ -225,7 +251,9 @@ int main(){
 
     }
 
-    
+    if (logger){
+        mpc2.toggle_log();
+    }
 
     std::cout << "Simulation end" << std::endl; 
 
