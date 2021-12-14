@@ -48,18 +48,28 @@ class MPC_ts: public ControllerPCC{
         MX u_prev; 
 
         DM u_temp; // input placeholder
-        MatrixXd p_temp; 
+        MatrixXd p_temp = MatrixXd::Zero(2*st_params.num_segments,1);
         VectorXd pxy;
 
-        MatrixXd sp_A;
-        MatrixXd sp_B;   // SS matrices
-        MatrixXd sp_w; 
+        MatrixXd sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
+        MatrixXd sp_B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);   // SS matrices
+        MatrixXd sp_w = MatrixXd::Zero(2*st_params.q_size, 1); 
 
-        DM sp_A_temp;
-        DM sp_B_temp;
-        DM sp_w_temp; 
-        DM x_r_temp;  // conversion placeholders
-        DM tr_r_temp;
-        DM q_0_temp;
-        DM q_dot_0_temp;
+        DM sp_A_temp = DM::nan(2*st_params.q_size, 2*st_params.q_size);
+        DM sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
+        DM sp_w_temp = DM::nan(2*st_params.q_size, 1); 
+
+        DM x_r_temp = DM::nan(3,1);  // conversion placeholders
+        DM tr_r_temp = DM::nan(3,Horizon+1); 
+        DM q_0_temp = DM::nan(st_params.q_size, 1);
+        DM q_dot_0_temp = DM::nan(st_params.q_size, 1);
+        DM q_0_large = DM::nan(st_params.q_size, Horizon+1);    // needed for warm-start
+        DM q_dot_0_large = DM::nan(st_params.q_size, Horizon+1); 
+        DM u_large = DM::nan(2*st_params.num_segments, Horizon);
+
+        MatrixXd sp_A_c = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
+        MatrixXd sp_B_c = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments); 
+        MatrixXd sp_w_c = MatrixXd::Zero(2*st_params.q_size, 1);
+        MatrixXd Ad; 
+        int length; 
 };

@@ -40,11 +40,11 @@ MatrixXd axis_angle_1(double thetax, double thetay){
     if (theta == 0){
         return rot; 
     }
-    if (thetax<0){   // just check this, since cos(phi) should always be positive
-        //theta = -theta; 
+    // if (thetax<0){   // just check this, since cos(phi) should always be positive
+    //     //theta = -theta; 
     
-        std::cout << "Negative rotation" << std::endl;  
-    }
+    //     std::cout << "Negative rotation" << std::endl;  
+    // }
 
     double ux = - thetay / theta; 
     double uy = - thetax / theta; 
@@ -196,6 +196,8 @@ void MPC_ts::control_loop(){
 
         x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();  // needed to fill global variable
 
+        // Debug for kinematics
+        /*
         std::cout << "=========================================" << std::endl; 
         std::cout << "End-effector position real : " << x.transpose() << std::endl;  
 
@@ -220,11 +222,12 @@ void MPC_ts::control_loop(){
         std::cout << "End-effector position mine (long): " << ee_t.transpose() << std::endl;
         std::cout << "End-effector position mine (short): " << ee_s.transpose() << std::endl;
         std::cout << "=========================================" << std::endl;
+        */
 
 
-        sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
-        sp_B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);  
-        sp_w = MatrixXd::Zero(2*st_params.q_size, 1);
+        // sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
+        // sp_B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);  
+        // sp_w = MatrixXd::Zero(2*st_params.q_size, 1);
 
         //MatrixXd sp_A(2*st_params.q_size, 2*st_params.q_size);
         //MatrixXd sp_B(2*st_params.q_size, 2*st_params.num_segments);   // SS matrices
@@ -237,18 +240,18 @@ void MPC_ts::control_loop(){
         //https://groups.google.com/g/casadi-users/c/npPcKItdLN8
         // DM <--> Eigen
 
-        sp_A_temp = DM::nan(2*st_params.q_size, 2*st_params.q_size);
-        sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
-        sp_w_temp = DM::nan(2*st_params.q_size, 1);
+        // sp_A_temp = DM::nan(2*st_params.q_size, 2*st_params.q_size);
+        // sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
+        // sp_w_temp = DM::nan(2*st_params.q_size, 1);
 
         //x_r_temp = DM::nan(3,1);  // conversion placeholders
-        tr_r_temp = DM::nan(3,Horizon+1); 
+        // tr_r_temp = DM::nan(3,Horizon+1); 
 
-        q_0_temp = DM::nan(st_params.q_size, 1);
-        q_dot_0_temp = DM::nan(st_params.q_size, 1);
-        DM q_0_large = DM::nan(st_params.q_size, Horizon+1);    // needed for warm-start
-        DM q_dot_0_large = DM::nan(st_params.q_size, Horizon+1); 
-        DM u_large = DM::nan(2*st_params.num_segments, Horizon); 
+        // q_0_temp = DM::nan(st_params.q_size, 1);
+        // q_dot_0_temp = DM::nan(st_params.q_size, 1);
+        // DM q_0_large = DM::nan(st_params.q_size, Horizon+1);    // needed for warm-start
+        // DM q_dot_0_large = DM::nan(st_params.q_size, Horizon+1); 
+        // DM u_large = DM::nan(2*st_params.num_segments, Horizon); 
         
 
         std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
@@ -305,7 +308,7 @@ void MPC_ts::control_loop(){
 
         std::cout << "solution :" << u_temp << std::endl;
         
-        p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
+        // p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),2*st_params.num_segments,1 ); 
 
@@ -368,8 +371,8 @@ Opti MPC_ts::define_problem(){
     MX T1 = MX::zeros(3,1);
     MX T2 = MX::zeros(st_params.q_size,1);
 
-    MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
-    MX p_max = MX::ones(2*st_params.num_segments,1)*500;
+    MX p_min = MX::ones(2*st_params.num_segments,1)*-1000;
+    MX p_max = MX::ones(2*st_params.num_segments,1)*1000;
 
     MX Du = MX::ones(2*st_params.num_segments,1)*100; 
 
@@ -500,9 +503,9 @@ void MPC_ts::get_state_space(MatrixXd B, MatrixXd c, MatrixXd g, MatrixXd K, Mat
     // already discretized
     // missing the constant coriolis + stuff, check paper
 
-    MatrixXd sp_A_c(2*st_params.q_size, 2*st_params.q_size);
-    MatrixXd sp_B_c(2*st_params.q_size, 2*st_params.num_segments); 
-    MatrixXd sp_w_c(2*st_params.q_size, 1);
+    // MatrixXd sp_A_c(2*st_params.q_size, 2*st_params.q_size);
+    // MatrixXd sp_B_c(2*st_params.q_size, 2*st_params.num_segments); 
+    // MatrixXd sp_w_c(2*st_params.q_size, 1);
 
     sp_A_c << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - B.inverse() * K, -B.inverse() * D;
     sp_B_c << MatrixXd::Zero(st_params.q_size, 2*st_params.num_segments), B.inverse()*A;
@@ -521,7 +524,7 @@ void MPC_ts::get_state_space(MatrixXd B, MatrixXd c, MatrixXd g, MatrixXd K, Mat
 
 MatrixXd MPC_ts::matrix_exponential(MatrixXd A, int size){
 
-    MatrixXd Ad = MatrixXd::Identity(size,size) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120;   //up to 5th order
+    Ad = MatrixXd::Identity(size,size) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120;   //up to 5th order
     return Ad; 
 }
 
@@ -642,7 +645,9 @@ void MPC_ts::set_ref(const MatrixXd refx){
     //     x_r = 0.27*x_ref.colwise().normalized();
     // }
 
-    int length = x_r.cols();
+    //std::cout << "reference : " << x_r << std::endl;
+
+    length = x_r.cols();
     int i; 
     if (length == 0){
         ; 
@@ -666,4 +671,6 @@ void MPC_ts::set_ref(const MatrixXd refx){
 
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
+
+    //std::cout << "Trajectory : " << traj_ref << std::endl; 
 }
