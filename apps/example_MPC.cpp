@@ -158,8 +158,8 @@ int main(){
         while (t < time/3){
 
             // trajectory << 0.099968, -0.00253146, -0.215; 
-            trajectory(0,0) = 0.099968; 
-            trajectory(1,0) = -0.00253146; 
+            trajectory(0,0) = 0.09; 
+            trajectory(1,0) = -0.01; 
             trajectory(2,0) = -0.215; 
     
 
@@ -181,7 +181,7 @@ int main(){
 
             std::cout << "Error : " << error_avg.mean() << std::endl;
 
-            srl::sleep(0.04); 
+            srl::sleep(0.03); 
             t += dt; 
 
         }
@@ -192,8 +192,8 @@ int main(){
         while (t < 2*time/3)
         {
             // trajectory << 0.0125192, -0.0992133, -0.215; 
-            trajectory(0,0) = 0.0125192; 
-            trajectory(1,0) = -0.0992133; 
+            trajectory(0,0) = 0.01; 
+            trajectory(1,0) = -0.09; 
             trajectory(2,0) = -0.215; 
 
             x_ref = trajectory;
@@ -212,7 +212,7 @@ int main(){
 
             std::cout << "Error : " << error_avg.mean() << std::endl;
 
-            srl::sleep(0.04); 
+            srl::sleep(0.03); 
             t += dt; 
 
         }
@@ -223,8 +223,8 @@ int main(){
         while (t < time)
         {
             // trajectory << -0.0962055, -0.0272855, -0.215;  
-            trajectory(0,0) = -0.0962055; 
-            trajectory(1,0) = -0.0272855; 
+            trajectory(0,0) = -0.09; 
+            trajectory(1,0) = 0.01; 
             trajectory(2,0) = -0.215; 
 
             x_ref = trajectory;
@@ -243,7 +243,7 @@ int main(){
 
             std::cout << "Error : " << error_avg.mean() << std::endl;
 
-            srl::sleep(0.04); 
+            srl::sleep(0.03); 
             t += dt; 
 
         }

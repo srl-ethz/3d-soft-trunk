@@ -15,7 +15,7 @@ int main(){
     MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 10.0;
+    double time = 10.0;  //10 for 6 turns
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -39,7 +39,7 @@ int main(){
     std::unique_ptr<CurvatureCalculator> cc;
 
     double coef = 12 * 3.1415 / time;
-    double r = 0.08;
+    double r = 0.1;
     double tol = 0.2;
     double t = 0;
     bool flag = 0; // to have 1 disturbance, and one only
@@ -60,7 +60,7 @@ int main(){
     }
      
 
-    while ( t < time){
+    while ( t < 1.1*time){
 
         //trajectory << r*cos(coef*t), r*sin(coef*t),-0.215;  // circular trajectory
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
@@ -70,6 +70,31 @@ int main(){
             trajectory(1,i) = r*sin(coef*(t+3*i*dt));
             trajectory(2,i) = -0.215;
         }
+
+        // for (int i = 0; i<mpc2.Horizon +1; i++){
+        //     if (t + 3*i*dt < time/4){
+        //         //trajectory(0,i) = 0.08;
+        //         trajectory(0,i) = 0.08*((t+3*i*dt) / (time/4)); // provide a slow approach 
+        //         //trajectory(1,i) = -0.08 + 0.16*((t+3*i*dt) / (time/4)); 
+        //         trajectory(1,i) = 0.08*((t+3*i*dt) / (time/4)); 
+        //         trajectory(2,i) = -0.25; 
+        //     }
+        //     if ((time/4 < t + 3*i*dt) && (t + 3*i*dt < time/2)){
+        //         trajectory(0,i) = 0.08 - 0.16*((t+3*i*dt-time/4) / (time/4));
+        //         trajectory(1,i) =  0.08; 
+        //         trajectory(2,i) = -0.25; 
+        //     }
+        //     if ((time/2 < t + 3*i*dt) && (t + 3*i*dt < 3*time/4)){
+        //         trajectory(0,i) = - 0.08; 
+        //         trajectory(1,i) = 0.08 - 0.16*((t+3*i*dt-time/2) / (time/4)); 
+        //         trajectory(2,i) = -0.25; 
+        //     }
+        //     if (3*time/4 < t + 3*i*dt){
+        //         trajectory(0,i) = -0.08 + 0.16*((t+3*i*dt-3*time/4) / (time/4));
+        //         trajectory(1,i) = -0.08; 
+        //         trajectory(2,i) = -0.25; 
+        //     }
+        // }
 
         // std::cout << "Future trajectory" << trajectory << std::endl; 
 
@@ -85,7 +110,7 @@ int main(){
 
         mpc2.get_x(x_act); 
 
-        srl::sleep(0.03); 
+        srl::sleep(0.03);  // 0.03 for circular 
         t+= dt; 
 
 
