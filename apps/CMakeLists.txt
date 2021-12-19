@@ -63,6 +63,9 @@ target_link_libraries(example_MPC casadi ControllerPCC MPC MPC_ts)
 add_executable(example_MPC_circular example_MPC_circular.cpp)
 target_link_libraries(example_MPC_circular casadi ControllerPCC MPC_ts QuasiStatic)
 
+add_executable(example_Controller_MPC example_Controller_MPC.cpp)
+target_link_libraries(example_Controller_MPC casadi ControllerPCC MPC MPC_ts)
+
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
