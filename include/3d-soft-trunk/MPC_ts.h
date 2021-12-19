@@ -72,4 +72,10 @@ class MPC_ts: public ControllerPCC{
         MatrixXd sp_w_c = MatrixXd::Zero(2*st_params.q_size, 1);
         MatrixXd Ad; 
         int length; 
+
+        MX rot; 
+        MX len1;
+        MX len2;
+        MX totRot;
+        MX inter = MX::zeros(3,1);
 };

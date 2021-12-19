@@ -166,7 +166,7 @@ MPC_ts::MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorT
     filename = "MPC_logger";
 
     // Horizon = 5;
-    dt = 1./5;
+    dt = 1./20;
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
@@ -378,12 +378,13 @@ Opti MPC_ts::define_problem(){
 
     MX end_effector = MX::zeros(3,1); 
 
-    T1 = fabs(tr_r(Slice(), Horizon)); 
+    T1 = fabs(tr_r(Slice(), Horizon));
+    //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
     MX Q = MX::eye(3); 
-    MX Q2 = MX::eye(st_params.q_size)*1e-8; 
-    MX R = MX::eye(2*st_params.num_segments)*1e-6;
+    MX Q2 = MX::eye(st_params.q_size)*1e-11; //-8 before
+    MX R = MX::eye(2*st_params.num_segments)*1e-14;
 
     MX thetax = MX::zeros(2,1);
     MX thetay = MX::zeros(2,1);
@@ -392,15 +393,20 @@ Opti MPC_ts::define_problem(){
 
     std::cout << "Variables initialized" << std::endl; 
 
+    int k, kk;
+
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
     //end_effector = MX::zeros(3,1);
 
-    for (int k = 0; k < Horizon; k++) 
+    //J += mtimes((u(Slice(),0)-u_prev).T(), mtimes(R, (u(Slice(),0)-u_prev))); 
+
+    for (k = 0; k < Horizon; k++) 
     {
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
         J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
+        //J += mtimes((u(Slice(),k+1)-u(Slice(),k)).T(), mtimes(R, (u(Slice(),k+1)-u(Slice(),k)))); 
 
-        for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
+        for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
             thetax(kk) = q(2*kk,k); 
             thetay(kk) = q(2*kk+1,k);
@@ -420,7 +426,7 @@ Opti MPC_ts::define_problem(){
 
     //end_effector = MX::zeros(3,1);    // needed also later for terminal constraint
 
-    for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
+    for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
         thetax(kk) = q(2*kk,Horizon); 
         thetay(kk) = q(2*kk+1,Horizon);
@@ -460,7 +466,7 @@ Opti MPC_ts::define_problem(){
     prob.subject_to(q(Slice(),0) == q_0);
     prob.subject_to(q_dot(Slice(),0) == q_dot_0);
 
-    for (int k = 0; k < Horizon; k++)
+    for (k = 0; k < Horizon; k++)
     {
         prob.subject_to(q(Slice(),k+1) == mtimes(A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(0, st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(0, st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(0,st_params.q_size))); 
         prob.subject_to(q_dot(Slice(),k+1) == mtimes(A(Slice(st_params.q_size, 2*st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(st_params.q_size, 2*st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(st_params.q_size, 2*st_params.q_size)));
@@ -470,7 +476,7 @@ Opti MPC_ts::define_problem(){
     }
 
     prob.subject_to(-Du <= (u(Slice(),0)-u_prev) <= Du); 
-    for (int k = 0; k < Horizon/4; k++){
+    for (k = 0; k < Horizon/4; k++){
         prob.subject_to(-Du <= (u(Slice(),k+1)-u(Slice(),k)) <= Du); 
         prob.subject_to(p_min < u(Slice(), k) < p_max);
     }
@@ -478,18 +484,21 @@ Opti MPC_ts::define_problem(){
     // terminal constraint
 
 
-    //prob.subject_to( fabs(end_effector - x_r) <= 1*T1); 
+    //prob.subject_to( fabs(end_effector) >= 0.5*T1); 
     prob.subject_to(q_dot(Slice(),Horizon) == T2); 
 
-    // prob.subject_to(end_effector == T1);
+    //prob.subject_to(end_effector == T1);
     // prob.subject_to(q_dot(Slice(),Horizon) == T2);
 
     std::cout << "Constraints initialized" << std::endl;
 
 
     Dict opts_dict=Dict();   // to stop printing out solver data
+    //opts_dict["ipopt.tol"] = 1e-4;
     opts_dict["ipopt.acceptable_tol"] = 1e4;
-    opts_dict["ipopt.print_level"] = 1; 
+    opts_dict["ipopt.print_level"] = 3; 
+    // opts_dict["jit"] = true;
+    // opts_dict["compiler"] = "shell"; 
 
     prob.solver("ipopt", opts_dict);
 
@@ -530,7 +539,7 @@ MatrixXd MPC_ts::matrix_exponential(MatrixXd A, int size){
 
 MX MPC_ts::Rotx(MX theta){
 
-    MX rot = MX::zeros(3,3); 
+    rot = MX::zeros(3,3); 
     rot(0,0) = 1;
     rot(1,1) = cos(theta); 
     rot(2,2) = cos(theta); 
@@ -548,7 +557,7 @@ MX MPC_ts::Rotx(MX theta){
 
 MX MPC_ts::Roty(MX theta){
 
-    MX rot = MX::zeros(3,3); 
+    rot = MX::zeros(3,3); 
     rot(1,1) = 1;
     rot(0,0) = cos(theta); 
     rot(2,2) = cos(theta); 
@@ -593,28 +602,31 @@ MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // comp
 
     //MX tot_rot = axis_angle(thetax(0), thetay(0));
 
-    MX len1 = MX::zeros(3,2);
-    MX len2 = MX::zeros(3,2);
+    len1 = MX::zeros(3,2);
+    len2 = MX::zeros(3,2);
 
     // MX theta(2,1); 
     // theta(0) = sqrt(pow(thetax(0),2)+pow(thetay(0),2));
     // theta(1) = sqrt(pow(thetax(1),2)+pow(thetay(1),2)); 
 
 
-    for (int i = 0; i<2 ; i++){
+    // for (int i = 0; i<2 ; i++){
 
 
-        // if (!theta(i).is_zero()){
-        // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
-        // }
-        // else {
-        //     len1(2,i) = length1(i);
-        // }
-        // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
-        len1(2,i) = 0.98*length1(i);
-        len2(2,i) = length2(i); 
+    //     // if (!theta(i).is_zero()){
+    //     // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+    //     // }
+    //     // else {
+    //     //     len1(2,i) = length1(i);
+    //     // }
+    //     // len1(2,i) = 2*length1(i)*sin(theta(i)/2)/theta(i);
+    //     len1(2,i) = 0.98*length1(i);
+    //     len2(2,i) = length2(i); 
 
-    }
+    // }
+
+    len1(2,Slice()) = 0.98*length1;
+    len2(2,Slice()) = length2; 
 
     // MX inter(3,1);
     
@@ -624,8 +636,8 @@ MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // comp
     // tot_rot = mtimes(tot_rot, axis_angle(thetax(1), thetay(1))); 
     // inter += mtimes(tot_rot, len1(Slice(),1));
 
-    MX totRot = mtimes(Roty(-thetax(0)/2),Rotx(-thetay(0)/2));
-    MX inter(3,1);
+    totRot = mtimes(Roty(-thetax(0)/2),Rotx(-thetay(0)/2));
+    
 
     inter = mtimes(totRot, len1(Slice(),0)); 
     totRot = mtimes(totRot, mtimes(Roty(-thetax(0)/2), Rotx(-thetay(0)/2))); 
@@ -640,29 +652,29 @@ MX MPC_ts::ee_position(MX thetax, MX thetay, MX length1, MX length2){    // comp
 
 void MPC_ts::set_ref(const MatrixXd refx){
     std::lock_guard<std::mutex> lock(mtx);
-    MatrixXd x_r = refx;
+    // x_r = refx;
     // if (x_ref.colwise().norm() > 0.27) {
     //     x_r = 0.27*x_ref.colwise().normalized();
     // }
 
     //std::cout << "reference : " << x_r << std::endl;
 
-    length = x_r.cols();
+    length = refx.cols();
     int i; 
     if (length == 0){
         ; 
     }
     else if (length <= Horizon+1){
         for (i = 0; i < length; i++){
-            this->traj_ref.col(i) = x_r.col(i); 
+            this->traj_ref.col(i) = refx.col(i); 
         }
         for (i = length; i< Horizon+1; i++){
-            this->traj_ref.col(i) = x_r.col(length-1); 
+            this->traj_ref.col(i) = refx.col(length-1); 
         }
     }
     else{
         for (i = 0; i< Horizon+1; i++){
-            this->traj_ref.col(i) = x_r.col(i);
+            this->traj_ref.col(i) = refx.col(i);
         }
     }
 
@@ -672,5 +684,5 @@ void MPC_ts::set_ref(const MatrixXd refx){
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 
-    //std::cout << "Trajectory : " << traj_ref << std::endl; 
+    std::cout << "Trajectory : " << traj_ref << std::endl; 
 }
