@@ -74,9 +74,9 @@ int main(){
         // for (int i = 0; i<mpc2.Horizon +1; i++){
         //     if (t + 3*i*dt < time/4){
         //         //trajectory(0,i) = 0.08;
-        //         trajectory(0,i) = 0.08*((t+3*i*dt) / (time/4)); // provide a slow approach 
+        //         trajectory(0,i) = 0.10*((t+3*i*dt) / (time/4)) - 0.02; // provide a slow approach 
         //         //trajectory(1,i) = -0.08 + 0.16*((t+3*i*dt) / (time/4)); 
-        //         trajectory(1,i) = 0.08*((t+3*i*dt) / (time/4)); 
+        //         trajectory(1,i) = 0.10*((t+3*i*dt) / (time/4)) - 0.02; 
         //         trajectory(2,i) = -0.25; 
         //     }
         //     if ((time/4 < t + 3*i*dt) && (t + 3*i*dt < time/2)){

@@ -6,12 +6,25 @@ using namespace casadi;
 
 int main(){
 
-    MX test  = MX::ones(3,1); 
-    test = -test; 
+
+    DM A = DM::zeros(3,3);
+    DM B = DM::ones(3,1); 
+
+    A(Slice(),2) = 0.9*B; 
+
+    for (int i = 0; i<3; i++){
+        for (int j=0; j<3; j++){
+            std::cout << A(i,j);
+        }
+        std::cout << std::endl; 
+    }
+     
 
 
-    std::cout << test << std::endl; 
-    std::cout << fabs(test) << std::endl; 
+/*
+    MatrixXd test = MatrixXd::Identity(10,10);
+    std::cout << test.rightCols(5) << std::endl; 
+*/
 
 /*
     std::vector<double> lengths = {-0.125, -0.02, -0.125, -0.02};
@@ -60,15 +73,24 @@ int main(){
     opti.subject_to( pow(x,2)+ pow(y,2) ==1 );
     opti.subject_to(       x+y>=1 );
 
-    opti.solver("ipopt");
+    Dict opts_dict=Dict();   // to stop printing out solver data
+    opts_dict["jit"] = true;
+    opts_dict["compiler"] = "shell"; 
+
+    opti.solver("ipopt", opts_dict);
+
+    Function test = opti.to_function("test", {}, {x,y}); 
 
 
     OptiSol sol = opti.solve();
 
-    std::cout << sol.value(x) << " --- "<<sol.value(y) << std::endl; 
+    //test.generate_out(); 
+
+    std::cout << sol.value(x) << " --- "<< sol.value(y) << std::endl; 
 
 
 */
+
 
 /*
     MX x = MX::sym("x",2); // Two states
@@ -92,6 +114,7 @@ int main(){
     Function S("S",{x},{jacobian(ress["xf"],x)});
     std::cout << S(DM(std::vector<double>{0,1})) << std::endl;
 */
+
 /*
     MX x = MX::sym("x",2);
     MX y = MX::sym("y",2);
@@ -107,10 +130,10 @@ int main(){
     
     std::cout << G << std::endl;
 
+    //G.generate("gen.c");
 
-*/
     //std::cout<< "solution: " << F << std::endl;
-
+*/
 /*
     MX x = MX::sym("x");
     MX y = MX::sym("y");
@@ -160,7 +183,9 @@ for (int k=0;k<4;++k) {
 MXDict nlp = {{"x",u},{"f",dot(u,u)},{"g",x}};
 
 // Solve using IPOPT
-Function solver = nlpsol("solver","ipopt",nlp);
+//Function solver = nlpsol("solver","ipopt",nlp);
+Function solver = nlpsol("solver","sqpmethod",nlp);
 DMDict res = solver(DMDict{{"x0",0.2},{"lbg",0},{"ubg",0}});
 */
+
 }

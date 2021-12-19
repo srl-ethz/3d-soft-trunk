@@ -29,7 +29,7 @@ int main(){
     srl::State state = st_params.getBlankState();
     srl::State state_ref = st_params.getBlankState(); 
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 10.0;
+    double time = 30.0;
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
