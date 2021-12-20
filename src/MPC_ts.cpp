@@ -374,10 +374,10 @@ Opti MPC_ts::define_problem(){
     MX T2 = MX::zeros(st_params.q_size,1);
     //MX T3 = MX::ones(st_params.q_size,1)*0.5; 
 
-    MX p_min = MX::ones(2*st_params.num_segments,1)*-1000;
-    MX p_max = MX::ones(2*st_params.num_segments,1)*1000;
+    MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
+    MX p_max = MX::ones(2*st_params.num_segments,1)*500;
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*100; 
+    MX Du = MX::ones(2*st_params.num_segments,1)*8;   // 8~10 seems to achieve the best result with 20Hz rate
 
     MX end_effector = MX::zeros(3,1); 
 
@@ -502,8 +502,8 @@ Opti MPC_ts::define_problem(){
     //opts_dict["ipopt.tol"] = 1e-4;
     opts_dict["ipopt.acceptable_tol"] = 1e4;
     opts_dict["ipopt.print_level"] = 0; 
-    opts_dict["ipopt.sb"] = "yes";
-    opts_dict["print_time"] = 0;
+    // opts_dict["ipopt.sb"] = "yes";
+    // opts_dict["print_time"] = 0;
     // opts_dict["jit"] = true;
     // opts_dict["compiler"] = "shell"; 
 
