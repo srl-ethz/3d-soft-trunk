@@ -5,7 +5,7 @@
 
 
 MatrixXd x_ref(3,1);
-MatrixXd trajectory(3,1);
+// MatrixXd trajectory(3,1);
 Vector3d x;
 
 void printer(MPC_ts& mpc){
@@ -38,6 +38,11 @@ int main(){
     
     double t = 0;
     double dt = 0.1;
+    double time = 15;
+    double coef = 4 * 3.1415 / time;
+    double r = 0.1;
+    MatrixXd trajectory = MatrixXd::Zero(3, mpc.Horizon+1);
+
 
     mpc.set_ref(x_ref);
     srl::sleep(0.5);
@@ -46,12 +51,18 @@ int main(){
     
 
     mpc.toggle_log();
-    while (t < 10){
+    while (t < time){
         //x_ref = osc.get_objects()[0];
 
-        trajectory(0,0) = 0.09; 
-        trajectory(1,0) = -0.01; 
-        trajectory(2,0) = -0.215; 
+        for (int i = 0; i< mpc.Horizon +1; i++){
+            trajectory(0,i) = r*cos(coef*(t+i*dt));
+            trajectory(1,i) = r*sin(coef*(t+i*dt));
+            trajectory(2,i) = -0.215;
+        }
+
+        // trajectory(0,0) = 0.09; 
+        // trajectory(1,0) = -0.01; 
+        // trajectory(2,0) = -0.215; 
         x_ref = trajectory;
 
         mpc.set_ref(x_ref);
@@ -63,6 +74,7 @@ int main(){
         
         t+=dt;
         srl::sleep(dt);
+        std::cout << t << std::endl;
     }
 
     x_ref(0,0) = 0.03;
@@ -70,7 +82,7 @@ int main(){
     x_ref(2,0) = -0.23;
     
     mpc.set_ref(x_ref);
-    srl::sleep(3);
+    srl::sleep(1);
     mpc.toggle_log();
     srl::sleep(2);
     return 1;
