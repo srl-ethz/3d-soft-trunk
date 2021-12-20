@@ -306,6 +306,8 @@ void MPC_ts::control_loop(){
         //auto u_temp = static_cast<std::vector<double>>(sol.value(u));
         u_temp = sol.value(u)(Slice(),0); 
 
+        //std::cout << mtimes(sol.value(q_dot)(Slice(),Horizon).T(), sol.value(q_dot)(Slice(),Horizon)) << std::endl; 
+
         std::cout << "solution :" << u_temp << std::endl;
         
         // p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
@@ -326,7 +328,7 @@ void MPC_ts::control_loop(){
         // pxy = stm->A_pseudo.inverse()*tau_ref/10000;
         // p = stm->pseudo2real(pxy);  // possibly add gravity compensation
 
-        p = stm->pseudo2real(p_temp); 
+        p = stm->pseudo2real(p_temp ); //+ gravity_compensate(state)/2
 
         std::cout << "pressure input : " << p.transpose() << std::endl; 
 
@@ -370,6 +372,7 @@ Opti MPC_ts::define_problem(){
     MX b2 = MX::ones(st_params.q_size,1);
     MX T1 = MX::zeros(3,1);
     MX T2 = MX::zeros(st_params.q_size,1);
+    //MX T3 = MX::ones(st_params.q_size,1)*0.5; 
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-1000;
     MX p_max = MX::ones(2*st_params.num_segments,1)*1000;
@@ -382,8 +385,8 @@ Opti MPC_ts::define_problem(){
     //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
-    MX Q = MX::eye(3); 
-    MX Q2 = MX::eye(st_params.q_size)*1e-11; //-8 before
+    MX Q = MX::eye(3)*1; 
+    MX Q2 = MX::eye(st_params.q_size)*1e-12; //-8 before
     MX R = MX::eye(2*st_params.num_segments)*1e-14;
 
     MX thetax = MX::zeros(2,1);
@@ -486,6 +489,8 @@ Opti MPC_ts::define_problem(){
 
     //prob.subject_to( fabs(end_effector) >= 0.5*T1); 
     prob.subject_to(q_dot(Slice(),Horizon) == T2); 
+    //prob.subject_to( mtimes(q_dot(Slice(),Horizon).T(), q_dot(Slice(),Horizon)) < 1e-23); 
+    
 
     //prob.subject_to(end_effector == T1);
     // prob.subject_to(q_dot(Slice(),Horizon) == T2);
@@ -496,7 +501,9 @@ Opti MPC_ts::define_problem(){
     Dict opts_dict=Dict();   // to stop printing out solver data
     //opts_dict["ipopt.tol"] = 1e-4;
     opts_dict["ipopt.acceptable_tol"] = 1e4;
-    opts_dict["ipopt.print_level"] = 3; 
+    opts_dict["ipopt.print_level"] = 0; 
+    opts_dict["ipopt.sb"] = "yes";
+    opts_dict["print_time"] = 0;
     // opts_dict["jit"] = true;
     // opts_dict["compiler"] = "shell"; 
 
@@ -684,5 +691,5 @@ void MPC_ts::set_ref(const MatrixXd refx){
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 
-    std::cout << "Trajectory : " << traj_ref << std::endl; 
+    //std::cout << "Trajectory : " << traj_ref << std::endl; 
 }
