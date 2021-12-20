@@ -9,7 +9,8 @@ class MPC_ts: public ControllerPCC{
     public:
         MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type);
         void set_ref(const MatrixXd refx);
-        const int Horizon = 5;
+        const int Horizon = 7;  // 5 original, 7 to have good tracking but unstable
+                                // with horizon 7 the terminal constraint doesn't affect the reachability
 
     protected:
         MatrixXd traj_ref = MatrixXd::Zero(3, Horizon+1);

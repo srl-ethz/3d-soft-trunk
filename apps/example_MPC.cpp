@@ -51,7 +51,8 @@ int main(){
 
     Vector3d x_act; 
     MatrixXd x_ref; 
-    MatrixXd trajectory = MatrixXd::Zero(3, 1);
+    Vector3d trajectory; 
+    //MatrixXd trajectory = MatrixXd::Zero(3, 1);
 
     double coef = 2 * 3.1415 / time;
     double r = 0.1;
@@ -179,10 +180,12 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Error : " << error_avg.mean() << std::endl;
+            //std::cout << "Error : " << error_avg.mean() << std::endl;
 
-            srl::sleep(0.03); 
+            srl::sleep(0.05); 
             t += dt; 
+
+            std::cout << t << std::endl; 
 
         }
 
@@ -191,6 +194,8 @@ int main(){
 
         while (t < 2*time/3)
         {
+            // std::cout << "NEXT PHASE" << std::endl; 
+            // break;
             // trajectory << 0.0125192, -0.0992133, -0.215; 
             trajectory(0,0) = 0.01; 
             trajectory(1,0) = -0.09; 
@@ -210,9 +215,9 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Error : " << error_avg.mean() << std::endl;
+            // std::cout << "Error : " << error_avg.mean() << std::endl;
 
-            srl::sleep(0.03); 
+            srl::sleep(0.05); 
             t += dt; 
 
         }
@@ -222,6 +227,7 @@ int main(){
 
         while (t < time)
         {
+            // break;
             // trajectory << -0.0962055, -0.0272855, -0.215;  
             trajectory(0,0) = -0.09; 
             trajectory(1,0) = 0.01; 
@@ -241,9 +247,9 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Error : " << error_avg.mean() << std::endl;
+            // std::cout << "Error : " << error_avg.mean() << std::endl;
 
-            srl::sleep(0.03); 
+            srl::sleep(0.05); 
             t += dt; 
 
         }
