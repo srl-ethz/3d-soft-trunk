@@ -185,7 +185,7 @@ int main(){
             srl::sleep(0.05); 
             t += dt; 
 
-            //std::cout << t << std::endl; 
+            std::cout << t << std::endl; 
 
         }
 
@@ -215,7 +215,7 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Error : " << error_avg.mean() << std::endl;
+            // std::cout << "Error : " << error_avg.mean() << std::endl;
 
             srl::sleep(0.05); 
             t += dt; 
@@ -247,7 +247,7 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Error : " << error_avg.mean() << std::endl;
+            // std::cout << "Error : " << error_avg.mean() << std::endl;
 
             srl::sleep(0.05); 
             t += dt; 

@@ -31,7 +31,7 @@ int main(){
     Vector3d x_act; 
     MatrixXd x_ref;
     Vector3d trajectory; 
-    //MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
+    // MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
     Vector3d dx_ref;
     Vector3d ddx_ref;
 
