@@ -6,7 +6,7 @@ using namespace casadi;
 
 int main(){
 
-
+/*
     DM A = DM::zeros(3,3);
     DM B = DM::ones(3,1); 
 
@@ -18,7 +18,7 @@ int main(){
         }
         std::cout << std::endl; 
     }
-     
+*/ 
 
 
 /*
@@ -63,7 +63,7 @@ int main(){
     std::cout << M1(Slice(0,5), Slice()) << std::endl; 
 
 */
-/*
+
     Opti opti = casadi::Opti();
 
     MX x = opti.variable();
@@ -89,7 +89,7 @@ int main(){
     std::cout << sol.value(x) << " --- "<< sol.value(y) << std::endl; 
 
 
-*/
+
 
 
 /*
