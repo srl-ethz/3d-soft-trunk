@@ -185,6 +185,8 @@ void MPC_ts::control_loop(){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
 
+        //auto start = std::chrono::steady_clock::now();
+
         if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
             
         stm->updateState(state);
@@ -297,6 +299,8 @@ void MPC_ts::control_loop(){
             solved = TRUE; 
         }
 
+        //ctrl.set_initial(sol.value_variables());   // to be investigated, as it is doesn't work
+
         
         //std::cout << "complete u : " <<sol.value(u) << std::endl; 
         //std::cout << "-----------------" << std::endl;
@@ -336,6 +340,33 @@ void MPC_ts::control_loop(){
         else {
             assert(simulate(p));
         }
+
+        // auto end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double> elapsed = end - start;
+
+        // counter += 1; 
+        // total_time += elapsed.count(); 
+        // if (counter < 5){
+        //     total_time -= elapsed.count(); 
+        // }
+        // if (elapsed.count() > slow_execution(4)){
+        //     for (int i = 0; i<5; i++){
+        //         if (elapsed.count() > slow_execution(i)){
+        //             for(int k = 4; k>i; k--){
+        //                 slow_execution(k) = slow_execution(k-1); 
+        //             }
+        //             slow_execution(i) = elapsed.count(); 
+        //             break; 
+        //         }
+        //     }
+        // }
+
+        // if (counter%1 == 0){
+        //     std::cout << "==================" << std::endl; 
+        //     std::cout << "Average time : " << total_time / counter << std::endl; 
+        //     std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
+        //     std::cout << "==================" << std::endl; 
+        // }
         
     }
     
@@ -502,8 +533,8 @@ Opti MPC_ts::define_problem(){
     //opts_dict["ipopt.tol"] = 1e-4;
     opts_dict["ipopt.acceptable_tol"] = 1e4;
     opts_dict["ipopt.print_level"] = 0; 
-    // opts_dict["ipopt.sb"] = "yes";
-    // opts_dict["print_time"] = 0;
+    opts_dict["ipopt.sb"] = "yes";
+    opts_dict["print_time"] = 0;
     // opts_dict["jit"] = true;
     // opts_dict["compiler"] = "shell"; 
 

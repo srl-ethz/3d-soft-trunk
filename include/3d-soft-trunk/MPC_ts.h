@@ -3,6 +3,7 @@
 #include "3d-soft-trunk/ControllerPCC.h"
 #include <casadi/casadi.hpp>
 #include <casadi/core/optistack.hpp>
+//#include <chrono>
 using namespace casadi;
 
 class MPC_ts: public ControllerPCC{
@@ -33,7 +34,7 @@ class MPC_ts: public ControllerPCC{
 
         
         Opti ctrl;
-        bool solved; 
+        bool solved;  
         //OptiSol sol; 
 
         MX q;
@@ -79,4 +80,8 @@ class MPC_ts: public ControllerPCC{
         MX len2;
         MX totRot;
         MX inter = MX::zeros(3,1);
+
+        // int counter = 0; 
+        // double total_time = 0;
+        // VectorXd slow_execution = VectorXd::Zero(5); 
 };
