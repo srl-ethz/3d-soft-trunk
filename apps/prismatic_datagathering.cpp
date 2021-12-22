@@ -18,7 +18,7 @@ int main(){
     log_file.open("prisamtic_datagathering_logs.csv", std::fstream::out);
 
     srl::Rate r{1./dt};
-    for (size_t i = 0; i < max_pressure; i+50)
+    for (size_t i = 0; i < max_pressure; i+1)
     {
     vc.setSinglePressure(0,i);
     qc.getData(frames, timestamp);
