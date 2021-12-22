@@ -9,9 +9,9 @@ int main(){
     SoftTrunkParameters st_params;
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
-    //QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
+    QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
     //PID pid(st_params, CurvatureCalculator::SensorType::simulator);
-    MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
+    //MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
     double time = 5.0;
@@ -34,9 +34,9 @@ int main(){
     std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<CurvatureCalculator> cc;
 
-    double coef = 2 * 3.1415 / time;
+    double coef = 4 * 3.1415 / time;
     double r = 0.1;
-    double tol = 0.1;
+    double tol = 0.05;
     double t = 0;
     bool flag = 0; // to have 1 disturbance, and one only
     double disturbance = 2.093 / st_params.sections_per_segment / st_params.num_segments / 10;
@@ -45,9 +45,11 @@ int main(){
     int new_counter = 0; 
 
     
-    mpc2.set_state(state);
+    qs.set_state(state);
     const double hz = 1./dt;
-    mpc2.set_frequency(hz);
+    qs.set_frequency(hz);
+
+    qs.toggle_log(); 
 
     auto start = std::chrono::steady_clock::now();
 
@@ -57,9 +59,9 @@ int main(){
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
         x_ref = trajectory; 
 
-        mpc2.set_ref(x_ref); 
+        qs.set_ref(x_ref); 
 
-        mpc2.get_x(x_act); 
+        qs.get_x(x_act); 
 
         if ( (x_ref - x_act).norm() < tol){
             t += dt;  
@@ -89,6 +91,8 @@ int main(){
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Simulated " << time << "s of motion in " << elapsed.count() <<"s realtime using timestep " << dt << "\n";
+
+    qs.toggle_log(); 
 
     //return 0;
 }
