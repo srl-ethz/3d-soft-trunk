@@ -114,7 +114,12 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         p0 = p1;
     }
 
-    xi_.segment(1,num_joints-1) = xi_.segment(0,num_joints-1);
+    Eigen::VectorXd xi_intermediate;
+    xi_intermediate = xi_;
+    for (size_t i = 0; i < numjoints; i++)
+    {
+      xi_(i+1) = xi_intermediate(i);
+    }
     xi_(0) = prismatic_value;
 }
 
