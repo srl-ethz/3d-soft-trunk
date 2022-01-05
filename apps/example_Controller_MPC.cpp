@@ -5,7 +5,6 @@
 
 
 MatrixXd x_ref(3,1);
-// MatrixXd trajectory(3,1);
 Vector3d x;
 
 void printer(MPC_ts& mpc){
@@ -38,9 +37,10 @@ int main(){
     
     double t = 0;
     double dt = 0.1;
-    double time = 15;
+    double time = 25;
     double coef = 4 * 3.1415 / time;
-    double r = 0.1;
+    double r = 0.09;
+    //MatrixXd trajectory(3,1);
     MatrixXd trajectory = MatrixXd::Zero(3, mpc.Horizon+1);
 
 
@@ -84,6 +84,6 @@ int main(){
     mpc.set_ref(x_ref);
     srl::sleep(1);
     mpc.toggle_log();
-    srl::sleep(2);
+    srl::sleep(1);
     return 1;
 }

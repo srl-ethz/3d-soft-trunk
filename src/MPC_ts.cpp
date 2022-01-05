@@ -166,7 +166,7 @@ MPC_ts::MPC_ts(const SoftTrunkParameters st_params, CurvatureCalculator::SensorT
     filename = "MPC_logger";
 
     // Horizon = 5;
-    dt = 1./20;
+    dt = 1./15;
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
@@ -336,7 +336,7 @@ void MPC_ts::control_loop(){
 
         std::cout << "pressure input : " << p.transpose() << std::endl; 
 
-        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);} // actuate(p)
         else {
             assert(simulate(p));
         }
@@ -535,8 +535,8 @@ Opti MPC_ts::define_problem(){
     opts_dict["ipopt.print_level"] = 0; 
     opts_dict["ipopt.sb"] = "yes";
     opts_dict["print_time"] = 0;
-    // opts_dict["jit"] = true;
-    // opts_dict["compiler"] = "shell"; 
+    opts_dict["jit"] = true;
+    opts_dict["compiler"] = "shell"; 
 
     prob.solver("ipopt", opts_dict);
 
