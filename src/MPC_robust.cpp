@@ -10,10 +10,25 @@
 // retrieve noise bounds for simlation and real experiment 
 // simulation : 0.5060399090697567 1.1695533650831549 1.4095219511871493 1.053521060609602
 
+// with new function, one-step simulation error
+// 0.00942188, 0.00552891, 0.0277994, 0.0238107, 1.2437, 0.944875, 4.58187, 3.41322
+// 0.00678449, 0.00518904, 0.0217856, 0.0206506, 0.722802, 0.791403, 2.51938, 3.51999
+// 0.00745796, 0.0051715, 0.0193878, 0.0199429, 0.730912, 0.851556, 3.15132, 3.63464
+// 0.00669639, 0.00586572, 0.0271501, 0.0194003, 0.853697, 0.811016, 3.76215, 3.34119
+
 // define somehow a minimum robust invariant set
 // change initial constraint with this set and design tube-MPC control law
 
 // now correction is too strong, need to somehow limit it. It's what the restricted set would do. 
+
+void compute_disturbance(DM q_sim, DM q_real, DM q_dot_sim, DM q_dot_real, const SoftTrunkParameters st_params, DM &dist){
+
+    DM dist_temp = DM::zeros(2*st_params.q_size, 1);
+
+    dist_temp = fabs( vertcat(q_sim, q_dot_sim) - vertcat(q_real, q_dot_real) );
+
+    dist = fmax(dist, dist_temp); 
+} 
 
 MPC_robust::MPC_robust(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
@@ -24,7 +39,7 @@ MPC_robust::MPC_robust(const SoftTrunkParameters st_params, CurvatureCalculator:
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
     solved = false; 
 
-    //OptiAdvanced ctrl_deb = ctrl.debug();
+    //OptiAdvanced ctrl_deb = ctrl.debug(); 
 
     control_thread = std::thread(&MPC_robust::control_loop, this);
 }
@@ -139,13 +154,19 @@ void MPC_robust::control_loop(){
             u_large(Slice(),i) = u_temp; 
         }
 
+        // function to find disturbance with q_old and q_0_temp
+
+        // compute_disturbance(q_old, q_0_temp, q_dot_old, q_dot_0_temp, st_params, disturbance); 
+
+        // std::cout << "disturbance = " << disturbance.T() << std::endl; 
+
         ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
         ctrl.set_value(B, sp_B_temp);
         ctrl.set_value(w, sp_w_temp); 
         //ctrl.set_value(x_r, x_r_temp);
         ctrl.set_value(tr_r, tr_r_temp);
-        ctrl.set_value(q_0, q_old); 
-        ctrl.set_value(q_dot_0, q_dot_old); 
+        ctrl.set_value(q_0, q_0_temp); // q_old for tube
+        ctrl.set_value(q_dot_0, q_dot_0_temp); // q_dot_old for tube
         ctrl.set_value(u_prev, u_temp); 
 
         ctrl.set_initial(q, q_0_large);
@@ -183,11 +204,12 @@ void MPC_robust::control_loop(){
         DM v_temp = vertcat(sol.value(q)(Slice(),0), sol.value(q_dot)(Slice(),0) ); 
         DM x_temp = vertcat(q_0_temp, q_dot_0_temp);
 
-        std::cout << "v : " << v_temp << " x : " << x_temp << std::endl;
+        // std::cout << "v : " << v_temp << std::endl;
+        // std::cout << "x : " << x_temp << std::endl;
 
         DM u_robust = u_temp + robust_correction(mtimes(K_temp, (x_temp - v_temp)));
 
-        std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
+        //std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
         
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_robust).nonzeros().data(),2*st_params.num_segments,1 ); 
@@ -265,13 +287,32 @@ Opti MPC_robust::define_problem(){
 
 
     MX J = 0;
-    MX A1 = MX::zeros(st_params.q_size, st_params.q_size);
-    MX b1 = MX::ones(st_params.q_size,1);
-    MX A2 = MX::zeros(st_params.q_size, st_params.q_size);
-    MX b2 = MX::ones(st_params.q_size,1);
+    DM A1 = DM::zeros(2*st_params.q_size, st_params.q_size);
+    DM b1 = DM::ones(2*st_params.q_size,1);
+    DM A2 = DM::zeros(2*st_params.q_size, st_params.q_size);
+    DM b2 = DM::ones(2*st_params.q_size,1);
     MX T1 = MX::zeros(3,1);
     MX T2 = MX::zeros(st_params.q_size,1);
     //MX T3 = MX::ones(st_params.q_size,1)*0.5; 
+
+    A1(0,0) = 1;
+    A1(1,0) = -1;
+    A1(2,1) = 1; 
+    A1(3,1) = -1;
+    A1(4,2) = 1;
+    A1(5,2) = -1;
+    A1(6,3) = 1;
+    A1(7,3) = -1;
+
+    A2 = A1; 
+
+    //std::cout << A1 << std::endl; 
+    // 0.00942188, 0.00552891, 0.0277994, 0.0238107, 1.2437, 0.944875, 4.58187, 3.41322
+    // 0.00678449, 0.00518904, 0.0217856, 0.0206506, 0.722802, 0.791403, 2.51938, 3.51999
+    // 0.00745796, 0.0051715, 0.0193878, 0.0199429, 0.730912, 0.851556, 3.15132, 3.63464
+
+    b1 = {0.01, 0.01, 0.006, 0.006, 0.03, 0.03, 0.03, 0.03};
+    b2 = {1.3, 1.3, 1.0, 1.0, 4.6, 4.6, 3.7, 3.7};
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -365,8 +406,19 @@ Opti MPC_robust::define_problem(){
 
     // Slice function (0,2) select 0-1 only
 
-    prob.subject_to(q(Slice(),0) == q_0);
-    prob.subject_to(q_dot(Slice(),0) == q_dot_0);
+    // prob.subject_to(q(Slice(),0) == q_0);
+    // prob.subject_to(q_dot(Slice(),0) == q_dot_0);
+ 
+    MX Q0 = MX::zeros(2*st_params.q_size,1);
+    MX Q_DOT_0 = MX::zeros(2*st_params.q_size,1);
+    for (int i = 0; i < 2*st_params.q_size; i++){
+        Q0(i,0) = pow(-1,i)*q_0(int(i/2)) + b1(i,0);
+        Q_DOT_0(i,0) = pow(-1,i)*q_dot_0(int(i/2)) + b2(i,0);
+    }
+
+
+    prob.subject_to( mtimes(A1, q(Slice(),0)) <= Q0); 
+    prob.subject_to( mtimes(A2, q_dot(Slice(),0)) <= Q_DOT_0); 
 
     for (k = 0; k < Horizon; k++)
     {
@@ -387,7 +439,7 @@ Opti MPC_robust::define_problem(){
 
 
     //prob.subject_to( fabs(end_effector) >= 0.5*T1); 
-    prob.subject_to(q_dot(Slice(),Horizon) == T2); 
+    //prob.subject_to(q_dot(Slice(),Horizon) == T2); 
     //prob.subject_to( mtimes(q_dot(Slice(),Horizon).T(), q_dot(Slice(),Horizon)) < 1e-23); 
     
 
@@ -559,7 +611,11 @@ void MPC_robust::set_ref(const MatrixXd refx){
 
 DM MPC_robust::robust_correction(DM U){
 
-    std::cout << "From " << U.T() << std::endl; 
+    if (U.is_zero()){
+        return U; 
+    }
+
+    //std::cout << "From " << U.T() << std::endl; 
 
     auto U_new = U.get_elements(); 
     auto index  = std::minmax_element(U_new.begin(), U_new.end()); 
@@ -571,7 +627,7 @@ DM MPC_robust::robust_correction(DM U){
         U(i) = -5 + coeff*(U(i)- *index.first); 
     }
 
-    std::cout << "to "<< U.T() << std::endl; 
+    //std::cout << "to "<< U.T() << std::endl; 
 
     return U; 
 

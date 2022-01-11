@@ -84,6 +84,8 @@ class MPC_robust: public ControllerPCC{
         MX totRot;
         MX inter = MX::zeros(3,1);
 
+        DM disturbance = DM::zeros(2*st_params.q_size, 1);
+
         int counter = 0; 
         double total_time = 0;
         VectorXd slow_execution = VectorXd::Zero(5); 
