@@ -27,6 +27,7 @@ class MPC_robust: public ControllerPCC{
         MX Rotx(MX theta);
         MX Roty(MX theta);
         MX ee_position(MX thetax, MX thetay, MX length1, MX length2);
+        DM robust_correction(DM U);
         
         VectorXd p_prev = VectorXd::Zero(2*st_params.num_segments);
         VectorXd tau_ref;
@@ -49,6 +50,8 @@ class MPC_robust: public ControllerPCC{
         MX u_prev; 
 
         DM u_temp; // input placeholder
+        DM q_old; 
+        DM q_dot_old; 
         MatrixXd p_temp = MatrixXd::Zero(2*st_params.num_segments,1);
         VectorXd pxy;
 
@@ -59,6 +62,7 @@ class MPC_robust: public ControllerPCC{
         DM sp_A_temp = DM::nan(2*st_params.q_size, 2*st_params.q_size);
         DM sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
         DM sp_w_temp = DM::nan(2*st_params.q_size, 1); 
+        DM K_temp = DM::nan(2*st_params.num_segments, 2*st_params.q_size);
 
         DM x_r_temp = DM::nan(3,1);  // conversion placeholders
         DM tr_r_temp = DM::nan(3,Horizon+1); 

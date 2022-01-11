@@ -7,9 +7,13 @@
 // SLICOT
 
 // Missing:
-// retrieve noise bounds for simlation and real experiment
+// retrieve noise bounds for simlation and real experiment 
+// simulation : 0.5060399090697567 1.1695533650831549 1.4095219511871493 1.053521060609602
+
 // define somehow a minimum robust invariant set
 // change initial constraint with this set and design tube-MPC control law
+
+// now correction is too strong, need to somehow limit it. It's what the restricted set would do. 
 
 MPC_robust::MPC_robust(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
@@ -33,7 +37,7 @@ void MPC_robust::control_loop(){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
 
-        //auto start = std::chrono::steady_clock::now();
+        auto start = std::chrono::steady_clock::now();
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
             
@@ -57,7 +61,7 @@ void MPC_robust::control_loop(){
         Q.block(st_params.q_size, st_params.q_size, st_params.q_size, st_params.q_size) *= 0.001; // reduce cost for velocity
         int res; 
 
-        auto start = std::chrono::steady_clock::now();
+        // auto start = std::chrono::steady_clock::now();
 
         P_old = P;
          
@@ -70,116 +74,8 @@ void MPC_robust::control_loop(){
 
         MatrixXd K = -(sp_B.transpose()*P*sp_B + R).inverse()*(sp_B.transpose()*P*sp_A); 
 
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-
-        counter += 1; 
-        total_time += elapsed.count(); 
-        if (counter < 5){
-            total_time -= elapsed.count(); 
-        }
-        if (elapsed.count() > slow_execution(4)){
-            for (int i = 0; i<5; i++){
-                if (elapsed.count() > slow_execution(i)){
-                    for(int k = 4; k>i; k--){
-                        slow_execution(k) = slow_execution(k-1); 
-                    }
-                    slow_execution(i) = elapsed.count(); 
-                    break; 
-                }
-            }
-        }
-
-        if (counter%1 == 0){
-            std::cout << "==================" << std::endl; 
-            std::cout << "Average time : " << total_time / counter << std::endl; 
-            std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
-            std::cout << "==================" << std::endl; 
-        }
-
-
-        //https://github.com/casadi/casadi/issues/2563
-        //https://groups.google.com/g/casadi-users/c/npPcKItdLN8
-        // DM <--> Eigen
-        
-
-        std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
-        std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
-        std::copy(sp_w.data(), sp_w.data() + sp_w.size(), sp_w_temp.ptr());
-        //std::copy(x_ref.data(), x_ref.data() + x_ref.size(), x_r_temp.ptr());
-        std::copy(traj_ref.data(), traj_ref.data() + traj_ref.size(), tr_r_temp.ptr()); 
-        std::copy(state.q.data(), state.q.data() + state.q.size(), q_0_temp.ptr());
-        std::copy(state.dq.data(), state.dq.data() + state.dq.size(), q_dot_0_temp.ptr());
-
-        for (int i = 0; i < Horizon+1; i++){
-            q_0_large(Slice(),i) = q_0_temp; 
-            q_dot_0_large(Slice(),i) = q_dot_0_temp; 
-        }
-
-
-        // solve problem
-
-        if (!solved){
-            u_temp = DM::zeros(2*st_params.num_segments,1); 
-        }
-
-        for (int i = 0; i < Horizon; i++){
-            u_large(Slice(),i) = u_temp; 
-        }
-
-        ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
-        ctrl.set_value(B, sp_B_temp);
-        ctrl.set_value(w, sp_w_temp); 
-        //ctrl.set_value(x_r, x_r_temp);
-        ctrl.set_value(tr_r, tr_r_temp);
-        ctrl.set_value(q_0, q_0_temp); 
-        ctrl.set_value(q_dot_0, q_dot_0_temp); 
-        ctrl.set_value(u_prev, u_temp); 
-
-        ctrl.set_initial(q, q_0_large);
-        ctrl.set_initial(q_dot, q_dot_0_large);
-
-        OptiSol sol = ctrl.solve(); 
-         
-        
-        if (!solved){
-            solved = TRUE; 
-        }
-
-        //ctrl.set_initial(sol.value_variables());   // to be investigated, as it is doesn't work
-
-        
-        //std::cout << "complete u : " <<sol.value(u) << std::endl; 
-        //std::cout << "-----------------" << std::endl;
-        //std::cout << stm->A_pseudo << std::endl;
-        //std::cout << stm-> A << std::endl;
-
-       
-        u_temp = sol.value(u)(Slice(),0); 
-
-        //std::cout << mtimes(sol.value(q_dot)(Slice(),Horizon).T(), sol.value(q_dot)(Slice(),Horizon)) << std::endl; 
-
-        //std::cout << "solution :" << u_temp << std::endl;
-        
-
-        p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),2*st_params.num_segments,1 ); 
-
-        ///// DEBUG
-        /*
-        std::cout << "DEBUG" << std::endl; 
-        std::cout << stm->A_pseudo.size() << std::endl;   // size 16? 
-        std::cout << p_temp.size() << std::endl;   // size 2
-        */
-        /////
-
-        p = stm->pseudo2real(p_temp ); //+ gravity_compensate(state)/2
-
-        //std::cout << "pressure input : " << p.transpose() << std::endl; 
-
-        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
-        else {
-            assert(simulate(p));
-        }
+        // std::cout << "size of matrix K : " << K.rows() << "x" << K.cols()<< std::endl; 
+        // std::cout << K << std::endl;
 
         // auto end = std::chrono::steady_clock::now();
         // std::chrono::duration<double> elapsed = end - start;
@@ -207,6 +103,138 @@ void MPC_robust::control_loop(){
         //     std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
         //     std::cout << "==================" << std::endl; 
         // }
+
+
+        //https://github.com/casadi/casadi/issues/2563
+        //https://groups.google.com/g/casadi-users/c/npPcKItdLN8
+        // DM <--> Eigen
+        
+
+        std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
+        std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
+        std::copy(sp_w.data(), sp_w.data() + sp_w.size(), sp_w_temp.ptr());
+        std::copy(K.data(), K.data() + K.size(), K_temp.ptr());
+        //std::copy(x_ref.data(), x_ref.data() + x_ref.size(), x_r_temp.ptr());
+        std::copy(traj_ref.data(), traj_ref.data() + traj_ref.size(), tr_r_temp.ptr()); 
+        std::copy(state.q.data(), state.q.data() + state.q.size(), q_0_temp.ptr());
+        std::copy(state.dq.data(), state.dq.data() + state.dq.size(), q_dot_0_temp.ptr());
+
+        //std::cout << K_temp << std::endl;
+
+        for (int i = 0; i < Horizon+1; i++){
+            q_0_large(Slice(),i) = q_0_temp; 
+            q_dot_0_large(Slice(),i) = q_dot_0_temp; 
+        }
+
+
+        // solve problem
+
+        if (!solved){
+            u_temp = DM::zeros(2*st_params.num_segments,1);
+            q_old = q_0_temp;
+            q_dot_old = q_dot_0_temp;  
+        }
+
+        for (int i = 0; i < Horizon; i++){
+            u_large(Slice(),i) = u_temp; 
+        }
+
+        ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
+        ctrl.set_value(B, sp_B_temp);
+        ctrl.set_value(w, sp_w_temp); 
+        //ctrl.set_value(x_r, x_r_temp);
+        ctrl.set_value(tr_r, tr_r_temp);
+        ctrl.set_value(q_0, q_old); 
+        ctrl.set_value(q_dot_0, q_dot_old); 
+        ctrl.set_value(u_prev, u_temp); 
+
+        ctrl.set_initial(q, q_0_large);
+        ctrl.set_initial(q_dot, q_dot_0_large);
+        //ctrl.set_initial(u, u_large); 
+
+        OptiSol sol = ctrl.solve(); 
+         
+        
+        if (!solved){
+            solved = true; 
+        }
+
+        //ctrl.set_initial(sol.value_variables());   // to be investigated, as it is doesn't work
+
+        
+        //std::cout << "complete u : " <<sol.value(u) << std::endl; 
+        //std::cout << "-----------------" << std::endl;
+        //std::cout << stm->A_pseudo << std::endl;
+        //std::cout << stm-> A << std::endl;
+
+       
+        u_temp = sol.value(u)(Slice(),0); 
+
+        q_old = sol.value(q)(Slice(),1);
+        q_dot_old = sol.value(q_dot)(Slice(),1);
+
+        //std::cout << mtimes(sol.value(q_dot)(Slice(),Horizon).T(), sol.value(q_dot)(Slice(),Horizon)) << std::endl; 
+
+        //std::cout << "solution :" << u_temp << std::endl;
+
+
+        // provide robust input
+
+        DM v_temp = vertcat(sol.value(q)(Slice(),0), sol.value(q_dot)(Slice(),0) ); 
+        DM x_temp = vertcat(q_0_temp, q_dot_0_temp);
+
+        std::cout << "v : " << v_temp << " x : " << x_temp << std::endl;
+
+        DM u_robust = u_temp + robust_correction(mtimes(K_temp, (x_temp - v_temp)));
+
+        std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
+        
+
+        p_temp = Eigen::VectorXd::Map(DM::densify(u_robust).nonzeros().data(),2*st_params.num_segments,1 ); 
+
+        ///// DEBUG
+        /*
+        std::cout << "DEBUG" << std::endl; 
+        std::cout << stm->A_pseudo.size() << std::endl;   // size 16? 
+        std::cout << p_temp.size() << std::endl;   // size 2
+        */
+        /////
+
+        p = stm->pseudo2real(p_temp ); //+ gravity_compensate(state)/2
+
+        // std::cout << "pressure input : " << p.transpose() << std::endl; 
+
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
+        else {
+            assert(simulate(p));
+        }
+
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        counter += 1; 
+        total_time += elapsed.count(); 
+        if (counter < 5){
+            total_time -= elapsed.count(); 
+        }
+        if (elapsed.count() > slow_execution(4)){
+            for (int i = 0; i<5; i++){
+                if (elapsed.count() > slow_execution(i)){
+                    for(int k = 4; k>i; k--){
+                        slow_execution(k) = slow_execution(k-1); 
+                    }
+                    slow_execution(i) = elapsed.count(); 
+                    break; 
+                }
+            }
+        }
+
+        if (counter%1 == 0){
+            std::cout << "==================" << std::endl; 
+            std::cout << "Average time : " << total_time / counter << std::endl; 
+            std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
+            std::cout << "==================" << std::endl; 
+        }
         
     }
     
@@ -527,4 +555,24 @@ void MPC_robust::set_ref(const MatrixXd refx){
         is_initial_ref_received = true;
 
     //std::cout << "Trajectory : " << traj_ref << std::endl; 
+}
+
+DM MPC_robust::robust_correction(DM U){
+
+    std::cout << "From " << U.T() << std::endl; 
+
+    auto U_new = U.get_elements(); 
+    auto index  = std::minmax_element(U_new.begin(), U_new.end()); 
+
+    float coeff = (5 - (-5)) / (*index.second - *index.first); 
+
+    int i; 
+    for (i = 0; i < U.rows() ; i++ ){
+        U(i) = -5 + coeff*(U(i)- *index.first); 
+    }
+
+    std::cout << "to "<< U.T() << std::endl; 
+
+    return U; 
+
 }

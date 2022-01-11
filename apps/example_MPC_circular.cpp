@@ -31,8 +31,8 @@ int main(){
 
     Vector3d x_act; 
     MatrixXd x_ref;
-    Vector3d trajectory; 
-    // MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
+    //Vector3d trajectory; 
+    MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
     Vector3d dx_ref;
     Vector3d ddx_ref;
 
@@ -63,14 +63,14 @@ int main(){
 
     while ( t < 1.1*time){
 
-        trajectory << r*cos(coef*t), r*sin(coef*t),-0.215;  // circular trajectory
+        //trajectory << r*cos(coef*t), r*sin(coef*t),-0.215;  // circular trajectory
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
 
-        // for (int i = 0; i< mpc2.Horizon +1; i++){
-        //     trajectory(0,i) = r*cos(coef*(t+i*dt));
-        //     trajectory(1,i) = r*sin(coef*(t+i*dt));
-        //     trajectory(2,i) = -0.215;
-        // }
+        for (int i = 0; i< mpc2.Horizon +1; i++){
+            trajectory(0,i) = r*cos(coef*(t+i*dt));
+            trajectory(1,i) = r*sin(coef*(t+i*dt));
+            trajectory(2,i) = -0.215;
+        }
 
         // for (int i = 0; i<mpc2.Horizon +1; i++){
         //     if (t + i*dt < time/4){
