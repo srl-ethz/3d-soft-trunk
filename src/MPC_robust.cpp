@@ -609,7 +609,7 @@ void MPC_robust::set_ref(const MatrixXd refx){
     //std::cout << "Trajectory : " << traj_ref << std::endl; 
 }
 
-DM MPC_robust::robust_correction(DM U){
+DM MPC_robust::robust_correction(DM U){     // use normalization ? 
 
     if (U.is_zero()){
         return U; 

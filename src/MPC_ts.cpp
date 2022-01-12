@@ -535,8 +535,8 @@ Opti MPC_ts::define_problem(){
     opts_dict["ipopt.print_level"] = 0; 
     opts_dict["ipopt.sb"] = "yes";
     opts_dict["print_time"] = 0;
-    opts_dict["jit"] = true;
-    opts_dict["compiler"] = "shell"; 
+    // opts_dict["jit"] = true;
+    // opts_dict["compiler"] = "shell"; 
 
     prob.solver("ipopt", opts_dict);
 
