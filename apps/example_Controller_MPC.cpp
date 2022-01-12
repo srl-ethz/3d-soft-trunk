@@ -1,13 +1,14 @@
 #include <3d-soft-trunk/ControllerPCC.h>
 #include "3d-soft-trunk/MPC.h"
 #include "3d-soft-trunk/MPC_ts.h"
+#include "3d-soft-trunk/MPC_robust.h"
 #include <chrono>
 
 
 MatrixXd x_ref(3,1);
 Vector3d x;
 
-void printer(MPC_ts& mpc){
+void printer(MPC_robust& mpc){
     srl::Rate r{0.3};
     while(true){
         Vector3d x;
@@ -24,7 +25,7 @@ void printer(MPC_ts& mpc){
 int main(){
     SoftTrunkParameters st_params;
     st_params.finalize();
-    MPC_ts mpc(st_params, CurvatureCalculator::SensorType::qualisys);
+    MPC_robust mpc(st_params, CurvatureCalculator::SensorType::qualisys);
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
     srl::State state = st_params.getBlankState();
 
