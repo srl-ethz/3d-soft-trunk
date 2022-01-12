@@ -6,35 +6,37 @@ int main(){
     std::vector<int> cameras = {9};
     unsigned long long int timestamp;
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> frames;
-    double dt = 0.01;
+    double dt = 0.001;
     double distance;
     std::fstream log_file;
-    int max_pressure = 500;
+    std::fstream log_file2;
+    int max_pressure = 2000;
     //log_file = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, "prisamtic_datagathering_logs.csv");
     
     ValveController vc{"192.168.0.100", map, max_pressure};
     QualisysClient qc{2, cameras};
 
 
-    log_file.open("experiment_px_Pis/px_Pis_2,5offsett_001_20_500_3.csv", std::fstream::out);
+    log_file.open("experiment_dadp_McK/dxdp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
+    log_file2.open("experiment_dadp_McK/dadp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
 
     srl::Rate r{1./dt};
 
-    p1 =   2.22e-14
-    p2 =  -7.215e-11
-    p3 =   4.793e-08
-    p4 =   -9.85e-06 
-    p5 =      0.2005
+    double p1 =   2.22e-14;
+    double p2 =  -7.215e-11;
+    double p3 =   4.793e-08;
+    double p4 =   -9.85e-06;
+    double p5 =      0.2005;
 
     //outer loop defines initial position
-    for (size_t i = 0; i < max_pressure; i+=100)
+    for (size_t i = 600; i < max_pressure; i+=200)
     {
 
         //define pressure/distance function
-        double pos = p1*i^4 + p2*i^3 + p3*i^2 + p2*i + p5;
+        double pos = p1*pow(i,4) + p2*pow(i,3) + p3*pow(i,2) + p4*i + p5;
 
         //set pressure in all McK's
-        for (size_t d = 1; d < 8; d++)
+        for (size_t d = 1; d < 7; d++)
         {
             vc.setSinglePressure(d,i);
         }
@@ -44,17 +46,28 @@ int main(){
         //log data
         qc.getData(frames, timestamp);
         distance = (frames[0].translation()-frames[1].translation()).norm();
-        log_file << distance << "," << timestamp << "," << i << pos << (distance-pos).norm() "\n";
+        log_file << distance << "," << pos << "," << (distance-pos) << "," << timestamp << "," << i << "\n";
 
         srl::sleep(1);
 
-        /*
-        //give pressure step and record average accelration for set initial position
-        for (size_t d = 1; d < 8; d++)
+        qc.getData(frames, timestamp);
+        distance = (frames[0].translation()-frames[1].translation()).norm();
+        log_file2 << distance << "," << timestamp << "," << i << "\n";
+
+        //give pressure step and record position change
+        for (size_t d = 1; d < 7; d++)
         {
-            vc.setSinglePressure(d,i+100);
+            vc.setSinglePressure(d,(i+100));
         }
-        */
+        
+        for (size_t e = 0; e < 20; e++)
+        {
+            qc.getData(frames, timestamp);
+            distance = (frames[0].translation()-frames[1].translation()).norm();
+            log_file2 << distance << "," << timestamp << "," << i << "\n";
+            r.sleep();
+        }
+        
     }
     
     
