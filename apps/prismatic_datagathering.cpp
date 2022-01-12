@@ -9,7 +9,7 @@ int main(){
     double dt = 0.01;
     double distance;
     std::fstream log_file;
-    int max_pressure = 700;
+    int max_pressure = 2000;
     //log_file = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, "prisamtic_datagathering_logs.csv");
     
     ValveController vc{"192.168.0.100", map, max_pressure};
@@ -21,17 +21,17 @@ int main(){
    
     for (size_t i = 0; i < max_pressure; i+=20)
         {
-            
+  /*         
         vc.setSinglePressure(0,i);       
+*/ 
 
-/*
         vc.setSinglePressure(1,i);
         vc.setSinglePressure(2,i);
         vc.setSinglePressure(3,i);
         vc.setSinglePressure(4,i);
         vc.setSinglePressure(5,i);
         vc.setSinglePressure(6,i);
-*/
+
         qc.getData(frames, timestamp);
         distance = (frames[0].translation()-frames[1].translation()).norm();
         r.sleep();
