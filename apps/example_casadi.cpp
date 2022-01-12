@@ -6,19 +6,47 @@ using namespace casadi;
 
 int main(){
 
+    DM q_0 = {1,2,3,4}; 
+    DM q_dot_0 = {1,1,1,1}; 
+    DM b1 = {5,5,5,5,5,5,5,5}; 
+    DM b2 = {3,3,3,3,3,3,3,3};
+
+    DM Q0 = DM::zeros(2*4,1);
+    DM Q_DOT_0 = DM::zeros(2*4,1);
+    for (int i = 0; i < 2*4; i++){
+        Q0(i,0) = pow(-1,i)*q_0(int(i/2)) + b1(i,0);
+        Q_DOT_0(i,0) = ((-1)^(i))*q_dot_0(int(i/2)) + b2(i,0);
+    }
+
+    std::cout << Q0.T() << std::endl;
+    std::cout << Q_DOT_0.T() << std::endl;
+
 /*
-    DM A = DM::zeros(3,3);
+    DM A = DM::nan(2,1);
+    DM B = DM::nan(2,1); 
+
+    A = {30, 20}; 
+    B = {20, 30}; 
+
+    std::cout << fmax(A,B) << std::endl;
+*/
+/*
+    DM A = DM::zeros(3,1);
     DM B = DM::ones(3,1); 
 
-    A(Slice(),2) = 0.9*B; 
+    //A(Slice(),2) = 0.9*B; 
 
-    for (int i = 0; i<3; i++){
-        for (int j=0; j<3; j++){
-            std::cout << A(i,j);
+    DM C = vertcat(A,B); 
+
+    for (int i = 0; i<6; i++){
+        for (int j=0; j<1; j++){
+            std::cout << C(i,j);
         }
         std::cout << std::endl; 
     }
-*/ 
+
+    std::cout << "Is this? " << C << C.rows() << std::endl;
+*/
 
 
 /*
@@ -63,7 +91,7 @@ int main(){
     std::cout << M1(Slice(0,5), Slice()) << std::endl; 
 
 */
-
+/*
     Opti opti = casadi::Opti();
 
     MX x = opti.variable();
@@ -74,8 +102,8 @@ int main(){
     opti.subject_to(       x+y>=1 );
 
     Dict opts_dict=Dict();   // to stop printing out solver data
-    opts_dict["jit"] = true;
-    opts_dict["compiler"] = "shell"; 
+    // opts_dict["jit"] = true;
+    // opts_dict["compiler"] = "shell"; 
 
     opti.solver("ipopt", opts_dict);
 
@@ -89,7 +117,7 @@ int main(){
     std::cout << sol.value(x) << " --- "<< sol.value(y) << std::endl; 
 
 
-
+*/
 
 
 /*
@@ -183,8 +211,8 @@ for (int k=0;k<4;++k) {
 MXDict nlp = {{"x",u},{"f",dot(u,u)},{"g",x}};
 
 // Solve using IPOPT
-//Function solver = nlpsol("solver","ipopt",nlp);
-Function solver = nlpsol("solver","sqpmethod",nlp);
+Function solver = nlpsol("solver","ipopt",nlp);
+//Function solver = nlpsol("solver","sqpmethod",nlp);
 DMDict res = solver(DMDict{{"x0",0.2},{"lbg",0},{"ubg",0}});
 */
 

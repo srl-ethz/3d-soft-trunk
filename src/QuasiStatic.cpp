@@ -237,7 +237,7 @@ void QuasiStatic::control_loop(){
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
-            assert(simulate(p_new));
+            assert(simulate(p));
         }
 
         // std::cout << "pressure input : " << p.transpose() << std::endl; 

@@ -58,13 +58,13 @@ add_executable(example_casadi example_casadi.cpp)
 target_link_libraries(example_casadi casadi ControllerPCC)
 
 add_executable(example_MPC example_MPC.cpp)
-target_link_libraries(example_MPC casadi ControllerPCC MPC MPC_ts)
+target_link_libraries(example_MPC casadi ControllerPCC MPC MPC_ts MPC_robust)
 
 add_executable(example_MPC_circular example_MPC_circular.cpp)
-target_link_libraries(example_MPC_circular casadi ControllerPCC MPC_ts QuasiStatic)
+target_link_libraries(example_MPC_circular casadi ControllerPCC MPC_ts MPC_robust QuasiStatic)
 
 add_executable(example_Controller_MPC example_Controller_MPC.cpp)
-target_link_libraries(example_Controller_MPC casadi ControllerPCC MPC MPC_ts)
+target_link_libraries(example_Controller_MPC casadi ControllerPCC MPC MPC_ts MPC_robust)
 
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)

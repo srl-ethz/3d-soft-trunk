@@ -2,6 +2,7 @@
 #include "3d-soft-trunk/QuasiStatic.h"
 #include "3d-soft-trunk/PID.h"
 #include "3d-soft-trunk/MPC_ts.h"
+#include "3d-soft-trunk/MPC_robust.h"
 #include <chrono>
 
 int main(){
@@ -12,7 +13,7 @@ int main(){
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
     //QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
-    MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
+    MPC_robust mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
     double time = 10.0;  //10 for 6 turns
@@ -30,8 +31,8 @@ int main(){
 
     Vector3d x_act; 
     MatrixXd x_ref;
-    Vector3d trajectory; 
-    // MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
+    //Vector3d trajectory; 
+    MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
     Vector3d dx_ref;
     Vector3d ddx_ref;
 
@@ -62,14 +63,14 @@ int main(){
 
     while ( t < 1.1*time){
 
-        trajectory << r*cos(coef*t), r*sin(coef*t),-0.215;  // circular trajectory
+        //trajectory << r*cos(coef*t), r*sin(coef*t),-0.215;  // circular trajectory
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
 
-        // for (int i = 0; i< mpc2.Horizon +1; i++){
-        //     trajectory(0,i) = r*cos(coef*(t+i*dt));
-        //     trajectory(1,i) = r*sin(coef*(t+i*dt));
-        //     trajectory(2,i) = -0.215;
-        // }
+        for (int i = 0; i< mpc2.Horizon +1; i++){
+            trajectory(0,i) = r*cos(coef*(t+i*dt));
+            trajectory(1,i) = r*sin(coef*(t+i*dt));
+            trajectory(2,i) = -0.215;
+        }
 
         // for (int i = 0; i<mpc2.Horizon +1; i++){
         //     if (t + i*dt < time/4){
@@ -110,8 +111,10 @@ int main(){
 
         mpc2.get_x(x_act); 
 
-        srl::sleep(0.05);  // 0.03 for circular 
+        srl::sleep(0.03);  // 0.03 for circular 
         t+= dt; 
+
+        //std::cout << t << std::endl; 
 
 
         // if ( (x_ref.col(0) - x_act).norm() < tol){   // wrong dimensions
