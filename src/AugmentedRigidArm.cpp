@@ -113,14 +113,15 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         t0 = t1;
         p0 = p1;
     }
-
+    fmt::print("xi_ before:\n{}\n", xi_);
     Eigen::VectorXd xi_intermediate;
     xi_intermediate = xi_;
-    for (size_t i = 0; i < numjoints; i++)
+    for (size_t i = 0; i < num_joints; i++)
     {
       xi_(i+1) = xi_intermediate(i);
     }
     xi_(0) = prismatic_value;
+    fmt::print("xi_ after:\n{}\n", xi_);
 }
 
 void AugmentedRigidArm::update_drake_model()
