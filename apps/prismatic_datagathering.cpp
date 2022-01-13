@@ -1,26 +1,26 @@
 #include "mobilerack-interface/QualisysClient.h"
 #include "mobilerack-interface/ValveController.h"
 
+
 int main(){
     std::vector<int> map = {0,1,2,3,4,6,7};
     std::vector<int> cameras = {9};
     unsigned long long int timestamp;
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> frames;
-    double dt = 0.001;
+    double dt = 0.01;
     double distance;
     std::fstream log_file;
     std::fstream log_file2;
     int max_pressure = 2000;
     //log_file = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, "prisamtic_datagathering_logs.csv");
-    
     ValveController vc{"192.168.0.100", map, max_pressure};
+    
     QualisysClient qc{2, cameras};
 
 
     log_file.open("experiment_dadp_McK/dxdp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
     log_file2.open("experiment_dadp_McK/dadp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
-
-    srl::Rate r{1./dt};
+   
 
     double p1 =   2.22e-14;
     double p2 =  -7.215e-11;
@@ -29,7 +29,7 @@ int main(){
     double p5 =      0.2005;
 
     //outer loop defines initial position
-    for (size_t i = 600; i < max_pressure; i+=200)
+    for (size_t i = 400; i < max_pressure; i+=200)
     {
 
         //define pressure/distance function
@@ -41,7 +41,7 @@ int main(){
             vc.setSinglePressure(d,i);
         }
 
-        srl::sleep(1);
+        srl::sleep(2);
         
         //log data
         qc.getData(frames, timestamp);
@@ -50,27 +50,50 @@ int main(){
 
         srl::sleep(1);
 
-        qc.getData(frames, timestamp);
-        distance = (frames[0].translation()-frames[1].translation()).norm();
-        log_file2 << distance << "," << timestamp << "," << i << "\n";
+        //qc.getData(frames, timestamp);
+        //distance = (frames[0].translation()-frames[1].translation()).norm();
+        //log_file2 << distance << "," << timestamp << "," << i << "\n";
 
         //give pressure step and record position change
-        for (size_t d = 1; d < 7; d++)
+        for (size_t f = 1; f < 7; f++)
         {
-            vc.setSinglePressure(d,(i+100));
+            vc.setSinglePressure(f,(i+100));
         }
-        
+
+        //log acceleartions and pressure
+        srl::Rate r{1./dt};
         for (size_t e = 0; e < 20; e++)
         {
+
+
+            //compute average of all active valves
+            double average = 0;
+            int active_valves = 0;
+
+            for(int j = 0; j < vc.sensor_pressures.size(); j++){
+                if (vc.sensor_pressures[j] != 0)
+                {
+                    active_valves++;
+                    average += vc.sensor_pressures[j];
+                }
+            }
+            average = average/active_valves;
+
+            //log results
             qc.getData(frames, timestamp);
             distance = (frames[0].translation()-frames[1].translation()).norm();
-            log_file2 << distance << "," << timestamp << "," << i << "\n";
+            log_file2 << distance << "," << timestamp << "," << i+100;
+            log_file2 << "," << average << "\n";
             r.sleep();
         }
         
+        srl::sleep(1);
+
     }
+    log_file.close();
+    log_file2.close();
     
-    
+    //this section tracks the p/x trajectory
       /*  
     for (size_t i = 0; i < max_pressure; i+=20)
         {
