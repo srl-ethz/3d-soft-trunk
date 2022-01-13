@@ -126,10 +126,36 @@ QuasiStatic::QuasiStatic(const SoftTrunkParameters st_params, CurvatureCalculato
     ctrl = define_problem();
     solved = false; 
 
-    control_thread = std::thread(&QuasiStatic::control_loop, this);
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
  
     mapping_matrix << chamberMatrix, MatrixXd::Zero(2,3), MatrixXd::Zero(2,3), chamberMatrix;  
+
+    std::cout << "OPEN LOG" << std::endl; 
+
+    pressure_log.open("/home/filippo/SRL/3d-soft-trunk/P_log.csv", std::fstream::out); 
+
+    if (pressure_log.is_open()){
+        std::cout << "OK" << std::endl; 
+    }
+
+    pressure_log << "time"; 
+
+    for (int i = 0; i<6; i++){
+        pressure_log << fmt::format(", p{}", i); 
+    }
+    for (int i = 0; i<6; i++){
+        pressure_log << fmt::format(", o{}", i); 
+    }
+    for (int i = 0; i<6; i++){
+        pressure_log << fmt::format(", l{}", i); 
+    }
+
+    pressure_log << "\n"; 
+
+    //pressure_log.close(); 
+
+    control_thread = std::thread(&QuasiStatic::control_loop, this);
+    
 }
 
 void QuasiStatic::control_loop(){
@@ -214,6 +240,28 @@ void QuasiStatic::control_loop(){
         std::cout << "P_old : " << p.transpose() << std::endl;
         std::cout << "P_new : " << p_new.transpose() << std::endl; 
         std::cout << "P_LS : " << p_ls.transpose() << std::endl; 
+
+        if (avg < 1000){
+            pressure_log << avg; 
+            for (int i = 0; i < 6; i++)
+            {
+                pressure_log << fmt::format(", {}", p(i));
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                pressure_log << fmt::format(", {}", p_new(i));
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                pressure_log << fmt::format(", {}", p_ls(i));
+            }
+            pressure_log << "\n"; 
+            
+        }
+        else if (avg ==500) {
+            pressure_log.close(); 
+            std::cout << "END LOG" << std::endl;  
+        }
 
 
         double error = (pxy+p_prev - mapping_matrix*p_new).transpose() * (pxy+p_prev - mapping_matrix*p_new);

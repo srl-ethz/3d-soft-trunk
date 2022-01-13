@@ -52,5 +52,6 @@ private:
     int avg = 0;
     double pseudo_avg = 0; 
     double opt_avg = 0; 
+    std::fstream pressure_log; 
     
 };

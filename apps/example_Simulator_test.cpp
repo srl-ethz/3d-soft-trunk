@@ -34,7 +34,7 @@ int main(){
     std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<CurvatureCalculator> cc;
 
-    double coef = 4 * 3.1415 / time;
+    double coef = 2 * 3.1415 / time;  //half a turn
     double r = 0.1;
     double tol = 0.05;
     double t = 0;
@@ -49,7 +49,7 @@ int main(){
     const double hz = 1./dt;
     qs.set_frequency(hz);
 
-    qs.toggle_log(); 
+    //qs.toggle_log(); 
 
     auto start = std::chrono::steady_clock::now();
 
@@ -92,7 +92,7 @@ int main(){
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Simulated " << time << "s of motion in " << elapsed.count() <<"s realtime using timestep " << dt << "\n";
 
-    qs.toggle_log(); 
+    //qs.toggle_log(); 
 
     //return 0;
 }
