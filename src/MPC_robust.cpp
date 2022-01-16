@@ -33,7 +33,7 @@ void compute_disturbance(DM q_sim, DM q_real, DM q_dot_sim, DM q_dot_real, const
 MPC_robust::MPC_robust(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
 
-    dt = 1./20;
+    dt = 1./15;
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
@@ -52,7 +52,7 @@ void MPC_robust::control_loop(){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
 
-        auto start = std::chrono::steady_clock::now();
+        // auto start = std::chrono::steady_clock::now();
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) cc->get_curvature(state);
             
@@ -209,7 +209,7 @@ void MPC_robust::control_loop(){
 
         DM u_robust = u_temp + robust_correction(mtimes(K_temp, (x_temp - v_temp)));
 
-        //std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
+        std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
         
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_robust).nonzeros().data(),2*st_params.num_segments,1 ); 
@@ -224,39 +224,39 @@ void MPC_robust::control_loop(){
 
         p = stm->pseudo2real(p_temp ); //+ gravity_compensate(state)/2
 
-        // std::cout << "pressure input : " << p.transpose() << std::endl; 
+        std::cout << "pressure input : " << p.transpose() << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
             assert(simulate(p));
         }
 
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
+        // auto end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double> elapsed = end - start;
 
-        counter += 1; 
-        total_time += elapsed.count(); 
-        if (counter < 5){
-            total_time -= elapsed.count(); 
-        }
-        if (elapsed.count() > slow_execution(4)){
-            for (int i = 0; i<5; i++){
-                if (elapsed.count() > slow_execution(i)){
-                    for(int k = 4; k>i; k--){
-                        slow_execution(k) = slow_execution(k-1); 
-                    }
-                    slow_execution(i) = elapsed.count(); 
-                    break; 
-                }
-            }
-        }
+        // counter += 1; 
+        // total_time += elapsed.count(); 
+        // if (counter < 5){
+        //     total_time -= elapsed.count(); 
+        // }
+        // if (elapsed.count() > slow_execution(4)){
+        //     for (int i = 0; i<5; i++){
+        //         if (elapsed.count() > slow_execution(i)){
+        //             for(int k = 4; k>i; k--){
+        //                 slow_execution(k) = slow_execution(k-1); 
+        //             }
+        //             slow_execution(i) = elapsed.count(); 
+        //             break; 
+        //         }
+        //     }
+        // }
 
-        if (counter%1 == 0){
-            std::cout << "==================" << std::endl; 
-            std::cout << "Average time : " << total_time / counter << std::endl; 
-            std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
-            std::cout << "==================" << std::endl; 
-        }
+        // if (counter%1 == 0){
+        //     std::cout << "==================" << std::endl; 
+        //     std::cout << "Average time : " << total_time / counter << std::endl; 
+        //     std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
+        //     std::cout << "==================" << std::endl; 
+        // }
         
     }
     
@@ -310,6 +310,7 @@ Opti MPC_robust::define_problem(){
     // 0.00942188, 0.00552891, 0.0277994, 0.0238107, 1.2437, 0.944875, 4.58187, 3.41322
     // 0.00678449, 0.00518904, 0.0217856, 0.0206506, 0.722802, 0.791403, 2.51938, 3.51999
     // 0.00745796, 0.0051715, 0.0193878, 0.0199429, 0.730912, 0.851556, 3.15132, 3.63464
+    // 0.00595452, 0.00610513, 0.0229777, 0.0228444, 0.950628, 1.09753, 3.28104, 4.09674
 
     b1 = {0.01, 0.01, 0.006, 0.006, 0.03, 0.03, 0.03, 0.03};
     b2 = {1.3, 1.3, 1.0, 1.0, 4.6, 4.6, 3.7, 3.7};
@@ -615,19 +616,30 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
         return U; 
     }
 
-    //std::cout << "From " << U.T() << std::endl; 
+    std::cout << "Correction from " << U.T() << std::endl; 
 
     auto U_new = U.get_elements(); 
     auto index  = std::minmax_element(U_new.begin(), U_new.end()); 
 
-    float coeff = (5 - (-5)) / (*index.second - *index.first); 
+    double limit = 0;
+    if (abs(*index.second) >= abs(*index.first)){
+        limit = abs(*index.second); 
+    }
+    else{
+        limit = abs(*index.first); 
+    }
+
+    //float coeff = (5 - (-5)) / (*index.second - *index.first); 
+    float coeff = (5 - (-5)) / (limit - (-limit)); 
 
     int i; 
     for (i = 0; i < U.rows() ; i++ ){
-        U(i) = -5 + coeff*(U(i)- *index.first); 
-    }
+        U(i) = -5 + coeff*(U(i)- (-limit)); 
+    } 
 
-    //std::cout << "to "<< U.T() << std::endl; 
+
+
+    std::cout << "to "<< U.T() << std::endl; 
 
     return U; 
 
