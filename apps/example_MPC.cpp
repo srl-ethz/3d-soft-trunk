@@ -1,11 +1,12 @@
 #include <3d-soft-trunk/ControllerPCC.h>
 #include "3d-soft-trunk/MPC.h"
 #include "3d-soft-trunk/MPC_ts.h"
+#include "3d-soft-trunk/MPC_robust.h"
 #include <chrono>
 
 int main(){
 
-    bool task_space_control = true;   // set to true to operate in task space   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    bool task_space_control = false;   // set to true to operate in task space   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     bool logger = true; 
 
     std::cout << "Task space control enabled : " << task_space_control << std::endl; 
@@ -16,8 +17,8 @@ int main(){
 
     // Choose mpc1 for joint-space control, mpc2 for end-effector space control   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    //MPC mpc1(st_params, CurvatureCalculator::SensorType::simulator);
-    MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
+    MPC mpc1(st_params, CurvatureCalculator::SensorType::simulator);
+    //MPC_robust mpc2(st_params, CurvatureCalculator::SensorType::simulator);
 
     // if (!task_space_control){
     //     MPC mpc(st_params, CurvatureCalculator::SensorType::simulator);
@@ -29,7 +30,7 @@ int main(){
     srl::State state = st_params.getBlankState();
     srl::State state_ref = st_params.getBlankState(); 
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 30.0;
+    double time = 20.0;
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -46,8 +47,8 @@ int main(){
     std::unique_ptr<CurvatureCalculator> cc;
 
 
-    //Vector3d q_ref, q_act; 
-    //Vector3d dq_ref;
+    Vector3d q_ref, q_act; 
+    Vector3d dq_ref;
 
     Vector3d x_act; 
     MatrixXd x_ref; 
@@ -69,25 +70,25 @@ int main(){
     VectorXd error_avg = VectorXd::Zero(avg); 
 
 
-    //mpc1.set_state(state);               // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change here to switch between modes
-    mpc2.set_state(state);
+    mpc1.set_state(state);               // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< change here to switch between modes
+    //mpc2.set_state(state);
     const double hz = 1./dt;
-    //mpc1.set_frequency(hz);
-    mpc2.set_frequency(hz);
+    mpc1.set_frequency(hz);
+    //mpc2.set_frequency(hz);
 
     if (logger){
-        mpc2.toggle_log();
+        mpc1.toggle_log();
     }
 
     auto start = std::chrono::steady_clock::now();
 
     // comment and uncomment each loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-/*
+
     if (!task_space_control){
 
         while (t < time/2){
         
-            state_ref.q << -0.440825, 0.373653, -0.0481017, -0.105963;
+            state_ref.q << 0.222, -0.116, -0.077, -0.866;
             mpc1.set_ref(state_ref);
 
             mpc1.get_state(state); 
@@ -101,10 +102,10 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
+            //std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
             // std::cout << "Error vector : " << error_avg.transpose() << std::endl;
             
-            std::cout << "Error : " << error_avg.mean() << std::endl; 
+            //std::cout << "Error : " << error_avg.mean() << std::endl; 
 
             std::cout<< "time : " << t <<std::endl; 
 
@@ -112,6 +113,7 @@ int main(){
             //     std::cout << "Convergerged in " << t << std::endl;
             // }
 
+            srl::sleep(0.03);
             t += dt; 
         }
 
@@ -120,7 +122,7 @@ int main(){
 
         while (t < time){
 
-            state_ref.q << 0.0633816, 0.290002, 0.655952, -0.0951374;
+            state_ref.q << -0.133, 0.075, -0.003, 0.670;
             mpc1.set_ref(state_ref);
 
             mpc1.get_state(state); 
@@ -134,22 +136,22 @@ int main(){
                 counter ++; 
             }
 
-            std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
+            //std::cout << "Reference : "<< state_ref.q.transpose()<< "\nCurrent state : " << state.q.transpose() << std::endl;  
             // std::cout << "Error vector : " << error_avg.transpose() << std::endl;
 
-            std::cout << "Error : " << error_avg.mean() << std::endl;
+            //std::cout << "Error : " << error_avg.mean() << std::endl;
             
             std::cout<< "time : " << t <<std::endl; 
             // if ( (state.q - state_ref.q).norm() < tol){
             //     std::cout << "Convergerged in " << t << std::endl;
             // }
-
+            srl::sleep(0.03);
             t += dt; 
         }
     }
-*/
-    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+/*
    
     counter = 0;
     error_avg = VectorXd::Zero(avg);
@@ -255,10 +257,10 @@ int main(){
         }
         
 
-    }
+    } */
 
     if (logger){
-        mpc2.toggle_log();
+        mpc1.toggle_log();
     }
 
     std::cout << "Simulation end" << std::endl; 

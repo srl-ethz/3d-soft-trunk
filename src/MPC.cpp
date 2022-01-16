@@ -5,7 +5,7 @@
 MPC::MPC(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     filename = "MPC_logger";
 
-    dt = 1./10;
+    dt = 1./15;
 
     // Take model
     ctrl = define_problem();   // define matrices as parameters, so we can update them without re-initalizing the problem
@@ -31,9 +31,11 @@ void MPC::control_loop(){
             continue;
         } 
 
-        Vector3d ee_x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        // auto start = std::chrono::steady_clock::now();
 
-        std::cout << "End-effector position : " << ee_x.transpose() << std::endl; 
+        // Vector3d ee_x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+
+        // std::cout << "End-effector position : " << ee_x.transpose() << std::endl; 
 
         // Define state space system : https://x-engineer.org/graduate-engineering/signals-systems/control-systems/state-space-model-dynamic-system/
         // Define discrete system
@@ -112,12 +114,39 @@ void MPC::control_loop(){
 
         p = stm->pseudo2real(p_temp); 
 
-        std::cout << "pressure input : " << p.transpose() << std::endl; 
+        //std::cout << "pressure input : " << p.transpose() << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
             assert(simulate(p));
         }
+
+        // auto end = std::chrono::steady_clock::now();
+        // std::chrono::duration<double> elapsed = end - start;
+
+        // counter += 1; 
+        // total_time += elapsed.count(); 
+        // if (counter < 5){
+        //     total_time -= elapsed.count(); 
+        // }
+        // if (elapsed.count() > slow_execution(4)){
+        //     for (int i = 0; i<5; i++){
+        //         if (elapsed.count() > slow_execution(i)){
+        //             for(int k = 4; k>i; k--){
+        //                 slow_execution(k) = slow_execution(k-1); 
+        //             }
+        //             slow_execution(i) = elapsed.count(); 
+        //             break; 
+        //         }
+        //     }
+        // }
+
+        // if (counter%1 == 0){
+        //     std::cout << "==================" << std::endl; 
+        //     std::cout << "Average time : " << total_time / counter << std::endl; 
+        //     std::cout << "Slowest execution :" << slow_execution.transpose() << std::endl; 
+        //     std::cout << "==================" << std::endl; 
+        // }
         
     }
     
@@ -158,14 +187,15 @@ Opti MPC::define_problem(){
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500; 
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*100; 
+    MX Du = MX::ones(2*st_params.num_segments,1)*5; 
 
     //std::cout << "Delta u = " << Du << std::endl; 
 
     T1 = q_r; 
     T2 = q_dot_r;  //terminal condition with delta formulation
 
-    MX Q = MX::eye(st_params.q_size); 
+    MX Q1 = MX::eye(st_params.q_size)*1e8; 
+    MX Q2 = MX::eye(st_params.q_size)*1e0; 
     MX R = MX::eye(2*st_params.num_segments)*1e-3;
 
     std::cout << "Variables initialized" << std::endl; 
@@ -174,13 +204,13 @@ Opti MPC::define_problem(){
 
     for (int k = 0; k < Horizon; k++) 
     {
-        J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
-        J += mtimes((q_dot(Slice(),k)-q_dot_r).T(), mtimes(Q, (q_dot(Slice(),k)-q_dot_r)));
+        J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q1, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
+        J += mtimes((q_dot(Slice(),k)-q_dot_r).T(), mtimes(Q2, (q_dot(Slice(),k)-q_dot_r)));
         J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));     // if want to penalize input, need to use the ss one
     }
 
-    J += mtimes((q(Slice(),Horizon)-q_r).T(), mtimes(Q, (q(Slice(),Horizon)-q_r))); 
-    J += mtimes((q_dot(Slice(),Horizon)-q_dot_r).T(), mtimes(Q, (q_dot(Slice(),Horizon)-q_dot_r)));  // terminal cost
+    J += mtimes((q(Slice(),Horizon)-q_r).T(), mtimes(Q1, (q(Slice(),Horizon)-q_r))); 
+    J += mtimes((q_dot(Slice(),Horizon)-q_dot_r).T(), mtimes(Q2, (q_dot(Slice(),Horizon)-q_dot_r)));  // terminal cost
     
     prob.minimize(J);
 

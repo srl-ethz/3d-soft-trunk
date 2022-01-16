@@ -20,7 +20,7 @@ class MPC: public ControllerPCC{
         VectorXd p_prev = VectorXd::Zero(2*st_params.num_segments);
         VectorXd tau_ref;
 
-        int Horizon = 20;
+        int Horizon = 10;
         Opti ctrl;
         bool solved; 
         //OptiSol sol; 
@@ -59,5 +59,9 @@ class MPC: public ControllerPCC{
         MatrixXd sp_B_c = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments); 
         MatrixXd sp_w_c = MatrixXd::Zero(2*st_params.q_size, 1);
         MatrixXd Ad; 
+
+        int counter = 0; 
+        double total_time = 0;
+        VectorXd slow_execution = VectorXd::Zero(5); 
 };
 
