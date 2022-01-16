@@ -156,9 +156,9 @@ void MPC_robust::control_loop(){
 
         // function to find disturbance with q_old and q_0_temp
 
-        compute_disturbance(q_old, q_0_temp, q_dot_old, q_dot_0_temp, st_params, disturbance); 
+        // compute_disturbance(q_old, q_0_temp, q_dot_old, q_dot_0_temp, st_params, disturbance); 
 
-        std::cout << "disturbance = " << disturbance.T() << std::endl; 
+        // std::cout << "disturbance = " << disturbance.T() << std::endl; 
 
         ctrl.set_value(A, sp_A_temp);   // need to define them already as global variables
         ctrl.set_value(B, sp_B_temp);
@@ -209,7 +209,7 @@ void MPC_robust::control_loop(){
 
         DM u_robust = u_temp + robust_correction(mtimes(K_temp, (x_temp - v_temp)));
 
-        // std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
+        std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
         
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_robust).nonzeros().data(),2*st_params.num_segments,1 ); 
@@ -224,7 +224,7 @@ void MPC_robust::control_loop(){
 
         p = stm->pseudo2real(p_temp ); //+ gravity_compensate(state)/2
 
-        // std::cout << "pressure input : " << p.transpose() << std::endl; 
+        std::cout << "pressure input : " << p.transpose() << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
@@ -307,11 +307,17 @@ Opti MPC_robust::define_problem(){
     A2 = A1; 
 
     //std::cout << A1 << std::endl; 
+    // Simulation
     // 0.00942188, 0.00552891, 0.0277994, 0.0238107, 1.2437, 0.944875, 4.58187, 3.41322
     // 0.00678449, 0.00518904, 0.0217856, 0.0206506, 0.722802, 0.791403, 2.51938, 3.51999
     // 0.00745796, 0.0051715, 0.0193878, 0.0199429, 0.730912, 0.851556, 3.15132, 3.63464
     // 0.00595452, 0.00610513, 0.0229777, 0.0228444, 0.950628, 1.09753, 3.28104, 4.09674
     // 0.00646077, 0.00610885, 0.0199081, 0.0255239, 0.736116, 1.01822, 3.21705, 4.20152
+
+    // Real
+    // 0.114308, 0.130749, 0.39742, 0.416883, 2.33043, 3.00624, 6.40119, 7.64612
+    // 0.0852791, 0.111846, 0.419061, 0.413883, 3.25302, 3.08219, 7.16393, 7.14721
+    // [0.254572, 0.133217, 0.442591, 0.410043, 4.59241, 3.55436, 9.93646, 8.1169
 
     b1 = {0.01, 0.01, 0.006, 0.006, 0.03, 0.03, 0.03, 0.03};
     b2 = {1.3, 1.3, 1.0, 1.0, 4.6, 4.6, 3.7, 3.7};
@@ -408,19 +414,19 @@ Opti MPC_robust::define_problem(){
 
     // Slice function (0,2) select 0-1 only
 
-    prob.subject_to(q(Slice(),0) == q_0);
-    prob.subject_to(q_dot(Slice(),0) == q_dot_0);
+    // prob.subject_to(q(Slice(),0) == q_0);
+    // prob.subject_to(q_dot(Slice(),0) == q_dot_0);
  
-    // MX Q0 = MX::zeros(2*st_params.q_size,1);
-    // MX Q_DOT_0 = MX::zeros(2*st_params.q_size,1);
-    // for (int i = 0; i < 2*st_params.q_size; i++){
-    //     Q0(i,0) = pow(-1,i)*q_0(int(i/2)) + b1(i,0);
-    //     Q_DOT_0(i,0) = pow(-1,i)*q_dot_0(int(i/2)) + b2(i,0);
-    // }
+    MX Q0 = MX::zeros(2*st_params.q_size,1);
+    MX Q_DOT_0 = MX::zeros(2*st_params.q_size,1);
+    for (int i = 0; i < 2*st_params.q_size; i++){
+        Q0(i,0) = pow(-1,i)*q_0(int(i/2)) + b1(i,0);
+        Q_DOT_0(i,0) = pow(-1,i)*q_dot_0(int(i/2)) + b2(i,0);
+    }
 
 
-    // prob.subject_to( mtimes(A1, q(Slice(),0)) <= Q0); 
-    // prob.subject_to( mtimes(A2, q_dot(Slice(),0)) <= Q_DOT_0); 
+    prob.subject_to( mtimes(A1, q(Slice(),0)) <= Q0); 
+    prob.subject_to( mtimes(A2, q_dot(Slice(),0)) <= Q_DOT_0); 
 
     for (k = 0; k < Horizon; k++)
     {
@@ -617,7 +623,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
         return U; 
     }
 
-    // std::cout << "Correction from " << U.T() << std::endl; 
+    std::cout << "Correction from " << U.T() << std::endl; 
 
     auto U_new = U.get_elements(); 
     auto index  = std::minmax_element(U_new.begin(), U_new.end()); 
@@ -640,7 +646,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
 
 
 
-    // std::cout << "to "<< U.T() << std::endl; 
+    std::cout << "to "<< U.T() << std::endl; 
 
     return U; 
 
