@@ -52,7 +52,8 @@ void MPC::control_loop(){
         std::copy(sp_A.data(), sp_A.data() + sp_A.size(), sp_A_temp.ptr());
         std::copy(sp_B.data(), sp_B.data() + sp_B.size(), sp_B_temp.ptr());
         std::copy(sp_w.data(), sp_w.data() + sp_w.size(), sp_w_temp.ptr());
-        std::copy(state_ref.q.data(), state_ref.q.data() + state_ref.q.size(), q_r_temp.ptr());
+        //std::copy(state_ref.q.data(), state_ref.q.data() + state_ref.q.size(), q_r_temp.ptr());
+        std::copy(q_ref_long.data(), q_ref_long.data() + q_ref_long.size(), q_r_temp.ptr());
         std::copy(state_ref.dq.data(), state_ref.dq.data() + state_ref.dq.size(), q_dot_r_temp.ptr());
         std::copy(state.q.data(), state.q.data() + state.q.size(), q_0_temp.ptr());
         std::copy(state.dq.data(), state.dq.data() + state.dq.size(), q_dot_0_temp.ptr());
@@ -169,7 +170,9 @@ Opti MPC::define_problem(){
     B = prob.parameter(2*st_params.q_size, 2*st_params.num_segments);
     w = prob.parameter(2*st_params.q_size, 1); 
 
-    q_r = prob.parameter(st_params.q_size, 1);
+    // q_r = prob.parameter(st_params.q_size, 1);
+    q_r = prob.parameter(st_params.q_size, Horizon+1);
+
     q_dot_r = prob.parameter(st_params.q_size,1); 
 
     u_prev = prob.parameter(2*st_params.num_segments,1); 
@@ -191,7 +194,7 @@ Opti MPC::define_problem(){
 
     //std::cout << "Delta u = " << Du << std::endl; 
 
-    T1 = q_r; 
+    T1 = q_r(Slice(), Horizon); 
     T2 = q_dot_r;  //terminal condition with delta formulation
 
     MX Q1 = MX::eye(st_params.q_size)*1e8; 
@@ -204,12 +207,12 @@ Opti MPC::define_problem(){
 
     for (int k = 0; k < Horizon; k++) 
     {
-        J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q1, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
+        J += mtimes((q(Slice(),k)-q_r(Slice(),k)).T(), mtimes(Q1, (q(Slice(),k)-q_r(Slice(),k))));   // probaly Slice(0,st_params.q_size,1) has same effect
         J += mtimes((q_dot(Slice(),k)-q_dot_r).T(), mtimes(Q2, (q_dot(Slice(),k)-q_dot_r)));
         J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));     // if want to penalize input, need to use the ss one
     }
 
-    J += mtimes((q(Slice(),Horizon)-q_r).T(), mtimes(Q1, (q(Slice(),Horizon)-q_r))); 
+    J += mtimes((q(Slice(),Horizon)-q_r(Slice(),Horizon)).T(), mtimes(Q1, (q(Slice(),Horizon)-q_r(Slice(),Horizon)))); 
     J += mtimes((q_dot(Slice(),Horizon)-q_dot_r).T(), mtimes(Q2, (q_dot(Slice(),Horizon)-q_dot_r)));  // terminal cost
     
     prob.minimize(J);
@@ -292,4 +295,23 @@ MatrixXd MPC::matrix_exponential(MatrixXd A, int size){
 
     Ad = MatrixXd::Identity(size,size) + A + (A*A)/2 + (A*A*A)/6 + (A*A*A*A)/24 + (A*A*A*A*A)/120;   //up to 5th order
     return Ad; 
+}
+
+void MPC::set_ref(const srl::State &state_ref1, const srl::State &state_ref2, int edge) {
+    std::lock_guard<std::mutex> lock(mtx);
+    // assign to member variables
+    this->state_ref = state_ref1;
+
+    int i = 0;
+    for (i = 0; i < edge; i++){
+        this->q_ref_long.col(i) = state_ref1.q; 
+    }
+    for (i = edge; i < Horizon+1; i++){
+        this->q_ref_long.col(i) = state_ref2.q;
+    }
+
+    // std::cout << q_ref_long << std::endl; 
+
+    if (!is_initial_ref_received)
+        is_initial_ref_received = true;
 }

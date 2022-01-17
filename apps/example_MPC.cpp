@@ -28,9 +28,10 @@ int main(){
     // }
     
     srl::State state = st_params.getBlankState();
-    srl::State state_ref = st_params.getBlankState(); 
+    srl::State state_ref1 = st_params.getBlankState();
+    srl::State state_ref2 = st_params.getBlankState(); 
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 20.0;
+    double time = 20.0;  //20
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -88,8 +89,18 @@ int main(){
 
         while (t < time/2){
         
-            state_ref.q << 0.222, -0.116, -0.077, -0.866;
-            mpc1.set_ref(state_ref);
+            state_ref1.q << 0.222, -0.116, -0.077, -0.866;
+            state_ref2 = state_ref1; 
+            int edge = 0;
+            for (int i = 0; i < mpc1.Horizon + 1; i++){
+                if (t + i*0.05 >= time/2){   //time/2
+                    state_ref2.q << -0.133, 0.075, -0.003, 0.670;
+                    edge = i;
+                    break;
+                }
+            }
+
+            mpc1.set_ref(state_ref1, state_ref2, edge);
 
             mpc1.get_state(state); 
 
@@ -98,7 +109,7 @@ int main(){
             }
 
             if (counter < avg){
-                error_avg(counter) = (state_ref.q - state.q).norm(); 
+                error_avg(counter) = (state_ref1.q - state.q).norm(); 
                 counter ++; 
             }
 
@@ -113,7 +124,7 @@ int main(){
             //     std::cout << "Convergerged in " << t << std::endl;
             // }
 
-            srl::sleep(0.03);
+            srl::sleep(0.05);  // this needs to be accoding to the control rate, tune to have output 1 solution, 1 time
             t += dt; 
         }
 
@@ -122,8 +133,10 @@ int main(){
 
         while (t < time){
 
-            state_ref.q << -0.133, 0.075, -0.003, 0.670;
-            mpc1.set_ref(state_ref);
+            state_ref1.q << -0.133, 0.075, -0.003, 0.670;
+            state_ref2 = state_ref1;
+
+            mpc1.set_ref(state_ref1, state_ref2, 0);
 
             mpc1.get_state(state); 
 
@@ -132,7 +145,7 @@ int main(){
             }
 
             if (counter < avg){
-                error_avg(counter) = (state_ref.q - state.q).norm(); 
+                error_avg(counter) = (state_ref1.q - state.q).norm(); 
                 counter ++; 
             }
 
@@ -145,7 +158,7 @@ int main(){
             // if ( (state.q - state_ref.q).norm() < tol){
             //     std::cout << "Convergerged in " << t << std::endl;
             // }
-            srl::sleep(0.03);
+            srl::sleep(0.05);
             t += dt; 
         }
     }
