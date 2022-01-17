@@ -241,7 +241,7 @@ void QuasiStatic::control_loop(){
         std::cout << "P_new : " << p_new.transpose() << std::endl; 
         std::cout << "P_LS : " << p_ls.transpose() << std::endl; 
 
-        if (avg < 1000){
+        if (avg < 500){
             pressure_log << avg; 
             for (int i = 0; i < 6; i++)
             {

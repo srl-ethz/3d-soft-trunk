@@ -34,7 +34,7 @@ int main(){
     std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<CurvatureCalculator> cc;
 
-    double coef = 2 * 3.1415 / time;  //half a turn
+    double coef = 1 * 3.1415 / time;  //half a turn
     double r = 0.1;
     double tol = 0.05;
     double t = 0;
