@@ -53,6 +53,9 @@ target_link_libraries(example_QuasiStatic QuasiStatic)
 add_executable(prismatic_datagathering prismatic_datagathering.cpp)
 target_link_libraries(prismatic_datagathering ValveController QualisysClient)
 
+add_executable(prismatic_controller prismatic_controller.cpp)
+target_link_libraries(prismatic_controller ValveController QualisysClient)
+
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)
