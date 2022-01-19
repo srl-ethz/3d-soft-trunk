@@ -312,7 +312,7 @@ void MPC_ts::control_loop(){
 
         //std::cout << mtimes(sol.value(q_dot)(Slice(),Horizon).T(), sol.value(q_dot)(Slice(),Horizon)) << std::endl; 
 
-        std::cout << "solution :" << u_temp << std::endl;
+        //std::cout << "solution :" << u_temp << std::endl;
         
         // p_temp = MatrixXd::Zero(2*st_params.num_segments,1); 
 
@@ -416,9 +416,9 @@ Opti MPC_ts::define_problem(){
     //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
-    MX Q = MX::eye(3)*1; 
-    MX Q2 = MX::eye(st_params.q_size)*1e-12; //-8 before
-    MX R = MX::eye(2*st_params.num_segments)*1e-14;
+    MX Q = MX::eye(3)*5e2; 
+    MX Q2 = MX::eye(st_params.q_size)*1e-4; //-8 before
+    MX R = MX::eye(2*st_params.num_segments)*1e-10;
 
     MX thetax = MX::zeros(2,1);
     MX thetay = MX::zeros(2,1);
@@ -432,13 +432,17 @@ Opti MPC_ts::define_problem(){
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
     //end_effector = MX::zeros(3,1);
 
-    //J += mtimes((u(Slice(),0)-u_prev).T(), mtimes(R, (u(Slice(),0)-u_prev))); 
+    J += mtimes((u(Slice(),0)-u_prev).T(), mtimes(R, (u(Slice(),0)-u_prev))); 
 
     for (k = 0; k < Horizon; k++) 
     {
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
         J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
-        //J += mtimes((u(Slice(),k+1)-u(Slice(),k)).T(), mtimes(R, (u(Slice(),k+1)-u(Slice(),k)))); 
+        J += mtimes((u(Slice(),k)).T(), mtimes(R, (u(Slice(),k)))); 
+        if (k>1){
+            J += mtimes((u(Slice(),k)-u(Slice(),k-1)).T(), mtimes(R, (u(Slice(),k)-u(Slice(),k-1)))); 
+        }
+        
 
         for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
