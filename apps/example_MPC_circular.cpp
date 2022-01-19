@@ -13,7 +13,7 @@ int main(){
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
     //QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
-    MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
+    MPC_robust mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
     double time = 20.0;  //10 for 6 turns
@@ -31,8 +31,8 @@ int main(){
 
     Vector3d x_act; 
     MatrixXd x_ref;
-    Vector3d trajectory; 
-    //MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
+    //Vector3d trajectory; 
+    MatrixXd trajectory = MatrixXd::Zero(3, mpc2.Horizon+1); 
     Vector3d dx_ref;
     Vector3d ddx_ref;
 
@@ -63,14 +63,14 @@ int main(){
 
     while ( t < 1.1*time){
 
-        trajectory << r*cos(coef*t), r*sin(coef*t),-0.250;  // circular trajectory
+        //trajectory << r*cos(coef*t), r*sin(coef*t),-0.250;  // circular trajectory
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
 
-        // for (int i = 0; i< mpc2.Horizon +1; i++){
-        //     trajectory(0,i) = r*cos(coef*(t+i*dt));
-        //     trajectory(1,i) = r*sin(coef*(t+i*dt));
-        //     trajectory(2,i) = -0.250;
-        // }
+        for (int i = 0; i< mpc2.Horizon +1; i++){
+            trajectory(0,i) = r*cos(coef*(t+i*5*dt));
+            trajectory(1,i) = r*sin(coef*(t+i*5*dt));
+            trajectory(2,i) = -0.250;
+        }
 
         // for (int i = 0; i<mpc2.Horizon +1; i++){
         //     if (t + i*dt < time/4){
@@ -78,22 +78,22 @@ int main(){
         //         trajectory(0,i) = 0.10*((t+i*dt) / (time/4)) - 0.02; // provide a slow approach 
         //         //trajectory(1,i) = -0.08 + 0.16*((t+3*i*dt) / (time/4)); 
         //         trajectory(1,i) = 0.10*((t+i*dt) / (time/4)) - 0.02; 
-        //         trajectory(2,i) = -0.25; 
+        //         trajectory(2,i) = -0.26; 
         //     }
         //     if ((time/4 < t + i*dt) && (t + i*dt < time/2)){
         //         trajectory(0,i) = 0.08 - 0.16*((t+i*dt-time/4) / (time/4));
         //         trajectory(1,i) =  0.08; 
-        //         trajectory(2,i) = -0.25; 
+        //         trajectory(2,i) = -0.26; 
         //     }
         //     if ((time/2 < t + i*dt) && (t + i*dt < 3*time/4)){
         //         trajectory(0,i) = - 0.08; 
         //         trajectory(1,i) = 0.08 - 0.16*((t+i*dt-time/2) / (time/4)); 
-        //         trajectory(2,i) = -0.25; 
+        //         trajectory(2,i) = -0.26; 
         //     }
         //     if (3*time/4 < t + i*dt){
         //         trajectory(0,i) = -0.08 + 0.16*((t+i*dt-3*time/4) / (time/4));
         //         trajectory(1,i) = -0.08; 
-        //         trajectory(2,i) = -0.25; 
+        //         trajectory(2,i) = -0.26; 
         //     }
         // }
 

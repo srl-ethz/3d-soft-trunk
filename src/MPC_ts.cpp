@@ -416,9 +416,9 @@ Opti MPC_ts::define_problem(){
     //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
-    MX Q = MX::eye(3)*5e2; 
-    MX Q2 = MX::eye(st_params.q_size)*1e-4; //-8 before
-    MX R = MX::eye(2*st_params.num_segments)*1e-10;
+    MX Q = MX::eye(3)*5e2;                              // circular : 5e2     square : 5e2 
+    MX Q2 = MX::eye(st_params.q_size)*1e-4;             // 20s      : 1e-4    10s    : 1e-4
+    MX R = MX::eye(2*st_params.num_segments)*2e-10;     // 15 Hz    : 1e-10   15Hz   : 2e-10               
 
     MX thetax = MX::zeros(2,1);
     MX thetay = MX::zeros(2,1);

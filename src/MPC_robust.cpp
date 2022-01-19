@@ -70,9 +70,9 @@ void MPC_robust::control_loop(){
         
         get_state_space(stm->B, stm->c, stm->g, stm->K, stm->D, stm->A_pseudo, sp_A, sp_B, sp_w, dt);
 
-        MatrixXd P, P_old; 
-        MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
-        MatrixXd Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
+        // MatrixXd P, P_old; 
+        // MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
+        // MatrixXd Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
         Q.block(st_params.q_size, st_params.q_size, st_params.q_size, st_params.q_size) *= 0.001; // reduce cost for velocity
         int res; 
 
@@ -87,7 +87,7 @@ void MPC_robust::control_loop(){
             P = P_old; 
         }
 
-        MatrixXd K = -(sp_B.transpose()*P*sp_B + R).inverse()*(sp_B.transpose()*P*sp_A); 
+        K = -(sp_B.transpose()*P*sp_B + R).inverse()*(sp_B.transpose()*P*sp_A); 
 
         // std::cout << "size of matrix K : " << K.rows() << "x" << K.cols()<< std::endl; 
         // std::cout << K << std::endl;
@@ -165,8 +165,8 @@ void MPC_robust::control_loop(){
         ctrl.set_value(w, sp_w_temp); 
         //ctrl.set_value(x_r, x_r_temp);
         ctrl.set_value(tr_r, tr_r_temp);
-        ctrl.set_value(q_0, q_0_temp); // q_old for tube
-        ctrl.set_value(q_dot_0, q_dot_0_temp); // q_dot_old for tube
+        ctrl.set_value(q_0, q_0_temp); // q_old for simplified tube
+        ctrl.set_value(q_dot_0, q_dot_0_temp); // q_dot_old for simplified tube
         ctrl.set_value(u_prev, u_temp); 
 
         ctrl.set_initial(q, q_0_large);
@@ -201,13 +201,13 @@ void MPC_robust::control_loop(){
 
         // provide robust input
 
-        DM v_temp = vertcat(sol.value(q)(Slice(),0), sol.value(q_dot)(Slice(),0) ); 
-        DM x_temp = vertcat(q_0_temp, q_dot_0_temp);
+        v_temp = vertcat(sol.value(q)(Slice(),0), sol.value(q_dot)(Slice(),0) ); 
+        x_temp = vertcat(q_0_temp, q_dot_0_temp);
 
         // std::cout << "v : " << v_temp << std::endl;
         // std::cout << "x : " << x_temp << std::endl;
 
-        DM u_robust = u_temp + robust_correction(mtimes(K_temp, (x_temp - v_temp)));
+        u_robust = u_temp + robust_correction(mtimes(K_temp, (x_temp - v_temp)));
 
         std::cout << "u_temp = " << u_temp << " -- u_robust = " << u_robust << std::endl; 
         
@@ -224,7 +224,7 @@ void MPC_robust::control_loop(){
 
         p = stm->pseudo2real(p_temp ); //+ gravity_compensate(state)/2
 
-        std::cout << "pressure input : " << p.transpose() << std::endl; 
+        //std::cout << "pressure input : " << p.transpose() << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
@@ -333,9 +333,9 @@ Opti MPC_robust::define_problem(){
     //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
-    MX Q = MX::eye(3)*1; 
-    MX Q2 = MX::eye(st_params.q_size)*1e-12; //-8 before
-    MX R = MX::eye(2*st_params.num_segments)*1e-14;
+    MX Q = MX::eye(3)*5e2; 
+    MX Q2 = MX::eye(st_params.q_size)*1e-4; //-8 before
+    MX R = MX::eye(2*st_params.num_segments)*1e-10;
 
     MX thetax = MX::zeros(2,1);
     MX thetay = MX::zeros(2,1);
@@ -349,13 +349,16 @@ Opti MPC_robust::define_problem(){
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
     //end_effector = MX::zeros(3,1);
 
-    //J += mtimes((u(Slice(),0)-u_prev).T(), mtimes(R, (u(Slice(),0)-u_prev))); 
+    J += mtimes((u(Slice(),0)-u_prev).T(), mtimes(R, (u(Slice(),0)-u_prev))); 
 
     for (k = 0; k < Horizon; k++) 
     {
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
-        J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
-        //J += mtimes((u(Slice(),k+1)-u(Slice(),k)).T(), mtimes(R, (u(Slice(),k+1)-u(Slice(),k)))); 
+        J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds 
+        J += mtimes((u(Slice(),k)).T(), mtimes(R, (u(Slice(),k)))); 
+        if (k>1){
+            J += mtimes((u(Slice(),k)-u(Slice(),k-1)).T(), mtimes(R, (u(Slice(),k)-u(Slice(),k-1)))); 
+        }
 
         for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
@@ -416,6 +419,7 @@ Opti MPC_robust::define_problem(){
 
     // prob.subject_to(q(Slice(),0) == q_0);
     // prob.subject_to(q_dot(Slice(),0) == q_dot_0);
+    
  
     MX Q0 = MX::zeros(2*st_params.q_size,1);
     MX Q_DOT_0 = MX::zeros(2*st_params.q_size,1);
@@ -424,9 +428,9 @@ Opti MPC_robust::define_problem(){
         Q_DOT_0(i,0) = pow(-1,i)*q_dot_0(int(i/2)) + b2(i,0);
     }
 
-
     prob.subject_to( mtimes(A1, q(Slice(),0)) <= Q0); 
     prob.subject_to( mtimes(A2, q_dot(Slice(),0)) <= Q_DOT_0); 
+
 
     for (k = 0; k < Horizon; k++)
     {
@@ -447,7 +451,7 @@ Opti MPC_robust::define_problem(){
 
 
     //prob.subject_to( fabs(end_effector) >= 0.5*T1); 
-    //prob.subject_to(q_dot(Slice(),Horizon) == T2); 
+    prob.subject_to(q_dot(Slice(),Horizon) == T2); 
     //prob.subject_to( mtimes(q_dot(Slice(),Horizon).T(), q_dot(Slice(),Horizon)) < 1e-23); 
     
 
@@ -503,7 +507,8 @@ MatrixXd MPC_robust::matrix_exponential(MatrixXd A, int size){
 
 int MPC_robust::solveDARE(MatrixXd A, MatrixXd B, MatrixXd Q, MatrixXd R, MatrixXd &X){
     
-    MatrixXd At = A.transpose(), Bt = B.transpose();
+    At = A.transpose();
+    Bt = B.transpose();
     X = Q;
 
     double EPS = 0.001;
@@ -623,7 +628,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
         return U; 
     }
 
-    std::cout << "Correction from " << U.T() << std::endl; 
+    //std::cout << "Correction from " << U.T() << std::endl; 
 
     auto U_new = U.get_elements(); 
     auto index  = std::minmax_element(U_new.begin(), U_new.end()); 
@@ -646,7 +651,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
 
 
 
-    std::cout << "to "<< U.T() << std::endl; 
+    //std::cout << "to "<< U.T() << std::endl; 
 
     return U; 
 

@@ -50,6 +50,7 @@ class MPC_robust: public ControllerPCC{
         MX u_prev; 
 
         DM u_temp; // input placeholder
+        DM u_robust; 
         DM q_old; 
         DM q_dot_old; 
         MatrixXd p_temp = MatrixXd::Zero(2*st_params.num_segments,1);
@@ -85,6 +86,16 @@ class MPC_robust: public ControllerPCC{
         MX inter = MX::zeros(3,1);
 
         DM disturbance = DM::zeros(2*st_params.q_size, 1);
+
+        MatrixXd P, P_old; 
+        MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
+        MatrixXd Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
+        MatrixXd K;
+
+        DM v_temp; 
+        DM x_temp;
+
+        MatrixXd At, Bt; 
 
         int counter = 0; 
         double total_time = 0;
