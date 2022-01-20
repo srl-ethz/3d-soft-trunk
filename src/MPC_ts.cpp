@@ -196,7 +196,13 @@ void MPC_ts::control_loop(){
             continue;
         } 
 
-        x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();  // needed to fill global variable
+        if (sensor_type != CurvatureCalculator::SensorType::simulator){
+            x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        }
+        else {
+            x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        }
+
 
         // Debug for kinematics
         /*
@@ -418,7 +424,7 @@ Opti MPC_ts::define_problem(){
 
     MX Q = MX::eye(3)*5e2;                              // circular : 5e2     square : 5e2 
     MX Q2 = MX::eye(st_params.q_size)*1e-4;             // 20s      : 1e-4    10s    : 1e-4
-    MX R = MX::eye(2*st_params.num_segments)*2e-10;     // 15 Hz    : 1e-10   15Hz   : 2e-10               
+    MX R = MX::eye(2*st_params.num_segments)*1e-10;     // 15 Hz    : 1e-10   15Hz   : 2e-10               
 
     MX thetax = MX::zeros(2,1);
     MX thetay = MX::zeros(2,1);

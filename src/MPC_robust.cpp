@@ -41,6 +41,8 @@ MPC_robust::MPC_robust(const SoftTrunkParameters st_params, CurvatureCalculator:
 
     //OptiAdvanced ctrl_deb = ctrl.debug(); 
 
+    Q << 1e5*MatrixXd::Identity(st_params.q_size, st_params.q_size), MatrixXd::Zero(st_params.q_size, st_params.q_size), MatrixXd::Zero(st_params.q_size, st_params.q_size), 1e0*MatrixXd::Identity(st_params.q_size, st_params.q_size) ;
+
     control_thread = std::thread(&MPC_robust::control_loop, this);
 }
 
@@ -63,7 +65,12 @@ void MPC_robust::control_loop(){
             continue;
         } 
 
-        x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();  // needed to fill global variable 
+        if (sensor_type != CurvatureCalculator::SensorType::simulator){
+            x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+        }
+        else {
+            x = stm->get_H_base().rotation()*stm->get_H(st_params.num_segments-1).translation();
+        }
 
 
         // need a coversion DM to MatrixXd and viceversa
@@ -73,8 +80,8 @@ void MPC_robust::control_loop(){
         // MatrixXd P, P_old; 
         // MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
         // MatrixXd Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
-        Q.block(st_params.q_size, st_params.q_size, st_params.q_size, st_params.q_size) *= 0.001; // reduce cost for velocity
-        int res; 
+        //Q.block(st_params.q_size, st_params.q_size, st_params.q_size, st_params.q_size) *= 0.001; // reduce cost for velocity
+        // int res; 
 
         // auto start = std::chrono::steady_clock::now();
 
@@ -319,8 +326,8 @@ Opti MPC_robust::define_problem(){
     // 0.0852791, 0.111846, 0.419061, 0.413883, 3.25302, 3.08219, 7.16393, 7.14721
     // 0.254572, 0.133217, 0.442591, 0.410043, 4.59241, 3.55436, 9.93646, 8.1169
 
-    b1 = {0.01, 0.01, 0.006, 0.006, 0.03, 0.03, 0.03, 0.03};
-    b2 = {1.3, 1.3, 1.0, 1.0, 4.6, 4.6, 3.7, 3.7};
+    b1 = {0.002, 0.002, 0.001, 0.001, 0.003, 0.003, 0.003, 0.003};  
+    b2 = {0.15, 0.15, 0.15, 0.15, 0.5, 0.5, 0.5, 0.5};
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -463,7 +470,7 @@ Opti MPC_robust::define_problem(){
 
     Dict opts_dict=Dict();   // to stop printing out solver data
     //opts_dict["ipopt.tol"] = 1e-4;
-    opts_dict["ipopt.acceptable_tol"] = 1e4;
+    opts_dict["ipopt.acceptable_tol"] = 1e2;
     opts_dict["ipopt.print_level"] = 0; 
     opts_dict["ipopt.sb"] = "yes";
     opts_dict["print_time"] = 0;
@@ -628,7 +635,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
         return U; 
     }
 
-    //std::cout << "Correction from " << U.T() << std::endl; 
+    // std::cout << "Correction from " << U.T() << std::endl; 
 
     auto U_new = U.get_elements(); 
     auto index  = std::minmax_element(U_new.begin(), U_new.end()); 
@@ -641,6 +648,10 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
         limit = abs(*index.first); 
     }
 
+    if (limit < 6){
+        return U; 
+    }
+
     //float coeff = (5 - (-5)) / (*index.second - *index.first); 
     float coeff = (5 - (-5)) / (limit - (-limit)); 
 
@@ -651,7 +662,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
 
 
 
-    //std::cout << "to "<< U.T() << std::endl; 
+    // std::cout << "to "<< U.T() << std::endl; 
 
     return U; 
 

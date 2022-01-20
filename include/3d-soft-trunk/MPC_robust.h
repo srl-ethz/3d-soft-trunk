@@ -88,9 +88,10 @@ class MPC_robust: public ControllerPCC{
         DM disturbance = DM::zeros(2*st_params.q_size, 1);
 
         MatrixXd P, P_old; 
-        MatrixXd R = 0.0001*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
-        MatrixXd Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
+        MatrixXd R = 1e-4*MatrixXd::Identity(2*st_params.num_segments, 2*st_params.num_segments);
+        MatrixXd Q = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
         MatrixXd K;
+        int res; 
 
         DM v_temp; 
         DM x_temp;
