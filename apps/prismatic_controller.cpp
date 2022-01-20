@@ -17,19 +17,19 @@ int main(){
     QualisysClient qc{2, cameras};
 
 
-    log_file.open("Push_pull.csv", std::fstream::out);
+    log_file.open("experiment_control/STEPs_kp35000_1.csv", std::fstream::out);
    
     
 
     //controller parameters
 
-    double k_p = 10000;
+    double k_p = 35000;
     double k_d = 1;
     double k_i = 100;
 
     //input desired position
 
-    double x_ref = 0.18; //position will be the offset from the top 
+    double x_ref = 0.14; //position will be the offset from the top 
     double delta_x = x_ref - distance;
     double delta_x_dot = 0;
     double integrator = 0;
@@ -49,17 +49,18 @@ int main(){
    //define pressure/distance relationship for the McKibbens
 
 
-    double p1 =   -181.9;
-    double p2 =  -696.4;
-    double p3 =   -603.3;
-    double p4 =   461.3;
-    double p5 =     551.3;
-    double p6 =   -115.9;
-    double p7 =   -429.9;
-    double p8 =   1161;
+    double p1 =   1.41328141453413e+16;
+    double p2 =  -8.45833368929168e+15;
+    double p3 =   2.88855935347167e+15;
+    double p4 =   -615654455624184;
+    double p5 =     83859684251354;
+    double p6 =   -7129046976908.42;
+    double p7 =   345824233842.199;
+    double p8 =   -7328966565.07981;
+    double p9 =  -1.03164077889415e+16;
    
 
-    long double static_pressure = p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8; //distance as funtion of pressure
+    long double static_pressure = p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 ; //distance as funtion of pressure
    
 
     //long double static_pressure = 2000 - 1400/0.05*(x_ref-0.15);
@@ -75,7 +76,8 @@ int main(){
         
         //define reference trajectory
         //x_ref = 0.02*sin(2*M_PI*i/250) + 0.17;
-        
+        //x_ref = 0.18;
+        if (i%100==0) x_ref += 0.01;
 
         //get data and calculate values
         qc.getData(frames, timestamp);
@@ -85,12 +87,14 @@ int main(){
 
         //activate piston if actuator needs to move down
         if (delta_x > 0) {
-            static_pressure = 2000 - 1400/0.05*(distance-0.15);
+            static_pressure =  p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 ;
             for (size_t f = 1; f < 7; f++)
             {
                 vc.setSinglePressure(f, static_pressure);
             }
-            vc.setSinglePressure(0, k_p*1.5*delta_x + k_d*delta_x_dot + k_i*integrator);
+            double piston_p = k_p*1.5*delta_x + k_d*delta_x_dot + k_i*integrator;
+            if (piston_p > 1100) piston_p = 1100;
+            vc.setSinglePressure(0, piston_p);
             //log data
             log_file << x_ref << "," << distance << "," << delta_x << "," << "pushing with" << "," << k_p*1.5*delta_x + k_d*delta_x_dot + k_i*integrator << "," << vc.sensor_pressures[0] << "," << static_pressure << "," << integrator << "\n";
         }
@@ -99,15 +103,17 @@ int main(){
         //activate McKs when its supposed to move up
         else {
             vc.setSinglePressure(0, 0); //reset piston pressure, otherwise it will keep on pushing
-            static_pressure =  2000 - 1400/0.05*(distance-0.15);
+            static_pressure =   p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 ;
+            double mck_p = -k_p*delta_x + k_d*delta_x_dot + k_i*integrator;
+            if (mck_p > 1100) mck_p = 1100;
             for (size_t f = 1; f < 7; f++)
             {
-                vc.setSinglePressure(f, static_pressure + k_p*-delta_x + k_d*delta_x_dot - k_i*integrator);
+                vc.setSinglePressure(f, static_pressure + mck_p);
             }
              //compute average of all active valves
             double average = 0;
             int active_valves = 0;
-            for(int j = 0; j < vc.sensor_pressures.size(); j++){
+            for(int j = 1; j < vc.sensor_pressures.size(); j++){
                 if (vc.sensor_pressures[j] != 0)
                 {
                     active_valves++;
