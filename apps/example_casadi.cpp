@@ -6,20 +6,32 @@ using namespace casadi;
 
 int main(){
 
-    DM q_0 = {1,2,3,4}; 
-    DM q_dot_0 = {1,1,1,1}; 
-    DM b1 = {5,5,5,5,5,5,5,5}; 
+    DM q_0 = {5,5,5,5}; 
+    DM q_dot_0 = {2,2,2,2}; 
+    DM b1 = {3,3,3,3,3,3,3,3}; 
     DM b2 = {3,3,3,3,3,3,3,3};
 
     DM Q0 = DM::zeros(2*4,1);
     DM Q_DOT_0 = DM::zeros(2*4,1);
     for (int i = 0; i < 2*4; i++){
         Q0(i,0) = pow(-1,i)*q_0(int(i/2)) + b1(i,0);
-        Q_DOT_0(i,0) = ((-1)^(i))*q_dot_0(int(i/2)) + b2(i,0);
+        Q_DOT_0(i,0) = pow(-1,i)*q_dot_0(int(i/2)) + b2(i,0);
     }
 
     std::cout << Q0.T() << std::endl;
     std::cout << Q_DOT_0.T() << std::endl;
+
+    DM A1 = DM::zeros(8,4); 
+    A1(0,0) = 1;
+    A1(1,0) = -1;
+    A1(2,1) = 1; 
+    A1(3,1) = -1;
+    A1(4,2) = 1;
+    A1(5,2) = -1;
+    A1(6,3) = 1;
+    A1(7,3) = -1;
+
+    std::cout << mtimes(A1, q_0).T() << std::endl; 
 
 /*
     DM A = DM::nan(2,1);

@@ -32,7 +32,7 @@ int main(){
     //x_ref = x_ref_center;
     x_ref(0,0) = 0.02;
     x_ref(1,0) = 0.02;
-    x_ref(2,0) = -0.25;
+    x_ref(2,0) = -0.27;
     std::thread print_thread(printer, std::ref(mpc));
 
     
@@ -58,7 +58,7 @@ int main(){
         for (int i = 0; i< mpc.Horizon +1; i++){
             trajectory(0,i) = r*cos(coef*(t+i*dt));
             trajectory(1,i) = r*sin(coef*(t+i*dt));
-            trajectory(2,i) = -0.215;
+            trajectory(2,i) = -0.26;
         }
 
         // trajectory(0,0) = 0.09; 
@@ -80,7 +80,7 @@ int main(){
 
     x_ref(0,0) = 0.03;
     x_ref(1,0) = 0.03;
-    x_ref(2,0) = -0.23;
+    x_ref(2,0) = -0.27;
     
     mpc.set_ref(x_ref);
     srl::sleep(1);
@@ -88,3 +88,59 @@ int main(){
     srl::sleep(1);
     return 1;
 }
+
+// For joint control
+// int main(){
+//     SoftTrunkParameters st_params;
+//     st_params.finalize();
+//     MPC mpc(st_params, CurvatureCalculator::SensorType::qualisys);
+//     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
+//     srl::State state = st_params.getBlankState();
+//     srl::State state_ref1 = st_params.getBlankState();
+//     srl::State state_ref2 = st_params.getBlankState();
+
+
+//     double t = 0;
+//     double dt = 0.1;
+//     double time = 10;
+    
+
+//     mpc.toggle_log();
+//     while (t < time/2){
+        
+//         state_ref1.q << 0.222, -0.116, -0.077, -0.866;
+//         state_ref2 = state_ref1; 
+//         int edge = 0;
+//         for (int i = 0; i < mpc.Horizon + 1; i++){
+//             if (t + i*dt >= time/2){   //time/2
+//                 state_ref2.q << -0.133, 0.075, -0.003, 0.670;
+//                 edge = i;
+//                 break;
+//             }
+//         }
+
+//         mpc.set_ref(state_ref1, state_ref2, edge);
+
+        
+//         t+=dt;
+//         srl::sleep(dt);
+//         std::cout << t << std::endl;
+//     }
+
+//     while (t < time){
+        
+//         state_ref1.q << -0.133, 0.075, -0.003, 0.670;
+//         state_ref2 = state_ref1;
+
+//         mpc.set_ref(state_ref1, state_ref2, 0);
+
+        
+//         t+=dt;
+//         srl::sleep(dt);
+//         std::cout << t << std::endl;
+//     }
+
+//     mpc.toggle_log();
+//     srl::sleep(1);
+//     return 1;
+// }

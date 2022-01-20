@@ -14,7 +14,7 @@ int main(){
     //MPC_ts mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 5.0;
+    double time = 20.0;
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -34,7 +34,7 @@ int main(){
     std::unique_ptr<SoftTrunkModel> stm;
     std::unique_ptr<CurvatureCalculator> cc;
 
-    double coef = 1 * 3.1415 / time;  //half a turn
+    double coef = 4 * 3.1415 / time;  //half a turn
     double r = 0.1;
     double tol = 0.05;
     double t = 0;
@@ -49,13 +49,13 @@ int main(){
     const double hz = 1./dt;
     qs.set_frequency(hz);
 
-    //qs.toggle_log(); 
+    qs.toggle_log(); 
 
     auto start = std::chrono::steady_clock::now();
 
     while ( t < time){
 
-        trajectory << r*cos(coef*t), r*sin(coef*t),-0.215;  // circular trajectory
+        trajectory << r*cos(coef*t), r*sin(coef*t),-0.250;  // circular trajectory
         //trajectory << r*cos(coef*t), 0, -0.200;               // linear trajectory
         x_ref = trajectory; 
 
@@ -80,6 +80,9 @@ int main(){
             new_counter = counter/10000; 
             if (( new_counter > 9 ) & (new_counter % 5 == 0)){
                 std::cout << "Number of iteration = " << new_counter << std::endl;
+                if (new_counter > 1000){
+                    t += dt; 
+                }
             }  
         }
         
@@ -92,7 +95,7 @@ int main(){
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Simulated " << time << "s of motion in " << elapsed.count() <<"s realtime using timestep " << dt << "\n";
 
-    //qs.toggle_log(); 
+    qs.toggle_log(); 
 
     //return 0;
 }
