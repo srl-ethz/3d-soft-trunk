@@ -95,7 +95,7 @@ void MPC::control_loop(){
 
         u_temp = sol.value(u)(Slice(),0); 
 
-        std::cout << "solution :" << u_temp << std::endl;
+        // std::cout << "solution :" << u_temp << std::endl;
 
         p_temp = Eigen::VectorXd::Map(DM::densify(u_temp).nonzeros().data(),2*st_params.num_segments,1 ); 
 
@@ -115,7 +115,7 @@ void MPC::control_loop(){
 
         p = stm->pseudo2real(p_temp); 
 
-        //std::cout << "pressure input : " << p.transpose() << std::endl; 
+        std::cout << "pressure input : " << p.transpose() << std::endl; 
 
         if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
         else {
@@ -190,7 +190,7 @@ Opti MPC::define_problem(){
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500; 
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*2; 
+    MX Du = MX::ones(2*st_params.num_segments,1)*5; // 2 for simulation
 
     //std::cout << "Delta u = " << Du << std::endl; 
 

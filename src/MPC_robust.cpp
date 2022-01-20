@@ -335,7 +335,7 @@ Opti MPC_robust::define_problem(){
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*8;   // 8~10 seems to achieve the best result with 20Hz rate
+    MX Du = MX::ones(2*st_params.num_segments,1)*20;   // 8 for simulation, 20 real
 
     MX end_effector = MX::zeros(3,1); 
 

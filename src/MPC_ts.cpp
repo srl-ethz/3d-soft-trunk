@@ -205,32 +205,32 @@ void MPC_ts::control_loop(){
 
 
         // Debug for kinematics
-        /*
-        std::cout << "=========================================" << std::endl; 
-        std::cout << "End-effector position real : " << x.transpose() << std::endl;  
+        
+        // std::cout << "=========================================" << std::endl; 
+        // std::cout << "End-effector position real : " << x.transpose() << std::endl;  
 
-        MatrixXd ee_t = MatrixXd::Zero(3,1); 
-        MatrixXd ee_s = MatrixXd::Zero(3,1);
+        // MatrixXd ee_t = MatrixXd::Zero(3,1); 
+        // MatrixXd ee_s = MatrixXd::Zero(3,1);
 
-        VectorXd thetax(2), thetay(2), length1(2), length2(2); 
+        // VectorXd thetax(2), thetay(2), length1(2), length2(2); 
 
-        for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
+        // for (int kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
-            thetax(kk) = state.q(2*kk,0); 
-            thetay(kk) = state.q(2*kk+1,0);
-            length1(kk) = -st_params.lengths[2*kk]; 
-            length2(kk) = -st_params.lengths[2*kk+1]; 
+        //     thetax(kk) = state.q(2*kk,0); 
+        //     thetay(kk) = state.q(2*kk+1,0);
+        //     length1(kk) = -st_params.lengths[2*kk]; 
+        //     length2(kk) = -st_params.lengths[2*kk+1]; 
 
-        }
+        // }
 
-        ee_t = ee_position_1(thetax, thetay, length1, length2); 
-        ee_s = ee_position_2(thetax, thetay, length1, length2);
+        // ee_t = ee_position_1(thetax, thetay, length1, length2); 
+        // ee_s = ee_position_2(thetax, thetay, length1, length2);
 
     
-        std::cout << "End-effector position mine (long): " << ee_t.transpose() << std::endl;
-        std::cout << "End-effector position mine (short): " << ee_s.transpose() << std::endl;
-        std::cout << "=========================================" << std::endl;
-        */
+        // std::cout << "End-effector position mine (long): " << ee_t.transpose() << std::endl;
+        // std::cout << "End-effector position mine (short): " << ee_s.transpose() << std::endl;
+        // std::cout << "=========================================" << std::endl;
+        
 
 
         // sp_A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
@@ -414,7 +414,7 @@ Opti MPC_ts::define_problem(){
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*8;   // 8~10 seems to achieve the best result with 20Hz rate
+    MX Du = MX::ones(2*st_params.num_segments,1)*20;   // 8 for simulation, 20 real 
 
     MX end_effector = MX::zeros(3,1); 
 
