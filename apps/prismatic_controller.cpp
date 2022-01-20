@@ -29,7 +29,7 @@ int main(){
 
     //input desired position
 
-    double x_ref = 0.15; //position will be the offset from the top 
+    double x_ref = 0.18; //position will be the offset from the top 
     double delta_x = x_ref - distance;
     double delta_x_dot = 0;
     double integrator = 0;
@@ -59,7 +59,7 @@ int main(){
     double p8 =   1161;
    
 
-    long double static_pressure = p1*pow(x_ref,7) + p2*pow(x_ref,6) + p3*pow(x_ref,5) + p4*pow(x_ref,4) + p5*pow(x_ref,3) + p6*pow(x_ref,2) + p7*x_ref + p8; //distance as funtion of pressure
+    long double static_pressure = p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8; //distance as funtion of pressure
    
 
     //long double static_pressure = 2000 - 1400/0.05*(x_ref-0.15);
@@ -68,13 +68,13 @@ int main(){
     distance = (frames[0].translation()-frames[1].translation()).norm();
     srl::sleep(1);
 
-    //PD control loop
+    //PID control loop
     srl::Rate r{1./dt};
-    for (size_t i = 0; i < 1000; i++)
+    for (size_t i = 0; i < 500; i++)
     {
         
         //define reference trajectory
-        x_ref = 0.02*sin(2*M_PI*i/250) + 0.17;
+        //x_ref = 0.02*sin(2*M_PI*i/250) + 0.17;
         
 
         //get data and calculate values
@@ -85,24 +85,24 @@ int main(){
 
         //activate piston if actuator needs to move down
         if (delta_x > 0) {
-            static_pressure = p1*pow(x_ref,7) + p2*pow(x_ref,6) + p3*pow(x_ref,5) + p4*pow(x_ref,4) + p5*pow(x_ref,3) + p6*pow(x_ref,2) + p7*x_ref + p8;
+            static_pressure = 2000 - 1400/0.05*(distance-0.15);
             for (size_t f = 1; f < 7; f++)
             {
                 vc.setSinglePressure(f, static_pressure);
             }
-            vc.setSinglePressure(0, k_p*1.5*delta_x + k_d*delta_x_dot);
+            vc.setSinglePressure(0, k_p*1.5*delta_x + k_d*delta_x_dot + k_i*integrator);
             //log data
-            log_file << x_ref << "," << distance << "," << delta_x << "," << "pushing with" << "," << k_p*1.5*delta_x + k_d*delta_x_dot << "," << vc.sensor_pressures[0] << "," << static_pressure << "," << integrator << "\n";
+            log_file << x_ref << "," << distance << "," << delta_x << "," << "pushing with" << "," << k_p*1.5*delta_x + k_d*delta_x_dot + k_i*integrator << "," << vc.sensor_pressures[0] << "," << static_pressure << "," << integrator << "\n";
         }
 
 
         //activate McKs when its supposed to move up
         else {
             vc.setSinglePressure(0, 0); //reset piston pressure, otherwise it will keep on pushing
-            static_pressure =  p1*pow(x_ref,7) + p2*pow(x_ref,6) + p3*pow(x_ref,5) + p4*pow(x_ref,4) + p5*pow(x_ref,3) + p6*pow(x_ref,2) + p7*x_ref + p8;
+            static_pressure =  2000 - 1400/0.05*(distance-0.15);
             for (size_t f = 1; f < 7; f++)
             {
-                vc.setSinglePressure(f, static_pressure + k_p*-delta_x + k_d*delta_x_dot);
+                vc.setSinglePressure(f, static_pressure + k_p*-delta_x + k_d*delta_x_dot - k_i*integrator);
             }
              //compute average of all active valves
             double average = 0;
@@ -116,10 +116,10 @@ int main(){
             }
             average = average/active_valves;
             //log data
-            log_file << x_ref << "," << distance << "," << delta_x << "," << "pulling with" << "," <<  static_pressure + k_p*-delta_x + k_d*delta_x_dot << "," << average << "," << static_pressure << "," << integrator << "\n";
+            log_file << x_ref << "," << distance << "," << delta_x << "," << "pulling with" << "," <<  static_pressure + k_p*-delta_x + k_d*delta_x_dot - k_i*integrator << "," << average << "," << static_pressure << "," << integrator << "\n";
         }
 
-        integrator += delta_x;
+        //integrator += delta_x;
         r.sleep();
         
     }
