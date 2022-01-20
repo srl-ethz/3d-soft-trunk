@@ -190,16 +190,16 @@ Opti MPC::define_problem(){
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500; 
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*5; 
+    MX Du = MX::ones(2*st_params.num_segments,1)*2; 
 
     //std::cout << "Delta u = " << Du << std::endl; 
 
     T1 = q_r(Slice(), Horizon); 
     T2 = q_dot_r;  //terminal condition with delta formulation
 
-    MX Q1 = MX::eye(st_params.q_size)*1e8; 
-    MX Q2 = MX::eye(st_params.q_size)*1e0; 
-    MX R = MX::eye(2*st_params.num_segments)*1e-3;
+    MX Q1 = MX::eye(st_params.q_size)*1e8;          // 2 segment: 8
+    MX Q2 = MX::eye(st_params.q_size)*1e0;          // 2 pcc    : 0
+    MX R = MX::eye(2*st_params.num_segments)*1e-3;  //          :-3
 
     std::cout << "Variables initialized" << std::endl; 
 

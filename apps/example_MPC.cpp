@@ -12,6 +12,14 @@ int main(){
     std::cout << "Task space control enabled : " << task_space_control << std::endl; 
 
     SoftTrunkParameters st_params;
+
+    st_params.num_segments = 3;
+    st_params.masses = {0.160, 0.020, 0.082, 0.023, 0.050, 0.020};
+    st_params.lengths = {0.125, 0.02, 0.125, 0.02, 0.125, 0.02};
+    st_params.diameters = {0.035, 0.028, 0.0198, 0.010};
+    st_params.shear_modulus = {40686, 59116, 60000};
+    st_params.drag_coef = {28000., 8000., 3000.};
+
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
 
@@ -89,12 +97,12 @@ int main(){
 
         while (t < time/2){
         
-            state_ref1.q << 0.222, -0.116, -0.077, -0.866;
+            state_ref1.q << 0.222, -0.116, -0.077, -0.866, 0.02, 0.02;
             state_ref2 = state_ref1; 
             int edge = 0;
             for (int i = 0; i < mpc1.Horizon + 1; i++){
                 if (t + i*0.05 >= time/2){   //time/2
-                    state_ref2.q << -0.133, 0.075, -0.003, 0.670;
+                    state_ref2.q << -0.133, 0.075, -0.003, 0.670, -0.02, -0.02;
                     edge = i;
                     break;
                 }
@@ -124,7 +132,7 @@ int main(){
             //     std::cout << "Convergerged in " << t << std::endl;
             // }
 
-            srl::sleep(0.05);  // this needs to be accoding to the control rate, tune to have output 1 solution, 1 time
+            srl::sleep(0.06);  // this needs to be according to the control rate, tune to have output 1 solution, 1 time
             t += dt; 
         }
 
@@ -133,7 +141,7 @@ int main(){
 
         while (t < time){
 
-            state_ref1.q << -0.133, 0.075, -0.003, 0.670;
+            state_ref1.q << -0.133, 0.075, -0.003, 0.670, -0.02, -0.02;
             state_ref2 = state_ref1;
 
             mpc1.set_ref(state_ref1, state_ref2, 0);
@@ -158,7 +166,7 @@ int main(){
             // if ( (state.q - state_ref.q).norm() < tol){
             //     std::cout << "Convergerged in " << t << std::endl;
             // }
-            srl::sleep(0.05);
+            srl::sleep(0.06);
             t += dt; 
         }
     }
