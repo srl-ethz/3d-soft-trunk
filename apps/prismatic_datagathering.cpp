@@ -18,8 +18,8 @@ int main(){
     QualisysClient qc{2, cameras};
 
 
-    log_file.open("experiment_dadp_McK/dxdp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
-    log_file2.open("experiment_dadp_McK/dadp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
+    log_file.open("experiment_control/dxdp_McK_bottom_001_1__2000_1_withSoPrA.csv", std::fstream::out);
+    //log_file2.open("experiment_dadp_McK/dadp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
    
 
     double p1 =   2.22e-14;
@@ -28,6 +28,7 @@ int main(){
     double p4 =   -9.85e-06;
     double p5 =      0.2005;
 
+/*
     //outer loop defines initial position
     for (size_t i = 400; i < max_pressure; i+=200)
     {
@@ -92,13 +93,13 @@ int main(){
     }
     log_file.close();
     log_file2.close();
-    
+    */
     //this section tracks the p/x trajectory
-      /*  
-    for (size_t i = 0; i < max_pressure; i+=20)
+        srl::Rate r{1./dt};
+    for (size_t i = 0; i < max_pressure; i-=1)
         {
           
-        vc.setSinglePressure(0,i);       
+        vc.setSinglePressure(0,0);       
 
  
         vc.setSinglePressure(1,i);
@@ -114,7 +115,7 @@ int main(){
         log_file << distance << "," << timestamp << "," << i << "\n";
         }
 
-     */
+     log_file.close();
    
 
     return 1;
