@@ -56,6 +56,9 @@ target_link_libraries(prismatic_datagathering ValveController QualisysClient)
 add_executable(prismatic_controller prismatic_controller.cpp)
 target_link_libraries(prismatic_controller ValveController QualisysClient)
 
+add_executable(spline_parser spline_parser.cpp)
+target_link_libraries(spline_parser ${EIGEN3_LIBRARIES} fmt)
+
 if(${roscpp_FOUND})
     add_executable(ui_controller ui_controller.cpp)
     target_link_libraries(ui_controller SoftTrunkModel OSC VisualizerROS)

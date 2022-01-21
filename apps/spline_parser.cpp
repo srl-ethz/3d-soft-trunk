@@ -1,0 +1,42 @@
+#include <Eigen/Dense>
+#include <fmt/core.h>
+using namespace Eigen;
+
+/** @brief get nth order spline value at x
+ * @param x place the function should be evaluated
+ * @param L spline breaks
+ * @param c polynomial coefficients */
+
+double get_spline_value(double x, const VectorXd& L, const MatrixXd c){
+    int br = -1;
+    double splineval = 0;
+    assert(c.rows() == L.size()-1); //make sure L and c are compatible
+
+    for (int i = 0; i < L.size(); i++){ //find which polynomial we are using       
+        if (x <= L(i+1) && x > L(i)) {
+            br = i;
+            break;
+        }
+    }
+
+    assert(br>=0); //if the spot we want to evaluate is not described by the spline, return an error
+    
+    for(int i = 0; i < c.cols(); i++){
+        splineval += c(br,i)*pow(x-L(br),c.cols()-1-i);
+    }
+
+    return splineval;
+}
+
+int main(){
+    VectorXd test_breaks = VectorXd::Zero(18);
+    test_breaks << 0.147239000000000,0.149303000000000,0.151819000000000,0.155310000000000,0.157321000000000,0.161131000000000,0.166565000000000,0.172667000000000,0.178897000000000,0.185014000000000,0.189881000000000,0.194217000000000,0.196451000000000,0.197879000000000,0.198726000000000,0.199102000000000,0.199290000000000,0.200005000000000;
+    fmt::print("Test breaks length: {}\n", test_breaks.size());
+    MatrixXd test_coefs = MatrixXd::Zero(17,4);
+    test_coefs << 429869651.771123,-955620.686415518,-48308.4972903711,1999,429869651.771130,1706132.19735126,-46759.4415317998,1899,-1306109308.37940,4950788.32891977,-30010.6294877017,1799,2725660016.39473,-8728094.45773767,-43197.2051834050,1699,-717207798.639405,7715812.42117161,-45232.9043589393,1599,57687395.5112432,-481872.717276795,-17671.5940871000,1499,-32870108.7072861,458547.204347491,-17798.3449243579,1398,18409730.3502344,-143173.005648087,-15873.9315638941,1299,-55122479.6324364,200904.854597795,-15514.2621449374,1199,111574596.289301,-810647.769137044,-19244.0595531740,1099,-393889234.017355,818452.911283034,-19206.0719263495,999,-164293869.384974,-4305258.24481472,-34324.8598525430,899,-2739747633.00338,-5406355.75743280,-56020.6055335638,799,-21356798030.1833,-17143434.6172194,-88221.7061885674,700,-517909352318.027,-71411058.4119156,-163227.361784246,600,790194933915.116,-655612807.826631,-436588.335489931,501,790194933915.112,-209942865.098521,-599312.801999854,401;
+    fmt::print("Test coefs size: {}\n",test_coefs.size());
+
+    fmt::print("Evaluated at 0.18 as: {}\n", get_spline_value(0.18,test_breaks,test_coefs));
+
+    return 1;
+}
