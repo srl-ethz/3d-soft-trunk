@@ -19,20 +19,9 @@ int main(){
 
     log_file.open("experiment_control/playaround.csv", std::fstream::out);
    
-    
+   srl::sleep(4);
 
-    //controller parameters
-
-    double k_p = 35000;
-    double k_d = 1;
-    double k_i = 100;
-
-    //input desired position
-
-    double x_ref = 0.115; //position will be the offset from the top 
-    double delta_x = x_ref - distance;
-    double delta_x_dot = 0;
-    double integrator = 0;
+   
 
     //define pressure/distance relationship for the McKibbens
 
@@ -72,7 +61,7 @@ int main(){
     double p8 =   -5911301273.26948;
     double p9 =  -9.03790616540163e+15;
     */
-
+/*
     //parameters with sopra attached druing lifting
     double p1 = 1.27149367844176e+16; 
     double p2 =  -7.89636435403446e+15;
@@ -84,7 +73,7 @@ int main(){
     double p8 =   -8527820459.58139;
     double p9 =  -8.94404845044271e+15;
 
-/*
+
     //parameters with sopra attached druing falling
     double p1 = -2.29494316545169e+15; 
     double p2 = 1.64098919415634e+15;
@@ -97,30 +86,98 @@ int main(){
     double p9 =  1.38147468102622e+15;
 */
 
-    long double static_pressure = p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 ; //distance as funtion of pressure
+  //parameters with sopra attached druing lifting
+    double p1 = 2.27286685805334e+16; 
+    double p2 =  -1.44742813860741e+16;
+    double p3 =  5.26144455255893e+15;
+    double p4 =   -1.19403849976615e+15;
+    double p5 =   173236603400900;
+    double p6 =   -15691774818037.8;
+    double p7 =   811336068389.078;
+    double p8 =   -18333497313.1710;
+    double p9 =  -1.55973266940115e+16;
+
+    //parameters with sopra during falling
+
+    double pa1 = -3.46533160247876e+15; 
+    double pa2 =  2.25018172335107e+15;
+    double pa3 =  -834656736243444;
+    double pa4 =   193435836054681;
+    double pa5 =   -28681818851200.6;
+    double pa6 =   2657163630691.87;
+    double pa7 =   -140622269201.993;
+    double pa8 =   3254846129.69969;
+    double pa9 =  2.33400234637593e+15;
+
+     //controller parameters
+
+    double k_p = 20000; //gain without SoPrA around 35000, with SoPrA around 8000
+    double k_d = 2*sqrt(k_p);
+    double k_i = 0;
+
+    //input desired position
+
+    double x_ref = 0.210; //position will be the offset from the top 
+    double delta_x = x_ref - distance;
+    double x_dot_ref = 0;
+    double delta_x_dot = 0;
+    double integrator = 0;
+    double distance_prev = 0; // used for computation of delta_x_dot
+
+
+    long double static_pressure = 100*(0.005-delta_x)*(pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8) + (1-100*(0.005-delta_x))*(p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8);
+
+    long double static_pressure_up  = 1.3*(p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8) ; //distance as funtion of pressure
+    long double static_pressure_down = pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8 ;
     //long double static_pressure =  p9*pow(x_ref,8) + p1*pow(x_ref,7) + p2*pow(x_ref,6) + p3*pow(x_ref,5) + p4*pow(x_ref,4) + p5*pow(x_ref,3) + p6*pow(x_ref,2) + p7*x_ref + p8 ;
 
 
     //PID control loop
     log_file << "Input" << "," << "Output" << "," << "error" << "," << "state" << "," << "desired pressure" << "," << "actual pressure" << "," << "static feed forward pressure" << "\n";
+    
+    qc.getData(frames, timestamp);
+    distance = (frames[0].translation()-frames[1].translation()).norm();
+    delta_x = x_ref - distance;
+    distance_prev = distance;
     srl::Rate r{1./dt};
+    
     for (size_t i = 0; i < 1000; i++)
     {
         
         //define reference trajectory
-        x_ref = 0.025*cos(2*M_PI*i/500) + 0.180;
-        //x_ref = 0.155;
-        //if (i%100==0) x_ref += 0.01;
+        if (i < 1000)
+       {
+            x_ref = 0.022*cos(2*M_PI*i/500) + 0.188;
+            x_dot_ref = 0.023*sin(2*M_PI*i/500)*2*M_PI/500;
+       }
+        else {
+            x_dot_ref = 0;
+            if (i==250) x_ref = 0.17;
+            if (i==500) x_ref = 0.195;
+       }
 
         //get data and calculate values
         qc.getData(frames, timestamp);
         distance = (frames[0].translation()-frames[1].translation()).norm();
         delta_x = x_ref - distance;
+        delta_x_dot = x_dot_ref - (distance - distance_prev)/dt;
+        if(distance - distance_prev < 0.001) {
+            delta_x_dot = 0;
+        }
+        distance_prev = distance;
 
+        long double static_pressure_up  = (p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8) ; 
+        //if (static_pressure_up > 1800) static_pressure_up;
+
+        long double static_pressure_down = pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8 ;
+
+        static_pressure =  (1-100*(0.005-delta_x))*static_pressure_down + 100*(0.005-delta_x)*static_pressure_up;
+        if (delta_x>0.005) static_pressure = static_pressure_down;
+        if (delta_x<-0.005) static_pressure = static_pressure_up;
+        
 
         //activate piston if actuator needs to move down
         if (delta_x > 0) {
-            static_pressure =  p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8;
 
             vc.setSinglePressure(1, static_pressure);
 
@@ -128,22 +185,26 @@ int main(){
             if (piston_p > 800) piston_p = 800;
             if (piston_p < 0) piston_p = 0;
             vc.setSinglePressure(0, piston_p);
+
             //log data
-            log_file << x_ref << "," << distance << "," << delta_x << "," << "pushing" << "," << piston_p << "," << vc.sensor_pressures[0] << "," << static_pressure << "\n";
+            log_file << x_ref << "," << distance << "," << delta_x << "," << "pushing" << "," << piston_p << "," << vc.sensor_pressures[0] << "," << static_pressure << "," << p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 << ","  << pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8 <<  "\n";
         }
 
 
         //activate McKs when its supposed to move up
         else {
-            vc.setSinglePressure(0, 0); //reset piston pressure, otherwise it will keep on pushing
-            static_pressure =  p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8;
-            double mck_p =  static_pressure -k_p*delta_x + k_d*delta_x_dot + k_i*integrator;
-            if (mck_p > 2000) mck_p = 2000;
-            if (mck_p < 0) mck_p = 0;
-            vc.setSinglePressure(1, mck_p);
+            
+            vc.setSinglePressure(0,  k_d*delta_x_dot); //reset piston pressure, otherwise it will keep on pushing
+            
+            if (static_pressure < 0) {
+                vc.setSinglePressure(1, -k_p*delta_x - k_d*delta_x_dot + k_i*integrator);
+            } else {
+                vc.setSinglePressure(1, static_pressure -k_p*delta_x - k_d*delta_x_dot + k_i*integrator);
+            }
+            
         
             //log data
-            log_file << x_ref << "," << distance << "," << delta_x << "," << "pulling" << "," <<  mck_p << "," << vc.sensor_pressures[1] << "," << static_pressure << "\n";
+            log_file << x_ref << "," << distance << "," << delta_x << "," << "pulling" << "," <<  static_pressure -k_p*delta_x + k_d*delta_x_dot + k_i*integrator << "," << vc.sensor_pressures[1] << "," << static_pressure << ","  << p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 << ","  << pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8 <<  "\n";
         }
 
         //integrator += delta_x;
