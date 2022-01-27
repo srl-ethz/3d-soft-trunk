@@ -190,8 +190,8 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
     {
         segment_id = section_id / (st_params.sections_per_segment+1);
         // differentiation is calculated via phi-theta parametrization for easier formulation.
-        int q_head = 2 * section_id;
-        int xi_head = 5 * section_id;
+        int q_head = 2 * section_id + 1;
+        int xi_head = 5 * section_id + 1;
         l = st_params.lengths[2 * segment_id] / st_params.sections_per_segment;
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */
@@ -352,10 +352,7 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         p0 = p1;
         t0 = t1;
     }
-    Eigen::MatrixXd Jm_intermediate;
-    Jm_intermediate = Jm_.block(0,0,Jm_.rows()-1,Jm_.cols()-1);
     Jm_(0,0) = 1;
-    Jm_.bottomRightCorner(Jm_intermediate.rows(),Jm_intermediate.cols()) = Jm_intermediate;
 }
 
 void AugmentedRigidArm::update_dJm(const VectorXd &q, const VectorXd &dq)

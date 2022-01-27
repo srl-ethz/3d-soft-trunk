@@ -16,8 +16,8 @@ int main(){
         // set to have about the same curvature as a whole regardless of scale
         double rand = -2.093 / st_params.sections_per_segment / st_params.num_segments;
         for (int j = 0; j < st_params.sections_per_segment; j++){
-            state.q(2*i*st_params.sections_per_segment + 2*j + 2) = -rand;
-            state.q(2*i*st_params.sections_per_segment + 2*j +1) = rand * 0.022 / 0.19;
+            state.q(2*i*st_params.sections_per_segment + 2*j + 2) = 0.;
+            state.q(2*i*st_params.sections_per_segment + 2*j +1) = 0.3;
         }
             
     }
