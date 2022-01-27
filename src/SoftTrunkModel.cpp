@@ -45,6 +45,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     //fmt::print("D:\n{}\n", D);
     //fmt::print("K:\n{}\n", K);
     //fmt::print("A_pseudo:\n{}\n", A_pseudo);
+    fmt::print("SoftTrunkModel initialized\n");
 }
 
 void SoftTrunkModel::updateState(const srl::State &state)

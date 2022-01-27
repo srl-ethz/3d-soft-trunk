@@ -113,15 +113,13 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         t0 = t1;
         p0 = p1;
     }
-    fmt::print("xi_ before:\n{}\n", xi_);
     Eigen::VectorXd xi_intermediate;
     xi_intermediate = xi_;
-    for (size_t i = 0; i < num_joints; i++)
+    for (size_t i = 0; i < num_joints - 1; i++)
     {
       xi_(i+1) = xi_intermediate(i);
     }
     xi_(0) = prismatic_value;
-    fmt::print("xi_ after:\n{}\n", xi_);
 }
 
 void AugmentedRigidArm::update_drake_model()
@@ -157,7 +155,6 @@ void AugmentedRigidArm::update_drake_model()
       
     }
     H_base = multibody_plant->GetFrameByName("softTrunk_base").CalcPoseInWorld(plant_context).GetAsMatrix4();
-    fmt::print("Successfully update drake model\n");
 }
 
 /**
@@ -392,9 +389,9 @@ void AugmentedRigidArm::update(const srl::State &state)
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
-    for (int i = 0; i < st_params.num_segments; i++)
+    for (int i = 0; i < st_params.num_segments; i++){
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
-
+    }
     //    update_dJm(state.q,state.dq);
     //
 }

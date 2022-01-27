@@ -4,10 +4,11 @@
 int main(){
 
     SoftTrunkParameters st_params;
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
-    VectorXd p = VectorXd::Zero(3*st_params.num_segments);
+    VectorXd p = VectorXd::Zero(3*st_params.num_segments+1);
     double time = 4.0;
     const double dt = 0.01;
 
@@ -15,8 +16,8 @@ int main(){
         // set to have about the same curvature as a whole regardless of scale
         double rand = -2.093 / st_params.sections_per_segment / st_params.num_segments;
         for (int j = 0; j < st_params.sections_per_segment; j++){
-            state.q(2*i*st_params.sections_per_segment + 2*j + 1) = -rand;
-            state.q(2*i*st_params.sections_per_segment + 2*j ) = rand * 0.022 / 0.19;
+            state.q(2*i*st_params.sections_per_segment + 2*j + 2) = -rand;
+            state.q(2*i*st_params.sections_per_segment + 2*j +1) = rand * 0.022 / 0.19;
         }
             
     }

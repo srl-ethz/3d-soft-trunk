@@ -137,7 +137,8 @@ bool ControllerPCC::simulate(const VectorXd &p){
         state.ddq = b_inv_rest + b_inv_d*state.dq;
         state.dq += 0.00001*(2*(2*state.ddq - ddq_prev) + 5*state.ddq - ddq_prev)/6;  
     }
-
+    state.dq(0) = 0;
+    state.ddq(0) = 0;
     state.q = state.q + state.dq*dt + (dt*dt*(4*state.ddq - state_prev.ddq) / 6);
 
 
