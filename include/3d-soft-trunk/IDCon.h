@@ -32,5 +32,6 @@ private:
     VectorXd tau_ref;
     double eps;
     double lambda;
+    double arm_mass = 0;
     Eigen::MatrixXd computePinv(Eigen::MatrixXd j, double e, double lambda);
 };

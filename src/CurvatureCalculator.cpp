@@ -157,7 +157,8 @@ void CurvatureCalculator::calculateCurvature() {
     double phi, theta;
     // next, calculate the parameters
     for (int i = 0; i < st_params.num_segments; i++) {
-        matrix = (abs_transforms[i].inverse() * abs_transforms[i + 1]).matrix();
+        state.q(0) = (abs_transforms[0].translation() - abs_transforms[1].translation()).norm(); //prismatic extension
+        matrix = (abs_transforms[i+1].inverse() * abs_transforms[i + 2]).matrix();
         // see documentation in header file for how this is calculated
         if (calcMethod == CalcMethod::orientation)
         {
@@ -169,7 +170,7 @@ void CurvatureCalculator::calculateCurvature() {
             phi = atan2(matrix(1, 3), matrix(0, 3));
             theta = a2theta(sqrt(pow(matrix(0,3), 2) + pow(matrix(1,3), 2)), L);
         }
-        phiTheta2longitudinal(phi, theta, state.q(2*i), state.q(2*i+1));
+        phiTheta2longitudinal(phi, theta, state.q(2*i+1), state.q(2*i+2));
     }
 }
 

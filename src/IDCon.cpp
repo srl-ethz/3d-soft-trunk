@@ -12,6 +12,9 @@ IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorTyp
     control_thread = std::thread(&IDCon::control_loop, this);
     eps = 1e-1;
 	lambda = 0.5e-1;
+    for(int i = 0; i < st_params.masses.size(); i++){
+        arm_mass += st_params.masses[i];
+    }
     fmt::print("IDCon initialized.\n");
 }
 //
@@ -42,6 +45,8 @@ void IDCon::control_loop(){
         //J_inv = J.transpose()*(J*J.transpose()).inverse();
         J_inv = computePinv(J, eps, lambda);
         state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
+
+        stm->g(0) = stm->g(0) - 9.81*arm_mass; //unloaded arm gravity is handled elsewhere, therefore remove
 
         tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state.q + stm->D*state.dq;
         

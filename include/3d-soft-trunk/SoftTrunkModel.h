@@ -53,10 +53,9 @@ public:
     MatrixXd A_pseudo;
 
     /** variables for the prismatic joint to be determined through parameter identification */
-    double k = 1;
-    double d = 1;
-    double a = 1;
-    double a_p = 1;
+    double k_pris = 0;
+    double d_pris = 0;
+    double a_pris = 1./150;
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
     std::vector<Eigen::MatrixXd> J;
