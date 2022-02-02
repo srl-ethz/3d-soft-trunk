@@ -78,14 +78,13 @@ int main(){
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 16;
     bool freedom = false;
+    id.toggle_log();
     id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(3);
 
     getchar();
-
+    id.toggle_log();
     
 
-    id.toggle_log();
     while (t<10){
         
         double r = 0.15;
