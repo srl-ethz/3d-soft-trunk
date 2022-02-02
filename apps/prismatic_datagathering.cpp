@@ -3,7 +3,7 @@
 
 
 int main(){
-    std::vector<int> map = {0,1,2,3,4,6,7};
+    std::vector<int> map = {0,1};
     std::vector<int> cameras = {9};
     unsigned long long int timestamp;
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> frames;
@@ -18,7 +18,7 @@ int main(){
     QualisysClient qc{2, cameras};
 
 
-    log_file.open("experiment_control/dxdp_McK_bottom_001_1__2000_1_withSoPrA.csv", std::fstream::out);
+    log_file.open("experiment_control/dxdp_McK_bottom_001_1_2000_withSoPrA6.csv", std::fstream::out);
     //log_file2.open("experiment_dadp_McK/dadp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
    
 
@@ -95,24 +95,18 @@ int main(){
     log_file2.close();
     */
     //this section tracks the p/x trajectory
+   
         srl::Rate r{1./dt};
-    for (size_t i = 0; i < max_pressure; i-=1)
+    for (size_t i = 00; i < 2000; i+=1)
         {
           
-        vc.setSinglePressure(0,0);       
-
- 
         vc.setSinglePressure(1,i);
-        vc.setSinglePressure(2,i);
-        vc.setSinglePressure(3,i);
-        vc.setSinglePressure(4,i);
-        vc.setSinglePressure(5,i);
-        vc.setSinglePressure(6,i);
 
         qc.getData(frames, timestamp);
         distance = (frames[0].translation()-frames[1].translation()).norm();
         r.sleep();
-        log_file << distance << "," << timestamp << "," << i << "\n";
+        log_file << distance << "," << timestamp << "," << i << "," << vc.sensor_pressures[1] << "\n";
+        
         }
 
      log_file.close();

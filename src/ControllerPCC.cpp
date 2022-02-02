@@ -20,9 +20,9 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
 
     stm = std::make_unique<SoftTrunkModel>(st_params);
     // +X, +Y, -X, -Y
-    std::vector<int> map = {3,1,2,4,6,5,0};
+    std::vector<int> map = {5,7,2,6,3,1,0,4};
     
-    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, p_max);
+    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, 2000);
 
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, bendlabs_portname);
@@ -44,9 +44,6 @@ void ControllerPCC::set_ref(const srl::State &state_ref) {
 void ControllerPCC::set_ref(const Vector3d x_ref, const Vector3d &dx_ref, const Vector3d &ddx_ref){
     std::lock_guard<std::mutex> lock(mtx);
     Vector3d x_r = x_ref;
-    if (x_ref.norm() > 0.27) {
-        x_r = 0.27*x_ref.normalized(); //What is this???
-    }
     this->x_ref = x_r;
     this->dx_ref = dx_ref;
     this->ddx_ref = ddx_ref;
@@ -78,19 +75,19 @@ void ControllerPCC::get_pressure(VectorXd& p){
 void ControllerPCC::toggleGripper(){
     gripperAttached = true;
     gripping = !gripping;
-    vc->setSinglePressure(3*st_params.num_segments, gripping*350);
+    //vc->setSinglePressure(3*st_params.num_segments, gripping*350);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
     assert(st_params.sections_per_segment == 1);
     VectorXd gravcomp = stm->A_pseudo.inverse() * (stm->g + stm->K * state.q);
-
+    gravcomp(0) = 0;
     return gravcomp/100; //to mbar
 }
 
 void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to mapping from header
     assert(p.size() == 3 * st_params.num_segments + 1);
-    for (int i = 1; i < 3*st_params.num_segments; i++){
+    for (int i = 1; i < 3*st_params.num_segments+1; i++){
         vc->setSinglePressure(i+1, p(i)); //prismatic reserves 2 pressures but only 1 slot in the p vector, therefore i+1
     }
     

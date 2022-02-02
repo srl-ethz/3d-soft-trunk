@@ -41,10 +41,6 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     D(0,0) = d_pris;
     A(0,0) = a_pris;
     A_pseudo(0,0) = a_pris;
-    //fmt::print("A:\n{}\n", A);
-    //fmt::print("D:\n{}\n", D);
-    //fmt::print("K:\n{}\n", K);
-    //fmt::print("A_pseudo:\n{}\n", A_pseudo);
     fmt::print("SoftTrunkModel initialized\n");
 }
 
@@ -77,7 +73,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i+1,2).norm() > 650) pressure_pseudo.segment(2*i,2) *= 550/pressure_pseudo.segment(2*i,2).norm();
+        if (pressure_pseudo.segment(2*i+1,2).norm() > 700) pressure_pseudo.segment(2*i+1,2) *= 700/pressure_pseudo.segment(2*i+1,2).norm();
 
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
@@ -104,7 +100,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double min_p = output.segment(3*i+1, 3).minCoeff();
 
         output.segment(3*i+1, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
-
+        output(0) = pressure_pseudo(0);
         
         if (angle < 0) angle += 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)

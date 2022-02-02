@@ -6,7 +6,7 @@
 IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
     filename = "ID_logger";
     J_prev = MatrixXd::Zero(3, st_params.q_size);
-    kp = 70;
+    kp = 80;
     kd = 5.5;
     dt = 1./50;
     control_thread = std::thread(&IDCon::control_loop, this);
@@ -37,21 +37,17 @@ void IDCon::control_loop(){
 
         J_prev = J;
         //do controls
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-        //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
+        x = stm->get_H_base().rotation()*cc->get_frame(1).rotation()*(cc->get_frame(st_params.num_segments+1).translation()-cc->get_frame(0).translation());
+        //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation(); //forward kinematics
 
         dx = J*state.dq;
         ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
-        //J_inv = J.transpose()*(J*J.transpose()).inverse();
         J_inv = computePinv(J, eps, lambda);
-        state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
+        state_ref.ddq = J.transpose()*(J*J.transpose()).inverse()*(ddx_d - dJ*state.dq); //+ ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
 
         stm->g(0) = 0; //arm gravity is handled elsewhere, remove
-
         tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state.q + stm->D*state.dq;
-        
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
-
         if (!(sensor_type == CurvatureCalculator::SensorType::simulator)) {actuate(p);}
         else {
             assert(simulate(p));

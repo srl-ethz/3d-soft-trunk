@@ -54,7 +54,8 @@ void printer(IDCon &id){
         Vector3d x;
         id.get_x(x);
         fmt::print("------------------------------------\n");
-        fmt::print("extra object: {}\n", id.get_objects()[0].transpose());
+        //fmt::print("A_pseudo.inverse(): \n {} \n",id.stm->A_pseudo.inverse());
+        fmt::print("x: {} \n",x.transpose());
         fmt::print("x error: {}\n", (x_ref-x).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-x).norm());
         VectorXd p;
@@ -66,33 +67,36 @@ void printer(IDCon &id){
 
 int main(){
     SoftTrunkParameters st_params;
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
     IDCon id(st_params, CurvatureCalculator::SensorType::qualisys, 1);
+    std::thread print_thread(printer, std::ref(id));
+    std::thread gain_thread(gain, std::ref(id));
     double t = 0;
     double dt = 0.1;
-    x_ref << 0.15,0,-0.2;
+    x_ref << -0.1,0,-0.38;
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 16;
     bool freedom = false;
     id.set_ref(x_ref,dx_ref,ddx_ref);
     srl::sleep(3);
+
     getchar();
 
-    std::thread print_thread(printer, std::ref(id));
-    std::thread gain_thread(gain, std::ref(id));
+    
 
     id.toggle_log();
     while (t<10){
         
         double r = 0.15;
-        circle << r*cos(coef*t), r*sin(coef*t), -0.2;
+        circle << r*cos(coef*t), r*sin(coef*t), -0.43;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        //x_ref = circle;
-        //dx_ref = d_circle;
-        //ddx_ref = dd_circle;
-        x_ref = id.get_objects()[0];
-        id.set_ref(x_ref,dx_ref,ddx_ref);
+        x_ref = circle;
+        dx_ref = d_circle;
+        ddx_ref = dd_circle;
+        //x_ref = id.get_objects()[0];
+        //id.set_ref(x_ref,dx_ref,ddx_ref);
         
         
         t+=dt;

@@ -17,11 +17,15 @@ public:
     /** @brief methods for setting OCS gain */
     void set_kp(double kp);
     void set_kd(double kd);
+    
+        VectorXd tau_ref;
+
 private:
     void control_loop();
     /** @brief gains for ID*/
     double kp;
     double kd;
+    
     MatrixXd J;
     MatrixXd dJ;
     MatrixXd J_prev;
@@ -29,7 +33,6 @@ private:
     Vector3d dx_prev;
     Vector3d ddx_ref;
     Vector3d ddx_d;
-    VectorXd tau_ref;
     double eps;
     double lambda;
     double arm_mass = 0;

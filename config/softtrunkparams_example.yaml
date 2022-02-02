@@ -14,7 +14,7 @@ diameters: [0.035, 0.028, 0.0198]
 #Angle of arm relative to upright position
 armAngle: 180
 #Shear moduli of the segments
-shear_modulus: [35000,62000]
+shear_modulus: [35000.,40000.]
 #Drag coefficients of the segments
 drag_coef: [28000,8000]
 ...

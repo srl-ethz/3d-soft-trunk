@@ -74,6 +74,7 @@ public:
     bool gripperAttached = false;
     double loadAttached = 0.;
 
+
 protected:
 
     const SoftTrunkParameters st_params;

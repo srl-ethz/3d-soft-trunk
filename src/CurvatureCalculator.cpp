@@ -4,7 +4,7 @@
 CurvatureCalculator::CurvatureCalculator(const SoftTrunkParameters& st_params, CurvatureCalculator::SensorType sensor_type, std::string address, int extra_frames): st_params(st_params), sensor_type(sensor_type), extra_frames(extra_frames) {
     assert(st_params.is_finalized());
     // initialize size of arrays that record transforms
-    abs_transforms.resize(st_params.num_segments + 1 + extra_frames);
+    abs_transforms.resize(st_params.num_segments + 2 + extra_frames);
 
     if (sensor_type == CurvatureCalculator::SensorType::qualisys){
         fmt::print("Using Qualisys to measure curvature...\n");
@@ -120,7 +120,7 @@ unsigned long long int CurvatureCalculator::get_timestamp(){
 
 Eigen::Transform<double, 3, Eigen::Affine> CurvatureCalculator::get_frame(int id){
     //std::lock_guard<std::mutex> lock(mtx);
-    assert(0 <= id && id < abs_transforms.size());
+    //assert(0 <= id && id < abs_transforms.size());
     assert(sensor_type == SensorType::qualisys);
     return abs_transforms[id];
 }
@@ -156,8 +156,8 @@ void CurvatureCalculator::calculateCurvature() {
     MatrixXd matrix;
     double phi, theta;
     // next, calculate the parameters
+    state.q(0) = (abs_transforms[0].translation() - abs_transforms[1].translation()).norm()-0.005; //prismatic extension
     for (int i = 0; i < st_params.num_segments; i++) {
-        state.q(0) = (abs_transforms[0].translation() - abs_transforms[1].translation()).norm(); //prismatic extension
         matrix = (abs_transforms[i+1].inverse() * abs_transforms[i + 2]).matrix();
         // see documentation in header file for how this is calculated
         if (calcMethod == CalcMethod::orientation)

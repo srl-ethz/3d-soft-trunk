@@ -19,7 +19,7 @@ int main(){
 
     log_file.open("experiment_control/playaround.csv", std::fstream::out);
    
-   srl::sleep(4);
+   //srl::sleep(4);
 
    
 
@@ -127,7 +127,7 @@ int main(){
 
     long double static_pressure = 100*(0.005-delta_x)*(pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8) + (1-100*(0.005-delta_x))*(p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8);
 
-    long double static_pressure_up  = 1.3*(p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8) ; //distance as funtion of pressure
+    long double static_pressure_up  = p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8 ; //distance as funtion of pressure
     long double static_pressure_down = pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8 ;
     //long double static_pressure =  p9*pow(x_ref,8) + p1*pow(x_ref,7) + p2*pow(x_ref,6) + p3*pow(x_ref,5) + p4*pow(x_ref,4) + p5*pow(x_ref,3) + p6*pow(x_ref,2) + p7*x_ref + p8 ;
 
@@ -145,16 +145,16 @@ int main(){
     {
         
         //define reference trajectory
-        if (i < 1000)
-       {
-            x_ref = 0.022*cos(2*M_PI*i/500) + 0.188;
-            x_dot_ref = 0.023*sin(2*M_PI*i/500)*2*M_PI/500;
-       }
-        else {
+        //if (i < 1000)
+      // {
+        //    x_ref = 0.022*cos(2*M_PI*i/500) + 0.188;
+      //      x_dot_ref = 0.023*sin(2*M_PI*i/500)*2*M_PI/500;
+     //  }
+      // else {
             x_dot_ref = 0;
-            if (i==250) x_ref = 0.17;
+            if (i==250) x_ref = 0.175;
             if (i==500) x_ref = 0.195;
-       }
+      // }
 
         //get data and calculate values
         qc.getData(frames, timestamp);
@@ -166,10 +166,10 @@ int main(){
         }
         distance_prev = distance;
 
-        long double static_pressure_up  = (p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*distance + p8) ; 
+        long double static_pressure_up  = (p9*pow(distance,8) + p1*pow(distance,7) + p2*pow(distance,6) + p3*pow(distance,5) + p4*pow(distance,4) + p5*pow(distance,3) + p6*pow(distance,2) + p7*(distance) + p8) ; 
         //if (static_pressure_up > 1800) static_pressure_up;
 
-        long double static_pressure_down = pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*distance + pa8 ;
+        long double static_pressure_down = pa9*pow(distance,8) + pa1*pow(distance,7) + pa2*pow(distance,6) + pa3*pow(distance,5) + pa4*pow(distance,4) + pa5*pow(distance,3) + pa6*pow(distance,2) + pa7*(distance) + pa8 ;
 
         static_pressure =  (1-100*(0.005-delta_x))*static_pressure_down + 100*(0.005-delta_x)*static_pressure_up;
         if (delta_x>0.005) static_pressure = static_pressure_down;
