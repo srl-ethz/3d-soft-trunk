@@ -74,15 +74,15 @@ int main(){
     std::thread gain_thread(gain, std::ref(id));
     double t = 0;
     double dt = 0.01;
-    x_ref << 0,0,-0.465;
+    x_ref << 0.12,0,-0.445;
     double amplitude = 0.2;
     double coef = 2 * 3.1415/16;
     bool freedom = false;
     id.toggle_log();
     id.set_ref(x_ref,dx_ref,ddx_ref);
 
+    srl::sleep(3);
     //getchar();
-    id.toggle_log();
     
 
     while (t<20){
@@ -135,7 +135,6 @@ int main(){
         ddx_ref << 0, 0, 0;
 */
 
-        x_ref = id.get_objects()[0];
         id.set_ref(x_ref,dx_ref,ddx_ref);
 
         t+=dt;
