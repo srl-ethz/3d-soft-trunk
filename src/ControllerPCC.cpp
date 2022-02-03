@@ -104,14 +104,18 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
    double static_pressure = 0.5*static_pressure_down + 0.5*static_pressure_up;
 
     //activate piston if actuator needs to move down
-    if (p(0) > 0) {
+    if (p(0) < 0) {
         vc->setSinglePressure(1, static_pressure);
-        if (p(0) > 800) vc->setSinglePressure(0,800);
-        else vc->setSinglePressure(0,p(0));
+        if (-p(0) > 800) {
+            vc->setSinglePressure(0,800);
+        }
+        else {
+            vc->setSinglePressure(0,-1.5*p(0));
+        }
         vc->setSinglePressure(1,static_pressure);
     }  else { //mckibbens otherwise
         vc->setSinglePressure(0, 0); //reset piston pressure, otherwise it will keep on pushing
-        vc->setSinglePressure(1, static_pressure - p(0));
+        vc->setSinglePressure(1, static_pressure + p(0));
     }
     if (logging){  
         log((cc->get_timestamp() - initial_timestamp)/10e5);                     //log once per control timestep

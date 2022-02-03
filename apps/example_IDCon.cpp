@@ -74,7 +74,7 @@ int main(){
     std::thread gain_thread(gain, std::ref(id));
     double t = 0;
     double dt = 0.1;
-    x_ref << -0.1,0,-0.38;
+    x_ref << 0,0,-0.45;
     double amplitude = 0.2;
     double coef = 2 * 3.1415 / 16;
     bool freedom = false;

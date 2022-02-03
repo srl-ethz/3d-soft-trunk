@@ -42,6 +42,9 @@ void IDCon::control_loop(){
 
         dx = J*state.dq;
         ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
+        //Vector3d error = x_ref - x;
+        //if (error.norm()>0.05) error = error.normalized()*0.05;       
+        //ddx_d = ddx_ref + kp*(error) + kd*(dx_ref - dx); 
         J_inv = computePinv(J, eps, lambda);
         state_ref.ddq = J.transpose()*(J*J.transpose()).inverse()*(ddx_d - dJ*state.dq); //+ ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
 
