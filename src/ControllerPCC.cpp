@@ -204,7 +204,7 @@ void ControllerPCC::log(double time){
     log_file << time;
 
     VectorXd x_tip = stm->get_H(st_params.num_segments - 1).translation();
-    if (sensor_type == CurvatureCalculator::SensorType::qualisys) x_tip = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
+    if (sensor_type == CurvatureCalculator::SensorType::qualisys) x_tip = stm->get_H_base().rotation()*cc->get_frame(1).rotation()*(cc->get_frame(st_params.num_segments+1).translation()-cc->get_frame(0).translation());
     
     log_file << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref(0), x_ref(1), x_ref(2), (x_tip - x_ref).norm());
 
