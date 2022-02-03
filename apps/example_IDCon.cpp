@@ -73,31 +73,71 @@ int main(){
     std::thread print_thread(printer, std::ref(id));
     std::thread gain_thread(gain, std::ref(id));
     double t = 0;
-    double dt = 0.1;
-    x_ref << 0,0,-0.45;
+    double dt = 0.01;
+    x_ref << 0,0,-0.465;
     double amplitude = 0.2;
-    double coef = 2 * 3.1415 / 16;
+    double coef = 2 * 3.1415/16;
     bool freedom = false;
     id.toggle_log();
     id.set_ref(x_ref,dx_ref,ddx_ref);
 
-    getchar();
+    //getchar();
     id.toggle_log();
     
 
-    while (t<10){
+    while (t<20){
         
-        double r = 0.15;
-        circle << r*cos(coef*t), r*sin(coef*t), -0.43;
+        double r = 0.12;
+
+        //Circle:
+/*
+        circle << r*cos(coef*t), r*sin(coef*t), -0.465;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
         x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
-        //x_ref = id.get_objects()[0];
-        //id.set_ref(x_ref,dx_ref,ddx_ref);
+  */      
         
-        
+        //Slanted Circle:
+
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.445 + 0.02*sin(coef*t);
+
+        dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*t);
+
+        ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*t);
+
+/*
+        //Wavy Circle with n waves:
+
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.4 + 0.02*sin(coef*n*t);
+
+        dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*n*t);
+
+        ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*n*t);
+
+
+       // Helix:
+
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.42 + 0.02*coef*t;
+
+        dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef;
+
+        ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), 0;
+
+
+        //Line along z:
+
+        x_ref << 0.12, 0, -0.42 + 0.1*t;
+
+        dx_ref << 0, 0, 0.1;
+
+        ddx_ref << 0, 0, 0;
+*/
+
+        x_ref = id.get_objects()[0];
+        id.set_ref(x_ref,dx_ref,ddx_ref);
+
         t+=dt;
         srl::sleep(dt);
     }
