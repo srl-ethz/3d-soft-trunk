@@ -20,7 +20,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
 
     stm = std::make_unique<SoftTrunkModel>(st_params);
     // +X, +Y, -X, -Y
-    std::vector<int> map = {5,7,2,6,3,1,0,4};
+    std::vector<int> map = {5,7,2,6,3,1,0,4,gripperchannel};
     
     if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, 2000);
 
@@ -75,7 +75,7 @@ void ControllerPCC::get_pressure(VectorXd& p){
 void ControllerPCC::toggleGripper(){
     gripperAttached = true;
     gripping = !gripping;
-    //vc->setSinglePressure(3*st_params.num_segments, gripping*350);
+    vc->setSinglePressure(3*st_params.num_segments+2, gripping*300);
 }
 
 VectorXd ControllerPCC::gravity_compensate(const srl::State state){
