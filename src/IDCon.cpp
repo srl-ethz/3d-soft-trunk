@@ -41,12 +41,12 @@ void IDCon::control_loop(){
         //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation(); //forward kinematics
 
         dx = J*state.dq;
-        ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
-        //Vector3d error = x_ref - x;
-        //if (error.norm()>0.05) error = error.normalized()*0.05;       
-        //ddx_d = ddx_ref + kp*(error) + kd*(dx_ref - dx); 
+        //ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
+        Vector3d error = x_ref - x;
+        if (error.norm()>0.05) error = error.normalized()*0.05;       
+        ddx_d = ddx_ref + kp*(error) + kd*(dx_ref - dx); 
         J_inv = computePinv(J, eps, lambda);
-        state_ref.ddq = J.transpose()*(J*J.transpose()).inverse()*(ddx_d - dJ*state.dq); //+ ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
+        state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
 
         stm->g(0) = 0; //arm gravity is handled elsewhere, remove
         tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state.q + stm->D*state.dq;
