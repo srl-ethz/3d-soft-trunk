@@ -73,8 +73,8 @@ int main(){
     std::thread print_thread(printer, std::ref(id));
     std::thread gain_thread(gain, std::ref(id));
     double t = 0;
-    double dt = 0.01;
-    x_ref << 0.12,0,-0.445;
+    double dt = 1./50;
+    x_ref << 0.12,0,-0.42;
     double amplitude = 0.2;
     double coef = 2 * 3.1415/16;
     bool freedom = false;
@@ -85,9 +85,11 @@ int main(){
     //getchar();
     
 
-    while (t<20){
+    while (t<50){
         
         double r = 0.12;
+
+    //x_ref << 0.12,0,-0.445;
 
         //Circle:
 /*
@@ -97,8 +99,8 @@ int main(){
         x_ref = circle;
         dx_ref = d_circle;
         ddx_ref = dd_circle;
-  */      
         
+       
         //Slanted Circle:
 
         x_ref << r*cos(coef*t), r*sin(coef*t), -0.445 + 0.02*sin(coef*t);
@@ -106,20 +108,21 @@ int main(){
         dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*t);
 
         ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*t);
+*/ 
 
-/*
         //Wavy Circle with n waves:
+        double n = 2;
 
-        x_ref << r*cos(coef*t), r*sin(coef*t), -0.4 + 0.02*sin(coef*n*t);
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.42 + 0.02*sin(coef*n*t);
 
         dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*n*t);
 
         ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*n*t);
 
-
+/*
        // Helix:
 
-        x_ref << r*cos(coef*t), r*sin(coef*t), -0.42 + 0.02*coef*t;
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.465 + 0.04/16*t;
 
         dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef;
 
