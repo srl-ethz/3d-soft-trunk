@@ -16,6 +16,8 @@ public:
      * */
     void calcK(int segment, int directions = 8, int verticalsteps = 5);
     
+    void TaskSpaceAnalysis(int points_per_height);
+
 private:
     const double deg2rad = 0.01745329;
 };
