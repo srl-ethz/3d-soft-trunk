@@ -10,8 +10,10 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     N_obs = 10; 
     N_tar = 100;   // targets are defined as points along the trajectory (task-space)
 
-    // MatrixXd obstacles = MatrixXd::Zero(3, N_obs); 
-    // MatrixXd targets = MatrixXd::Zero(3, N_tar); 
+
+    obstacles = MatrixXd::Zero(3, N_obs); 
+    targets = MatrixXd::Zero(3, N_tar); 
+
 
     VectorXd q_l = VectorXd::Zero(st_params.q_size); // maximum  q_l < q < q_u
     VectorXd q_u = VectorXd::Zero(st_params.q_size); 
@@ -20,26 +22,48 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     VectorXd q_l_opt = VectorXd::Zero(st_params.q_size); // optimal
     VectorXd q_u_opt = VectorXd::Zero(st_params.q_size); 
 
+    // phi in [0, 2pi], theta in [0, pi/2], so thetax and thetay in [-pi/2, pi/2]
 
-    N_trials = 1000;
-    N_check = 1000;
+    q_l = VectorXd::Ones(st_params.q_size) * -PI/2;
+    q_u = VectorXd::Ones(st_params.q_size) * PI/2; 
 
-    std::default_random_engine generator;
+    // fill obstacles and targets
+
+    double coef = 2 * 3.1415 / N_tar;
+    double r = 0.02;
+
+    for (int i = 0; i< N_tar; i++){
+            targets(0,i) = r*cos(coef*i);
+            targets(1,i) = r*sin(coef*i);
+            targets(2,i) = -0.26;
+        }
+
+
+    N_trials = 1e5;
+    N_check = 1e4;
+
+    std::random_device generator;
 
  //////////////////////////////////////////////////////
 
     q_l_temp = q_l; // before check for those
     q_u_temp = q_u; 
 
-    if (check_inclusion(q_l_temp, q_u_temp)){
+    if (check_inclusion(q_l_temp, q_u_temp)*0){
         q_l_opt = q_l_temp; 
         q_u_opt = q_u_temp;
+
+        std::cout << "Configuration limits work" << std::endl;   // works for no obstacles
     }
     else{
         q_l_temp = VectorXd::Zero(st_params.q_size);
         q_u_temp = VectorXd::Zero(st_params.q_size);
 
+        std::cout << "Start looking for limits" << std::endl;
+
         for (int i =0; i < N_trials; i++){
+
+            std::cout << "Iteration " << i << std::endl; 
             
             std::uniform_real_distribution<double> distribution0(q_l(0), q_u(0));
             std::uniform_real_distribution<double> distribution1(q_l(1), q_u(1));
@@ -55,10 +79,15 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
 
             q_u_temp << distribution4(generator), distribution5(generator), distribution6(generator), distribution7(generator);
 
+            std::cout << "Proposal = " << q_l_temp.transpose() << " --- " << q_u_temp.transpose() << std::endl;
+
             if ( (q_u_opt - q_l_opt).norm() < (q_u_temp - q_l_temp).norm() ){
+
+                std::cout << "Proposal larger" << std::endl;
                 if (check_inclusion(q_l_temp, q_u_temp)){
                     q_l_opt = q_l_temp; 
                     q_u_opt = q_u_temp;
+                    std::cout << "Proposal accepted at " << i << std::endl;
                 } 
             }
         }
@@ -82,13 +111,16 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
 
     VectorXd q_test = VectorXd::Zero(st_params.q_size);
 
-    std::default_random_engine generator;
+    std::random_device generator;
     std::uniform_real_distribution<double> distribution0(q_low(0), q_up(0));
     std::uniform_real_distribution<double> distribution1(q_low(1), q_up(1));
     std::uniform_real_distribution<double> distribution2(q_low(2), q_up(2));
     std::uniform_real_distribution<double> distribution3(q_low(3), q_up(3));
 
     for (i = 0; i<N_check; i++){
+
+        //std::cout << "Check " << i << std::endl;
+
         q_test << distribution0(generator), distribution1(generator), distribution2(generator), distribution3(generator); 
 
         for (ii = 0; ii < st_params.q_size/2; ii++){
@@ -106,23 +138,26 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
         for (ii = 0; ii < N_obs; ii++){
             if ( (ee_mid - obstacles.col(ii)).norm() < 0.01 ){  // 1cm
                 included = false; 
+                std::cout << ee_mid.transpose() << " hits obstacle " << obstacles.col(ii).transpose() << std::endl;
                 break; 
             }
 
             if ( (ee_end - obstacles.col(ii)).norm() < 0.01 ){  // 1cm
                 included = false; 
+                std::cout << ee_end.transpose() << " hits obstacle " << obstacles.col(ii).transpose() << std::endl;
                 break; 
             }
         }
 
-        if (included = false){
+        if (included == false){
             break;
         }
 
 
         for (ii = 0; ii < N_tar; ii++){
-            if ( (ee_end - targets.col(ii)).norm() < 0.02 ){  
+            if ( (ee_end - targets.col(ii)).norm() < 0.05 ){  
                 target_reached[ii] = true;  
+                //std::cout << ee_end.transpose() << " reaches " << targets.col(ii).transpose() << std::endl;
             }
         }
         
@@ -130,9 +165,13 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
 
     target_missed = std::count(target_reached, target_reached+N_tar, 0); 
 
+    std::cout << " Proposal missed " << target_missed << " targets" << std::endl;
+
     if (target_missed > N_tar/3){
         included = false; 
     }
+
+    std::cout << "Proposal accepted : " << included << std::endl; 
 
     return included;
 } 
@@ -249,5 +288,3 @@ MatrixXd MPC_constraints_finder::ee_position_2(VectorXd thetax, VectorXd thetay,
     return inter; 
     
 }
-
-

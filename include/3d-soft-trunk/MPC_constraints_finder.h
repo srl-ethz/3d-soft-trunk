@@ -13,8 +13,8 @@ class MPC_constraints_finder: public ControllerPCC{
         int N_trials;
         int N_check;
 
-        MatrixXd obstacles = MatrixXd::Zero(3, N_obs); 
-        MatrixXd targets = MatrixXd::Zero(3, N_tar); 
+        MatrixXd obstacles; 
+        MatrixXd targets; 
 
     private:
         MatrixXd Rotx_1(double theta);
