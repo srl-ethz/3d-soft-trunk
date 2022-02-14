@@ -655,7 +655,7 @@ DM MPC_robust::robust_correction(DM U){     // use normalization ?
         return U; 
     }
 
-    //float coeff = (5 - (-5)) / (*index.second - *index.first); 
+    //float coeff = (5 - (-5)) / (*index.second - *index.first);   // 5 for simulation
     float coeff = (10 - (-10)) / (limit - (-limit)); 
 
     int i; 
