@@ -5,6 +5,11 @@
 // Cosimo Della Santina  , Antonio Bicchi  , Daniela Rus 
 
 
+// this algorithm can be used only for circluar obstacles or for linear allowed trajectories. 
+// we need wither PHI almost constant or THETA upper-bounded. Otherwise formulation with thetax and thetay is simply wrong.
+// But the random trials can be reused in a different way, by finding thetax and thetay references to by looked for. 
+
+
 MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     
     N_obs = 10; 
@@ -14,15 +19,30 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     obstacles = MatrixXd::Zero(3, N_obs); 
     targets = MatrixXd::Zero(3, N_tar); 
 
+    // need to define in THETA and PHI  :  q = THETA_1, PHI_1, THETA_2, PHI_2
 
     VectorXd q_l = VectorXd::Zero(st_params.q_size); // maximum  q_l < q < q_u
     VectorXd q_u = VectorXd::Zero(st_params.q_size); 
-    VectorXd q_l_temp = VectorXd::Zero(st_params.q_size); // temprary during optimization
+    VectorXd q_l_temp = VectorXd::Zero(st_params.q_size); // temporary during optimization
     VectorXd q_u_temp = VectorXd::Zero(st_params.q_size); 
     VectorXd q_l_opt = VectorXd::Zero(st_params.q_size); // optimal
     VectorXd q_u_opt = VectorXd::Zero(st_params.q_size); 
 
     // phi in [0, 2pi], theta in [0, pi/2], so thetax and thetay in [-pi/2, pi/2]
+
+    // init option 1 (THETA, PHI)
+
+    // for (int i = 0; i < st_params.q_size/2; i++){
+    //     q_l(2*i) = 0; 
+    //     q_l(2*i + 1) = 0; 
+    // }
+
+    // for (int i = 0; i < st_params.q_size/2; i++){
+    //     q_u(2*i) = PI/2; 
+    //     q_u(2*i + 1) = 2*PI; 
+    // }
+    
+    // init option 2 (thetax, thetay)
 
     q_l = VectorXd::Ones(st_params.q_size) * -PI/2;
     q_u = VectorXd::Ones(st_params.q_size) * PI/2; 
@@ -33,10 +53,15 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     double r = 0.02;
 
     for (int i = 0; i< N_tar; i++){
-            targets(0,i) = r*cos(coef*i);
-            targets(1,i) = r*sin(coef*i);
-            targets(2,i) = -0.26;
-        }
+        targets(0,i) = r*cos(coef*i);
+        targets(1,i) = r*sin(coef*i);
+        targets(2,i) = -0.26;
+    }
+
+    obstacles.col(0) << 0, 0, -0.1;
+    obstacles.col(1) << 0., 0., -0.15; 
+    obstacles.col(2) << 0, 0, -0.20; 
+    obstacles.col(3) << 0, 0, -0.25; 
 
 
     N_trials = 1e5;
@@ -49,7 +74,7 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     q_l_temp = q_l; // before check for those
     q_u_temp = q_u; 
 
-    if (check_inclusion(q_l_temp, q_u_temp)*0){
+    if (check_inclusion(q_l_temp, q_u_temp)){
         q_l_opt = q_l_temp; 
         q_u_opt = q_u_temp;
 
@@ -93,8 +118,45 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
         }
     }
 
+    // option 1
+    // std::cout << "                THETA1    PHI1    THETA2    PHI2" << std::endl; 
+    // std::cout << "Lower bound : " << q_l_opt.transpose() << std::endl; 
+    // std::cout << "Upper bound : " << q_u_opt.transpose() << std::endl; 
+
+
+    // // now map back to thetax and thetay
+
+    // VectorXd q_lower_bound = VectorXd::Zero(st_params.q_size); // maximum  q_l < q < q_u
+    // VectorXd q_upper_bound = VectorXd::Zero(st_params.q_size);
+
+    // for (int i = 0; i < st_params.q_size/2; i++){
+    //     q_lower_bound(2*i) = q_l_opt(2*i)*cos(q_l_opt(2*i+1)); 
+    //     q_lower_bound(2*i+1) = q_l_opt(2*i)*sin(q_l_opt(2*i+1));
+
+    //     q_upper_bound(2*i) = q_u_opt(2*i)*cos(q_u_opt(2*i+1));     // this doesn't make any sense
+    //     q_upper_bound(2*i+1) = q_u_opt(2*i)*sin(q_u_opt(2*i+1));
+    // }
+
+
+    // option 2
+
     std::cout << "q_lower_bound : " << q_l_opt.transpose() << std::endl; 
     std::cout << "q_upper_bound : " << q_u_opt.transpose() << std::endl; 
+
+    // Vector2d THETA_low; 
+    // THETA_low << sqrt(pow(q_l_opt(0),2) + pow(q_l_opt(1),2))*180/PI, sqrt(pow(q_l_opt(2),2) + pow(q_l_opt(3),2))*180/PI; 
+    // Vector2d THETA_up; 
+    // THETA_up << sqrt(pow(q_u_opt(0),2) + pow(q_u_opt(1),2))*180/PI, sqrt(pow(q_u_opt(2),2) + pow(q_u_opt(3),2))*180/PI; 
+
+    // Vector2d PHI_low;
+    // Vector2d PHI_up;
+    // PHI_low << atan2(q_l_opt(1), q_l_opt(0))*180/PI, atan2(q_l_opt(3), q_l_opt(2))*180/PI; 
+    // PHI_up << atan2(q_u_opt(1), q_u_opt(0))*180/PI, atan2(q_u_opt(3), q_u_opt(2))*180/PI; 
+
+    // std::cout << "THETA lower bound : " << THETA_low.transpose() << std::endl; 
+    // std::cout << "THETA upper bound : " << THETA_up.transpose() << std::endl; 
+    // std::cout << "PHI lower bound : " << PHI_low.transpose() << std::endl; 
+    // std::cout << "PHI upper bound : " << PHI_up.transpose() << std::endl; 
 
 }
 
@@ -123,10 +185,21 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
 
         q_test << distribution0(generator), distribution1(generator), distribution2(generator), distribution3(generator); 
 
+        // option 1
+        // for (ii = 0; ii < st_params.q_size/2; ii++){
+
+        //     thetax(ii) = q_test(2*ii)*cos(q_test(2*ii+1)); 
+        //     thetay(ii) = q_test(2*ii)*sin(q_test(2*ii+1));
+        //     length1(ii) = -st_params.lengths[2*ii]; 
+        //     length2(ii) = -st_params.lengths[2*ii+1]; 
+
+        // }
+
+        // option 2
         for (ii = 0; ii < st_params.q_size/2; ii++){
 
-            thetax(ii) = q_test(2*ii,0); 
-            thetay(ii) = q_test(2*ii+1,0);
+            thetax(ii) = q_test(2*ii); 
+            thetay(ii) = q_test(2*ii+1);
             length1(ii) = -st_params.lengths[2*ii]; 
             length2(ii) = -st_params.lengths[2*ii+1]; 
 
@@ -136,15 +209,17 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
         ee_end = ee_position_2(thetax, thetay, length1, length2);
 
         for (ii = 0; ii < N_obs; ii++){
-            if ( (ee_mid - obstacles.col(ii)).norm() < 0.01 ){  // 1cm
+            if ( (ee_mid - obstacles.col(ii)).norm() < 0.02 ){  // 1cm
                 included = false; 
                 std::cout << ee_mid.transpose() << " hits obstacle " << obstacles.col(ii).transpose() << std::endl;
+                //int flag = getchar();   // to pause the program
                 break; 
             }
 
-            if ( (ee_end - obstacles.col(ii)).norm() < 0.01 ){  // 1cm
+            if ( (ee_end - obstacles.col(ii)).norm() < 0.02 ){  // 1cm
                 included = false; 
                 std::cout << ee_end.transpose() << " hits obstacle " << obstacles.col(ii).transpose() << std::endl;
+                //int flag = getchar(); 
                 break; 
             }
         }
