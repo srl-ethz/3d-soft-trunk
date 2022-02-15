@@ -3,6 +3,7 @@
 #include "3d-soft-trunk/PID.h"
 #include "3d-soft-trunk/MPC_ts.h"
 #include "3d-soft-trunk/MPC_robust.h"
+#include "3d-soft-trunk/MPC_obstacles.h"
 #include <chrono>
 
 int main(){
@@ -13,10 +14,10 @@ int main(){
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params, CurvatureCalculator::SensorType::simulator);
     //QuasiStatic qs(st_params, CurvatureCalculator::SensorType::simulator);
-    MPC_robust mpc2(st_params, CurvatureCalculator::SensorType::simulator);
+    MPC_obstacles mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 20.0;  //10 for 6 turns
+    double time = 10.0;  //10 for 6 turns      before 20
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -40,7 +41,7 @@ int main(){
     std::unique_ptr<CurvatureCalculator> cc;
 
     double coef = 8 * 3.1415 / time;
-    double r = 0.1;
+    double r = 0.12;
     double tol = 0.2;
     double t = 0;
     bool flag = 0; // to have 1 disturbance, and one only
@@ -69,7 +70,7 @@ int main(){
         for (int i = 0; i< mpc2.Horizon +1; i++){
             trajectory(0,i) = r*cos(coef*(t+i*5*dt));
             trajectory(1,i) = r*sin(coef*(t+i*5*dt));
-            trajectory(2,i) = -0.250;
+            trajectory(2,i) = -0.240;
         }
 
         // for (int i = 0; i<mpc2.Horizon +1; i++){

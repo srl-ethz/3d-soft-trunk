@@ -115,6 +115,9 @@ target_link_libraries(MPC_robust ControllerPCC casadi)
 add_library(MPC_constraints_finder src/MPC_constraints_finder.cpp)
 target_link_libraries(MPC_constraints_finder ControllerPCC)
 
+add_library(MPC_obstacles src/MPC_obstacles.cpp)
+target_link_libraries(MPC_obstacles ControllerPCC casadi)
+
 
 if(${roscpp_FOUND})
     add_library(VisualizerROS src/VisualizerROS.cpp)
