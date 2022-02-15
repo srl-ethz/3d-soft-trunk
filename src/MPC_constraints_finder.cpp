@@ -50,22 +50,28 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     // fill obstacles and targets
 
     double coef = 2 * 3.1415 / N_tar;
-    double r = 0.02;
+    double r = 0.12;
 
     for (int i = 0; i< N_tar; i++){
         targets(0,i) = r*cos(coef*i);
         targets(1,i) = r*sin(coef*i);
-        targets(2,i) = -0.26;
+        targets(2,i) = -0.24;
     }
 
-    obstacles.col(0) << 0, 0, -0.1;
-    obstacles.col(1) << 0., 0., -0.15; 
-    obstacles.col(2) << 0, 0, -0.20; 
-    obstacles.col(3) << 0, 0, -0.25; 
+    obstacles.col(0) << 0, 0.14, -0.24;
+    obstacles.col(1) << 0, 0.15, -0.24; 
+    obstacles.col(2) << 0.01, 0.14, -0.24; 
+    obstacles.col(3) << -0.01, 0,.14 -0.24; 
+    obstacles.col(4) << 0, 0.14, -0.26;
+    obstacles.col(5) << 0, 0.15, -0.22; 
+    obstacles.col(6) << 0.01, 0.14, -0.26; 
+    obstacles.col(7) << -0.01, 0.14, -0.22; 
+    obstacles.col(8) << -0.01, 0.10, -0.25; 
+    obstacles.col(9) << 0, 0.10, -0.25; 
 
 
     N_trials = 1e5;
-    N_check = 1e4;
+    N_check = 1e5;
 
     std::random_device generator;
 

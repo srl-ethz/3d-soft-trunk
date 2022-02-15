@@ -268,12 +268,14 @@ Opti MPC_obstacles::define_problem(){
 
     MX J = 0;
     DM A1 = DM::zeros(2*st_params.q_size, st_params.q_size);
-    DM b1 = DM::ones(2*st_params.q_size,1);
+    DM b1 = DM::ones(2*st_params.q_size,1);                     // b1 and b2 for initial set
     DM A2 = DM::zeros(2*st_params.q_size, st_params.q_size);
     DM b2 = DM::ones(2*st_params.q_size,1);
     MX T1 = MX::zeros(3,1);
     MX T2 = MX::zeros(st_params.q_size,1);
     //MX T3 = MX::ones(st_params.q_size,1)*0.5; 
+
+    DM b3 = DM::zeros(2*st_params.q_size,1);    // b3 for feasible set (MPC_constraints_finder)
 
     A1(0,0) = 1;
     A1(1,0) = -1;
@@ -305,6 +307,8 @@ Opti MPC_obstacles::define_problem(){
     b1 = {0.004, 0.004, 0.002, 0.002, 0.006, 0.006, 0.006, 0.006};  
     b2 = {0.15, 0.15, 0.15, 0.15, 0.5, 0.5, 0.5, 0.5};
 
+    b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51}; 
+
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
 
@@ -329,10 +333,10 @@ Opti MPC_obstacles::define_problem(){
 
     int k, kk;
 
-    MX obstacle = MX::zeros(3,1);
-    obstacle(0) = 0;
-    obstacle(1) = 0.14;
-    obstacle(2) = -0.24;  
+    // MX obstacle = MX::zeros(3,1);
+    // obstacle(0) = 0;
+    // obstacle(1) = 0.14;
+    // obstacle(2) = -0.24;  
 
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
     //end_effector = MX::zeros(3,1);
@@ -364,7 +368,7 @@ Opti MPC_obstacles::define_problem(){
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
-        J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle).T(), (end_effector - obstacle) ));
+        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle).T(), (end_effector - obstacle) ));
 
     }
 
@@ -414,7 +418,7 @@ Opti MPC_obstacles::define_problem(){
     {
         prob.subject_to(q(Slice(),k+1) == mtimes(A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(0, st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(0, st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(0,st_params.q_size))); 
         prob.subject_to(q_dot(Slice(),k+1) == mtimes(A(Slice(st_params.q_size, 2*st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(st_params.q_size, 2*st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(st_params.q_size, 2*st_params.q_size)));
-        //prob.subject_to(mtimes(A1, q(Slice(),k)) <= b1);
+        prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3);
         //prob.subject_to(mtimes(A2, q_dot(Slice(),k)) <= b2);
         // some stuff on pressure
     }
