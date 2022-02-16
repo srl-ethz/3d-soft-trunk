@@ -103,7 +103,7 @@ int main(){
         // for (int i = 0; i< mpc2.Horizon +1; i++){
         //     trajectory(0,i) = r*cos(coef*(t+i*dt));
         //     trajectory(1,i) = 0;
-        //     trajectory(2,i) = -0.250;
+        //     trajectory(2,i) = -0.24;
         // }
 
         x_ref = trajectory; 

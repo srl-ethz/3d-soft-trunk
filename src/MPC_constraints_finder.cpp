@@ -12,7 +12,7 @@
 
 MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     
-    N_obs = 10; 
+    N_obs = 20; 
     N_tar = 100;   // targets are defined as points along the trajectory (task-space)
 
 
@@ -59,15 +59,25 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     }
 
     obstacles.col(0) << 0, 0.14, -0.24;
-    obstacles.col(1) << 0, 0.15, -0.24; 
+    obstacles.col(1) << 0, 0.13, -0.24; 
     obstacles.col(2) << 0.01, 0.14, -0.24; 
-    obstacles.col(3) << -0.01, 0,.14 -0.24; 
-    obstacles.col(4) << 0, 0.12, -0.26;
-    obstacles.col(5) << 0, 0.11, -0.22; 
-    obstacles.col(6) << 0.01, 0.10, -0.26; 
-    obstacles.col(7) << -0.01, 0.10, -0.22; 
-    obstacles.col(8) << -0.01, 0.10, -0.25; 
-    obstacles.col(9) << 0, 0.10, -0.25; 
+    obstacles.col(3) << -0.01, 0.14, -0.24; 
+    obstacles.col(4) << 0, 0.12, -0.25;
+    obstacles.col(5) << -0.12, 0, -0.24; 
+    obstacles.col(6) << -0.13, 0.01, -0.24; 
+    obstacles.col(7) << -0.13, -0.01, -0.24; 
+    obstacles.col(8) << -0.01, 0.11, -0.25; 
+    obstacles.col(9) << -0.11, 0.01, -0.25; 
+    obstacles.col(10) << 0.01, 0.12, -0.24;
+    obstacles.col(11) << 0.01, 0.13, -0.24; 
+    obstacles.col(12) << -0.01, 0.14, -0.25; 
+    obstacles.col(13) << -0.01, 0.12, -0.25; 
+    obstacles.col(14) << 0, 0.125, -0.25;
+    obstacles.col(15) << -0.11, 0, -0.24; 
+    obstacles.col(16) << -0.13, 0.013, -0.244; 
+    obstacles.col(17) << -0.13, -0.011, -0.242; 
+    obstacles.col(18) << -0.01, 0.11, -0.25; 
+    obstacles.col(19) << -0.113, 0.015, -0.24; 
 
 
     N_trials = 1e5;

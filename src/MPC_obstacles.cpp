@@ -250,7 +250,7 @@ Opti MPC_obstacles::define_problem(){
     q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
-    MX slack = prob.variable(2*st_params.q_size, Horizon); 
+    MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
 
     q_0 = prob.parameter(st_params.q_size,1);
     q_dot_0 = prob.parameter(st_params.q_size,1); 
@@ -311,7 +311,8 @@ Opti MPC_obstacles::define_problem(){
 
     //b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51};   // upper, - lower
     //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // -lower, upper   works
-    b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
+    //b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
+    b3 = {1.30, 1.29, 1.26, 1.43, 1.40, 1.34, -1.03, 1.04}; 
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -338,9 +339,14 @@ Opti MPC_obstacles::define_problem(){
     int k, kk;
 
     // MX obstacle = MX::zeros(3,1);
-    // obstacle(0) = 0;
-    // obstacle(1) = 0.14;
-    // obstacle(2) = -0.24;  
+    // obstacle(0,0) = 0;
+    // obstacle(1,0) = 0.14;
+    // obstacle(2,0) = -0.24;  
+
+    // obstacle(0,0) = 0;
+    // obstacle(1,0) = 0.06;
+    // obstacle(2,0) = -0.24;  
+
 
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
     //end_effector = MX::zeros(3,1);
@@ -374,7 +380,8 @@ Opti MPC_obstacles::define_problem(){
 
         J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
 
-        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle).T(), (end_effector - obstacle) ));   // to account for one obstacle
+        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
+        //J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
 
     }
 
