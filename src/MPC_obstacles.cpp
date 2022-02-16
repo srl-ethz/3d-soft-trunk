@@ -250,6 +250,8 @@ Opti MPC_obstacles::define_problem(){
     q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
+    MX slack = prob.variable(2*st_params.q_size, Horizon); 
+
     q_0 = prob.parameter(st_params.q_size,1);
     q_dot_0 = prob.parameter(st_params.q_size,1); 
 
@@ -307,7 +309,9 @@ Opti MPC_obstacles::define_problem(){
     b1 = {0.004, 0.004, 0.002, 0.002, 0.006, 0.006, 0.006, 0.006};  
     b2 = {0.15, 0.15, 0.15, 0.15, 0.5, 0.5, 0.5, 0.5};
 
-    b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51}; 
+    //b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51};   // upper, - lower
+    //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // -lower, upper   works
+    b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -368,7 +372,9 @@ Opti MPC_obstacles::define_problem(){
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
-        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle).T(), (end_effector - obstacle) ));
+        J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
+
+        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle).T(), (end_effector - obstacle) ));   // to account for one obstacle
 
     }
 
@@ -418,7 +424,7 @@ Opti MPC_obstacles::define_problem(){
     {
         prob.subject_to(q(Slice(),k+1) == mtimes(A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(0, st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(0, st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(0,st_params.q_size))); 
         prob.subject_to(q_dot(Slice(),k+1) == mtimes(A(Slice(st_params.q_size, 2*st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(st_params.q_size, 2*st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(st_params.q_size, 2*st_params.q_size)));
-        prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3);
+        prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
         //prob.subject_to(mtimes(A2, q_dot(Slice(),k)) <= b2);
         // some stuff on pressure
     }

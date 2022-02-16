@@ -62,10 +62,10 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     obstacles.col(1) << 0, 0.15, -0.24; 
     obstacles.col(2) << 0.01, 0.14, -0.24; 
     obstacles.col(3) << -0.01, 0,.14 -0.24; 
-    obstacles.col(4) << 0, 0.14, -0.26;
-    obstacles.col(5) << 0, 0.15, -0.22; 
-    obstacles.col(6) << 0.01, 0.14, -0.26; 
-    obstacles.col(7) << -0.01, 0.14, -0.22; 
+    obstacles.col(4) << 0, 0.12, -0.26;
+    obstacles.col(5) << 0, 0.11, -0.22; 
+    obstacles.col(6) << 0.01, 0.10, -0.26; 
+    obstacles.col(7) << -0.01, 0.10, -0.22; 
     obstacles.col(8) << -0.01, 0.10, -0.25; 
     obstacles.col(9) << 0, 0.10, -0.25; 
 
