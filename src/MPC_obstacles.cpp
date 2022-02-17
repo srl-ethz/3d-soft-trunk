@@ -250,7 +250,7 @@ Opti MPC_obstacles::define_problem(){
     q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
-    MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
+    // MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
 
     q_0 = prob.parameter(st_params.q_size,1);
     q_dot_0 = prob.parameter(st_params.q_size,1); 
@@ -262,7 +262,7 @@ Opti MPC_obstacles::define_problem(){
     w = prob.parameter(2*st_params.q_size, 1); 
 
     //x_r = prob.parameter(3,1); 
-    tr_r = prob.parameter(3, Horizon+1); 
+    tr_r = prob.parameter(3, Horizon); 
 
     u_prev = prob.parameter(2*st_params.num_segments,1); 
 
@@ -312,7 +312,7 @@ Opti MPC_obstacles::define_problem(){
     //b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51};   // upper, - lower
     //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // -lower, upper   works
     //b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
-    b3 = {1.30, 1.29, 1.26, 1.43, 1.40, 1.34, -1.03, 1.04}; 
+    // b3 = {1.30, 1.29, 1.26, 1.43, 1.40, 1.34, -1.03, 1.04}; 
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -321,7 +321,7 @@ Opti MPC_obstacles::define_problem(){
 
     MX end_effector = MX::zeros(3,1); 
 
-    T1 = fabs(tr_r(Slice(), Horizon));
+    T1 = fabs(tr_r(Slice(), Horizon-1));
     //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
@@ -360,28 +360,30 @@ Opti MPC_obstacles::define_problem(){
         J += mtimes((u(Slice(),k)).T(), mtimes(R, (u(Slice(),k)))); 
         if (k>1){
             J += mtimes((u(Slice(),k)-u(Slice(),k-1)).T(), mtimes(R, (u(Slice(),k)-u(Slice(),k-1)))); 
+        
+
+            for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
+
+                thetax(kk) = q(2*kk,k); 
+                thetay(kk) = q(2*kk+1,k);
+                length1(kk) = -st_params.lengths[2*kk]; 
+                length2(kk) = -st_params.lengths[2*kk+1];
+                
+                // end_effector += ee_position(q(2*kk,k), q(2*kk+1,k), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
+            }
+
+            end_effector = ee_position(thetax, thetay, length1, length2); 
+
+            J += mtimes((end_effector-tr_r(Slice(),k-1)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k-1)))); 
+
         }
-
-        for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
-
-            thetax(kk) = q(2*kk,k); 
-            thetay(kk) = q(2*kk+1,k);
-            length1(kk) = -st_params.lengths[2*kk]; 
-            length2(kk) = -st_params.lengths[2*kk+1];
-            
-            // end_effector += ee_position(q(2*kk,k), q(2*kk+1,k), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
-        }
-
-        end_effector = ee_position(thetax, thetay, length1, length2); 
-
-        J += mtimes((end_effector-tr_r(Slice(),k)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k)))); 
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
-        J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
+        // J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
 
         // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
-        //J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
+        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
 
     }
 
@@ -401,7 +403,7 @@ Opti MPC_obstacles::define_problem(){
     end_effector = ee_position(thetax, thetay, length1, length2);
 
     
-    J += mtimes((end_effector-tr_r(Slice(),Horizon)).T(), mtimes(Q, (end_effector-tr_r(Slice(), Horizon))));
+    J += mtimes((end_effector-tr_r(Slice(),Horizon-1)).T(), mtimes(Q, (end_effector-tr_r(Slice(), Horizon-1))));
 
     //J += mtimes(q(Slice(),Horizon).T(), mtimes(Q, q(Slice(),Horizon))); 
     //J += mtimes(q_dot(Slice(),Horizon).T(), mtimes(Q, q_dot(Slice(),Horizon)));  // terminal cost
@@ -431,7 +433,7 @@ Opti MPC_obstacles::define_problem(){
     {
         prob.subject_to(q(Slice(),k+1) == mtimes(A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(0, st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(0, st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(0,st_params.q_size))); 
         prob.subject_to(q_dot(Slice(),k+1) == mtimes(A(Slice(st_params.q_size, 2*st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(st_params.q_size, 2*st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(st_params.q_size, 2*st_params.q_size)));
-        prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
+        // prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
         //prob.subject_to(mtimes(A2, q_dot(Slice(),k)) <= b2);
         // some stuff on pressure
     }
@@ -592,16 +594,16 @@ void MPC_obstacles::set_ref(const MatrixXd refx){
     if (length == 0){
         ; 
     }
-    else if (length <= Horizon+1){
+    else if (length <= Horizon){
         for (i = 0; i < length; i++){
             this->traj_ref.col(i) = refx.col(i); 
         }
-        for (i = length; i< Horizon+1; i++){
+        for (i = length; i< Horizon; i++){
             this->traj_ref.col(i) = refx.col(length-1); 
         }
     }
     else{
-        for (i = 0; i< Horizon+1; i++){
+        for (i = 0; i< Horizon; i++){
             this->traj_ref.col(i) = refx.col(i);
         }
     }
@@ -612,7 +614,7 @@ void MPC_obstacles::set_ref(const MatrixXd refx){
     if (!is_initial_ref_received)
         is_initial_ref_received = true;
 
-    //std::cout << "Trajectory : " << traj_ref << std::endl; 
+    // std::cout << "Trajectory : " << traj_ref << std::endl; 
 }
 
 DM MPC_obstacles::robust_correction(DM U){     // use normalization ? 
