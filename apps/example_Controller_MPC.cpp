@@ -45,12 +45,11 @@ int main(){
     //MatrixXd trajectory(3,1);
     MatrixXd trajectory = MatrixXd::Zero(3, mpc.Horizon);
 
-
-    mpc.set_ref(x_ref);
+    // mpc.set_ref(x_ref);
     srl::sleep(0.5);
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
-    
+
 
     mpc.toggle_log();
     while (t < time){
@@ -62,7 +61,7 @@ int main(){
             trajectory(2,i) = -0.25;
         }
 
-        // for (int i = 0; i<mpc.Horizon +1; i++){
+        // for (int i = 0; i<mpc.Horizon; i++){
         //     if (t + i*dt < time/4){
         //         //trajectory(0,i) = 0.08;
         //         trajectory(0,i) = 0.10*((t+i*dt) / (time/4)) - 0.02; // provide a slow approach 
@@ -104,12 +103,12 @@ int main(){
         std::cout << t << std::endl;
     }
 
-    x_ref(0,0) = 0.03;
-    x_ref(1,0) = 0.03;
-    x_ref(2,0) = -0.27;
+    x_ref(0,0) = 0.02;
+    x_ref(1,0) = 0;
+    x_ref(2,0) = -0.26;
     
-    mpc.set_ref(x_ref);
-    srl::sleep(1);
+    // mpc.set_ref(x_ref);
+    // srl::sleep(1);
     mpc.toggle_log();
     srl::sleep(1);
     return 1;

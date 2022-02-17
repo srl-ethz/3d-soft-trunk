@@ -206,7 +206,7 @@ void MPC_obstacles::control_loop(){
 
         //std::cout << "pressure input : " << p.transpose() << std::endl; 
 
-        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}
+        if (sensor_type != CurvatureCalculator::SensorType::simulator) {actuate(p);}  //actuate(p)
         else {
             assert(simulate(p));
         }
@@ -306,8 +306,11 @@ Opti MPC_obstacles::define_problem(){
     // b1 = {0.002, 0.002, 0.001, 0.001, 0.003, 0.003, 0.003, 0.003};  
     // b2 = {0.15, 0.15, 0.15, 0.15, 0.5, 0.5, 0.5, 0.5};
 
-    b1 = {0.004, 0.004, 0.002, 0.002, 0.006, 0.006, 0.006, 0.006};  
-    b2 = {0.15, 0.15, 0.15, 0.15, 0.5, 0.5, 0.5, 0.5};
+    // b1 = {0.004, 0.004, 0.002, 0.002, 0.006, 0.006, 0.006, 0.006};  
+    // b2 = {0.15, 0.15, 0.15, 0.15, 0.5, 0.5, 0.5, 0.5};
+
+    b1 = {0.008, 0.008, 0.004, 0.004, 0.012, 0.012, 0.012, 0.012};  
+    b2 = {0.30, 0.30, 0.30, 0.30, 0.8, 0.8, 0.8, 0.8};
 
     //b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51};   // upper, - lower
     //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // -lower, upper   works
@@ -317,7 +320,7 @@ Opti MPC_obstacles::define_problem(){
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
 
-    MX Du = MX::ones(2*st_params.num_segments,1)*20;   // 8 for simulation, 20 real
+    MX Du = MX::ones(2*st_params.num_segments,1)*30;   // 20 for simulation, 20 real
 
     MX end_effector = MX::zeros(3,1); 
 
@@ -340,8 +343,8 @@ Opti MPC_obstacles::define_problem(){
 
     // MX obstacle = MX::zeros(3,1);
     // obstacle(0,0) = 0;
-    // obstacle(1,0) = 0.14;
-    // obstacle(2,0) = -0.24;  
+    // obstacle(1,0) = 0.11;   // 0.14 simulation
+    // obstacle(2,0) = -0.25;  // -0.24
 
     // obstacle(0,0) = 0;
     // obstacle(1,0) = 0.06;
@@ -382,7 +385,7 @@ Opti MPC_obstacles::define_problem(){
 
         // J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
 
-        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
+        // J += 2e2 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
         // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
 
     }
@@ -641,7 +644,7 @@ DM MPC_obstacles::robust_correction(DM U){     // use normalization ?
     }
 
     //float coeff = (5 - (-5)) / (*index.second - *index.first);   // 5 for simulation
-    float coeff = (10 - (-10)) / (limit - (-limit)); 
+    float coeff = (20 - (-20)) / (limit - (-limit));   // 10 before
 
     int i; 
     for (i = 0; i < U.rows() ; i++ ){
