@@ -64,7 +64,7 @@ add_executable(example_MPC_circular example_MPC_circular.cpp)
 target_link_libraries(example_MPC_circular casadi ControllerPCC MPC_ts MPC_robust MPC_obstacles QuasiStatic)
 
 add_executable(example_Controller_MPC example_Controller_MPC.cpp)
-target_link_libraries(example_Controller_MPC casadi ControllerPCC MPC MPC_ts MPC_robust)
+target_link_libraries(example_Controller_MPC casadi ControllerPCC MPC MPC_ts MPC_robust MPC_obstacles)
 
 add_executable(example_MPC_set example_MPC_set.cpp)
 target_link_libraries(example_MPC_set ControllerPCC MPC_constraints_finder)
