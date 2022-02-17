@@ -1,7 +1,6 @@
 #include "3d-soft-trunk/Characterize.h"
 
 Characterize::Characterize(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC(st_params, sensor_type, 1){
-
 }
 
 void Characterize::logRadialPressureDist(int segment, std::string fname){
@@ -105,4 +104,51 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
     fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
+}
+
+void Characterize::TaskSpaceAnalysis(int points_per_height){
+    set_log_filename("prismatic_taskspace");
+    toggle_log();
+    VectorXd p_ps = VectorXd::Zero(2*st_params.num_segments+1);
+    fmt::print("Starting task space analysis with {} points per height\n",points_per_height);
+    for (int h = 2000; h < 2001; h+=500){ //go through the different prismatic heights
+        fmt::print("Height: {}\n",h);
+        p_ps(0) = h;
+
+        for(int pi = 0; pi < points_per_height; pi++){ //go to pi different positions
+            fmt::print("Point: {} ",pi);
+            VectorXd p_prev = p_ps;
+
+            for(int i = 0; i < 2*st_params.num_segments; i++){ //generate random x,y coords
+                p_ps(1+i) = (rand()%1400)-700;
+            }
+
+            VectorXd delta = p_ps - p_prev;
+
+            double traversal_time = 0;
+            if (abs(delta.minCoeff()) > abs(delta.maxCoeff())){ //determine time required to traverse
+                traversal_time = abs(delta.minCoeff()) / 100;
+            } else {
+                traversal_time = abs(delta.maxCoeff()) / 100;
+            }
+            fmt::print("Traversal Time: {} \n",traversal_time);
+
+            double time = 0;
+            int counter = 0;
+
+            while (time < traversal_time){                  //traverse to new point, normed to 100mbar/s max
+                cc->get_curvature(state);
+                p = stm->pseudo2real(p_prev+(time/traversal_time)*delta);
+                for(int i = 0; i < p.size(); i++){
+                    vc->setSinglePressure(i+1,p(i));
+                }
+                time += 1./50;
+                counter++;
+                if(counter%50) log(time);
+                srl::sleep(1./50);
+            }
+
+        }
+    }
+    toggle_log();
 }

@@ -55,7 +55,7 @@ public:
     /** variables for the prismatic joint to be determined through parameter identification */
     double k_pris = 0;
     double d_pris = 0;
-    double a_pris = 1./120000;
+    double a_pris = 1./100000;
     
     /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
     std::vector<Eigen::MatrixXd> J;
