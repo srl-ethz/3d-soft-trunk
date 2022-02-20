@@ -91,9 +91,9 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         vc->setSinglePressure(i+1, p(i)); //prismatic reserves 2 pressures but only 1 slot in the p vector, therefore i+1
     }
     
-    long double static_pressure_up  = (p9*pow(state.q(0),8) + p1*pow(state.q(0),7) + p2*pow(state.q(0),6) + p3*pow(state.q(0),5) + p4*pow(state.q(0),4) + p5*pow(state.q(0),3) + p6*pow(state.q(0),2) + p7*state.q(0) + p8) ; 
+    long double static_pressure_up  = (p8*pow(state.q(0),8) + p7*pow(state.q(0),7) + p6*pow(state.q(0),6) + p5*pow(state.q(0),5) + p4*pow(state.q(0),4) + p3*pow(state.q(0),3) + p2*pow(state.q(0),2) + p1*state.q(0) + p0) ; 
     //if (static_pressure_up > 1800) static_pressure_up;
-    long double static_pressure_down = pa9*pow(state.q(0),8) + pa1*pow(state.q(0),7) + pa2*pow(state.q(0),6) + pa3*pow(state.q(0),5) + pa4*pow(state.q(0),4) + pa5*pow(state.q(0),3) + pa6*pow(state.q(0),2) + pa7*state.q(0) + pa8 ;
+    long double static_pressure_down = pa8*pow(state.q(0),8) + pa7*pow(state.q(0),7) + pa6*pow(state.q(0),6) + pa5*pow(state.q(0),5) + pa4*pow(state.q(0),4) + pa3*pow(state.q(0),3) + pa2*pow(state.q(0),2) + pa1*state.q(0) + pa0 ;
     
     /* no relu for now
     double static_pressure =  (1-100*(0.005-delta_x))*static_pressure_down + 100*(0.005-delta_x)*static_pressure_up;

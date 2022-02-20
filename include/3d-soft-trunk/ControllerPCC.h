@@ -158,27 +158,26 @@ protected:
     CurvatureCalculator::SensorType sensor_type;
 
     //parameters with sopra attached druing lifting
-    double p1 = 4.51698461347244e+16; 
-    double p2 =  -3.12073466347396e+16;
-    double p3 = 1.23130012673882e+16;
-    double p4 =  -3.03450557592897e+15;
-    double p5 =   478331438321324;
-    double p6 =   -47096326831020.5;
-    double p7 =  2648160620315.88;
-    double p8 =   -65105392481.1006;
-    double p9 = -2.85861303582473e+16;
+    double p0 = 0.00113897552812834;
+    double p1 = 12087623603.1984;
+    double p2 =  -538364333054.543;
+    double p3 = 10265966297319.4;
+    double p4 =  -108646424108771;
+    double p5 =   689204864780934;
+    double p6 =   -2.62060203572610e+15;
+    double p7 =  5.53035651329319e+15;
+    double p8 =   -4.99693781765136e+15;
 
     //parameters with sopra during falling
-
-    double pa1 = -2.64730093198093e+16; 
-    double pa2 = 1.88754119607122e+16;
-    double pa3 =  -7.67951699706221e+15;
-    double pa4 =   1.95006513121308e+15;
-    double pa5 =   -316487278565487;
-    double pa6 =   32060378469783.3;
-    double pa7 =   -1853449120986.59	;
-    double pa8 =   46818794523.1091;
-    double pa9 =  1.62201184463770e+16;
+    double pa0 = -42572009781.3745;
+    double pa1 = 2233702645823.27;
+    double pa2 = -51234675163551.8;
+    double pa3 =  671005929905415;
+    double pa4 =   -5.48823794779020e+15;
+    double pa5 =   2.87068862081799e+16;
+    double pa6 =   -9.37752747378696e+16;
+    double pa7 =   1.74913845812015e+17;
+    double pa8 =   -1.42630485294530e+17;
 
 
 private:
