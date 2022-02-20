@@ -76,7 +76,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
         if (pressure_pseudo.segment(2*i+1,2).norm() > 700) pressure_pseudo.segment(2*i+1,2) = 700*pressure_pseudo.segment(2*i+1,2).normalized();
 
-        double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
+        double angle = atan2(pressure_pseudo(2*i+1), pressure_pseudo(2*i+2))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
         
         
@@ -104,9 +104,11 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         output(0) = pressure_pseudo(0);
         
         if (angle < 0) angle += 360;
+        if (angle > 360) angle -= 360;
         //these values are obtained from manual curve fitting on the data from radial pressure distribution (see Characterize)
+        
+        if (0 < angle && angle <= 120) output.segment(3*i+1,3) *= 0.7/(3.71201813459996e-08*pow(angle-0,3) + -7.36375566141796e-05*pow(angle-0,2) + 0.00883421279960121*(angle-0) + 0.633222762484493);
         /*
-        if (0 < angle && angle <= 120) output.segment(3*i,3) *= 0.13/(2.7750557441253637e-08*pow(angle-0,3) + -5.762652637994046e-06*pow(angle-0,2) + 0.00042688659843405537*(angle-0) + 0.10908579883251328);
         else if (120 < angle && angle <= 240) output.segment(3*i,3) *= 0.13/(-2.641536000489659e-08*pow(angle-120,3) + -9.189459782962052e-07*pow(angle-120,2) + 0.0003412821736715674*(angle-120) + 0.12131067770780038);
         else if (240 < angle && angle <=360) output.segment(3*i,3) *= 0.13/(-4.7376777314191625e-09*pow(angle-240,3) + -4.1653897916977306e-06*pow(angle-240,2) + 0.0005947459035433383*(angle-240) + 0.11134234826302813);
          */
