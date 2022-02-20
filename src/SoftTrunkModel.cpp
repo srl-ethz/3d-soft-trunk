@@ -42,6 +42,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     A(0,0) = a_pris;
     A_pseudo(0,0) = a_pris;
     fmt::print("SoftTrunkModel initialized\n");
+    fmt::print("K: {}\n",K);
 }
 
 void SoftTrunkModel::updateState(const srl::State &state)
@@ -70,10 +71,10 @@ void SoftTrunkModel::newChamberConfig(Vector3d &angles){
 VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
     assert(pressure_pseudo.size() == 2*st_params.num_segments+1);
     VectorXd output = VectorXd::Zero(3*st_params.num_segments+1);
-    MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse(); //old variant
+    MatrixXd chamberMatrix_inv = chamberMatrix.transpose()*(chamberMatrix*chamberMatrix.transpose()).inverse();
     for (int i = 0; i < st_params.num_segments; i++){
         //constrain the pressure to be 500 at most (this may fuck with your arm if you want more than 600mbar)
-        if (pressure_pseudo.segment(2*i+1,2).norm() > 700) pressure_pseudo.segment(2*i+1,2) *= 700/pressure_pseudo.segment(2*i+1,2).norm();
+        if (pressure_pseudo.segment(2*i+1,2).norm() > 700) pressure_pseudo.segment(2*i+1,2) = 700*pressure_pseudo.segment(2*i+1,2).normalized();
 
         double angle = atan2(pressure_pseudo(2*i), pressure_pseudo(2*i+1))*180/3.14156;
         if (angle < 0) angle += 360; //-30 because the first region spans -30,90 and this makes that easier
@@ -83,7 +84,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         angle = angle - 90; 
 
         double deg2rad = 0.01745329;
-        double r = sqrt(pow(pressure_pseudo(2*i),2) + pow(pressure_pseudo(2*i+1),2));
+        double r = sqrt(pow(pressure_pseudo(2*i+1),2) + pow(pressure_pseudo(2*i+2),2));
         /*
         if (0 < angle && angle <= 120) angle += 1.6668411110844264e-05*pow(angle-0,3) + -0.0009804395073310674*pow(angle-0,2) + -0.22201779303795005*(angle-0) + 9.300010910023673;
         else if (120 < angle && angle <= 240) angle += -9.353234254731867e-06*pow(angle-120,3) + 0.0018923863124461152*pow(angle-120,2) + 0.040334057044388305*(angle-120) + -1.2983488480812746;

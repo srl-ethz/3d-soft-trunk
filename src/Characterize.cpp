@@ -11,11 +11,8 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
     fmt::print("Starting radial log to {}\n", filename);
     log_file.open(filename, std::fstream::out);
-    log_file << "angle";
-    //write header
-    log_file << fmt::format(", angle_measured, r");
-    log_file << "\n"; 
-    
+    log_file << "angle, angle_measured, q_1, q_2\n";
+
     pressures(2*segment+1) = 500;
 
     if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
@@ -42,9 +39,9 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         double angle = atan2(x(1),x(0))*180/3.14156;
         if (angle < 0) angle+=360;
 
-        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
+        fmt::print("angle: {}, angle_measured: {} q_1: {}, q_2: {} \n", (double) i, angle, state.q(1), state.q(2));
 
-        log_file << fmt::format("{},{},{}", (double) i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        log_file << fmt::format("{},{},{},{}", (double) i, angle, state.q(1), state.q(2));
         ang_err(i) = i - angle;
         if (abs(ang_err(i)) > 180) ang_err(i) -= ((ang_err(i) > 0) - (ang_err(i) < 0))*360;
         angle_vals(i,0) = i*i*i;

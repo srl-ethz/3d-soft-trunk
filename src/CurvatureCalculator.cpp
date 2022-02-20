@@ -88,11 +88,11 @@ void CurvatureCalculator::calculator_loop() {
         state_prev.dq = state.dq;
         if (log) {
             log_file << timestamp;
-            for (int i = 0; i < 2 * st_params.num_segments; ++i)
+            for (int i = 0; i < st_params.q_size; ++i)
                 log_file << fmt::format(", {}", state.q(i));
             double phi, theta;
             for (int i = 0; i < st_params.num_segments; i++){
-                longitudinal2phiTheta(state.q(2*i), state.q(2*i+1), phi, theta);
+                longitudinal2phiTheta(state.q(2*i+1), state.q(2*i+2), phi, theta);
                 log_file << fmt::format(", {}, {}", phi, theta);
             } 
             log_file << "\n";
@@ -156,7 +156,7 @@ void CurvatureCalculator::calculateCurvature() {
     MatrixXd matrix;
     double phi, theta;
     // next, calculate the parameters
-    state.q(0) = (abs_transforms[0].translation() - abs_transforms[1].translation()).norm()-0.005; //prismatic extension
+    state.q(0) = (abs_transforms[0].translation() - abs_transforms[1].translation()).norm(); //prismatic extension
     for (int i = 0; i < st_params.num_segments; i++) {
         matrix = (abs_transforms[i+1].inverse() * abs_transforms[i + 2]).matrix();
         // see documentation in header file for how this is calculated

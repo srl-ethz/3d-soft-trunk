@@ -51,6 +51,8 @@ void IDCon::control_loop(){
         stm->g(0) = 0; //arm gravity is handled elsewhere, remove
         tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state.q + stm->D*state.dq;
         p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
+        fmt::print("g: {} \n",(stm->A_pseudo.inverse()*stm->g/100).transpose());
+        fmt::print("kq: {} \n",(stm->A_pseudo.inverse()*stm->K*state.q/100).transpose());
         if (!(sensor_type == CurvatureCalculator::SensorType::simulator)) {actuate(p);}
         else {
             assert(simulate(p));

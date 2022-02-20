@@ -20,9 +20,9 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
 
     stm = std::make_unique<SoftTrunkModel>(st_params);
     // +X, +Y, -X, -Y
-    std::vector<int> map = {15,7,5,2,0,6,1,4,3};
+    map = {15,7,5,2,0,6,1,4,3};
     
-    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, 2000);
+    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, 650);
 
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, bendlabs_portname);
@@ -106,7 +106,6 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 
     //activate piston if actuator needs to move down
     if (p(0) < 0) {
-        vc->setSinglePressure(1, static_pressure);
         if (-p(0) > 800) {
             vc->setSinglePressure(0,800);
         }
@@ -118,6 +117,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         vc->setSinglePressure(0, 0); //reset piston pressure, otherwise it will keep on pushing
         vc->setSinglePressure(1, static_pressure + p(0));
     }
+
     if (logging){  
         log((cc->get_timestamp() - initial_timestamp)/10e5);                     //log once per control timestep
     }

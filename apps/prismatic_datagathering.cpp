@@ -96,9 +96,10 @@ int main(){
     log_file2.close();
     */
     //this section tracks the p/x trajectory
-   
+   vc.setSinglePressure(1,2000);
+   srl::sleep(1);
         srl::Rate r{1./dt};
-    for (size_t i = 00; i < 2000; i+=1)
+    for (size_t i = 2000; i > 0; i-=1)
         {
           
         vc.setSinglePressure(1,i);

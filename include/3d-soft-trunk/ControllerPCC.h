@@ -179,6 +179,8 @@ protected:
     double pa7 =   1.74913845812015e+17;
     double pa8 =   -1.42630485294530e+17;
 
+    std::vector<int> map;
+
 
 private:
     /** @brief forward simulate using beeman method

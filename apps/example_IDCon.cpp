@@ -74,81 +74,33 @@ int main(){
     std::thread gain_thread(gain, std::ref(id));
     double t = 0;
     double dt = 1./50;
-    x_ref << 0.12,0,-0.455;
+    x_ref << 0.125,0,-0.355;
     double amplitude = 0.2;
     double coef = 2 * 3.1415/16;
     bool freedom = false;
-    id.toggle_log();
-    dx_ref << 0.001,0.001,0.001;
-    id.set_ref(x_ref,dx_ref,ddx_ref);
-   
-    //pick and place task
-   /*
     
-    x_ref << 0,-0.06,-0.425;
     id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(4);
-
-    x_ref << 0,-0.06,-0.465;
-    id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(0.5);
-
-    id.toggleGripper();
-    srl::sleep(1);
-
-    x_ref << 0,0,-0.425;
-    id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(1);
-
-    x_ref << 0,0.15,-0.39;
-    id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(3);
-
-    id.toggleGripper();
     srl::sleep(2);
+    id.toggle_log();
 
-    x_ref << 0,0,-0.425;
-    id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(4);
-*/
     
     //getchar();
     
 
     while (t<10){
         
-        double r = 0.12;
+        double r = 0.125;
 
-   /* 
-        //Circle:
-
-        circle << r*cos(coef*t), r*sin(coef*t), -0.465;
-        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
-        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-        x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
-        
        
         //Slanted Circle:
 
-        x_ref << r*cos(coef*t), r*sin(coef*t), -0.445 + 0.02*sin(coef*t);
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.375 + 0.02*sin(coef*t);
 
         dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*t);
 
         ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*t);
 
-
-        //Wavy Circle with n waves:
-        double n = 2;
-
-        x_ref << r*cos(coef*t), r*sin(coef*t), -0.42 + 0.02*sin(coef*n*t);
-
-        dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*n*t);
-
-        ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*n*t);
-
-
+/*
        // Helix:
 
         x_ref << r*cos(coef*t), r*sin(coef*t), -0.465 + 0.04/16*t;
@@ -159,13 +111,13 @@ int main(){
 */
 
         //Line along z:
-
+/*
         x_ref << 0, 0.15-0.3/10*t, -0.425;
 
         dx_ref << 0, -0.18/10, 0;
 
         ddx_ref << 0, 0, 0;
-
+*/
         id.set_ref(x_ref,dx_ref,ddx_ref);
 
         t+=dt;
