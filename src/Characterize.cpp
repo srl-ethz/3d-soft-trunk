@@ -1,4 +1,5 @@
 #include "3d-soft-trunk/Characterize.h"
+#include "time.h"
 
 Characterize::Characterize(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC(st_params, sensor_type, 1){
 }
@@ -108,10 +109,11 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
 
 void Characterize::TaskSpaceAnalysis(int points_per_height){
     set_log_filename("prismatic_taskspace");
+    srand(time(NULL)); //initialize randomness
     toggle_log();
     VectorXd p_ps = VectorXd::Zero(2*st_params.num_segments+1);
     fmt::print("Starting task space analysis with {} points per height\n",points_per_height);
-    for (int h = 2000; h < 2001; h+=500){ //go through the different prismatic heights
+    for (int h = 0; h < 2001; h+=200){ //go through the different prismatic heights
         fmt::print("Height: {}\n",h);
         p_ps(0) = h;
 
@@ -119,10 +121,16 @@ void Characterize::TaskSpaceAnalysis(int points_per_height){
             fmt::print("Point: {} ",pi);
             VectorXd p_prev = p_ps;
 
-            for(int i = 0; i < 2*st_params.num_segments; i++){ //generate random x,y coords
-                p_ps(1+i) = (rand()%1400)-700;
+            
+            for(int i = 0; i < st_params.num_segments; i++){ //generate random x,y coords
+                p_ps(2+i*2) = (rand()%1400)-700;
             }
-
+            
+           
+           p_ps(2) = 700 - 1400*(pi==2 or pi==3 or pi==6);
+           p_ps(4) = 700 - 1400*(pi==2 or pi==5 or pi==6);
+           p_ps = p_ps * (pi!=0) ;
+            p_ps(0) = h;
             VectorXd delta = p_ps - p_prev;
 
             double traversal_time = 0;
@@ -144,7 +152,7 @@ void Characterize::TaskSpaceAnalysis(int points_per_height){
                 }
                 time += 1./50;
                 counter++;
-                if(counter%50) log(time);
+                if(!(counter%50)) log(time);
                 srl::sleep(1./50);
             }
 

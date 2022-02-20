@@ -3,22 +3,23 @@
 
 
 int main(){
-    std::vector<int> map = {0,1};
+    std::vector<int> map = {15,7};
     std::vector<int> cameras = {9};
     unsigned long long int timestamp;
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> frames;
     double dt = 0.01;
     double distance;
+    std::string filename;
     std::fstream log_file;
     std::fstream log_file2;
     int max_pressure = 2000;
-    //log_file = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, "prisamtic_datagathering_logs.csv");
+    filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, "prisamtic_datagathering_logs");
     ValveController vc{"192.168.0.100", map, max_pressure};
     
     QualisysClient qc{2, cameras};
 
 
-    log_file.open("experiment_control/dxdp_McK_bottom_001_1_2000_withSoPrA6.csv", std::fstream::out);
+    log_file.open(filename, std::fstream::out);
     //log_file2.open("experiment_dadp_McK/dadp_McK_bottom_001_200_100_2000_1.csv", std::fstream::out);
    
 
