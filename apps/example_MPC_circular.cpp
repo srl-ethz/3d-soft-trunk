@@ -17,7 +17,7 @@ int main(){
     MPC_obstacles mpc2(st_params, CurvatureCalculator::SensorType::simulator);
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(3*st_params.num_segments);
-    double time = 10.0;  //10 for 6 turns      before 20
+    double time = 20.0;  //10 for 6 turns      before 20
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
