@@ -341,10 +341,11 @@ Opti MPC_obstacles::define_problem(){
 
     int k, kk;
 
-    // MX obstacle = MX::zeros(3,1);
-    // obstacle(0,0) = 0;
-    // obstacle(1,0) = 0.11;   // 0.14 simulation
-    // obstacle(2,0) = -0.25;  // -0.24
+
+    MX obstacle = MX::zeros(3,1);
+    obstacle(0,0) = 0;
+    obstacle(1,0) = 0.14;   // 0.14 simulation
+    obstacle(2,0) = -0.24;  // -0.24
 
     // obstacle(0,0) = 0;
     // obstacle(1,0) = 0.06;
@@ -361,7 +362,7 @@ Opti MPC_obstacles::define_problem(){
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
         J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds 
         J += mtimes((u(Slice(),k)).T(), mtimes(R, (u(Slice(),k)))); 
-        if (k>1){
+        if (k>0){
             J += mtimes((u(Slice(),k)-u(Slice(),k-1)).T(), mtimes(R, (u(Slice(),k)-u(Slice(),k-1)))); 
         
 
@@ -379,14 +380,14 @@ Opti MPC_obstacles::define_problem(){
 
             J += mtimes((end_effector-tr_r(Slice(),k-1)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k-1)))); 
 
+            J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
+            // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
+
         }
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
         // J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
-
-        // J += 2e2 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
-        // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
 
     }
 

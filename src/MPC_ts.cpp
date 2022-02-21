@@ -396,7 +396,7 @@ Opti MPC_ts::define_problem(){
     w = prob.parameter(2*st_params.q_size, 1); 
 
     //x_r = prob.parameter(3,1); 
-    tr_r = prob.parameter(3, Horizon+1); 
+    tr_r = prob.parameter(3, Horizon); 
 
     u_prev = prob.parameter(2*st_params.num_segments,1); 
 
@@ -418,7 +418,7 @@ Opti MPC_ts::define_problem(){
 
     MX end_effector = MX::zeros(3,1); 
 
-    T1 = fabs(tr_r(Slice(), Horizon));
+    T1 = fabs(tr_r(Slice(), Horizon-1));
     //T1 = tr_r(Slice(), Horizon); 
     T2 = MX::zeros(st_params.q_size,1);  //terminal condition with delta formulation
 
@@ -445,24 +445,24 @@ Opti MPC_ts::define_problem(){
         // J += mtimes((q(Slice(),k)-q_r).T(), mtimes(Q, (q(Slice(),k)-q_r)));   // probaly Slice(0,st_params.q_size,1) has same effect
         J += mtimes((q_dot(Slice(),k)).T(), mtimes(Q2, (q_dot(Slice(),k))));    // keep limit on speeds
         J += mtimes((u(Slice(),k)).T(), mtimes(R, (u(Slice(),k)))); 
-        if (k>1){
+        if (k>0){
             J += mtimes((u(Slice(),k)-u(Slice(),k-1)).T(), mtimes(R, (u(Slice(),k)-u(Slice(),k-1)))); 
-        }
         
 
-        for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
+            for (kk = 0; kk < st_params.num_segments*st_params.sections_per_segment; kk++){
 
-            thetax(kk) = q(2*kk,k); 
-            thetay(kk) = q(2*kk+1,k);
-            length1(kk) = -st_params.lengths[2*kk]; 
-            length2(kk) = -st_params.lengths[2*kk+1];
-            
-            // end_effector += ee_position(q(2*kk,k), q(2*kk+1,k), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
+                thetax(kk) = q(2*kk,k); 
+                thetay(kk) = q(2*kk+1,k);
+                length1(kk) = -st_params.lengths[2*kk]; 
+                length2(kk) = -st_params.lengths[2*kk+1];
+                
+                // end_effector += ee_position(q(2*kk,k), q(2*kk+1,k), -st_params.lengths[2*kk] - st_params.lengths[2*kk+1]); 
+            }
+
+            end_effector = ee_position(thetax, thetay, length1, length2); 
+
+            J += mtimes((end_effector-tr_r(Slice(),k-1)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k-1)))); 
         }
-
-        end_effector = ee_position(thetax, thetay, length1, length2); 
-
-        J += mtimes((end_effector-tr_r(Slice(),k)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k)))); 
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
     }
@@ -483,7 +483,7 @@ Opti MPC_ts::define_problem(){
     end_effector = ee_position(thetax, thetay, length1, length2);
 
     
-    J += mtimes((end_effector-tr_r(Slice(),Horizon)).T(), mtimes(Q, (end_effector-tr_r(Slice(), Horizon))));
+    J += mtimes((end_effector-tr_r(Slice(),Horizon-1)).T(), mtimes(Q, (end_effector-tr_r(Slice(), Horizon-1))));
 
     //J += mtimes(q(Slice(),Horizon).T(), mtimes(Q, q(Slice(),Horizon))); 
     //J += mtimes(q_dot(Slice(),Horizon).T(), mtimes(Q, q_dot(Slice(),Horizon)));  // terminal cost
@@ -712,16 +712,16 @@ void MPC_ts::set_ref(const MatrixXd refx){
     if (length == 0){
         ; 
     }
-    else if (length <= Horizon+1){
+    else if (length <= Horizon){
         for (i = 0; i < length; i++){
             this->traj_ref.col(i) = refx.col(i); 
         }
-        for (i = length; i< Horizon+1; i++){
+        for (i = length; i< Horizon; i++){
             this->traj_ref.col(i) = refx.col(length-1); 
         }
     }
     else{
-        for (i = 0; i< Horizon+1; i++){
+        for (i = 0; i< Horizon; i++){
             this->traj_ref.col(i) = refx.col(i);
         }
     }

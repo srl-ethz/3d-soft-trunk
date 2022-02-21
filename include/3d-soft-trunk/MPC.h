@@ -12,7 +12,7 @@ class MPC: public ControllerPCC{
         const int Horizon = 10;
 
     protected:
-        MatrixXd q_ref_long = MatrixXd::Zero(st_params.q_size, Horizon+1); 
+        MatrixXd q_ref_long = MatrixXd::Zero(st_params.q_size, Horizon); 
 
     private:
         void control_loop(); 
@@ -51,7 +51,7 @@ class MPC: public ControllerPCC{
         DM sp_B_temp = DM::nan(2*st_params.q_size, 2*st_params.num_segments);
         DM sp_w_temp = DM::nan(2*st_params.q_size, 1); 
         //DM q_r_temp = DM::nan(st_params.q_size, 1);
-        DM q_r_temp = DM::nan(st_params.q_size, Horizon+1);
+        DM q_r_temp = DM::nan(st_params.q_size, Horizon);
         DM q_dot_r_temp = DM::nan(st_params.q_size, 1);  // conversion placeholders
         DM q_0_temp = DM::nan(st_params.q_size, 1);
         DM q_dot_0_temp = DM::nan(st_params.q_size, 1);

@@ -171,7 +171,7 @@ Opti MPC::define_problem(){
     w = prob.parameter(2*st_params.q_size, 1); 
 
     // q_r = prob.parameter(st_params.q_size, 1);
-    q_r = prob.parameter(st_params.q_size, Horizon+1);
+    q_r = prob.parameter(st_params.q_size, Horizon);
 
     q_dot_r = prob.parameter(st_params.q_size,1); 
 
@@ -194,7 +194,7 @@ Opti MPC::define_problem(){
 
     //std::cout << "Delta u = " << Du << std::endl; 
 
-    T1 = q_r(Slice(), Horizon); 
+    T1 = q_r(Slice(), Horizon-1); 
     T2 = q_dot_r;  //terminal condition with delta formulation
 
     MX Q1 = MX::eye(st_params.q_size)*1e8;          // 2 segment: 8
@@ -206,13 +206,15 @@ Opti MPC::define_problem(){
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
 
     for (int k = 0; k < Horizon; k++) 
-    {
-        J += mtimes((q(Slice(),k)-q_r(Slice(),k)).T(), mtimes(Q1, (q(Slice(),k)-q_r(Slice(),k))));   // probaly Slice(0,st_params.q_size,1) has same effect
+    {   
+        if (k > 0 ){
+            J += mtimes((q(Slice(),k)-q_r(Slice(),k-1)).T(), mtimes(Q1, (q(Slice(),k)-q_r(Slice(),k-1))));   // probaly Slice(0,st_params.q_size,1) has same effect
+        }
         J += mtimes((q_dot(Slice(),k)-q_dot_r).T(), mtimes(Q2, (q_dot(Slice(),k)-q_dot_r)));
         J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));     // if want to penalize input, need to use the ss one
     }
 
-    J += mtimes((q(Slice(),Horizon)-q_r(Slice(),Horizon)).T(), mtimes(Q1, (q(Slice(),Horizon)-q_r(Slice(),Horizon)))); 
+    J += mtimes((q(Slice(),Horizon)-q_r(Slice(),Horizon-1)).T(), mtimes(Q1, (q(Slice(),Horizon)-q_r(Slice(),Horizon-1)))); 
     J += mtimes((q_dot(Slice(),Horizon)-q_dot_r).T(), mtimes(Q2, (q_dot(Slice(),Horizon)-q_dot_r)));  // terminal cost
     
     prob.minimize(J);
@@ -306,7 +308,7 @@ void MPC::set_ref(const srl::State &state_ref1, const srl::State &state_ref2, in
     for (i = 0; i < edge; i++){
         this->q_ref_long.col(i) = state_ref1.q; 
     }
-    for (i = edge; i < Horizon+1; i++){
+    for (i = edge; i < Horizon; i++){
         this->q_ref_long.col(i) = state_ref2.q;
     }
 

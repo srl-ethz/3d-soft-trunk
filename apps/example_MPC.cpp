@@ -100,7 +100,7 @@ int main(){
             state_ref1.q << 0.222, -0.116, -0.077, -0.866, 0.02, 0.02;
             state_ref2 = state_ref1; 
             int edge = 0;
-            for (int i = 0; i < mpc1.Horizon + 1; i++){
+            for (int i = 0; i < mpc1.Horizon; i++){
                 if (t + i*0.05 >= time/2){   //time/2
                     state_ref2.q << -0.133, 0.075, -0.003, 0.670, -0.02, -0.02;
                     edge = i;

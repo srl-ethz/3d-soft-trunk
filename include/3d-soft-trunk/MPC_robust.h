@@ -14,9 +14,9 @@ class MPC_robust: public ControllerPCC{
                                 // with horizon 7 the terminal constraint doesn't affect the reachability
 
     protected:
-        MatrixXd traj_ref = MatrixXd::Zero(3, Horizon+1);
-        MatrixXd dtraj_ref = MatrixXd::Zero(3, Horizon+1);
-        MatrixXd ddtraj_ref = MatrixXd::Zero(3, Horizon+1);
+        MatrixXd traj_ref = MatrixXd::Zero(3, Horizon);
+        MatrixXd dtraj_ref = MatrixXd::Zero(3, Horizon);
+        MatrixXd ddtraj_ref = MatrixXd::Zero(3, Horizon);
 
     private:
         void control_loop(); 
@@ -66,7 +66,7 @@ class MPC_robust: public ControllerPCC{
         DM K_temp = DM::nan(2*st_params.num_segments, 2*st_params.q_size);
 
         DM x_r_temp = DM::nan(3,1);  // conversion placeholders
-        DM tr_r_temp = DM::nan(3,Horizon+1); 
+        DM tr_r_temp = DM::nan(3,Horizon); 
         DM q_0_temp = DM::nan(st_params.q_size, 1);
         DM q_dot_0_temp = DM::nan(st_params.q_size, 1);
         DM q_0_large = DM::nan(st_params.q_size, Horizon+1);    // needed for warm-start
