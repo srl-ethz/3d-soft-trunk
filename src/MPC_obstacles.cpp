@@ -312,10 +312,10 @@ Opti MPC_obstacles::define_problem(){
     // b1 = {0.008, 0.008, 0.004, 0.004, 0.012, 0.012, 0.012, 0.012};  // real
     // b2 = {0.30, 0.30, 0.30, 0.30, 0.8, 0.8, 0.8, 0.8};
 
-    //b3 = {1.20, 1.47, 0.17, 0.64, 1.04, 1.54, 1.38, 1.51};   // upper, - lower
-    //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // -lower, upper   works
-    //b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
-    // b3 = {1.30, 1.29, 1.26, 1.43, 1.40, 1.34, -1.03, 1.04}; 
+    //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // upper, -lower   works
+    // b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
+    // b3 = {1.20, 1.16, 0.73, 0.32, 1.00, 1.42, 1.54, 1.54}; 
+    // b3 = {1.16, 1.49, 1.51, 0.48, 1.53, 1.42, 1.30, -0.24}; 
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -342,14 +342,14 @@ Opti MPC_obstacles::define_problem(){
     int k, kk;
 
 
-    MX obstacle = MX::zeros(3,2);
-    obstacle(0,0) = 0;
-    obstacle(1,0) = 0.14;   // 0.14 simulation
-    obstacle(2,0) = -0.24;  // -0.24
+    // MX obstacle = MX::zeros(3,2);
+    // obstacle(0,0) = 0;
+    // obstacle(1,0) = 0.14;   // 0.14 simulation
+    // obstacle(2,0) = -0.24;  // -0.24
 
-    obstacle(0,1) = -0.14;
-    obstacle(1,1) = 0;
-    obstacle(2,1) = -0.24;  
+    // obstacle(0,1) = -0.14;
+    // obstacle(1,1) = 0;
+    // obstacle(2,1) = -0.24;  
 
 
     // use delta-formulation with state reference  <<<<--------------<<<<<<<<<<<<----------<<<<<<<<<<<<----------
@@ -380,8 +380,8 @@ Opti MPC_obstacles::define_problem(){
 
             J += mtimes((end_effector-tr_r(Slice(),k-1)).T(), mtimes(Q, (end_effector-tr_r(Slice(),k-1)))); 
 
-            J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
-            J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
+            // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),0)).T(), (end_effector - obstacle(Slice(),0)) ));   // to account for one obstacle
+            // J += 5e1 / exp( 1e3* mtimes( (end_effector - obstacle(Slice(),1)).T(), (end_effector - obstacle(Slice(),1)) ));
 
         }
 
@@ -640,7 +640,7 @@ DM MPC_obstacles::robust_correction(DM U){     // use normalization ?
         limit = abs(*index.first); 
     }
 
-    if (limit < 6){
+    if (limit < 12){  // 6 simulation
         return U; 
     }
 

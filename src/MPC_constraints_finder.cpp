@@ -59,25 +59,25 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
     }
 
     obstacles.col(0) << 0, 0.14, -0.24;
-    obstacles.col(1) << 0, 0.13, -0.24; 
-    obstacles.col(2) << 0.01, 0.14, -0.24; 
-    obstacles.col(3) << -0.01, 0.14, -0.24; 
-    obstacles.col(4) << 0, 0.12, -0.25;
-    obstacles.col(5) << -0.12, 0, -0.24; 
-    obstacles.col(6) << -0.13, 0.01, -0.24; 
-    obstacles.col(7) << -0.13, -0.01, -0.24; 
-    obstacles.col(8) << -0.01, 0.11, -0.25; 
-    obstacles.col(9) << -0.11, 0.01, -0.25; 
-    obstacles.col(10) << 0.01, 0.12, -0.24;
-    obstacles.col(11) << 0.01, 0.13, -0.24; 
-    obstacles.col(12) << -0.01, 0.14, -0.25; 
-    obstacles.col(13) << -0.01, 0.12, -0.25; 
-    obstacles.col(14) << 0, 0.125, -0.25;
-    obstacles.col(15) << -0.11, 0, -0.24; 
-    obstacles.col(16) << -0.13, 0.013, -0.244; 
-    obstacles.col(17) << -0.13, -0.011, -0.242; 
-    obstacles.col(18) << -0.01, 0.11, -0.25; 
-    obstacles.col(19) << -0.113, 0.015, -0.24; 
+    obstacles.col(1) << 0, 0.14, -0.22;
+    obstacles.col(2) << 0, 0.14, -0.25; 
+    obstacles.col(3) << 0, 0.12, -0.24;
+    obstacles.col(4) << 0, 0.12, -0.22;
+    obstacles.col(5) << 0, 0.15, -0.24;
+    obstacles.col(6) << 0, 0.15, -0.22;
+    obstacles.col(7) << 0.01, 0.14, -0.23;
+    obstacles.col(8) << 0.01, 0.12, -0.23;
+    obstacles.col(9) << -0.01, 0.14, -0.23;
+    obstacles.col(10) << -0.01, 0.12, -0.23;
+    obstacles.col(11) << 0.02, 0.14, -0.23;
+    obstacles.col(12) << 0.02, 0.12, -0.23;
+    obstacles.col(13) << -0.02, 0.14, -0.23;
+    obstacles.col(14) << -0.02, 0.12, -0.23;
+    obstacles.col(15) << 0.03, 0.14, -0.23;
+    obstacles.col(16) << 0.03, 0.12, -0.23;
+    obstacles.col(17) << -0.03, 0.14, -0.23;
+    obstacles.col(18) << -0.03, 0.12, -0.23;
+    obstacles.col(19) << 0, 0.13, -0.25;  
 
 
     N_trials = 1e5;
@@ -182,6 +182,7 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
     bool target_reached[N_tar] = {false}; 
     int target_missed = 0; 
     int i, ii; 
+    int l, m, n, o; 
 
     VectorXd thetax(2), thetay(2), length1(2), length2(2); // for FK
     MatrixXd ee_mid = MatrixXd::Zero(3,1); 
@@ -201,15 +202,11 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
 
         q_test << distribution0(generator), distribution1(generator), distribution2(generator), distribution3(generator); 
 
-        // option 1
-        // for (ii = 0; ii < st_params.q_size/2; ii++){
 
-        //     thetax(ii) = q_test(2*ii)*cos(q_test(2*ii+1)); 
-        //     thetay(ii) = q_test(2*ii)*sin(q_test(2*ii+1));
-        //     length1(ii) = -st_params.lengths[2*ii]; 
-        //     length2(ii) = -st_params.lengths[2*ii+1]; 
-
-        // }
+        // q_test(0) = i*(q_up(0)-q_low(0))/(N_check) + q_low(0);
+        // q_test(1) = i*(q_up(1)-q_low(1))/(N_check) + q_low(1);
+        // q_test(2) = i*(q_up(2)-q_low(2))/(N_check) + q_low(2);
+        // q_test(3) = i*(q_up(3)-q_low(3))/(N_check) + q_low(3); 
 
         // option 2
         for (ii = 0; ii < st_params.q_size/2; ii++){
@@ -251,9 +248,76 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
                 //std::cout << ee_end.transpose() << " reaches " << targets.col(ii).transpose() << std::endl;
             }
         }
-        
-    }
+                
+    }  
 
+    for (l = 0; l < 5; l++){
+        for (m = 0; m < 5; m++){
+            for (n = 0; n < 5; n++){
+                for (o = 0; o < 5; o++){
+
+                    q_test(0) = l*(q_up(0)-q_low(0))/4 + q_low(0);
+                    q_test(1) = m*(q_up(1)-q_low(1))/4 + q_low(1);
+                    q_test(2) = n*(q_up(2)-q_low(2))/4 + q_low(2);
+                    q_test(3) = o*(q_up(3)-q_low(3))/4 + q_low(3); 
+
+                    // option 2
+                    for (ii = 0; ii < st_params.q_size/2; ii++){
+
+                        thetax(ii) = q_test(2*ii); 
+                        thetay(ii) = q_test(2*ii+1);
+                        length1(ii) = -st_params.lengths[2*ii]; 
+                        length2(ii) = -st_params.lengths[2*ii+1]; 
+
+                    }
+
+                    ee_mid = ee_position_1(thetax, thetay, length1, length2);   // change to account for middle segment
+                    ee_end = ee_position_2(thetax, thetay, length1, length2);
+
+                    for (ii = 0; ii < N_obs; ii++){
+                        if ( (ee_mid - obstacles.col(ii)).norm() < 0.02 ){  // 1cm
+                            included = false; 
+                            std::cout << ee_mid.transpose() << " hits obstacle " << obstacles.col(ii).transpose() << std::endl;
+                            //int flag = getchar();   // to pause the program
+                            break; 
+                        }
+
+                        if ( (ee_end - obstacles.col(ii)).norm() < 0.02 ){  // 1cm
+                            included = false; 
+                            std::cout << ee_end.transpose() << " hits obstacle " << obstacles.col(ii).transpose() << std::endl;
+                            //int flag = getchar(); 
+                            break; 
+                        }
+                    }
+
+                    if (included == false){
+                        break;
+                    }
+
+
+                    for (ii = 0; ii < N_tar; ii++){
+                        if ( (ee_end - targets.col(ii)).norm() < 0.05 ){  
+                            target_reached[ii] = true;  
+                            //std::cout << ee_end.transpose() << " reaches " << targets.col(ii).transpose() << std::endl;
+                        }
+                    }
+
+                }
+            }
+        }
+    }      
+
+        // option 1
+        // for (ii = 0; ii < st_params.q_size/2; ii++){
+
+        //     thetax(ii) = q_test(2*ii)*cos(q_test(2*ii+1)); 
+        //     thetay(ii) = q_test(2*ii)*sin(q_test(2*ii+1));
+        //     length1(ii) = -st_params.lengths[2*ii]; 
+        //     length2(ii) = -st_params.lengths[2*ii+1]; 
+
+        // }
+        
+    
     target_missed = std::count(target_reached, target_reached+N_tar, 0); 
 
     std::cout << " Proposal missed " << target_missed << " targets" << std::endl;
