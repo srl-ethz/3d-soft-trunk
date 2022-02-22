@@ -162,20 +162,22 @@ void Characterize::estimateActuation(int segment, int points, int maxpressure){
     filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
     log_file.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
     log_file << "A11,A12,A21,A22,A31,A32\n";
-    std::vector<VectorXd> A;
-    A.resize(3);
-
+    std::vector<VectorXd> A(3);
     for (int i = 0; i < 3; i++){ //do it for each chamber
         A[i] = VectorXd::Zero(2*points);
-
+        double increment = ((double) maxpressure - 300) / (double) points;
         for (int j = 0; j < points; j++){
-            double pressure = (double) maxpressure / (double) points;
+            double pressure = j*increment+300;
+            fmt::print("Chamber: {}, Pressure: {}\n",i,pressure);
             vc->setSinglePressure(2+segment*3+i, pressure);
-            srl::sleep(5);
+            srl::sleep(8);
+            cc->get_curvature(state);
             stm->updateState(state);
-            A[i].segment(2*j,2) = (stm->K*state.q+stm->g)/pressure; //quasi-static used to invert onto A
+            A[i].segment(2*j,2) = (stm->K*state.q+stm->g).segment(1+2*segment,2)/(100*pressure*stm->A_pseudo(1+2*segment,1+2*segment)); //quasi-static used to invert onto A
+            fmt::print("Estimate: {}\n",((stm->K*state.q+stm->g).segment(1+2*segment,2)/(100*pressure*stm->A_pseudo(1+2*segment,1+2*segment))).transpose());
+            vc->setSinglePressure(2+segment*3+i, 0);
         }
-        fmt::print("A{} estimates: {}\n",i+1,A[i].transpose());
+        //fmt::print("A{} estimates: {}\n",i+1,A[i].transpose());
     }
 
 
