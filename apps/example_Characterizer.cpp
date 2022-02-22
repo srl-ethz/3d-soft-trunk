@@ -6,6 +6,7 @@ int main(){
     st_params.finalize();
     Characterize ch{st_params, CurvatureCalculator::SensorType::qualisys};
     //ch.calcK(1,4,5);
-    ch.logRadialPressureDist(0, "topRadialLog500");
+    //ch.logRadialPressureDist(0, "topRadialLog500");
     //ch.TaskSpaceAnalysis(30);
+    ch.estimateActuation(0,14,700);
 }

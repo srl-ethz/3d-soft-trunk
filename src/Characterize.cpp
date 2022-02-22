@@ -157,3 +157,33 @@ void Characterize::TaskSpaceAnalysis(int points_per_height){
     }
     toggle_log();
 }
+
+void Characterize::estimateActuation(int segment, int points, int maxpressure){
+    filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
+    log_file.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
+    log_file << "A11,A12,A21,A22,A31,A32\n";
+    std::vector<VectorXd> A;
+    A.resize(3);
+
+    for (int i = 0; i < 3; i++){ //do it for each chamber
+        A[i] = VectorXd::Zero(2*points);
+
+        for (int j = 0; j < points; j++){
+            double pressure = (double) maxpressure / (double) points;
+            vc->setSinglePressure(2+segment*3+i, pressure);
+            srl::sleep(5);
+            stm->updateState(state);
+            A[i].segment(2*j,2) = (stm->K*state.q+stm->g)/pressure; //quasi-static used to invert onto A
+        }
+        fmt::print("A{} estimates: {}\n",i+1,A[i].transpose());
+    }
+
+
+    for (int i = 0; i < points; i++){
+        for (int j = 0; j < 3; j++){
+            log_file << fmt::format("{},{}",A[j](2*i),A[j](2*i+1));
+            log_file << (i==2) ? "\n" : ",";
+        }
+    }
+
+}

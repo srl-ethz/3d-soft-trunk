@@ -18,6 +18,11 @@ public:
     
     void TaskSpaceAnalysis(int points_per_height);
 
+    /** @brief estimate actuation matrix A by performing quasi-static experiment
+     * @param segment number of segment whose actuation matrix should be estimated
+     * @param points number of points each chamber should be tested for */
+    void estimateActuation(int segment, int points, int maxpressure);
+
 private:
     const double deg2rad = 0.01745329;
 };
