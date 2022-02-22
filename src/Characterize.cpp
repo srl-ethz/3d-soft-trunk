@@ -158,32 +158,29 @@ void Characterize::TaskSpaceAnalysis(int points_per_height){
     toggle_log();
 }
 
-void Characterize::estimateActuation(int segment, int points, int maxpressure){
+void Characterize::estimateActuation(int segment, int points, int pressure){
     filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
     log_file.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
-    log_file << "A11,A12,A21,A22,A31,A32\n";
-    std::vector<VectorXd> A;
-    A.resize(3);
-
-    for (int i = 0; i < 3; i++){ //do it for each chamber
-        A[i] = VectorXd::Zero(2*points);
-
-        for (int j = 0; j < points; j++){
-            double pressure = (double) maxpressure / (double) points;
-            vc->setSinglePressure(2+segment*3+i, pressure);
-            srl::sleep(5);
-            stm->updateState(state);
-            A[i].segment(2*j,2) = (stm->K*state.q+stm->g)/pressure; //quasi-static used to invert onto A
-        }
-        fmt::print("A{} estimates: {}\n",i+1,A[i].transpose());
+    fmt::print("Estimating A...\n");
+    VectorXd p = VectorXd::Zero(3*360);
+    VectorXd Kqg = VectorXd::Zero(2*360);
+    vc->setSinglePressure(2+segment*3, pressure);
+    srl::sleep(8);
+    srl::Rate r{1};
+    for (int i = 0; i < 360; i ++){
+        fmt::print("{}\n",i);
+        cc->get_curvature(state);
+        stm->updateState(state);
+        Kqg.segment(2*i,2) << (stm->g+stm->K*state.q).segment(1+segment*2,2);
+        if (i > 0 && i < 120) p.segment(3*i,3) << cos(i*deg2rad*90/120)*pressure, sin(i*deg2rad*90/120)*pressure, 0;
+        if (i > 120 && i < 240) p.segment(3*i,3) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
+        if (i > 240 && i < 360) p.segment(3*i,3) << cos(i*deg2rad*90/120)*pressure, 0, sin((i-120)*90*deg2rad/120)*pressure;
+        vc->setSinglePressure(2+segment*3, p(3*i));
+        vc->setSinglePressure(2+segment*3+1,p(3*i+1));
+        vc->setSinglePressure(2+segment*3+2,p(3*i+2));
+        r.sleep();
     }
-
-
-    for (int i = 0; i < points; i++){
-        for (int j = 0; j < 3; j++){
-            log_file << fmt::format("{},{}",A[j](2*i),A[j](2*i+1));
-            log_file << (i==2) ? "\n" : ",";
-        }
-    }
-
+    p = p*100*stm->A_pseudo(1+segment*2,1+segment*2);
+    MatrixXd A = (p.transpose()*p).inverse()*p.transpose()*Kqg;
+    fmt::print("{}",A);
 }
