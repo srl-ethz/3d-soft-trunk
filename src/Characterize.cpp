@@ -18,7 +18,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
         else actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
-    srl::Rate r{2};
+    srl::Rate r{1};
 
     VectorXd ang_err = VectorXd::Zero(360);
     VectorXd radii = VectorXd::Zero(360);
@@ -48,7 +48,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
         angle_vals(i,1) = i*i;
         angle_vals(i,2) = i;
         angle_vals(i,3) = 1;
-        radii(i) = sqrt(x(0)*x(0)+x(1)*x(1));
+        radii(i) = sqrt(state.q(1)*state.q(1)+state.q(2)*state.q(2));
 
         log_file << "\n";
         r.sleep();
