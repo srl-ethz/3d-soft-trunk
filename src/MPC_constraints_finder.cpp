@@ -12,7 +12,7 @@
 
 MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
     
-    N_obs = 20; 
+    N_obs = 40;   // 20 for 1
     N_tar = 100;   // targets are defined as points along the trajectory (task-space)
 
 
@@ -60,24 +60,45 @@ MPC_constraints_finder::MPC_constraints_finder(const SoftTrunkParameters st_para
 
     obstacles.col(0) << 0, 0.14, -0.24;
     obstacles.col(1) << 0, 0.14, -0.22;
-    obstacles.col(2) << 0, 0.14, -0.25; 
+    obstacles.col(2) << 0, 0.14, -0.26; 
     obstacles.col(3) << 0, 0.12, -0.24;
-    obstacles.col(4) << 0, 0.12, -0.22;
+    obstacles.col(4) << 0, 0.12, -0.20;
     obstacles.col(5) << 0, 0.15, -0.24;
-    obstacles.col(6) << 0, 0.15, -0.22;
-    obstacles.col(7) << 0.01, 0.14, -0.23;
+    obstacles.col(6) << 0, 0.15, -0.28;
+    obstacles.col(7) << 0.01, 0.14, -0.28;
     obstacles.col(8) << 0.01, 0.12, -0.23;
     obstacles.col(9) << -0.01, 0.14, -0.23;
     obstacles.col(10) << -0.01, 0.12, -0.23;
-    obstacles.col(11) << 0.02, 0.14, -0.23;
+    obstacles.col(11) << 0.02, 0.14, -0.20;
     obstacles.col(12) << 0.02, 0.12, -0.23;
     obstacles.col(13) << -0.02, 0.14, -0.23;
-    obstacles.col(14) << -0.02, 0.12, -0.23;
+    obstacles.col(14) << -0.02, 0.12, -0.20;
     obstacles.col(15) << 0.03, 0.14, -0.23;
     obstacles.col(16) << 0.03, 0.12, -0.23;
-    obstacles.col(17) << -0.03, 0.14, -0.23;
+    obstacles.col(17) << -0.03, 0.14, -0.20;
     obstacles.col(18) << -0.03, 0.12, -0.23;
     obstacles.col(19) << 0, 0.13, -0.25;  
+
+    obstacles.col(20) << -0.14, 0, -0.24;   // change number of targets missed
+    obstacles.col(21) << -0.14, 0, -0.22;
+    obstacles.col(22) << -0.14, 0, -0.26; 
+    obstacles.col(23) << -0.12, 0, -0.24;
+    obstacles.col(24) << -0.12, 0, -0.20;
+    obstacles.col(25) << -0.15, 0, -0.24;
+    obstacles.col(26) << -0.15, 0, -0.28;
+    obstacles.col(27) << -0.14, 0.01, -0.28;
+    obstacles.col(28) << -0.12, 0.01, -0.23;
+    obstacles.col(29) << -0.14, -0.01, -0.23;
+    obstacles.col(30) << -0.12, -0.01, -0.23;
+    obstacles.col(31) << -0.14, 0.02, -0.20;
+    obstacles.col(32) << -0.12, 0.02, -0.23;
+    obstacles.col(33) << -0.14, -0.02, -0.23;
+    obstacles.col(34) << -0.12, -0.02, -0.20;
+    obstacles.col(35) << -0.14, 0.03, -0.23;
+    obstacles.col(36) << -0.12, 0.03, -0.23;
+    obstacles.col(37) << -0.14, -0.03, -0.20;
+    obstacles.col(38) << -0.12, -0.03, -0.23;
+    obstacles.col(39) << -0.13, 0, -0.25; 
 
 
     N_trials = 1e5;
@@ -322,7 +343,7 @@ bool MPC_constraints_finder::check_inclusion(VectorXd q_low, VectorXd q_up){
 
     std::cout << " Proposal missed " << target_missed << " targets" << std::endl;
 
-    if (target_missed > N_tar/3){
+    if (target_missed > 2*N_tar/3){  // only 1/3 with one obstacle
         included = false; 
     }
 
