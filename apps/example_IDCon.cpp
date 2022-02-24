@@ -74,59 +74,113 @@ int main(){
     std::thread gain_thread(gain, std::ref(id));
     double t = 0;
     double dt = 1./50;
-    x_ref << 0.125,0,-0.355;
-    double amplitude = 0.2;
+    x_ref << 0.,0.,-0.385;
     double coef = 2 * 3.1415/16;
     bool freedom = false;
-    
+    id.set_kp(100);
+    id.set_kd(5.5);
     id.set_ref(x_ref,dx_ref,ddx_ref);
-    srl::sleep(2);
     id.toggle_log();
 
-    
-    //getchar();
-    
+    getchar();
 
-    while (t<10){
+    /*
+    srl::Rate r1{1./dt};
+    for (double i = 0; i < 2.5; i +=dt){
+        x_ref << 0., i*0.12/2.5, -0.385;
+        dx_ref << 0, 0.12/2.5, 0;
+        id.set_ref(x_ref, dx_ref);
+        r1.sleep();
+    }
         
-        double r = 0.125;
+    getchar();
+    srl::Rate r3{1./dt};
+    for (double i = 0; i < 2.5; i +=dt){
+        x_ref << 0., 0.12, -0.385 - 0.03*i/2.5;
+        dx_ref << 0, 0, -0.03/2.5;
+        id.set_ref(x_ref, dx_ref);
+        r3.sleep();
+    }
+    x_ref << 0., 0.12, -0.415;
+    id.set_ref(x_ref);
 
+    getchar();
+    id.toggleGripper();
+    srl::sleep(0.5);
+    x_ref << 0., 0.12, -0.385;
+    id.set_ref(x_ref);
+
+    srl::Rate r4{1./dt};
+    for (double i = 0; i < 2.5; i +=dt){
+        x_ref << 0., 0.12, -0.415 + 0.03*i/2.5;
+        dx_ref << 0, 0, 0.03/2.5;
+        id.set_ref(x_ref, dx_ref);
+        r4.sleep();
+    }
+    x_ref << 0., 0.12, -0.385;
+    id.set_ref(x_ref);
+
+    getchar();
+    srl::Rate r2{1./dt};
+    for (double i = 0; i < 5; i +=dt){
+        x_ref << 0., 0.12 - 0.12*i/2.5, -0.385;
+        dx_ref << 0, -0.12/2.5, 0;
+        id.set_ref(x_ref, dx_ref);
+        r2.sleep();
+    }
+    dx_ref << 0,0,0;
+    id.set_ref(x_ref,dx_ref);
+
+    getchar();
+    id.toggleGripper();
+    getchar();
+
+    */
+
+    /*
+    srl::Rate rate{1./dt};
+    while (t<16){
+        
+        double r = 0.12;
+        Vector3d x;
+        id.get_x(x);
+        id.set_ref(x);
        
-        //Slanted Circle:
 
-        x_ref << r*cos(coef*t), r*sin(coef*t), -0.375 + 0.02*sin(coef*t);
+
+        //Slanted Circle:
+    /*
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.38 + 0.02*sin(coef*t);
 
         dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef*cos(coef*t);
 
         ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), -0.02*coef*coef*sin(coef*t);
+    */
 
+        
+        //Helix:
 /*
-       // Helix:
+        x_ref << r*cos(coef*t), r*sin(coef*t), -0.40 + 0.04*t/16;
 
-        x_ref << r*cos(coef*t), r*sin(coef*t), -0.465 + 0.04/16*t;
-
-        dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.02*coef;
+        dx_ref << -r*coef*sin(coef*t), r*coef*cos(coef*t), 0.04/16;
 
         ddx_ref << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t), 0;
 */
 
-        //Line along z:
+        //Line along x:
 /*
-        x_ref << 0, 0.15-0.3/10*t, -0.425;
+        x_ref << 0, 0.1 - (0.2*t)/16, -0.4;
 
-        dx_ref << 0, -0.18/10, 0;
+        dx_ref << 0, -(0.2/16), 0;
 
         ddx_ref << 0, 0, 0;
 */
-        id.set_ref(x_ref,dx_ref,ddx_ref);
-
+       // id.set_ref(x_ref,dx_ref,ddx_ref);
+       /*
+        rate.sleep();
         t+=dt;
-        srl::sleep(dt);
-    }
-
+    }*/
     id.toggle_log();
 
-    srl::sleep(2);
-    
     
 }

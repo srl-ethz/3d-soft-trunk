@@ -158,26 +158,26 @@ protected:
     CurvatureCalculator::SensorType sensor_type;
 
     //parameters with sopra attached druing lifting
-    double p0 = 0.00113897552812834;
-    double p1 = 12087623603.1984;
-    double p2 =  -538364333054.543;
-    double p3 = 10265966297319.4;
-    double p4 =  -108646424108771;
-    double p5 =   689204864780934;
-    double p6 =   -2.62060203572610e+15;
-    double p7 =  5.53035651329319e+15;
-    double p8 =   -4.99693781765136e+15;
+    double p0 = -123700627047.759;
+    double p1 = 6049479382394.90;
+    double p2 =  -129364182001149;
+    double p3 = 1.57995125853194e+15;
+    double p4 =  -1.20538228542017e+16;
+    double p5 =   5.88243647403692e+16;
+    double p6 =   -1.79325089868892e+17;
+    double p7 =  3.12218255943449e+17;
+    double p8 =   -2.37697882130186e+17;
 
     //parameters with sopra during falling
-    double pa0 = -42572009781.3745;
-    double pa1 = 2233702645823.27;
-    double pa2 = -51234675163551.8;
-    double pa3 =  671005929905415;
-    double pa4 =   -5.48823794779020e+15;
-    double pa5 =   2.87068862081799e+16;
-    double pa6 =   -9.37752747378696e+16;
-    double pa7 =   1.74913845812015e+17;
-    double pa8 =   -1.42630485294530e+17;
+    double pa0 = -37573527291.3553;
+    double pa1 = 1872913155829.48;
+    double pa2 = -40812753821930.7;
+    double pa3 =  507809881227244;
+    double pa4 =   -3.94595233957207e+15;
+    double pa5 =   1.96086765906834e+16;
+    double pa6 =   -6.08542532194457e+16;
+    double pa7 =   1.07835613604856e+17;
+    double pa8 =   -8.35369893476651e+16;
 
     std::vector<int> map;
 

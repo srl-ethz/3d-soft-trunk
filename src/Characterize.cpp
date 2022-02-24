@@ -18,7 +18,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
         else actuate(stm->pseudo2real(pressures));
     srl::sleep(5);
-    srl::Rate r{1};
+    srl::Rate r{2};
 
     VectorXd ang_err = VectorXd::Zero(360);
     VectorXd radii = VectorXd::Zero(360);
@@ -162,25 +162,42 @@ void Characterize::estimateActuation(int segment, int points, int pressure){
     filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
     log_file.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
     fmt::print("Estimating A...\n");
-    VectorXd p = VectorXd::Zero(3*360);
-    VectorXd Kqg = VectorXd::Zero(2*360);
+    int rotation = 360;
+    MatrixXd p = MatrixXd::Zero(3,rotation);
+    MatrixXd Kqg = MatrixXd::Zero(2,rotation);
     vc->setSinglePressure(2+segment*3, pressure);
     srl::sleep(8);
-    srl::Rate r{1};
-    for (int i = 0; i < 360; i ++){
+    srl::Rate r{2};
+    for (int i = 0; i < rotation; i+=1){
         fmt::print("{}\n",i);
         cc->get_curvature(state);
         stm->updateState(state);
-        Kqg.segment(2*i,2) << (stm->g+stm->K*state.q).segment(1+segment*2,2);
-        if (i > 0 && i < 120) p.segment(3*i,3) << cos(i*deg2rad*90/120)*pressure, sin(i*deg2rad*90/120)*pressure, 0;
-        if (i > 120 && i < 240) p.segment(3*i,3) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
-        if (i > 240 && i < 360) p.segment(3*i,3) << cos(i*deg2rad*90/120)*pressure, 0, sin((i-120)*90*deg2rad/120)*pressure;
-        vc->setSinglePressure(2+segment*3, p(3*i));
-        vc->setSinglePressure(2+segment*3+1,p(3*i+1));
-        vc->setSinglePressure(2+segment*3+2,p(3*i+2));
+        Kqg.block(0,i,2,1) = (stm->g+stm->K*state.q).segment(1+2*segment,2);
+        if (i >= 0 && i < 120) p.block(0,i,3,1) << cos(i*deg2rad*90/120)*pressure, sin(i*deg2rad*90/120)*pressure, 0;
+        if (i >= 120 && i < 240) p.block(0,i,3,1) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
+        if (i >= 240 && i < 360) p.block(0,i,3,1) << sin((i-240)*deg2rad*90/120)*pressure, 0, sin((i-120)*90*deg2rad/120)*pressure;
+        vc->setSinglePressure(2+segment*3, p(0,i));
+        vc->setSinglePressure(2+segment*3+1, p(1,i));
+        vc->setSinglePressure(2+segment*3+2, p(2,i));
         r.sleep();
     }
-    p = p*100*stm->A_pseudo(1+segment*2,1+segment*2);
-    MatrixXd A = (p.transpose()*p).inverse()*p.transpose()*Kqg;
-    fmt::print("{}",A);
+    log_file << "i,kqg0,kqg1,p0,p1,p2";
+    for (int i = 0; i < rotation; i++){
+        log_file << fmt::format("{},{},{},{},{},{}\n",i, Kqg(0,i), Kqg(1,i), p(0,i), p(1,i), p(2,i));
+    }
+    log_file.close();
+
+    p = p*stm->A_pseudo(1+segment*2,1+segment)*100;
+
+    fmt::print("Constant: {}\n",stm->A_pseudo(1+segment*2,1+segment));
+
+    MatrixXd A_top = Kqg.block(0,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
+    MatrixXd A_bot = Kqg.block(1,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
+    fmt::print("A_top: {}\n",A_top);
+    fmt::print("A_bot: {}\n",A_bot);
+    MatrixXd A = MatrixXd::Zero(2,3);
+    A << A_top, A_bot;
+    fmt::print("A: {}\n",A);
+    A = A/(sqrt(A(0,0)*A(0,0) + A(0,1)*A(0,1)));
+    fmt::print("A: {}\n",A);
 }

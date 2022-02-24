@@ -8,5 +8,5 @@ int main(){
     //ch.calcK(1,4,5);
     //ch.logRadialPressureDist(0, "topRadialLog500");
     //ch.TaskSpaceAnalysis(30);
-    ch.estimateActuation(0,14,700);
+    ch.estimateActuation(0,7,650);
 }

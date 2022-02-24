@@ -20,9 +20,9 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params, CurvatureCalcu
 
     stm = std::make_unique<SoftTrunkModel>(st_params);
     // +X, +Y, -X, -Y
-    map = {15,7,4,3,1,6,2,5,0};
+    map = {15,7,2,5,3,4,1,0,6};
     
-    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, 650);
+    if (sensor_type != CurvatureCalculator::SensorType::simulator) vc = std::make_unique<ValveController>("192.168.0.100", map, 2000);
 
     if (sensor_type == CurvatureCalculator::SensorType::bend_labs)
         cc = std::make_unique<CurvatureCalculator>(st_params, sensor_type, bendlabs_portname);
@@ -91,9 +91,9 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         vc->setSinglePressure(i+1, p(i)); //prismatic reserves 2 pressures but only 1 slot in the p vector, therefore i+1
     }
     
-    long double static_pressure_up  = (p8*pow(state.q(0),8) + p7*pow(state.q(0),7) + p6*pow(state.q(0),6) + p5*pow(state.q(0),5) + p4*pow(state.q(0),4) + p3*pow(state.q(0),3) + p2*pow(state.q(0),2) + p1*state.q(0) + p0) ; 
+    long double static_pressure_up  = p8*pow(state.q(0),8) + p7*pow(state.q(0),7) + p6*pow(state.q(0),6) + p5*pow(state.q(0),5) + p4*pow(state.q(0),4) + p3*pow(state.q(0),3) + p2*pow(state.q(0),2) + p1*state.q(0) + p0; 
     //if (static_pressure_up > 1800) static_pressure_up;
-    long double static_pressure_down = pa8*pow(state.q(0),8) + pa7*pow(state.q(0),7) + pa6*pow(state.q(0),6) + pa5*pow(state.q(0),5) + pa4*pow(state.q(0),4) + pa3*pow(state.q(0),3) + pa2*pow(state.q(0),2) + pa1*state.q(0) + pa0 ;
+    long double static_pressure_down = pa8*pow(state.q(0),8) + pa7*pow(state.q(0),7) + pa6*pow(state.q(0),6) + pa5*pow(state.q(0),5) + pa4*pow(state.q(0),4) + pa3*pow(state.q(0),3) + pa2*pow(state.q(0),2) + pa1*state.q(0) + pa0;
     
     /* no relu for now
     double static_pressure =  (1-100*(0.005-delta_x))*static_pressure_down + 100*(0.005-delta_x)*static_pressure_up;
@@ -102,20 +102,19 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
     */
 
    double static_pressure = 0.5*static_pressure_down + 0.5*static_pressure_up;
+   if (static_pressure < 0) static_pressure = 0;
 
+    double prismatic_pres = p(0);
+    if (abs(prismatic_pres)>800) prismatic_pres = prismatic_pres*800/abs(prismatic_pres);
 
     //activate piston if actuator needs to move down
-    if (p(0) < 0) {
-        if (-p(0) > 800) {
-            vc->setSinglePressure(0,800);
-        }
-        else {
-            vc->setSinglePressure(0,-1.8*p(0));
-        }
+    if (prismatic_pres < 0) {
+        vc->setSinglePressure(0,-1.8*prismatic_pres);
         vc->setSinglePressure(1,static_pressure);
+
     }  else { //mckibbens otherwise
         vc->setSinglePressure(0, 0); //reset piston pressure, otherwise it will keep on pushing
-        vc->setSinglePressure(1, static_pressure + p(0));
+        vc->setSinglePressure(1, static_pressure + prismatic_pres);
     }
 
     if (logging){  

@@ -14,7 +14,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     A_pseudo = MatrixXd::Zero(st_params.q_size, st_params.q_size);
     J.resize(st_params.num_segments);
 
-    chamberMatrix <<  1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+    chamberMatrix <<  1.11, -0.47, -0.51, -0.09, 0.88, -0.98; //"perfect" is [1 -0.5 -0.5; 0, sqrt(3)/2, -sqrt(3)/2]
     for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
     {
         int segment_id = section_id / st_params.sections_per_segment;
@@ -42,7 +42,6 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(
     A(0,0) = a_pris;
     A_pseudo(0,0) = a_pris;
     fmt::print("SoftTrunkModel initialized\n");
-    fmt::print("K: {}\n",K);
 }
 
 void SoftTrunkModel::updateState(const srl::State &state)
@@ -80,7 +79,18 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
         double angle = atan2(pressure_pseudo(2*i+1), pressure_pseudo(2*i+2))*180/3.14156;
 
         angle -=90; //shift to start of characterization
-        angle = fmod(angle,360);
+        if (angle < 0) angle += 360;
+
+
+        if (angle >= 0 && angle < 120) angle += 3.069902703703258e-05*pow(angle-0,3) + -0.006231426862811088*pow(angle-0,2) + 0.442502067746001*(angle-0) + 0.2632326020363671;
+        if (angle >= 120 && angle < 240) angle += 7.524229743734353e-06*pow(angle-120,3) + -0.0017279787783047174*pow(angle-120,2) + 0.029688207635230904*(angle-120) + 17.788084881162515; 
+        if (angle >=240 && angle < 360) angle += 2.09351217869871e-05*pow(angle-240,3) + -0.0042281789909053725*pow(angle-240,2) + 0.14807732544442972*(angle-240) + 9.053915103860614;
+
+        if (angle < 0) angle += 360;
+        if (angle > 360) angle -= 360;
+
+        double r = pressure_pseudo.segment(2*i+1,2).norm();
+        pressure_pseudo.segment(2*i+1,2) << r*cos(angle*3.1415/180), -r*sin(angle*3.1415/180); 
 
         if (angle >= 0 && angle < 120){ //now, determine which pressure must be 0 and solve for other 2
             inverter.col(0) = chamberMatrix.col(0);
@@ -94,6 +104,7 @@ VectorXd SoftTrunkModel::pseudo2real(VectorXd pressure_pseudo){
             inverter.col(1) = chamberMatrix.col(2);
             truePressure = inverter.inverse()*pressure_pseudo.segment(2*i+1,2);
             output.segment(3*i+1,3) << 0, truePressure(0), truePressure(1);
+            output.segment(3*i+1,3) = output.segment(3*i+1,3)/1.1; //look man, I don't know why either
         }
 
         if (angle >=240 && angle < 360){
