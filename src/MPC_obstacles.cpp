@@ -250,7 +250,7 @@ Opti MPC_obstacles::define_problem(){
     q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
-    MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
+    // MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
 
     q_0 = prob.parameter(st_params.q_size,1);
     q_dot_0 = prob.parameter(st_params.q_size,1); 
@@ -317,7 +317,7 @@ Opti MPC_obstacles::define_problem(){
     // b3 = {1.20, 1.16, 0.73, 0.32, 1.00, 1.42, 1.54, 1.54}; 
     // b3 = {1.16, 1.49, 1.51, 0.48, 1.53, 1.42, 1.30, -0.24}; 
     // b3 = {1.18, 0.8, 1.56, -0.22, 1.55, 1.56, 1.46, 1.21}; // works, 1 obstacle
-    b3 = {1.02, 1.50, 1.46, -0.68, 1.49, 1.52, 1.32, 0.85}; // 2 obstacles
+    // b3 = {1.02, 1.50, 1.46, -0.68, 1.49, 1.52, 1.32, 0.85}; // 2 obstacles
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -344,10 +344,10 @@ Opti MPC_obstacles::define_problem(){
     int k, kk;
 
 
-    // MX obstacle = MX::zeros(3,2);
+    // MX obstacle = MX::zeros(3,1);
     // obstacle(0,0) = 0;
-    // obstacle(1,0) = 0.14;   // 0.14 simulation
-    // obstacle(2,0) = -0.24;  // -0.24
+    // obstacle(1,0) = 0.11;   // 0.14 simulation
+    // obstacle(2,0) = -0.25;  // -0.24
 
     // obstacle(0,1) = -0.14;
     // obstacle(1,1) = 0;
@@ -389,7 +389,7 @@ Opti MPC_obstacles::define_problem(){
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
-        J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
+        // J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
 
     }
 
@@ -439,7 +439,7 @@ Opti MPC_obstacles::define_problem(){
     {
         prob.subject_to(q(Slice(),k+1) == mtimes(A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(0, st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(0, st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(0,st_params.q_size))); 
         prob.subject_to(q_dot(Slice(),k+1) == mtimes(A(Slice(st_params.q_size, 2*st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(st_params.q_size, 2*st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(st_params.q_size, 2*st_params.q_size)));
-        prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
+        // prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
         //prob.subject_to(mtimes(A2, q_dot(Slice(),k)) <= b2);
         // some stuff on pressure
     }
@@ -642,12 +642,12 @@ DM MPC_obstacles::robust_correction(DM U){     // use normalization ?
         limit = abs(*index.first); 
     }
 
-    if (limit < 12){  // 6 simulation
+    if (limit < 12){  // 6 simulation, 12
         return U; 
     }
 
     //float coeff = (5 - (-5)) / (*index.second - *index.first);   // 5 for simulation
-    float coeff = (10 - (-10)) / (limit - (-limit));   // 20 real
+    float coeff = (10 - (-10)) / (limit - (-limit));   // 20 real, 10 before
 
     int i; 
     for (i = 0; i < U.rows() ; i++ ){

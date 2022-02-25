@@ -39,7 +39,7 @@ int main(){
     
     double t = 0;
     double dt = 0.07;
-    double time = 15;  // 25 for circle
+    double time = 20;  // 25 for circle, 20 better
     double coef = 4 * 3.1415 / time;
     double r = 0.1;
     //MatrixXd trajectory(3,1);
