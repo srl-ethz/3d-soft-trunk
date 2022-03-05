@@ -324,7 +324,8 @@ Opti MPC_obstacles::define_problem(){
     // b3 = {1.22, 1.37, 1.25, -0.82, 1.17, 1.05, 1.44, 1.42};
     // b3 = {1.06, 1.43, 0.85, -0.70, 1.46, 1.29, 1.54, 0.76};  // no work
     // b3 = {1.52, -0.97, 1.09, 1.43, 1.44, 1.56, 1.11, 1.23};
-    b3 = {1.31, -0.77, 0.93, 0.87, 1.48, 1.48, 1.39, 1.40}; 
+    // b3 = {1.31, -0.77, 0.93, 0.87, 1.48, 1.48, 1.39, 1.40}; 
+    b3 = {0.1, 0.1, 0.1, 0.1, 1.57, 1.57, 1.57, 1.57}; 
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -396,7 +397,7 @@ Opti MPC_obstacles::define_problem(){
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
-        J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
+        J += 100* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work), 10
 
     }
 
