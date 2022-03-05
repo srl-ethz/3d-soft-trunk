@@ -250,7 +250,7 @@ Opti MPC_obstacles::define_problem(){
     q_dot = prob.variable(st_params.q_size, Horizon+1);
     u = prob.variable(2*st_params.num_segments, Horizon);  //pressure
 
-    // MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
+    MX slack = prob.variable(2*st_params.q_size, Horizon);   // soft mpc
 
     q_0 = prob.parameter(st_params.q_size,1);
     q_dot_0 = prob.parameter(st_params.q_size,1); 
@@ -312,12 +312,19 @@ Opti MPC_obstacles::define_problem(){
     // b1 = {0.008, 0.008, 0.004, 0.004, 0.012, 0.012, 0.012, 0.012};  // real
     // b2 = {0.30, 0.30, 0.30, 0.30, 0.8, 0.8, 0.8, 0.8};
 
-    //b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // upper, -lower   works
+    // b3 = {1.47, 1.20, 0.64, 0.17, 1.54, 1.04, 1.51, 1.38};   // upper, -lower   works
     // b3 = {0.78, 1.33, 0.48, -0.21, 1.52, 1.15, 1.16, 1.55};    // upper, -lower   works
     // b3 = {1.20, 1.16, 0.73, 0.32, 1.00, 1.42, 1.54, 1.54}; 
     // b3 = {1.16, 1.49, 1.51, 0.48, 1.53, 1.42, 1.30, -0.24}; 
     // b3 = {1.18, 0.8, 1.56, -0.22, 1.55, 1.56, 1.46, 1.21}; // works, 1 obstacle
     // b3 = {1.02, 1.50, 1.46, -0.68, 1.49, 1.52, 1.32, 0.85}; // 2 obstacles
+    // b3 = {1.23, -0.35, 1.33, 0.25, 1.50, 1.40, 1.26, 1.36}; // 2 obs
+    // b3 = {1.43, 1.07, 1.11, -0.65, 1.42, 1.36, 1.53, 1.21};
+    // b3 = {0.90, 1.55, 1.56, -0.90, 0.56, 1.36, 1.42, 1.54};
+    // b3 = {1.22, 1.37, 1.25, -0.82, 1.17, 1.05, 1.44, 1.42};
+    // b3 = {1.06, 1.43, 0.85, -0.70, 1.46, 1.29, 1.54, 0.76};  // no work
+    // b3 = {1.52, -0.97, 1.09, 1.43, 1.44, 1.56, 1.11, 1.23};
+    b3 = {1.31, -0.77, 0.93, 0.87, 1.48, 1.48, 1.39, 1.40}; 
 
     MX p_min = MX::ones(2*st_params.num_segments,1)*-500;
     MX p_max = MX::ones(2*st_params.num_segments,1)*500;
@@ -389,7 +396,7 @@ Opti MPC_obstacles::define_problem(){
 
         //J += mtimes(u(Slice(),k).T(), mtimes(R, u(Slice(),k)));
 
-        // J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
+        J += 10* mtimes((slack(Slice(),k)).T(), slack(Slice(),k));  // soft formulation (can't use linear, norm1 doesn't work)
 
     }
 
@@ -439,7 +446,7 @@ Opti MPC_obstacles::define_problem(){
     {
         prob.subject_to(q(Slice(),k+1) == mtimes(A(Slice(0, st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(0, st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(0, st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(0,st_params.q_size))); 
         prob.subject_to(q_dot(Slice(),k+1) == mtimes(A(Slice(st_params.q_size, 2*st_params.q_size), Slice(0, st_params.q_size)), q(Slice(),k)) + mtimes(A(Slice(st_params.q_size,2*st_params.q_size), Slice(st_params.q_size, 2*st_params.q_size)), q_dot(Slice(),k)) + mtimes(B(Slice(st_params.q_size, 2*st_params.q_size), Slice()), u(Slice(),k)) + w(Slice(st_params.q_size, 2*st_params.q_size)));
-        // prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
+        prob.subject_to(mtimes(A1, q(Slice(),k)) <= b3 + slack(Slice(),k));
         //prob.subject_to(mtimes(A2, q_dot(Slice(),k)) <= b2);
         // some stuff on pressure
     }
