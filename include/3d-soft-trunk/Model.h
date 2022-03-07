@@ -13,22 +13,6 @@ public:
 
     ~Model();
 
-    /** @brief updates given DynamicParameter dyn with new values from model */
-    void get_dynamic_params(DynamicParams& dyn);
-
-    /** @brief updates model's configuration and forces computation of new dynamic parameters */
-    void set_state(const srl::State& state);
-
-    /** @brief update handed state with the one stored in this class */
-    void get_state(srl::State& state);
-
-    /** @brief update vector with forward kinematics of all manipulator tips */
-    bool get_x(std::vector<Vector3d>& x);
-
-    /** @brief update vector with forward kinematics of specific tip position 
-     * @param segment segment of which tip is desired, starts with 0 at base segment (thickest) */
-    bool get_x(Vector3d &x, int segment);
-
     /** @brief forces model to grab latest dynamic parameters from submodules */
     void force_dyn_update();
 
@@ -41,20 +25,25 @@ public:
     /** @brief takes x,y pseudopressures and transforms them to real pressures */
     VectorXd pseudo2real(VectorXd p_pseudo);
 
-private:
-    srl::State state_;
-    DynamicParams dyn_;
-    std::vector<Vector3d> x_;
+    /** @brief state of model */
+    srl::State state;
 
-    SoftTrunkParameters st_params_;
+    /** @brief dynamic parameters of model */
+    DynamicParams dyn_;
+
+    /** @brief segment tip positions */
+    std::vector<Vector3d> x;
 
     MatrixXd chamber_config = MatrixXd::Zero(2,3);
-    MatrixXd chamber_inv;
+
+private:
+    SoftTrunkParameters st_params_;
 
     std::unique_ptr<Lagrange> lag_;
     std::unique_ptr<SoftTrunkModel> stm_;
-
     std::unique_ptr<StateEstimator> state_est_;
+
+    MatrixXd chamber_inv_;
 
     bool run = true;
     std::thread update_thread;

@@ -202,6 +202,15 @@ public:
 
     std::string bendlabs_address = "/dev/ttyACM0";
 
+    /** @brief size of the pseudo pressure vector */
+    int p_pseudo_size;
+
+    /** @brief size of the real pressure vector */
+    int p_size;
+
+    /** @brief describes if the arm is mounted to the prismatic joint */
+    bool prismatic = false;
+
     void finalize(){
         assert(!is_finalized()); // already finalized
 

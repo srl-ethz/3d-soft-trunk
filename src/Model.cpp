@@ -13,8 +13,8 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             break;
     }
     chamber_config << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
-    chamber_inv = chamber_config.transpose()*(chamber_config*chamber_config.transpose()).inverse();
-    state_ = st_params_.getBlankState();
+    
+    state = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
 
     update_thread = std::thread(&Model::update_loop,this);
@@ -28,43 +28,7 @@ Model::~Model(){
 
 
 
-void Model::get_dynamic_params(DynamicParams& dyn){
-    mtx.lock();
-    dyn = this->dyn_;
-    mtx.unlock();
-}
 
-bool Model::get_x(std::vector<Vector3d>& x){
-    if(this->x_.size() <= 0){
-        return false;
-    }
-    mtx.lock();
-    x = this->x_;
-    mtx.unlock();
-    return true;
-}
-
-bool Model::get_x(Vector3d& x, int segment){
-    if (this->x_.size() > segment){
-        return false;
-    }
-    mtx.lock();
-    x = this->x_[segment];
-    mtx.unlock();
-    return true;
-}
-
-void Model::set_state(const srl::State& state){
-    mtx.lock();
-    this->state_ = state;
-    mtx.unlock();
-}
-
-void Model::get_state(srl::State& state){
-    mtx.lock();
-    state = this->state_;
-    mtx.unlock();
-}
 
 bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
     set_state(state);
@@ -94,7 +58,7 @@ void Model::force_dyn_update(){
                 assert (st_params_.coord_type == dyn_.coordtype);
                 break;
             case ModelType::lagrange:
-                lag_->set_state(state_);
+                lag_->set_state(state);
                 lag_->get_dynamic_params(dyn_);
                 assert (st_params_.coord_type == CoordType::phitheta);
                 assert (st_params_.num_segments == 2);                  //lagrange is hardcoded for a 2seg phitheta robot
@@ -111,12 +75,43 @@ void Model::update_loop(){
 }
 
 VectorXd Model::pseudo2real(VectorXd p_pseudo){
-    assert(p_pseudo.size() == 2 * st_params_.num_segments);
-    VectorXd output = VectorXd::Zero(3*st_params_.num_segments);
+    assert(p_pseudo.size() == st_params_.p_pseudo_size);
+    VectorXd output = VectorXd::Zero(st_params_.p_size);
+    MatrixXd inverter = MatrixXd::Zero(2,2);
+    VectorXd truePressure = VectorXd::Zero(2);
+
     for (int i = 0; i < st_params_.num_segments; i++){
-        output.segment(3*i, 3) = chamber_inv * p_pseudo.segment(2*i, 2); //invert back onto real chambers
-        double min_p = output.segment(3*i, 3).minCoeff();
-        output.segment(3*i, 3) -= min_p * Vector3d::Ones(); //remove any negative pressures, as they are not physically realisable
+        double angle = atan2(p_pseudo(2*i+st_params_.prismatic), p_pseudo(2*i+st_params_.prismatic+1))*180/3.14156; //determine direction the pressure wants to actuate in
+
+        angle -=90; //shift angle so chamber boundaries are easier to describe
+        if (angle < 0) angle += 360; //ensure angle is within [0,360]
+
+
+        if (angle >= 0 && angle < 120){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
+            inverter.col(0) = chamber_config.col(0);
+            inverter.col(1) = chamber_config.col(2);
+            truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
+            output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1);
+        }
+
+        if (angle >= 120 && angle < 240){ //depends on angle
+            inverter.col(0) = chamber_config.col(1);
+            inverter.col(1) = chamber_config.col(2);
+            truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
+            output.segment(3*i+st_params_.prismatic,3) << 0, truePressure(0), truePressure(1);
+        }
+
+        if (angle >=240 && angle < 360){
+            inverter.col(0) = chamber_config.col(0);
+            inverter.col(1) = chamber_config.col(1);
+            truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
+            output.segment(3*i+st_params_.prismatic,3) << truePressure(0), truePressure(1), 0;
+        }
+
+        if (st_params_.prismatic){
+            output(0) = p_pseudo(0);
+        }
+
     }
     return output;
 }
