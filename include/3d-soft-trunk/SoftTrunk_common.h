@@ -67,11 +67,20 @@ namespace srl{
      */
     class State{
     public:
+        /** @brief joint configuration */
         VectorXd q;
+        /** @brief joint velocity */
         VectorXd dq;
+        /** @brief joint acceleration */
         VectorXd ddq;
+        /** @brief tip transformations relative to base segment */
+        std::vector<Eigen::Transform<double, 3, Eigen::Affine>> tip_transforms;
+        /** @brief object transformations relative to base segment */
+        std::vector<Eigen::Transform<double, 3, Eigen::Affine>> objects;
+
         CoordType coordtype;
         unsigned long long int timestamp;
+
         /** @brief initialize and set the size of the vectors at the same time. */
         State(CoordType coordtype, const int q_size) : coordtype(coordtype){
             setSize(q_size);
@@ -134,6 +143,8 @@ public:
     srl::State getBlankState() const {
         assert(is_finalized());
         srl::State state{coord_type, q_size};
+        state.objects.resize(objects);
+        state.tip_transforms.resize(num_segments+1+prismatic);
         return state;
     }
     /** @brief name of robot (and of urdf / xacro file) */

@@ -1,46 +1,42 @@
 #include "3d-soft-trunk/StateEstimator.h"
 
-StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params(st_params), sensors(st_params.sensors), filter_type(st_params.filter_type) {
+StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params_(st_params), sensors_(st_params.sensors), filter_type_(st_params.filter_type) {
     assert(st_params.is_finalized());
-    state = st_params.getBlankState();
-    states_.resize(sensors.size());
-    for (int i = 0; i < sensors.size(); i++){
-        switch (sensors[i]){
+    state_ = st_params.getBlankState();
+    all_states_.resize(sensors_.size());
+    for (int i = 0; i < sensors_.size(); i++){
+        switch (sensors_[i]){
         case SensorType::qualisys:
-            mocap = std::make_unique<MotionCapture>(st_params);
+            mocap_ = std::make_unique<MotionCapture>(st_params_);
             break;
         case SensorType::bendlabs:
-            bendlabs = std::make_unique<BendLabs>(st_params);
+            bendlabs_ = std::make_unique<BendLabs>(st_params_);
             break;
         case SensorType::simulator:
             break;
         }
     }
 
-    fmt::print("State Estimator initialized with {} sensors.\n",sensors.size());
+    fmt::print("State Estimator initialized with {} sensors.\n",sensors_.size());
 }
 
 
-void StateEstimator::poll_sensors(){
-    srl::Rate r{st_params.sensor_refresh_rate};
-    while(run){
-        r.sleep();
-        for (int i = 0; i < sensors.size(); i++){
-            get_statefrom_ptr(states_[i],i);
-        }
-        state = get_filtered_state();
+void StateEstimator::poll_sensors(){    
+    for (int i = 0; i < sensors_.size(); i++){
+        get_state_from_ptr(all_states_[i],i);
     }
+    state_ = get_filtered_state();
 }
 
-void StateEstimator::get_statefrom_ptr(srl::State& state, int i){
-    switch (sensors[i]){
+void StateEstimator::get_state_from_ptr(srl::State& state, int i){
+    switch (sensors_[i]){
         case SensorType::qualisys:
-            mocap->get_state(state);
-            assert(state.coordtype==st_params.coord_type);
+            state = mocap_->state_;
+            assert(state.coordtype==st_params_.coord_type);
             break;
         case SensorType::bendlabs:
-            bendlabs->get_state(state);
-            assert(state.coordtype==st_params.coord_type);
+            state_ = bendlabs_->state_;
+            assert(state.coordtype==st_params_.coord_type);
             break;
         case SensorType::simulator:
             break;
@@ -49,26 +45,8 @@ void StateEstimator::get_statefrom_ptr(srl::State& state, int i){
 
 srl::State StateEstimator::get_filtered_state(){
     /** depending on filter complexity, make an object to poll for filter output and hand it all states */
-    switch (filter_type){
+    switch (filter_type_){
         default: 
-            return states_[0];
-    }
-}
-
-/** @TODO: rewrite so it takes primary sensor instead of only qualisys */
-Eigen::Transform<double, 3, Eigen::Affine> StateEstimator::get_object(int id){
-    for (int i = 0; i < sensors.size(); i++){
-        if (sensors[i] == SensorType::qualisys){
-            return mocap->get_object(id);
-        }
-    }
-    assert(false);
-}
-
-void StateEstimator::get_x(Vector3d &x){
-    for (int i = 0; i < sensors.size(); i++) {
-        if (sensors[i] == SensorType::qualisys){
-            mocap->get_x(x);
-        }
+            return all_states_[0];
     }
 }

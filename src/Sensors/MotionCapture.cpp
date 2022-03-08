@@ -4,7 +4,7 @@ MotionCapture::MotionCapture(const SoftTrunkParameters& st_params) : st_params_(
     assert(st_params.is_finalized());
 
     //initialize transformation vector to also contain objects    
-    abs_transforms_.resize(st_params.num_segments + 1 + st_params_.objects);
+    abs_transforms_.resize(st_params.num_segments + 1 + st_params_.objects + st_params.prismatic);
 
     //initialize client
     std::vector<int> emptyCameraList = {};
@@ -17,7 +17,7 @@ MotionCapture::MotionCapture(const SoftTrunkParameters& st_params) : st_params_(
 }
 
 MotionCapture::~MotionCapture(){
-    run = false;
+    run_ = false;
     calculatorThread.join();
 }
 
@@ -26,19 +26,6 @@ Eigen::Transform<double, 3, Eigen::Affine> MotionCapture::get_frame(int id){
     return abs_transforms_[id];
 }
 
-Eigen::Transform<double, 3, Eigen::Affine> MotionCapture::get_object(int id){
-    return abs_transforms_[st_params_.num_segments-1+id];
-}
-
-void MotionCapture::get_x(Vector3d& x){
-    x = abs_transforms_[0].rotation()*(abs_transforms_[st_params_.num_segments].translation() - abs_transforms_[0].translation());
-}
-
-void MotionCapture::get_state(srl::State& state){
-    mtx.lock();
-    state = this->state_;
-    mtx.unlock();
-}
 
 void MotionCapture::calculator_loop(){
     std::fstream log_file;
@@ -47,13 +34,12 @@ void MotionCapture::calculator_loop(){
     fmt::print("logging to {}\n", filename);
     log_file.open(filename, std::fstream::out);
     log_file << "timestamp";
-    // log both parametrizations
     for (int i = 0; i < st_params_.q_size; ++i)
         log_file << fmt::format(", q_{}", i);
     log_file << "\n";
 
 
-    srl::State state_prev = st_params_.getBlankState();
+    srl::State state_prev_ = st_params_.getBlankState();
 
     double frequency = 500.;
     if (st_params_.sensor_refresh_rate < 500.){     //qualisys max refresh rate is 500hz
@@ -61,10 +47,10 @@ void MotionCapture::calculator_loop(){
     }
     srl::Rate rate{frequency};
 
-    run = true;
-    unsigned long long int last_timestamp;
+    run_ = true;
     double interval_measured; // actual measured interval between timesteps
-    while(run){
+
+    while(run_){
         rate.sleep();
         optiTrackClient->getData(abs_transforms_, timestamp_);
 
@@ -90,7 +76,7 @@ void MotionCapture::calculator_loop(){
         mtx.lock(); //ensure that while the state is being changed nothing is getting pulled
 
         for (int i = 0; i < st_params_.num_segments; i++) {
-            matrix = (abs_transforms_[i].inverse() * abs_transforms_[i + 1]).matrix();
+            matrix = (abs_transforms_[i + st_params_.prismatic].inverse() * abs_transforms_[i + 1 + st_params_.prismatic]).matrix();
             // calculates phi, theta based on orientation w.r.t z-axis
             phi = atan2(matrix(1, 2), matrix(0, 2));
             theta = acos(matrix(2,2));
@@ -98,27 +84,39 @@ void MotionCapture::calculator_loop(){
             //convert to desired coordinate type
             switch (st_params_.coord_type) {
                 case CoordType::phitheta:
-                    state_.q(2*i) = phi;
-                    state_.q(2*i+1) = theta;
+                    state_.q(2*i+st_params_.prismatic) = phi;
+                    state_.q(2*i+1+st_params_.prismatic) = theta;
                     break;
                 case CoordType::thetax:
-                    state_.q(2*i) = -cos(phi) * theta;
-                    state_.q(2*i+1) = -sin(phi) * theta;
+                    state_.q(2*i+st_params_.prismatic) = -cos(phi) * theta;
+                    state_.q(2*i+1+st_params_.prismatic) = -sin(phi) * theta;
                     break;
+            }
+            if (st_params_.prismatic){
+                state_.q(0) = (abs_transforms_[0].translation()-abs_transforms_[1].translation()).norm();
             }
         }     
 
         
 
         //derivatives are evaluated numerically
-        state_.dq = (state_.q - state_prev.q) / interval_measured;
-        state_.ddq = (state_.dq - state_prev.dq) / interval_measured;
+        state_.dq = (state_.q - state_prev_.q) / interval_measured;
+        state_.ddq = (state_.dq - state_prev_.dq) / interval_measured;
         state_.timestamp = timestamp_;
+
+        // all transforms belonging to the arm go into the tip transform vector
+        for (int i = 0; i < st_params_.num_segments + 1 + st_params_.prismatic; i++){
+            state_.tip_transforms[i] = abs_transforms_[i];
+        }
+
+        //objects to object vector
+        for (int i = 0; i < st_params_.objects; i++){
+            state_.objects[i] = abs_transforms_[st_params_.num_segments + 1 + st_params_.prismatic + i];
+        }
 
         mtx.unlock(); //unlock the mutex after modifying state
 
-        state_prev.q = state_.q;
-        state_prev.dq = state_.dq;
+        state_prev_ = state_;
 
 
         log_file << timestamp_;

@@ -16,11 +16,6 @@ BendLabs::~BendLabs(){
     calculatorThread.join();
 }
 
-void BendLabs::get_state(srl::State& state){
-    mtx.lock();
-    state = this->state_;
-    mtx.unlock();
-}
 
 void BendLabs::calculator_loop(){
     std::fstream log_file;
@@ -34,7 +29,7 @@ void BendLabs::calculator_loop(){
     }
     log_file << "\n";
 
-    double frequency = 100.;
+    double frequency = 100.; //bendlabs cannot run faster than 100hz
     if (st_params_.sensor_refresh_rate < 100.){
         frequency = st_params_.sensor_refresh_rate;
     }
@@ -57,7 +52,7 @@ void BendLabs::calculator_loop(){
         }
 
         if (same_as_prev){  //assumption that no two datapoints will be same due to noise
-            continue;       //therefore if two following datapoints are equal, there has been no update
+            continue;       //therefore if two concurrent datapoints are equal, there has been no update
         }
 
         interval = timestamp_ - last_timestamp_;
@@ -68,20 +63,22 @@ void BendLabs::calculator_loop(){
         for (int i = 0; i < st_params_.num_segments; i++){
             switch (st_params_.coord_type){
                 case CoordType::thetax:
-                    state_.q(2*i+0) = bendLab_data_[2*i+1]; //idk why they're mixed up
-                    state_.q(2*i+1) = bendLab_data_[2*i+0];
+                    state_.q(2*i+st_params_.prismatic) = bendLab_data_[2*i+1]; //idk why they're mixed up
+                    state_.q(2*i+1+st_params_.prismatic) = bendLab_data_[2*i+0];
                     break;
                 case CoordType::phitheta:
-                    state_.q(2*i) = atan2(bendLab_data_[2*i],bendLab_data_[2*i+1]);
-                    state_.q(2*i+1) = sqrt(pow(bendLab_data_[2*i],2) + pow(bendLab_data_[2*i+1],2));
+                    state_.q(2*i+st_params_.prismatic) = atan2(bendLab_data_[2*i],bendLab_data_[2*i+1]);
+                    state_.q(2*i+1+st_params_.prismatic) = sqrt(pow(bendLab_data_[2*i],2) + pow(bendLab_data_[2*i+1],2));
                     break;
             }
+        }
+        if (st_params_.prismatic){
+            state_.q(0) = 0;
         }
 
         state_.dq = (state_.q - state_prev_.q)*0; //bendlabs has no way of logging time, so set speeds to 0
         state_.ddq = (state_.dq - state_prev_.dq)*0;
-        state_prev_.q = state_.q;
-        state_prev_.dq = state_.dq;
+        state_prev_ = state_;
         state_.timestamp = timestamp_;
 
         mtx.unlock();

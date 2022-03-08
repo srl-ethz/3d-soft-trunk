@@ -25,17 +25,9 @@ public:
     void set_ref(const srl::State &state_ref);
     void set_ref(const Vector3d x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
 
-    /** @brief get current kinematic state of the arm */
-    void get_state(srl::State &state);
 
     /** @brief get the tip x coordinates */
     void get_x(Vector3d &x);
-
-    /** @brief set position of arm, only use for simulations! */
-    void set_state(const srl::State &state);
-
-    /** @brief get current pressure output to the arm */
-    void get_pressure(VectorXd &p_vectorized);
 
     /** @brief return x_tip */
     Vector3d get_x();
@@ -62,17 +54,24 @@ public:
     *   @return if the simulation was successful (true) or overflowed (false) */
     bool simulate(const VectorXd &p);
 
-    /** @brief new chamber configuration */
-    void newChamberConfig(Vector3d &angles);
-
-    /** @brief sets the frequency of the simulator */
-    void set_frequency(const double hz);
-
     /** @brief toggles gripper */
     void toggleGripper();
     /** @brief gripper attached */
     bool gripperAttached = false;
     double loadAttached = 0.;
+
+        // arm configuration+target positions
+    srl::State state;
+    srl::State state_ref;
+    srl::State state_prev; //for simulation
+
+    Vector3d x;
+    Vector3d x_ref;
+    Vector3d dx;
+    Vector3d dx_ref;
+    Vector3d ddx_ref;
+
+    DynamicParams dyn;
 
 protected:
 
@@ -123,19 +122,8 @@ protected:
     std::mutex mtx;
 
     void control_loop();
-
-    // arm configuration+target positions
-    srl::State state_;
-    srl::State state_ref_;
-    srl::State state_prev_; //for simulation
-
-    DynamicParams dyn_;
     
-    Vector3d x;
-    Vector3d x_ref;
-    Vector3d dx;
-    Vector3d dx_ref;
-    Vector3d ddx_ref;
+
 
     bool gripping = false;
 

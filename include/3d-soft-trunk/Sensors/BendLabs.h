@@ -10,13 +10,12 @@ public:
 
     ~BendLabs();
 
-    /** @brief fetch state from serial loop */
-    void get_state(srl::State& state);
+    srl::State state_;
     
 private:
     SoftTrunkParameters st_params_;
 
-    srl::State state_;
+
     srl::State state_prev_;
 
     std::unique_ptr<SerialInterface> serialInterface;
@@ -33,6 +32,4 @@ private:
 
     std::mutex mtx;
     bool run = true;
-    
-
 };

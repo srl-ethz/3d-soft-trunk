@@ -112,8 +112,8 @@ void ControllerPCC::set_log_filename(const std::string s){
 }
 
 bool ControllerPCC::simulate(const VectorXd &p){
-    mdl->set_state(state_);
-    mdl->get_dynamic_params(dyn_);
+    mdl->update(state_);
+    this->dyn = mdl.dyn;
     state_prev_.ddq = state_.ddq;
     VectorXd p_adjusted = 100*p; //convert from mbar
 

@@ -9,27 +9,22 @@ public:
     /** @brief construct state estimator */
     StateEstimator(const SoftTrunkParameters& st_params);
 
-    ~StateEstimator();
-
     /** @brief have the state estimator update all states from sensors */
     void poll_sensors();
 
-    /** @brief get n'th object */
-    Eigen::Transform<double, 3, Eigen::Affine> get_object(int id);
+    /** @brief the "clean", filtered state */
+    srl::State state_;
 
-    srl::State state;
+    /** @brief states measured by all sensors */
+    std::vector<srl::State> all_states_;
 
-    const SoftTrunkParameters st_params;
+    const SoftTrunkParameters st_params_;
 private:
 
-
-
-    std::vector<srl::State> states_;
-
     /** @brief vector containing all active sensors */
-    std::vector<SensorType> sensors;
-    std::unique_ptr<MotionCapture> mocap;
-    std::unique_ptr<BendLabs> bendlabs;
+    std::vector<SensorType> sensors_;
+    std::unique_ptr<MotionCapture> mocap_;
+    std::unique_ptr<BendLabs> bendlabs_;
 
     /** @brief gets state of i'th sensor */
     void get_state_from_ptr(srl::State& state, int i);
@@ -37,9 +32,8 @@ private:
     /** @brief returns filtered state */
     srl::State get_filtered_state();
 
-    FilterType filter_type;
+    FilterType filter_type_;
 
     std::mutex mtx;
-
 
 };
