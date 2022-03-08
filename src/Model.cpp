@@ -20,8 +20,6 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
 }
 
 
-
-
 bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
     update(state);
     VectorXd p_adjusted = 100*p; //convert from mbar
@@ -98,4 +96,10 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
 
     }
     return output;
+}
+
+VectorXd Model::gravity_compensate(const srl::State state){
+    assert(st_params_.sections_per_segment == 1);
+    VectorXd gravcomp = dyn_.A_pseudo.inverse() * (dyn_.g + dyn_.K * state.q + dyn_.D * state.dq + dyn_.c);
+    return gravcomp/100; //to mbar
 }

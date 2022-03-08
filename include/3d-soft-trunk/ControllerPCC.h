@@ -20,21 +20,16 @@ class ControllerPCC {
 public:
     ControllerPCC(const SoftTrunkParameters st_params);
 
+    ~ControllerPCC();
+
     /** @brief set the reference pose (trajectory) of the arm
      */
     void set_ref(const srl::State &state_ref);
     void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
 
 
-    /**
-     * @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere
-     */
+    /** @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere */
     void toggle_log();
-
-    /**
-    *@brief return segment tip transformation
-    */
-    Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
     /** @brief forward simulate the stm by dt while inputting pressure p
     *   @return if the simulation was successful (true) or overflowed (false) */
@@ -45,17 +40,20 @@ public:
 
     /** @brief gripper attached */
     bool gripperAttached_ = false;
+
     /** @brief load attached to the arm, in Newtons */
     double loadAttached_ = 0.;
 
-    // arm configuration+target positions
+    // arm configuration
     srl::State state_;
-    srl::State state_ref_;
+
     srl::State state_prev_; //for simulation
 
+    //references
     Vector3d x_ref_;
     Vector3d dx_ref_;
     Vector3d ddx_ref_;
+    srl::State state_ref_;
 
     DynamicParams dyn_;
 
@@ -82,7 +80,7 @@ protected:
     VectorXd gravity_compensate(const srl::State state);
 
     /** @brief check if J is in a singularity
-    *   @return order of the singularity is in, also acts as bool
+    *   @return order of the singularity
     */
     int singularity(const MatrixXd &J);
 
@@ -91,15 +89,9 @@ protected:
     std::unique_ptr<StateEstimator> ste_;
     std::unique_ptr<ValveController> vc_;
 
-    /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
-     * for DragonSkin 30, set to 300.
-     * for DragonSkin 10, set to 150.
-     * (not throughly examined- a larger or smaller value may be better)
-     */
-    const int p_offset = 0;
-    const int p_max = 700; // 400 for DS 10, 1200 for DS 30
+    const int p_max = 700; // 700 for DS 10, 1200 for DS 30
 
-    double dt_ = 1./30;
+    double dt_ = 1./50;
     double t_ = 0;
 
     bool is_initial_ref_received = false;
@@ -108,12 +100,11 @@ protected:
     std::thread sensor_thread_;
     std::thread model_thread_;
 
+    void control_loop();
     void sensor_loop();
     void model_loop();
 
     std::mutex mtx;
-
-    void control_loop();
 
     bool gripping_ = false;
 
@@ -127,13 +118,9 @@ protected:
     std::fstream log_file_;
     void log(double t);
 
-    //qualisys variables
-    Eigen::Transform<double, 3, Eigen::Affine> base_transform;
-
+    bool run_;
 private:
     /** @brief forward simulate using beeman method
-    *   @details explained here https://www.compadre.org/PICUP/resources/Numerical-Integration/
-    */
+    *   @details explained here https://www.compadre.org/PICUP/resources/Numerical-Integration/ */
     bool Beeman(const VectorXd &p);
-
 };

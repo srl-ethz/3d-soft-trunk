@@ -15,6 +15,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
     state_ref_.setSize(st_params_.q_size);
     p_ = VectorXd::Zero(st_params_.p_size);
     f_ = VectorXd::Zero(st_params_.q_size);
+    dt_ = 1./st_params_.controller_update_rate;
 
     filename_ = "defaultController_log";
 
@@ -23,7 +24,17 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
 
     vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, p_max);
 
+    sensor_thread_ = std::thread(&ControllerPCC::sensor_loop, this);
+    model_thread_ = std::thread(&ControllerPCC::model_loop, this);
+
     fmt::print("ControllerPCC object initialized.\n");
+}
+
+ControllerPCC::~ControllerPCC(){
+    run_ = false;
+    control_thread_.join();
+    sensor_thread_.join();
+    model_thread_.join();
 }
 
 void ControllerPCC::set_ref(const srl::State &state_ref) {
@@ -48,13 +59,6 @@ void ControllerPCC::toggleGripper(){
     assert(gripperAttached_);
     gripping_ = !gripping_;
     vc_->setSinglePressure(3*st_params_.num_segments, gripping_*350); //350mbar to grip
-}
-
-VectorXd ControllerPCC::gravity_compensate(const srl::State state){
-    assert(st_params_.sections_per_segment == 1);
-    VectorXd gravcomp = dyn_.A_pseudo.inverse() * (dyn_.g + dyn_.K * state.q + dyn_.D * state.dq + dyn_.c);
-
-    return gravcomp/100; //to mbar
 }
 
 void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to mapping from header
@@ -135,4 +139,22 @@ void ControllerPCC::log(double time){
     for (int i=0; i < st_params_.p_size; i++)
         log_file_ << fmt::format(", {}", p_(i));
     log_file_ << "\n";
+}
+
+void ControllerPCC::sensor_loop(){
+    srl::Rate r{1./st_params_.sensor_refresh_rate};
+    while(run_){
+        ste_->poll_sensors();
+        this->state_ = ste_->state_;
+        r.sleep();
+    }
+}
+
+void ControllerPCC::model_loop(){
+    srl::Rate r{1./st_params_.model_update_rate};
+    while(run_){
+        mdl_->update(state_);
+        dyn_ = mdl_->dyn_;
+        r.sleep();
+    }
 }

@@ -211,6 +211,9 @@ public:
     /** @brief speed at which model self-updates, given in hz */
     double model_update_rate = 100.;
 
+    /** @brief controller refresh rate in hz */
+    double controller_update_rate = 50;
+
     std::string bendlabs_address = "/dev/ttyACM0";
 
     /** @brief size of the pseudo pressure vector */
@@ -293,9 +296,6 @@ public:
 private:
     bool finalized = false;
 };
-
-
-
 
 /**
  * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.

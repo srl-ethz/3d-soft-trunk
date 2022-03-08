@@ -24,6 +24,9 @@ public:
     /** @brief takes x,y pseudopressures and transforms them to real pressures */
     VectorXd pseudo2real(VectorXd p_pseudo);
 
+    /** @brief returns a pressure vector which compensates for gravity, coriolis, damping and stiffness */
+    VectorXd gravity_compensate(const srl::State state);
+
     /** @brief state of model */
     srl::State state_;
 
