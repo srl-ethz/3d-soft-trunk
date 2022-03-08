@@ -31,11 +31,11 @@ public:
 
     Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 
-    const SoftTrunkParameters st_params;
-    DynamicParams dyn;
+    const SoftTrunkParameters st_params_;
+    DynamicParams dyn_;
 
     /** @brief rigid joint states from augmented rigid arm */
-    VectorXd xi;
+    VectorXd xi_;
     
 private:
 

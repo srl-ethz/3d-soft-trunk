@@ -25,16 +25,16 @@ public:
     VectorXd pseudo2real(VectorXd p_pseudo);
 
     /** @brief state of model */
-    srl::State state;
+    srl::State state_;
 
     /** @brief dynamic parameters of model */
-    DynamicParams dyn;
+    DynamicParams dyn_;
 
-    MatrixXd chamber_config = MatrixXd::Zero(2,3);
+    MatrixXd chamber_config_ = MatrixXd::Zero(2,3);
+
+    const SoftTrunkParameters st_params_;
 
 private:
-    SoftTrunkParameters st_params_;
-
     std::unique_ptr<Lagrange> lag_;
     std::unique_ptr<SoftTrunkModel> stm_;
 

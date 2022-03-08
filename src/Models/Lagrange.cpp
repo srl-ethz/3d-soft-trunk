@@ -1,8 +1,8 @@
 #include "3d-soft-trunk/Models/Lagrange.h"
 
-Lagrange::Lagrange(const SoftTrunkParameters &st_params): st_params(st_params)
+Lagrange::Lagrange(const SoftTrunkParameters &st_params): st_params_(st_params)
 {
-    assert(st_params.is_finalized());
+    assert(st_params_.is_finalized());
 }
 
 void Lagrange::A_update(VectorXd q)
@@ -37,8 +37,8 @@ void Lagrange::A_update(VectorXd q)
 void Lagrange::M_update(VectorXd q)
 {
   double M_[16];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
-  double m[2] = {st_params.masses[0],st_params.masses[1]}; //mass of each link + connectors
+  double L[2] = {st_params_.lengths[0],st_params_.lengths[1]}; //length of each link
+  double m[2] = {st_params_.masses[0],st_params_.masses[1]}; //mass of each link + connectors
   double a;
   double a_tmp;
   double a_tmp_tmp;
@@ -241,8 +241,8 @@ void Lagrange::M_update(VectorXd q)
 void Lagrange::g_update(VectorXd q)
 {
   double G[4];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
-  double m[2] = {st_params.masses[0],st_params.masses[1]}; //mass of each link + connectors
+  double L[2] = {st_params_.lengths[0],st_params_.lengths[1]}; //length of each link
+  double m[2] = {st_params_.masses[0],st_params_.masses[1]}; //mass of each link + connectors
   double G_tmp;
   double b_G_tmp;
   double c_G_tmp;
@@ -300,7 +300,7 @@ void Lagrange::k_update(VectorXd q)
 {
   double K[4];
   assert(false);
-  double k_vect[2] = {4*st_params.shear_modulus[0], 4*st_params.shear_modulus[1]};
+  double k_vect[2] = {4*st_params_.shear_modulus[0], 4*st_params_.shear_modulus[1]};
   //std::cout << "stiff1:  " << k_vect[0];
   K[0] = 0.0;
   K[1] = k_vect[0] * q[1];
@@ -314,7 +314,7 @@ void Lagrange::d_update(VectorXd q, VectorXd dq)
 {
   double D[4];
   assert(false);
-  double d_vect[2] = {st_params.drag_coef[0],st_params.drag_coef[1]};
+  double d_vect[2] = {st_params_.drag_coef[0],st_params_.drag_coef[1]};
   D[0] = d_vect[0] * dq[0] * (q[1] * q[1]);
   D[1] = d_vect[0] * dq[1];
   D[2] = d_vect[1] * dq[2] * (q[3] * q[3]);
@@ -326,7 +326,7 @@ void Lagrange::d_update(VectorXd q, VectorXd dq)
 void Lagrange::p_update(VectorXd q)
 {
   double p_FK[3];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
+  double L[2] = {st_params_.lengths[0],st_params_.lengths[1]}; //length of each link
 
   double b_p_FK_tmp;
   double c_p_FK_tmp;
@@ -377,7 +377,7 @@ void Lagrange::p_update(VectorXd q)
 void Lagrange::J_update(VectorXd q)
 {
   double Jac[12];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
+  double L[2] = {st_params_.lengths[0],st_params_.lengths[1]}; //length of each link
 
   double b_in2_tmp;
   double c_in2_tmp;
@@ -489,7 +489,7 @@ void Lagrange::J_update(VectorXd q)
 void Lagrange::JDot_update(VectorXd q, VectorXd dq)
 {
   double JacDot[12];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
+  double L[2] = {st_params_.lengths[0],st_params_.lengths[1]}; //length of each link
 
   double b_in2_tmp;
   double b_t47_tmp;
@@ -754,8 +754,8 @@ void Lagrange::JDot_update(VectorXd q, VectorXd dq)
 void Lagrange::c_update(VectorXd q, VectorXd dq)
 {
   double c[4];
-  double L[2] = {st_params.lengths[0],st_params.lengths[1]}; //length of each link
-  double m[2] = {st_params.masses[0],st_params.masses[1]}; //mass of each link + connectors
+  double L[2] = {st_params_.lengths[0],st_params_.lengths[1]}; //length of each link
+  double m[2] = {st_params_.masses[0],st_params_.masses[1]}; //mass of each link + connectors
   double ab_c_tmp;
   double ab_c_tmp_tmp;
   double ac_c_tmp;
@@ -4707,16 +4707,16 @@ void Lagrange::set_state(const srl::State &state)
     Lagrange::J_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::JDot_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);
     //Lagrange::Y_update(state.q,state.dq,state_r.dq,state_r.ddq);
-    dyn.coordtype = CoordType::phitheta;
-    dyn.A_pseudo = this->A;
-    dyn.B = this->M;
-    dyn.g = this->g;
-    dyn.c = this->Cdq;
-    dyn.K = this->k;
-    dyn.D = this->d;
-    dyn.J.resize(st_params.num_segments);
-    dyn.J[st_params.num_segments-1] = this->J;
-    dyn.dJ.resize(st_params.num_segments);
-    dyn.dJ[st_params.num_segments-1] = this->JDot;
+    dyn_.coordtype = CoordType::phitheta;
+    dyn_.A_pseudo = this->A;
+    dyn_.B = this->M;
+    dyn_.g = this->g;
+    dyn_.c = this->Cdq;
+    dyn_.K = this->k;
+    dyn_.D = this->d;
+    dyn_.J.resize(st_params_.num_segments);
+    dyn_.J[st_params_.num_segments-1] = this->J;
+    dyn_.dJ.resize(st_params_.num_segments);
+    dyn_.dJ[st_params_.num_segments-1] = this->JDot;
 
 }

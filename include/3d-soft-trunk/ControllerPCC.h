@@ -23,32 +23,18 @@ public:
     /** @brief set the reference pose (trajectory) of the arm
      */
     void set_ref(const srl::State &state_ref);
-    void set_ref(const Vector3d x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
+    void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
 
-
-    /** @brief get the tip x coordinates */
-    void get_x(Vector3d &x);
-
-    /** @brief return x_tip */
-    Vector3d get_x();
 
     /**
      * @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere
      */
     void toggle_log();
 
-    /** @brief change log filename to string */
-    void set_log_filename(const std::string s);
-
     /**
     *@brief return segment tip transformation
     */
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
-
-    /**
-     * @brief return transformation of object in qualisys (objects =/= soft arm)
-     */
-    Eigen::Transform<double, 3, Eigen::Affine> get_object(int id);
 
     /** @brief forward simulate the stm by dt while inputting pressure p
     *   @return if the simulation was successful (true) or overflowed (false) */
@@ -56,26 +42,31 @@ public:
 
     /** @brief toggles gripper */
     void toggleGripper();
+
     /** @brief gripper attached */
-    bool gripperAttached = false;
-    double loadAttached = 0.;
+    bool gripperAttached_ = false;
+    /** @brief load attached to the arm, in Newtons */
+    double loadAttached_ = 0.;
 
-        // arm configuration+target positions
-    srl::State state;
-    srl::State state_ref;
-    srl::State state_prev; //for simulation
+    // arm configuration+target positions
+    srl::State state_;
+    srl::State state_ref_;
+    srl::State state_prev_; //for simulation
 
-    Vector3d x;
-    Vector3d x_ref;
-    Vector3d dx;
-    Vector3d dx_ref;
-    Vector3d ddx_ref;
+    Vector3d x_ref_;
+    Vector3d dx_ref_;
+    Vector3d ddx_ref_;
 
-    DynamicParams dyn;
+    DynamicParams dyn_;
+
+    const SoftTrunkParameters st_params_;
+
+    /** @brief log filename */
+    std::string filename_;
+
 
 protected:
 
-    const SoftTrunkParameters st_params_;
     /**
      * actuate the arm using generalized forces
      * @param p pressure vector, 3 pressures per segment
@@ -89,7 +80,6 @@ protected:
      * @return VectorXd of pseudopressures, unit mbar
      */
     VectorXd gravity_compensate(const srl::State state);
-    VectorXd gravity_compensate3(const srl::State state);
 
     /** @brief check if J is in a singularity
     *   @return order of the singularity is in, also acts as bool
@@ -97,13 +87,9 @@ protected:
     int singularity(const MatrixXd &J);
 
 
-    std::unique_ptr<Model> mdl;
-    std::unique_ptr<StateEstimator> ste;
-    std::unique_ptr<ValveController> vc;
-
-
-    std::string bendlabs_portname = "/dev/ttyUSB0";
-
+    std::unique_ptr<Model> mdl_;
+    std::unique_ptr<StateEstimator> ste_;
+    std::unique_ptr<ValveController> vc_;
 
     /** @brief baseline pressure of arm. The average of the pressures sent to a segment should be this pressure.
      * for DragonSkin 30, set to 300.
@@ -113,29 +99,32 @@ protected:
     const int p_offset = 0;
     const int p_max = 700; // 400 for DS 10, 1200 for DS 30
 
-    double dt = 1./30;
-    double t;
+    double dt_ = 1./30;
+    double t_ = 0;
 
     bool is_initial_ref_received = false;
 
-    std::thread control_thread;
+    std::thread control_thread_;
+    std::thread sensor_thread_;
+    std::thread model_thread_;
+
+    void sensor_loop();
+    void model_loop();
+
     std::mutex mtx;
 
     void control_loop();
-    
 
-
-    bool gripping = false;
+    bool gripping_ = false;
 
     //actuation vectors, p is pressures and f is torques
-    VectorXd p;
-    VectorXd f;
+    VectorXd p_;
+    VectorXd f_;
 
     //logging variables
-    bool logging = false;
-    unsigned long long int initial_timestamp;
-    std::fstream log_file;
-    std::string filename;
+    bool logging_ = false;
+    unsigned long long int initial_timestamp_;
+    std::fstream log_file_;
     void log(double t);
 
     //qualisys variables

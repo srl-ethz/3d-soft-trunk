@@ -2,53 +2,53 @@
 
 const double pi = 3.14159265;
 
-SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params(st_params)
+SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params_(st_params)
 {
-    assert(st_params.is_finalized());
+    assert(st_params_.is_finalized());
     generateRobotURDF();
     ara = std::make_unique<AugmentedRigidArm>(st_params);
 
-    dyn.coordtype = st_params.coord_type;
-    dyn.K = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 2 * st_params.sections_per_segment * st_params.num_segments);
-    dyn.D = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 2 * st_params.sections_per_segment * st_params.num_segments);
-    dyn.A = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 3 * st_params.num_segments);
-    dyn.A_pseudo = MatrixXd::Zero(2 * st_params.sections_per_segment * st_params.num_segments, 2*st_params.num_segments);
-    dyn.J.resize(st_params.num_segments);
+    dyn_.coordtype = st_params_.coord_type;
+    dyn_.K = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2 * st_params_.sections_per_segment * st_params_.num_segments);
+    dyn_.D = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2 * st_params_.sections_per_segment * st_params_.num_segments);
+    dyn_.A = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 3 * st_params_.num_segments);
+    dyn_.A_pseudo = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2*st_params_.num_segments);
+    dyn_.J.resize(st_params_.num_segments);
 
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
     
-    for (int section_id = 0; section_id < st_params.sections_per_segment * st_params.num_segments; section_id++)
+    for (int section_id = 0; section_id < st_params_.sections_per_segment * st_params_.num_segments; section_id++)
     {
-        int segment_id = section_id / st_params.sections_per_segment;
-        int section_id_in_segment = section_id % st_params.sections_per_segment;
-        double r_top = st_params.diameters[segment_id]/2;        // radius at base of segment
-        double r_bottom = st_params.diameters[segment_id + 1]/2; // radius at tip of segment
+        int segment_id = section_id / st_params_.sections_per_segment;
+        int section_id_in_segment = section_id % st_params_.sections_per_segment;
+        double r_top = st_params_.diameters[segment_id]/2;        // radius at base of segment
+        double r_bottom = st_params_.diameters[segment_id + 1]/2; // radius at tip of segment
         // radius at the middle of this PCC section
-        double radius = (r_top * (st_params.sections_per_segment - (0.5+section_id_in_segment)) + r_bottom * (0.5+section_id_in_segment)) / (double)st_params.sections_per_segment;
+        double radius = (r_top * (st_params_.sections_per_segment - (0.5+section_id_in_segment)) + r_bottom * (0.5+section_id_in_segment)) / (double)st_params_.sections_per_segment;
         double chamberCentroidDist;
         double siliconeArea;
         double chamberArea;
         double secondMomentOfArea;
-        double l = st_params.lengths[2 * segment_id] / st_params.sections_per_segment; // length of section
+        double l = st_params_.lengths[2 * segment_id] / st_params_.sections_per_segment; // length of section
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
 
-        dyn.K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params.shear_modulus[segment_id] * secondMomentOfArea / l;
-        dyn.A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
-        dyn.D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params.drag_coef[segment_id] / l; /** this is "heuristic" */
-        dyn.A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
+        dyn_.K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params_.shear_modulus[segment_id] * secondMomentOfArea / l;
+        dyn_.A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
+        dyn_.D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params_.drag_coef[segment_id] / l; /** this is "heuristic" */
+        dyn_.A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
     }
 }
 
 void SoftTrunkModel::set_state(const srl::State &state)
 {
     ara->update(state);
-    assert(state.coordtype == dyn.coordtype);
-    dyn.B = ara->B;
-    dyn.c = ara->c;
-    dyn.g = ara->g;
-    dyn.J = ara->J;
-    dyn.S = ara->S;
-    xi = ara->xi_;
+    assert(state.coordtype == dyn_.coordtype);
+    dyn_.B = ara->B;
+    dyn_.c = ara->c;
+    dyn_.g = ara->g;
+    dyn_.J = ara->J;
+    dyn_.S = ara->S;
+    xi_ = ara->xi_;
 }
 
 
@@ -97,12 +97,12 @@ void SoftTrunkModel::calculateCrossSectionProperties(double radius, double &cham
 }
 
 void SoftTrunkModel::generateRobotURDF(){
-    std::string xacro_filename = fmt::format("{}/urdf/{}.urdf.xacro", SOFTTRUNK_PROJECT_DIR, st_params.robot_name);
-    std::string urdf_filename = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params.robot_name);
+    std::string xacro_filename = fmt::format("{}/urdf/{}.urdf.xacro", SOFTTRUNK_PROJECT_DIR, st_params_.robot_name);
+    std::string urdf_filename = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params_.robot_name);
 
     // sanity check of the parameters, just in case
-    assert(2 * st_params.num_segments == st_params.lengths.size());
-    assert(st_params.num_segments + 1 == st_params.diameters.size());
+    assert(2 * st_params_.num_segments == st_params_.lengths.size());
+    assert(st_params_.num_segments + 1 == st_params_.diameters.size());
 
     fmt::print("generating XACRO file:\t{}\n", xacro_filename);
     std::ofstream xacro_file;
@@ -118,24 +118,24 @@ void SoftTrunkModel::generateRobotURDF(){
 
     xacro_file << "<?xml version='1.0'?>\n"
                << "<!-- This file has been generated automatically from SoftTrunkModel::generateRobotURDF(), do not edit by hand -->\n"
-               << fmt::format("<robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='{}'>\n", st_params.robot_name)
+               << fmt::format("<robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='{}'>\n", st_params_.robot_name)
                << "<xacro:include filename='macro_definitions.urdf.xacro' />\n"
                << "<xacro:empty_link name='base_link'/>\n"
-               << fmt::format("<xacro:rigid_rotation rotX='0' rotY='{}' rotZ='0' parent='base_link' child='softTrunk_base'/>", st_params.armAngle*pi/180)
+               << fmt::format("<xacro:rigid_rotation rotX='0' rotY='{}' rotZ='0' parent='base_link' child='softTrunk_base'/>", st_params_.armAngle*pi/180)
                << "<xacro:empty_link name='softTrunk_base'/>\n";
 
     std::string parent = "softTrunk_base";
     std::string child;
-    for (int i = 0; i < st_params.num_segments; i++)
+    for (int i = 0; i < st_params_.num_segments; i++)
     {
         // create sections that gradually taper
-        double segmentLength = st_params.lengths[2*i];
-        double connectorLength = st_params.lengths[2*i+1];
-        double baseRadius = st_params.diameters[i]/2.;
-        double tipRadius = st_params.diameters[i+1]/2.;
-        double sectionLengthInSegment = segmentLength / st_params.sections_per_segment; // length of a PCC section within a segment
-        double segmentMass = st_params.masses[2*i];
-        double connectorMass = st_params.masses[2*i+1];
+        double segmentLength = st_params_.lengths[2*i];
+        double connectorLength = st_params_.lengths[2*i+1];
+        double baseRadius = st_params_.diameters[i]/2.;
+        double tipRadius = st_params_.diameters[i+1]/2.;
+        double sectionLengthInSegment = segmentLength / st_params_.sections_per_segment; // length of a PCC section within a segment
+        double segmentMass = st_params_.masses[2*i];
+        double connectorMass = st_params_.masses[2*i+1];
         double dragon_skin_10_density = 1e6*1.07;
 
         double sectionLength;
@@ -144,21 +144,21 @@ void SoftTrunkModel::generateRobotURDF(){
 
         double segmentVolume = 0;
         // first calculate the segment's model volume (excluding connector piece)
-        for (int j = 0; j < st_params.sections_per_segment; j++)
+        for (int j = 0; j < st_params_.sections_per_segment; j++)
         {
-            double sectionRadius = (tipRadius * j + baseRadius * (st_params.sections_per_segment-j))/st_params.sections_per_segment;
+            double sectionRadius = (tipRadius * j + baseRadius * (st_params_.sections_per_segment-j))/st_params_.sections_per_segment;
             calculateCrossSectionProperties(sectionRadius, tmp1, siliconeArea, singleChamberArea, tmp2);
             segmentVolume += siliconeArea * sectionLengthInSegment;
         }
         fmt::print("estimated volume of segment {} is {} m^3, i.e. {} g. Actual value is {}g.\n", i, segmentVolume, segmentVolume*dragon_skin_10_density, segmentMass*1e3); // Dragon Skin 10 is 1.07g/cc
 
-        for (int j = 0; j < st_params.sections_per_segment + 1; j++)
+        for (int j = 0; j < st_params_.sections_per_segment + 1; j++)
         {
             // there is an "extra" PCC section at the end of each segment, to represent the straight connector piece that will always be kept straight.
-            double sectionRadius = (tipRadius * j + baseRadius * (st_params.sections_per_segment-j))/st_params.sections_per_segment;
+            double sectionRadius = (tipRadius * j + baseRadius * (st_params_.sections_per_segment-j))/st_params_.sections_per_segment;
             calculateCrossSectionProperties(sectionRadius, tmp1, siliconeArea, singleChamberArea, tmp2);
             child = fmt::format("seg{}_sec{}-{}_connect", i, j, j+1);
-            if (j != st_params.sections_per_segment){
+            if (j != st_params_.sections_per_segment){
                 sectionLength = sectionLengthInSegment;
                 sectionVolume = siliconeArea * sectionLength;
                 // distribute measured total mass equally by modelled volume

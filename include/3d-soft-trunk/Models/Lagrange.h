@@ -55,7 +55,7 @@ public:
     /** @brief update the member variables based on current PCC value */
     void set_state(const srl::State &state);
 
-    const SoftTrunkParameters st_params;
+    const SoftTrunkParameters st_params_;
 
-    DynamicParams dyn;
+    DynamicParams dyn_;
 };

@@ -12,9 +12,9 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             lag_ = std::make_unique<Lagrange>(st_params_);
             break;
     }
-    chamber_config << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
+    chamber_config_ << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
     
-    state = st_params_.getBlankState();
+    state_ = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
     
 }
@@ -28,8 +28,8 @@ bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
     VectorXd ddq_init = state.ddq;
     VectorXd ddq_prev;
 
-    VectorXd b_inv_rest = dyn.B.inverse() * (dyn.A * p_adjusted - dyn.c - dyn.g - dyn.K * state.q);      //set up constant terms to not constantly recalculate
-    MatrixXd b_inv_d = -dyn.B.inverse() * dyn.D; //dq will be changing for the loop so seperate
+    VectorXd b_inv_rest = dyn_.B.inverse() * (dyn_.A * p_adjusted - dyn_.c - dyn_.g - dyn_.K * state.q);      //set up constant terms to not constantly recalculate
+    MatrixXd b_inv_d = -dyn_.B.inverse() * dyn_.D; //dq will be changing for the loop so seperate
     
 
     for (int i=0; i < int (dt/0.00001); i++){                                              //forward integrate dq with very small steps
@@ -46,12 +46,12 @@ void Model::update(const srl::State& state){
     switch (st_params_.model_type){
             case ModelType::augmentedrigidarm: 
                 stm_->set_state(state);
-                this->dyn = stm_->dyn;
-                assert (st_params_.coord_type == dyn.coordtype);
+                this->dyn_ = stm_->dyn_;
+                assert (st_params_.coord_type == dyn_.coordtype);
                 break;
             case ModelType::lagrange:
                 lag_->set_state(state);
-                this->dyn = lag_->dyn;
+                this->dyn_ = lag_->dyn_;
                 assert (st_params_.coord_type == CoordType::phitheta);
                 assert (st_params_.num_segments == 2);    //lagrange is hardcoded for a 2seg phitheta robot
                 break;
@@ -72,22 +72,22 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
 
 
         if (angle >= 0 && angle < 120){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
-            inverter.col(0) = chamber_config.col(0);
-            inverter.col(1) = chamber_config.col(2);
+            inverter.col(0) = chamber_config_.col(0);
+            inverter.col(1) = chamber_config_.col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1);
         }
 
         if (angle >= 120 && angle < 240){ //depends on angle
-            inverter.col(0) = chamber_config.col(1);
-            inverter.col(1) = chamber_config.col(2);
+            inverter.col(0) = chamber_config_.col(1);
+            inverter.col(1) = chamber_config_.col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << 0, truePressure(0), truePressure(1);
         }
 
         if (angle >=240 && angle < 360){
-            inverter.col(0) = chamber_config.col(0);
-            inverter.col(1) = chamber_config.col(1);
+            inverter.col(0) = chamber_config_.col(0);
+            inverter.col(1) = chamber_config_.col(1);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << truePressure(0), truePressure(1), 0;
         }
