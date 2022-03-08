@@ -11,22 +11,19 @@ public:
 
     ~StateEstimator();
 
-    /** @brief get primary state from estimator */
-    void get_state(srl::State& state);
-    
-    /** @brief get all states from estimator, unfiltered */
-    void get_states(std::vector<srl::State>& states);
+    /** @brief have the state estimator update all states from sensors */
+    void poll_sensors();
 
     /** @brief get n'th object */
     Eigen::Transform<double, 3, Eigen::Affine> get_object(int id);
 
-    /** @brief fetch x_tip coords if primary sensor supports this */
-    void get_x(Vector3d& x);
+    srl::State state;
 
+    const SoftTrunkParameters st_params;
 private:
-    SoftTrunkParameters st_params_;
 
-    srl::State state_;
+
+
     std::vector<srl::State> states_;
 
     /** @brief vector containing all active sensors */
@@ -43,8 +40,6 @@ private:
     FilterType filter_type;
 
     std::mutex mtx;
-    std::thread polling_thread;
-    void poll_sensors();
-    bool run = true;
+
 
 };

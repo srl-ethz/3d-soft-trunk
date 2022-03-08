@@ -47,7 +47,7 @@ private:
     /** @brief Regressor Matrix */
     MatrixXd Y;
 
-    DynamicParams dyn_;
+    
 
 public:
     Lagrange(const SoftTrunkParameters &st_params);
@@ -55,8 +55,7 @@ public:
     /** @brief update the member variables based on current PCC value */
     void set_state(const srl::State &state);
 
-    /** @brief fetch dynamic parameters */
-    void get_dynamic_params(DynamicParams& dyn);
+    const SoftTrunkParameters st_params;
 
-    SoftTrunkParameters st_params;
+    DynamicParams dyn;
 };

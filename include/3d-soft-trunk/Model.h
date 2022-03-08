@@ -14,7 +14,7 @@ public:
     ~Model();
 
     /** @brief forces model to grab latest dynamic parameters from submodules */
-    void force_dyn_update();
+    void update(const srl::State& state);
 
     /** @brief forward simulate using the model
      * @param state the state which will be forward simulated
@@ -29,10 +29,7 @@ public:
     srl::State state;
 
     /** @brief dynamic parameters of model */
-    DynamicParams dyn_;
-
-    /** @brief segment tip positions */
-    std::vector<Vector3d> x;
+    DynamicParams dyn;
 
     MatrixXd chamber_config = MatrixXd::Zero(2,3);
 
@@ -44,10 +41,6 @@ private:
     std::unique_ptr<StateEstimator> state_est_;
 
     MatrixXd chamber_inv_;
-
-    bool run = true;
-    std::thread update_thread;
-    void update_loop();
 
     std::mutex mtx;
 };

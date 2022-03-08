@@ -21,45 +21,7 @@ public:
      * @brief update the model's state, and calculate the parameters of the model. Currently has problems when both Lx and Ly are 0.
      */
     void set_state(const srl::State &state);
-    
-    SoftTrunkParameters getSoftTrunkParameters(){
-        return st_params_;
-    }
 
-    /** @brief updates handed dyn params with internally stored ones 
-     * TODO: change structure to use dynparams
-    */
-    void get_dynamic_params(DynamicParams& dyn);
-
-    /** @brief inertia matrix */
-    MatrixXd B;
-
-    /** @brief coreolis & centrifugal force */
-    VectorXd c;
-
-    /** @brief gravity */
-    VectorXd g;
-
-    /** @brief elastic coefs */
-    MatrixXd K;
-
-    /** @brief dissipative coefs */
-    MatrixXd D;
-
-    /** @brief map from pressure to generalized force */
-    MatrixXd A;
-
-    /* @brief coriolis matrix */
-    MatrixXd S;
-
-    /** @brief map from pseudopressure to generalized force.
-     * The concept of pseudopressure creates a virtual chamber aligned with X and Y axes that can also output negative pressure values.
-     * Calculating using pseudopressure may make it easier for some controllers.
-    */
-    MatrixXd A_pseudo;
-    
-    /** @brief the Jacobian gives the relation between the pose \f$q\f$ and tip position \f$x\f$ in global coordinates. */
-    std::vector<Eigen::MatrixXd> J;
 
     /**
      * @brief get relative pose from base to tip of segment (at the tip of curved sections, ignores connector part)
@@ -69,26 +31,14 @@ public:
 
     Eigen::Transform<double, 3, Eigen::Affine> get_H_base();
 
+    const SoftTrunkParameters st_params;
+    DynamicParams dyn;
 
-    /** @brief set new angles for the chamber configuration*/
-    void newChamberConfig(Vector3d &angles);
-    
-    /**
-     * @brief convert pseudopressures to real pressures
-     * WARNING: Does not perform any unit conversion, so give it pseudopressures in mbar (or convert to mbar after 2 -> 3 conversion) 
-     * @param pressure_pseudo 2d input pressure
-     * @return VectorXd of 3d output pressure
-     */
-    VectorXd pseudo2real(VectorXd pressure_pseudo);
-
-    VectorXd get_xi();
+    /** @brief rigid joint states from augmented rigid arm */
+    VectorXd xi;
     
 private:
-    
 
-private:
-    const SoftTrunkParameters st_params_;
-    DynamicParams dyn_;
 
     /**
      * @brief calculate various properties of a cross section of the arm. All units of input / output are in meters.
@@ -105,10 +55,8 @@ private:
      */
     void generateRobotURDF();
 
-    /** @brief mapping between 2D pseudopressures and 3 chambers */
-    MatrixXd chamberMatrix = MatrixXd::Zero(2, 3); // describes the direction of each chamber
-    MatrixXd rc = MatrixXd::Zero(30,5);
-    VectorXd rca = VectorXd::Zero(31);
+    /** @brief default chamber configuration */
+    MatrixXd chamberMatrix;
 
     std::unique_ptr<AugmentedRigidArm> ara;
 };

@@ -12,32 +12,24 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             lag_ = std::make_unique<Lagrange>(st_params_);
             break;
     }
-    chamber_config << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
+    chamber_config << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
     
     state = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
-
-    update_thread = std::thread(&Model::update_loop,this);
     
 }
-
-Model::~Model(){
-    run = false;
-    update_thread.join();
-}
-
 
 
 
 
 bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
-    set_state(state);
+    update(state);
     VectorXd p_adjusted = 100*p; //convert from mbar
     VectorXd ddq_init = state.ddq;
     VectorXd ddq_prev;
 
-    VectorXd b_inv_rest = dyn_.B.inverse() * (dyn_.A * p_adjusted - dyn_.c - dyn_.g - dyn_.K * state.q);      //set up constant terms to not constantly recalculate
-    MatrixXd b_inv_d = -dyn_.B.inverse() * dyn_.D; //dq will be changing for the loop so seperate
+    VectorXd b_inv_rest = dyn.B.inverse() * (dyn.A * p_adjusted - dyn.c - dyn.g - dyn.K * state.q);      //set up constant terms to not constantly recalculate
+    MatrixXd b_inv_d = -dyn.B.inverse() * dyn.D; //dq will be changing for the loop so seperate
     
 
     for (int i=0; i < int (dt/0.00001); i++){                                              //forward integrate dq with very small steps
@@ -50,28 +42,20 @@ bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
     return !(abs(state.ddq[0])>pow(10.0,10.0) or abs(state.dq[0])>pow(10.0,10.0) or abs(state.q[0])>pow(10.0,10.0)); //catches when the sim is crashing, true = all ok, false = crashing
 }
 
-void Model::force_dyn_update(){
+void Model::update(const srl::State& state){
     switch (st_params_.model_type){
             case ModelType::augmentedrigidarm: 
-                stm_->set_state(state_);
-                stm_->get_dynamic_params(dyn_);
-                assert (st_params_.coord_type == dyn_.coordtype);
+                stm_->set_state(state);
+                this->dyn = stm_->dyn;
+                assert (st_params_.coord_type == dyn.coordtype);
                 break;
             case ModelType::lagrange:
                 lag_->set_state(state);
-                lag_->get_dynamic_params(dyn_);
+                this->dyn = lag_->dyn;
                 assert (st_params_.coord_type == CoordType::phitheta);
-                assert (st_params_.num_segments == 2);                  //lagrange is hardcoded for a 2seg phitheta robot
+                assert (st_params_.num_segments == 2);    //lagrange is hardcoded for a 2seg phitheta robot
                 break;
         }
-}
-
-void Model::update_loop(){
-    srl::Rate r{st_params_.model_update_rate};
-    while (run){
-        r.sleep();
-        force_dyn_update();
-    }
 }
 
 VectorXd Model::pseudo2real(VectorXd p_pseudo){

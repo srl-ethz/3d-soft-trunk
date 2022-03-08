@@ -4707,22 +4707,16 @@ void Lagrange::set_state(const srl::State &state)
     Lagrange::J_update(MatrixXd::Identity(4,4)*state.q);
     Lagrange::JDot_update(MatrixXd::Identity(4,4)*state.q,MatrixXd::Identity(4,4)*state.dq);
     //Lagrange::Y_update(state.q,state.dq,state_r.dq,state_r.ddq);
-    dyn_.coordtype = CoordType::phitheta;
-    dyn_.A_pseudo = this->A;
-    dyn_.B = this->M;
-    dyn_.g = this->g;
-    dyn_.c = this->Cdq;
-    dyn_.K = this->k;
-    dyn_.D = this->d;
-    dyn_.J.resize(st_params.num_segments);
-    dyn_.J[st_params.num_segments-1] = this->J;
-    dyn_.dJ.resize(st_params.num_segments);
-    dyn_.dJ[st_params.num_segments-1] = this->JDot;
+    dyn.coordtype = CoordType::phitheta;
+    dyn.A_pseudo = this->A;
+    dyn.B = this->M;
+    dyn.g = this->g;
+    dyn.c = this->Cdq;
+    dyn.K = this->k;
+    dyn.D = this->d;
+    dyn.J.resize(st_params.num_segments);
+    dyn.J[st_params.num_segments-1] = this->J;
+    dyn.dJ.resize(st_params.num_segments);
+    dyn.dJ[st_params.num_segments-1] = this->JDot;
 
-    //std::cout << "q:\n" << q << std::endl;
-    //Map<VectorXd> q(data);
-}
-
-void Lagrange::get_dynamic_params(DynamicParams& dyn){
-    dyn = this->dyn_;
 }

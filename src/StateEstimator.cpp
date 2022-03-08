@@ -1,63 +1,46 @@
 #include "3d-soft-trunk/StateEstimator.h"
 
-StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params_(st_params), sensors(st_params_.sensors), filter_type(st_params_.filter_type) {
-    assert(st_params_.is_finalized());
-    state_ = st_params_.getBlankState();
+StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params(st_params), sensors(st_params.sensors), filter_type(st_params.filter_type) {
+    assert(st_params.is_finalized());
+    state = st_params.getBlankState();
     states_.resize(sensors.size());
     for (int i = 0; i < sensors.size(); i++){
         switch (sensors[i]){
         case SensorType::qualisys:
-            mocap = std::make_unique<MotionCapture>(st_params_);
+            mocap = std::make_unique<MotionCapture>(st_params);
             break;
         case SensorType::bendlabs:
-            bendlabs = std::make_unique<BendLabs>(st_params_);
+            bendlabs = std::make_unique<BendLabs>(st_params);
             break;
         case SensorType::simulator:
             break;
         }
     }
 
-    polling_thread = std::thread(&StateEstimator::poll_sensors, this);
     fmt::print("State Estimator initialized with {} sensors.\n",sensors.size());
 }
 
-StateEstimator::~StateEstimator(){
-    run = false;
-    polling_thread.join();
-}
-
-void StateEstimator::get_state(srl::State& state){
-    mtx.lock();
-    state = this->state_;
-    mtx.unlock();
-}
-
-void StateEstimator::get_states(std::vector<srl::State>& states){
-    mtx.lock();
-    states = this->states_;
-    mtx.unlock();
-}
 
 void StateEstimator::poll_sensors(){
-    srl::Rate r{st_params_.sensor_refresh_rate};
+    srl::Rate r{st_params.sensor_refresh_rate};
     while(run){
         r.sleep();
         for (int i = 0; i < sensors.size(); i++){
-            get_state_from_ptr(states_[i],i);
+            get_statefrom_ptr(states_[i],i);
         }
-        state_ = get_filtered_state();
+        state = get_filtered_state();
     }
 }
 
-void StateEstimator::get_state_from_ptr(srl::State& state, int i){
+void StateEstimator::get_statefrom_ptr(srl::State& state, int i){
     switch (sensors[i]){
         case SensorType::qualisys:
             mocap->get_state(state);
-            assert(state.coordtype==st_params_.coord_type);
+            assert(state.coordtype==st_params.coord_type);
             break;
         case SensorType::bendlabs:
             bendlabs->get_state(state);
-            assert(state.coordtype==st_params_.coord_type);
+            assert(state.coordtype==st_params.coord_type);
             break;
         case SensorType::simulator:
             break;
