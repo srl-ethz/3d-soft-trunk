@@ -75,6 +75,16 @@ void MotionCapture::calculator_loop(){
 
         mtx.lock(); //ensure that while the state is being changed nothing is getting pulled
 
+        Matrix3d rot;
+        rot << 0, 0, -1, 0, 1, 0, 1, 0, 0; //this matrix rotates the base frame into the desired orientation;
+
+        for (int i = st_params_.num_segments + st_params_.prismatic - 1; i >= 0; i--){
+            //make translation relative to base frame and align orientation correctly
+            abs_transforms_[i].translation() = rot*(abs_transforms_[i].translation() - abs_transforms_[0].translation());
+            //bring rotation into desired orientation
+            abs_transforms_[i].matrix().block(0,0,3,3) = rot*abs_transforms_[i].matrix().block(0,0,3,3);
+        }
+
         for (int i = 0; i < st_params_.num_segments; i++) {
             matrix = (abs_transforms_[i + st_params_.prismatic].inverse() * abs_transforms_[i + 1 + st_params_.prismatic]).matrix();
             // calculates phi, theta based on orientation w.r.t z-axis

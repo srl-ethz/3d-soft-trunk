@@ -35,6 +35,7 @@ void OSC::control_loop() {
         dyn_ = mdl_->dyn_;
         J = dyn_.J[0];
 
+        x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
         assert(x_ == Vector3d::Zero()); //reminder to check for an easy way to grab x tip from qualisys
         //this x is from forward kinematics, use when using bendlabs sensors
 
