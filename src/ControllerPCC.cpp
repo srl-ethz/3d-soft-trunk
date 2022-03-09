@@ -158,3 +158,20 @@ void ControllerPCC::model_loop(){
         r.sleep();
     }
 }
+
+int ControllerPCC::singularity(const MatrixXd &J) {
+    int order = 0;
+    std::vector<Eigen::Vector3d> plane_normals(st_params_.num_segments);            //normals to planes create by jacobian
+    for (int i = 0; i < st_params_.num_segments; i++) {
+        Vector3d j1 = J.col(2*i).normalized();   //Eigen hates fun so we have to do this
+        Vector3d j2 = J.col(2*i+1).normalized();
+        plane_normals[i] = j1.cross(j2);
+    }
+
+    for (int i = 0; i < st_params_.num_segments - 1; i++) {                         //check for singularities
+        for (int j = 0; j < st_params_.num_segments - 1 - i; j++){
+            if (abs(plane_normals[i].dot(plane_normals[i+j+1])) > 0.995) order+=1;  //if the planes are more or less the same, we are near a singularity
+        }
+    }
+    return order;
+}

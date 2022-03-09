@@ -67,9 +67,6 @@ find_package(Threads REQUIRED)
 find_package(roscpp) # this is optionally required for VisualizerROS
 
 ### libraries
-ADD_LIBRARY(CurvatureCalculator SHARED src/Sensors/CurvatureCalculator.cpp)
-TARGET_LINK_LIBRARIES(CurvatureCalculator ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient SerialInterface fmt yaml-cpp)
-
 ADD_LIBRARY(MotionCapture SHARED src/Sensors/MotionCapture.cpp)
 TARGET_LINK_LIBRARIES(MotionCapture ${Boost_LIBRARIES} ${EIGEN3_LIBRARIES} QualisysClient fmt yaml-cpp)
 

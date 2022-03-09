@@ -46,7 +46,9 @@ public:
 
     // arm configuration
     srl::State state_;
-
+    Vector3d x_;
+    Vector3d dx_;
+    Vector3d ddx_;
     srl::State state_prev_; //for simulation
 
     //references
@@ -100,7 +102,6 @@ protected:
     std::thread sensor_thread_;
     std::thread model_thread_;
 
-    void control_loop();
     void sensor_loop();
     void model_loop();
 

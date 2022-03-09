@@ -36,8 +36,8 @@ endif(${roscpp_FOUND})
 
 ### other programs (experiments etc.)
 
-add_executable(example_Controller example_Controller.cpp)
-target_link_libraries(example_Controller ControllerPCC OSC)
+add_executable(example_OSC example_OSC.cpp)
+target_link_libraries(example_OSC ControllerPCC OSC)
 
 add_executable(characterization_actuation characterization_actuation.cpp)
 target_link_libraries(characterization_actuation ValveController SoftTrunkModel CurvatureCalculator)
