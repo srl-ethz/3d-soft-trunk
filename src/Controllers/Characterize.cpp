@@ -16,7 +16,7 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     log_file_ << fmt::format(", angle_measured, r");
     log_file_ << "\n"; 
     
-    pressures(2*segment) = 500;
+    pressures(2*(segment+st_params_.prismatic)) = 500;
 
     actuate(mdl_->pseudo2real(pressures));
     srl::sleep(5);
@@ -27,8 +27,8 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     MatrixXd angle_vals = MatrixXd::Zero(360,4);
 
     for (double i = 0; i < 360; i+=1.){
-        pressures(2*segment+st_params_.prismatic*2) = 500*cos(i*deg2rad);
-        pressures(2*segment+1+st_params_.prismatic*2) = -500*sin(i*deg2rad);
+        pressures(2*(segment+st_params_.prismatic)+st_params_.prismatic*2) = 500*cos(i*deg2rad);
+        pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic*2) = -500*sin(i*deg2rad);
 
         actuate(mdl_->pseudo2real(pressures));        
 
@@ -71,27 +71,26 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
     VectorXd K = VectorXd::Zero(2*directions*verticalsteps,1);
     VectorXd tau = VectorXd::Zero(2*directions*verticalsteps);
     double angle = 0;
-    VectorXd pressures = VectorXd::Zero(2*st_params.num_segments);
+    VectorXd pressures = VectorXd::Zero(st_params_.p_pseudo_size);
     fmt::print("Starting coefficient characterization in {} directions\n", directions);
     for (int i = 0; i < directions; i ++){
         angle = 45+i*360/directions; 
 
         for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
-            pressures(2*segment) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
-            pressures(2*segment+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
-            if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
-                else actuate(stm->pseudo2real(pressures));
+            pressures(2*(segment+st_params_.prismatic)) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
+            pressures(2*(segment+st_params_.prismatic)+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
+
+            actuate(mdl_->pseudo2real(pressures));
+
             fmt::print("angle = {}, intensity = {}\n", angle, 500/verticalsteps+500*j/verticalsteps);
 
             srl::sleep(10); //wait to let swinging subside
-            cc->get_curvature(state);
-            stm->set_state(state);
 
-            tau(2*verticalsteps*i + 2*j) = pressures(2*segment) - (stm->A_pseudo.inverse()*stm->g/100)(2*segment);
-            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*segment+1) - (stm->A_pseudo.inverse()*stm->g/100)(2*segment+1);
+            tau(2*verticalsteps*i + 2*j) = pressures(2*(segment+st_params_.prismatic)) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*(segment+st_params_.prismatic));
+            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*(segment+st_params_.prismatic)+1) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*(segment+st_params_.prismatic)+1);
 
-            K(2*verticalsteps*i + 2*j) = (stm->A_pseudo.inverse()*stm->K*state.q/100)(2*segment);
-            K(2*verticalsteps*i + 2*j + 1) = (stm->A_pseudo.inverse()*stm->K*state.q/100)(2*segment + 1);
+            K(2*verticalsteps*i + 2*j) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*(segment+st_params_.prismatic));
+            K(2*verticalsteps*i + 2*j + 1) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*(segment+st_params_.prismatic) + 1);
 
         }
     }
