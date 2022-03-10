@@ -1,25 +1,24 @@
 #include "3d-soft-trunk/Controllers/Characterize.h"
 
-Characterize::Characterize(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC(st_params, sensor_type){
+Characterize::Characterize(const SoftTrunkParameters st_params) : ControllerPCC(st_params){
 
 }
 
 void Characterize::logRadialPressureDist(int segment, std::string fname){
-    VectorXd pressures = VectorXd::Zero(2 * st_params.num_segments);
-    filename = fname;
+    VectorXd pressures = VectorXd::Zero(st_params_.p_pseudo_size);
+    filename_ = fname;
 
-    filename = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename);
-    fmt::print("Starting radial log to {}\n", filename);
-    log_file.open(filename, std::fstream::out);
-    log_file << "angle";
+    filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename_);
+    fmt::print("Starting radial log to {}\n", filename_);
+    log_file_.open(filename_, std::fstream::out);
+    log_file_ << "angle";
     //write header
-    log_file << fmt::format(", angle_measured, r");
-    log_file << "\n"; 
+    log_file_ << fmt::format(", angle_measured, r");
+    log_file_ << "\n"; 
     
     pressures(2*segment) = 500;
 
-    if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
-        else actuate(stm->pseudo2real(pressures));
+    actuate(mdl_->pseudo2real(pressures));
     srl::sleep(5);
     srl::Rate r{1};
 
@@ -28,35 +27,30 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     MatrixXd angle_vals = MatrixXd::Zero(360,4);
 
     for (double i = 0; i < 360; i+=1.){
-        pressures(2*segment) = 500*cos(i*deg2rad);
-        pressures(2*segment+1) = -500*sin(i*deg2rad);
+        pressures(2*segment+st_params_.prismatic*2) = 500*cos(i*deg2rad);
+        pressures(2*segment+1+st_params_.prismatic*2) = -500*sin(i*deg2rad);
 
-        if(sensor_type == CurvatureCalculator::SensorType::simulator) simulate(pressures);
-        else actuate(stm->pseudo2real(pressures));
-        
+        actuate(mdl_->pseudo2real(pressures));        
 
-        cc->get_curvature(state);
-        stm->set_state(state);
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-
-        double angle = atan2(x(1),x(0))*180/3.14156;
+        x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
+        double angle = atan2(x_(1),x_(0))*180/3.14156;
         if (angle < 0) angle+=360;
 
-        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x(1)*x(1) + x(0)*x(0)));
+        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x_(1)*x_(1) + x_(0)*x_(0)));
 
-        log_file << fmt::format("{},{},{}", (double) i, angle, sqrt(x(0)*x(0)+x(1)*x(1)));
+        log_file_ << fmt::format("{},{},{}", (double) i, angle, sqrt(x_(0)*x_(0)+x_(1)*x_(1)));
         ang_err(i) = i - angle;
         if (abs(ang_err(i)) > 180) ang_err(i) -= ((ang_err(i) > 0) - (ang_err(i) < 0))*360;
         angle_vals(i,0) = i*i*i;
         angle_vals(i,1) = i*i;
         angle_vals(i,2) = i;
         angle_vals(i,3) = 1;
-        radii(i) = sqrt(x(0)*x(0)+x(1)*x(1));
+        radii(i) = sqrt(x_(0)*x_(0)+x_(1)*x_(1));
 
-        log_file << "\n";
+        log_file_ << "\n";
         r.sleep();
     }
-    log_file.close();
+    log_file_.close();
     fmt::print("\n Finished radial logging\n");   
 
     std::string poly_location = fmt::format("{}/polynomial_{}.txt", SOFTTRUNK_PROJECT_DIR,segment);

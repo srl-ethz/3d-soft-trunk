@@ -33,7 +33,7 @@ void OSC::control_loop() {
             continue;
 
         dyn_ = mdl_->dyn_;
-        J = dyn_.J[0];
+        J = dyn_.J[st_params_.num_segments-1+st_params_.prismatic];
 
         x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
         assert(x_ == Vector3d::Zero()); //reminder to check for an easy way to grab x tip from qualisys

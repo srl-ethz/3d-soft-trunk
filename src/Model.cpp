@@ -16,9 +16,10 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
     
     state_ = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
-    
 }
 
+Model::~Model(){
+}
 
 bool Model::simulate(srl::State& state, const VectorXd &p, double dt){
     update(state);

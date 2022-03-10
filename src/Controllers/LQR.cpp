@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/Controllers/LQR.h"
 
-LQR::LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type) : ControllerPCC::ControllerPCC(st_params, sensor_type){
-    filename = "LQR_log";
+LQR::LQR(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_params){
+    filename_ = "LQR_log";
 
     A = MatrixXd::Zero(2*st_params.q_size, 2*st_params.q_size);
     B = MatrixXd::Zero(2*st_params.q_size, 2*st_params.num_segments);
@@ -10,17 +10,15 @@ LQR::LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType se
     Q = 100000*MatrixXd::Identity(2*st_params.q_size, 2*st_params.q_size);
     Q.block(st_params.q_size, st_params.q_size, st_params.q_size, st_params.q_size) *= 0.001; // reduce cost for velocity
 
-    relinearize(state); //linearizes in non-actuated position on startup
+    relinearize(); //linearizes in non-actuated position on startup
 
-    control_thread = std::thread(&LQR::control_loop, this);
+    control_thread_ = std::thread(&LQR::control_loop, this);
 }
 
-void LQR::relinearize(srl::State state){
-    stm->set_state(state);
-    
+void LQR::relinearize(){    
     //update A, B with new dynamics
-    A << MatrixXd::Zero(st_params.q_size,st_params.q_size), MatrixXd::Identity(st_params.q_size, st_params.q_size), - stm->B.inverse() * stm->K, -stm->B.inverse() * stm->D;
-    B << MatrixXd::Zero(st_params.q_size, 2*st_params.num_segments), stm->B.inverse()*stm->A_pseudo;
+    A << MatrixXd::Zero(st_params_.q_size,st_params_.q_size), MatrixXd::Identity(st_params_.q_size, st_params_.q_size), - dyn_.B.inverse() * dyn_.K, -dyn_.B.inverse() * dyn_.D;
+    B << MatrixXd::Zero(st_params_.q_size, 2*st_params_.num_segments), dyn_.B.inverse()*dyn_.A_pseudo;
 
     solveRiccati(A, B, Q, R, K);
 }
@@ -57,26 +55,22 @@ void LQR::solveRiccati(const MatrixXd &A, const MatrixXd &B, const MatrixXd &Q, 
 
 
 void LQR::control_loop() {
-    srl::Rate r{1./dt};
-    while(true){
+    srl::Rate r{1./dt_};
+    while(run_){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
-
-        //update the internal visualization
-        cc->get_curvature(state);
-        stm->set_state(state); /* this is optional for LQR but allows arm to be visualized in drake-visualizer */ 
 
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         
         //do controls
 
-        fullstate << state.q, state.dq;
-        fullstate_ref << state_ref.q, state_ref.dq;
-        f = K*(fullstate_ref - fullstate)/100;
+        fullstate << state_.q, state_.dq;
+        fullstate_ref << state_ref_.q, state_ref_.dq;
+        f_ = K*(fullstate_ref - fullstate)/100;
 
-        p = stm->pseudo2real(f + gravity_compensate(state));
+        p_ = mdl_->pseudo2real(f_ + gravity_compensate(state_));
 
-        actuate(p);
+        actuate(p_);
     }
 }

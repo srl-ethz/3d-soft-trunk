@@ -3,13 +3,13 @@
 
 #include "3d-soft-trunk/Controllers/IDCon.h"
 
-IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects) : ControllerPCC::ControllerPCC(st_params, sensor_type, objects){
-    filename = "ID_logger";
+IDCon::IDCon(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_params){
+    filename_ = "ID_logger";
     J_prev = MatrixXd::Zero(3, st_params.q_size);
     kp = 70;
     kd = 5.5;
-    dt = 1./50;
-    control_thread = std::thread(&IDCon::control_loop, this);
+    dt_ = 1./50;
+    control_thread_ = std::thread(&IDCon::control_loop, this);
     eps = 1e-1;
 	lambda = 0.5e-1;
     fmt::print("IDCon initialized.\n");
@@ -17,55 +17,34 @@ IDCon::IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorTyp
 //
 //
 void IDCon::control_loop(){
-    srl::Rate r{1./dt};
+    srl::Rate r{1./dt_};
     while(true){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
-
-        //update the internal visualization
-        if (!(sensor_type == CurvatureCalculator::SensorType::simulator)) cc->get_curvature(state);
-        stm->set_state(state);
         
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
 
-        J = stm->J[st_params.num_segments-1]; //tip jacobian
-        dJ = (J - J_prev)/dt;
+        J = dyn_.J[st_params_.num_segments-1+st_params_.prismatic]; //tip jacobian
+        dJ = (J - J_prev)/dt_;
 
         J_prev = J;
         //do controls
-        x = stm->get_H_base().rotation()*cc->get_frame(0).rotation()*(cc->get_frame(st_params.num_segments).translation()-cc->get_frame(0).translation());
-        //x = stm->get_H_base().rotation()*stm->get_H(st_params::num_segments-1).translation();
+        x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
 
-        dx = J*state.dq;
-        ddx_d = ddx_ref + kp*(x_ref - x) + kd*(dx_ref - dx); 
+        dx_ = J*state_.dq;
+        ddx_d = ddx_ref + kp*(x_ref_ - x_) + kd*(dx_ref_ - dx_); 
         //J_inv = J.transpose()*(J*J.transpose()).inverse();
         J_inv = computePinv(J, eps, lambda);
-        state_ref.ddq = J_inv*(ddx_d - dJ*state.dq) + ((MatrixXd::Identity(st_params.q_size, st_params.q_size) - J_inv*J))*(-kd*state.dq);
+        state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-kd*state_.dq);
 
-        tau_ref = stm->B*state_ref.ddq + stm->c + stm->g + stm->K * state.q + stm->D*state.dq;
+        tau_ref = dyn_.B*state_ref_.ddq + dyn_.c + dyn_.g + dyn_.K * state_.q + dyn_.D*state_.dq;
         
-        p = stm->pseudo2real(stm->A_pseudo.inverse()*tau_ref/100);
+        p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100);
 
-        if (!(sensor_type == CurvatureCalculator::SensorType::simulator)) {actuate(p);}
-        else {
-            assert(simulate(p));
-        }
+        actuate(p_);
     }
 
-}
-
-double IDCon::get_kd(){
-    return this->kd;
-}
-double IDCon::get_kp(){
-    return this->kp;
-}
-void IDCon::set_kd(double kd){
-    this->kd = kd;
-}
-void IDCon::set_kp(double kp){
-    this->kp = kp;
 }
 
 //compute damped pesudo inverse with a variable damping

@@ -5,10 +5,10 @@
 class LQR: public ControllerPCC
 {
 public:
-    LQR(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type);
+    LQR(const SoftTrunkParameters st_params);
 
-    /** @brief realinearize the LQR controller at given state, takes quite a while */
-    void relinearize(srl::State state);
+    /** @brief realinearize the LQR controller, takes quite a while */
+    void relinearize();
 
     /** @brief set the LQR cost matrices */
     void setcosts(MatrixXd &Q, MatrixXd &R);

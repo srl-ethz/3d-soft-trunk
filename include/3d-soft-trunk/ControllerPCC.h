@@ -58,6 +58,7 @@ public:
     srl::State state_ref_;
 
     DynamicParams dyn_;
+    double dt_ = 1./50;
 
     const SoftTrunkParameters st_params_;
 
@@ -93,7 +94,6 @@ protected:
 
     const int p_max = 700; // 700 for DS 10, 1200 for DS 30
 
-    double dt_ = 1./50;
     double t_ = 0;
 
     bool is_initial_ref_received = false;

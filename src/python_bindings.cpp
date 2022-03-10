@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 
 #include <3d-soft-trunk/Models/AugmentedRigidArm.h>
-#include <3d-soft-trunk/Sensors/CurvatureCalculator.h>
+#include <3d-soft-trunk/StateEstimator.h>
 #include <3d-soft-trunk/Models/SoftTrunkModel.h>
 #include <3d-soft-trunk/ControllerPCC.h>
 
@@ -22,7 +22,8 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     py::class_<SoftTrunkParameters>(m, "SoftTrunkParameters")
     .def(py::init<>())
     .def("getBlankState", &SoftTrunkParameters::getBlankState)
-    .def("finalize", &SoftTrunkParameters::finalize);
+    .def("finalize", &SoftTrunkParameters::finalize)
+    .def("load_yaml", &SoftTrunkParameters::load_yaml);
 
     py::class_<AugmentedRigidArm>(m, "AugmentedRigidArm")
     .def(py::init<SoftTrunkParameters>())
@@ -37,26 +38,15 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
         return ara.get_H_base().matrix();
     });
 
-    py::class_<CurvatureCalculator> cc(m, "CurvatureCalculator");
-    cc.def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, std::string>())
-    .def("get_curvature", [](CurvatureCalculator& cc){
-        // return as tuple rather than by reference
-        srl::State state;
-        cc.get_curvature(state);
-        return std::make_tuple(state.q, state.dq, state.ddq);
-    })
-    .def("get_frame", [](CurvatureCalculator& cc, int i){
-        Eigen::Matrix<double, 4, 4> H = Eigen::Matrix<double, 4, 4>::Identity();
-        H = cc.get_frame(i).matrix();
-        return H;
-    })
-    .def("get_timestamp", &CurvatureCalculator::get_timestamp);
+    py::class_<StateEstimator> ste(m, "StateEstimator");
+    ste.def(py::init<SoftTrunkParameters>())
+    .def("poll_sensors", &StateEstimator::poll_sensors);
     
     py::class_<SoftTrunkModel> stm(m, "SoftTrunkModel");
     stm.def(py::init<SoftTrunkParameters>())
     .def("set_state", &SoftTrunkModel::set_state)
     .def("getModel", [](SoftTrunkModel& stm){
-        return std::make_tuple(stm.B, stm.c, stm.g, stm.K, stm.D, stm.A, stm.J);
+        return std::make_tuple(stm.dyn_.B, stm.dyn_.c, stm.dyn_.g, stm.dyn_.K, stm.dyn_.D, stm.dyn_.A, stm.dyn_.J);
     })
     .def("get_H", [](SoftTrunkModel& stm, int i){
         return stm.get_H(i).matrix();
@@ -67,21 +57,8 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
 
 
     py::class_<ControllerPCC>(m, "ControllerPCC")
-    .def(py::init<SoftTrunkParameters, CurvatureCalculator::SensorType, bool>())
+    .def(py::init<SoftTrunkParameters>())
     .def("set_ref", py::overload_cast<const srl::State&>(&ControllerPCC::set_ref))
-    .def("get_state", [](ControllerPCC& cpcc){
-        srl::State state;
-        cpcc.get_state(state);
-        return state;
-    })
-    .def("get_pressure", &ControllerPCC::get_pressure)
-    .def("set_state", &ControllerPCC::set_state)
     .def("toggle_log", &ControllerPCC::toggle_log)
-    .def("simulate", &ControllerPCC::simulate)
-    .def("set_frequency", &ControllerPCC::set_frequency);
-
-    py::enum_<CurvatureCalculator::SensorType>(cc, "SensorType")
-    .value("qualisys", CurvatureCalculator::SensorType::qualisys)
-    .value("bend_labs", CurvatureCalculator::SensorType::bend_labs)
-    .value("simulator", CurvatureCalculator::SensorType::simulator);
+    .def("simulate", &ControllerPCC::simulate);
 }

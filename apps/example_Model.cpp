@@ -4,23 +4,20 @@ int main(){
     SoftTrunkParameters st_params;
     //st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
-    std::unique_ptr<StateEstimator> ste = std::make_unique<StateEstimator>(st_params);
+    
     Model mdl{st_params};
-    srl::State state{CoordType::thetax, st_params.q_size};
+
+    srl::State state = st_params.getBlankState();
     DynamicParams dyn;
 
-    for (int i = 0; i < st_params.num_segments; i++) {
+    for (int i = 0; i < st_params.num_segments+st_params.prismatic; i++) {
         state.q(2*i) = 0.3;
         state.q(2*i+1) = 0;
     }
-    mdl.set_state(state);
-    mdl.get_dynamic_params(dyn);
     srl::Rate r{100.};
-    while(true) {
-        r.sleep();
-        fmt::print("state: {}\n",state.q);
-        mdl.simulate(state, VectorXd::Zero(6), 0.001);
+    mdl.update(state);
+    dyn = mdl.dyn_;
 
-    }
+    getchar();
     return 0;
 }

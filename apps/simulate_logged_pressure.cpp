@@ -16,8 +16,8 @@ int main(int argc, char *argv[]){
     SoftTrunkParameters st_params{};
     st_params.finalize();
     srl::State state = st_params.getBlankState();
-    ControllerPCC cpcc{st_params, CurvatureCalculator::SensorType::simulator};
-    VectorXd p = VectorXd::Zero(3*st_params.num_segments);
+    ControllerPCC cpcc{st_params};
+    VectorXd p = VectorXd::Zero(st_params.p_size);
 
     // read and save the csv data
     std::string p_filename;
@@ -42,8 +42,7 @@ int main(int argc, char *argv[]){
     }
     const double hz = 1./dt;
     srl::Rate r{hz};
-    
-    cpcc.set_frequency(hz);
+    cpcc.dt_ = dt;
     int log_index = 0; // index of log currently being referred to for pressure data
     cpcc.toggle_log();
     for (double t = log_t[0]; t < log_t[log_t.size()-1]; t+=dt)

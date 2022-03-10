@@ -9,14 +9,8 @@
 #include <iostream>
 class IDCon: public ControllerPCC {
 public:
-    IDCon(const SoftTrunkParameters st_params, CurvatureCalculator::SensorType sensor_type, int objects = 0);
-    /** @brief methods for getting OSC gain */
-    double get_kp();
-    double get_kd();
+    IDCon(const SoftTrunkParameters st_params);
 
-    /** @brief methods for setting OCS gain */
-    void set_kp(double kp);
-    void set_kd(double kd);
 private:
     void control_loop();
     /** @brief gains for ID*/
