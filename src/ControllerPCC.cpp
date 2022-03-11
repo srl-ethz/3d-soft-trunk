@@ -156,7 +156,7 @@ void ControllerPCC::model_loop(){
     srl::Rate r{1./st_params_.model_update_rate};
     while(run_){
         mdl_->update(state_);
-        dyn_ = mdl_->dyn_;
+        this->dyn_ = mdl_->dyn_;
         r.sleep();
     }
 }

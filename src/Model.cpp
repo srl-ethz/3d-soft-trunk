@@ -6,10 +6,12 @@
 Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
     switch (st_params_.model_type) {
         case ModelType::augmentedrigidarm: 
-            stm_ = std::make_unique<SoftTrunkModel>(st_params_);     
+            stm_ = std::make_unique<SoftTrunkModel>(st_params_);  
+            this->dyn_ = stm_->dyn_;   
             break;
         case ModelType::lagrange: 
             lag_ = std::make_unique<Lagrange>(st_params_);
+            this->dyn_ = lag_->dyn_;
             break;
     }
     chamber_config_ << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
