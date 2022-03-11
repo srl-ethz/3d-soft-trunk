@@ -58,7 +58,7 @@ enum class SensorType {
 };
 
 enum class FilterType {
-
+    none,
 };
 
 namespace srl{
@@ -195,7 +195,7 @@ public:
     ControllerType controller_type = ControllerType::osc;
 
     /** @brief filtering type between multiple sensor inputs */
-    FilterType filter_type;
+    FilterType filter_type = FilterType::none;
 
     /** @brief degrees of freedom of arm. is set when finalize() is called */
     int q_size;

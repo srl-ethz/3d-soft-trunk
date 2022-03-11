@@ -10,7 +10,7 @@
 ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(st_params){
     assert(st_params_.is_finalized());
     // set appropriate size for each member
-    state_.setSize(st_params_.q_size);
+    state_ = st_params_.getBlankState();
     state_prev_.setSize(st_params_.q_size);
     state_ref_.setSize(st_params_.q_size);
     p_ = VectorXd::Zero(st_params_.p_size);
@@ -27,7 +27,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
     vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, p_max);
 
     sensor_thread_ = std::thread(&ControllerPCC::sensor_loop, this);
-    model_thread_ = std::thread(&ControllerPCC::model_loop, this);
+    //model_thread_ = std::thread(&ControllerPCC::model_loop, this);
 
     fmt::print("ControllerPCC object initialized.\n");
 }
@@ -144,7 +144,7 @@ void ControllerPCC::log(double time){
 }
 
 void ControllerPCC::sensor_loop(){
-    srl::Rate r{1./st_params_.sensor_refresh_rate};
+    srl::Rate r{st_params_.sensor_refresh_rate};
     while(run_){
         ste_->poll_sensors();
         this->state_ = ste_->state_;

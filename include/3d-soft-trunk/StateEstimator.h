@@ -27,12 +27,12 @@ private:
     std::unique_ptr<BendLabs> bendlabs_;
 
     /** @brief gets state of i'th sensor */
-    void get_state_from_ptr(srl::State& state, int i);
+    void get_states();
 
     /** @brief returns filtered state */
-    srl::State get_filtered_state();
+    void get_filtered_state();
 
-    FilterType filter_type_;
+    FilterType filter_type_ = FilterType::none;
 
     std::mutex mtx;
 

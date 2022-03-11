@@ -4,6 +4,11 @@ StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params
     assert(st_params.is_finalized());
     state_ = st_params.getBlankState();
     all_states_.resize(sensors_.size());
+
+    for (int i = 0; i < all_states_.size(); i++){
+        all_states_[i] = st_params_.getBlankState();
+    }
+
     for (int i = 0; i < sensors_.size(); i++){
         switch (sensors_[i]){
         case SensorType::qualisys:
@@ -22,31 +27,32 @@ StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params
 
 
 void StateEstimator::poll_sensors(){    
-    for (int i = 0; i < sensors_.size(); i++){
-        get_state_from_ptr(all_states_[i],i);
-    }
-    state_ = get_filtered_state();
+    get_states();
+    get_filtered_state();
 }
 
-void StateEstimator::get_state_from_ptr(srl::State& state, int i){
+void StateEstimator::get_states(){
+    for (int i = 0; i < all_states_.size(); i++)
     switch (sensors_[i]){
         case SensorType::qualisys:
-            state = mocap_->state_;
-            assert(state.coordtype==st_params_.coord_type);
+            all_states_[i] = mocap_->state_;
+            assert(all_states_[i].coordtype==st_params_.coord_type);
             break;
         case SensorType::bendlabs:
-            state_ = bendlabs_->state_;
-            assert(state.coordtype==st_params_.coord_type);
+            all_states_[i] = bendlabs_->state_;
+            assert(all_states_[i].coordtype==st_params_.coord_type);
             break;
         case SensorType::simulator:
             break;
     }
 }
 
-srl::State StateEstimator::get_filtered_state(){
+void StateEstimator::get_filtered_state(){
     /** depending on filter complexity, make an object to poll for filter output and hand it all states */
+    
     switch (filter_type_){
-        default: 
-            state_ = all_states_[0];
+        case FilterType::none: 
+            this->state_ = this->all_states_[0];
+            break;
     }
 }
