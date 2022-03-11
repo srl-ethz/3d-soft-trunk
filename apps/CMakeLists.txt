@@ -16,6 +16,9 @@ target_link_libraries(example_IDCon IDCon)
 add_executable(example_Model example_Model.cpp)
 target_link_libraries(example_Model Model)
 
+add_executable(example_Controller example_Controller.cpp)
+target_link_libraries(example_Controller ControllerPCC)
+
 if(${roscpp_FOUND})
 #    add_executable(example_VisualizerROS example_VisualizerROS.cpp)
 #    target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)
