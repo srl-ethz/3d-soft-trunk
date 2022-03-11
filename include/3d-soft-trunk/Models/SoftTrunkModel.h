@@ -56,7 +56,7 @@ private:
     void generateRobotURDF();
 
     /** @brief default chamber configuration */
-    MatrixXd chamberMatrix;
+    MatrixXd chamberMatrix = MatrixXd::Zero(2,3);
 
     std::unique_ptr<AugmentedRigidArm> ara;
 };

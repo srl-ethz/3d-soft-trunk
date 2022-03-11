@@ -5,6 +5,7 @@ AugmentedRigidArm::AugmentedRigidArm(const SoftTrunkParameters &st_params): st_p
 {
     assert(st_params.is_finalized());
     setup_drake_model();
+    fmt::print("Augmented Rigid Arm initialized\n");
 }
 
 void AugmentedRigidArm::setup_drake_model()

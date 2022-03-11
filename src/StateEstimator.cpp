@@ -47,6 +47,6 @@ srl::State StateEstimator::get_filtered_state(){
     /** depending on filter complexity, make an object to poll for filter output and hand it all states */
     switch (filter_type_){
         default: 
-            return all_states_[0];
+            state_ = all_states_[0];
     }
 }

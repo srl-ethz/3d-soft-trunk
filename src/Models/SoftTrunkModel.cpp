@@ -12,11 +12,10 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params_
     dyn_.K = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2 * st_params_.sections_per_segment * st_params_.num_segments);
     dyn_.D = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2 * st_params_.sections_per_segment * st_params_.num_segments);
     dyn_.A = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 3 * st_params_.num_segments);
-    dyn_.A_pseudo = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2*st_params_.num_segments);
+    dyn_.A_pseudo = MatrixXd::Zero(st_params_.q_size, 2*st_params_.num_segments);
     dyn_.J.resize(st_params_.num_segments);
-
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
-    
+
     for (int section_id = 0; section_id < st_params_.sections_per_segment * st_params_.num_segments; section_id++)
     {
         int segment_id = section_id / st_params_.sections_per_segment;
@@ -30,6 +29,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params_
         double chamberArea;
         double secondMomentOfArea;
         double l = st_params_.lengths[2 * segment_id] / st_params_.sections_per_segment; // length of section
+
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
 
         dyn_.K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params_.shear_modulus[segment_id] * secondMomentOfArea / l;
@@ -37,6 +37,7 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params_
         dyn_.D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params_.drag_coef[segment_id] / l; /** this is "heuristic" */
         dyn_.A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
     }
+    fmt::print("SoftTrunkModel initialized\n");
 }
 
 void SoftTrunkModel::set_state(const srl::State &state)

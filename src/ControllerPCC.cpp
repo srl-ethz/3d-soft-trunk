@@ -17,6 +17,8 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
     f_ = VectorXd::Zero(st_params_.q_size);
     dt_ = 1./st_params_.controller_update_rate;
 
+    run_ = true;
+
     filename_ = "defaultController_log";
 
     mdl_ = std::make_unique<Model>(st_params_);
