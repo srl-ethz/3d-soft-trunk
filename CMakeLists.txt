@@ -121,7 +121,7 @@ endif(${roscpp_FOUND})
 
 ### set up pybind modules
 pybind11_add_module(softtrunk_pybind_module src/python_bindings.cpp)
-target_link_libraries(softtrunk_pybind_module PUBLIC AugmentedRigidArm CurvatureCalculator SoftTrunkModel ControllerPCC)
+target_link_libraries(softtrunk_pybind_module PUBLIC ControllerPCC Model StateEstimator)
 
 if(${roscpp_FOUND})
     # pybind modules for classes that require ROS

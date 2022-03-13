@@ -6,7 +6,7 @@
 
 /**
  * @brief dynamic analytical model of the Soft Trunk. Refer to IROS2021 paper (toshimitsu et al., 2021) for background theory.
- * The matrices returned describe the following model:
+ * @details The matrices returned describe the following model:
  * \f$
  * B \ddot q + c + g + K q + D \dot q = A p
  * \f$
@@ -15,6 +15,10 @@
  */
 class SoftTrunkModel{
 public:
+    /** @brief Soft Trunk Model object. Acts as a wrapper to the Augmented Rigid Arm 
+     * @details SoftTrunkModel calculates the non-changing coefficients of the dynamic model:
+     * K (stiffness), D (damping), A (actuation)
+    */
     SoftTrunkModel(const SoftTrunkParameters& st_params);
 
     /**
@@ -26,6 +30,7 @@ public:
     /**
      * @brief get relative pose from base to tip of segment (at the tip of curved sections, ignores connector part)
      * @param segment_id 0 for first segment, and so on
+     * @details This is internal forward kinematics, is theoretically redundant after the introduction of state.tip_transforms
      */
     Eigen::Transform<double, 3, Eigen::Affine> get_H(int segment_id);
 
@@ -50,9 +55,7 @@ private:
      */
     void calculateCrossSectionProperties(double radius, double& chamberCentroidDist, double& siliconeArea, double& chamberArea, double& secondMomentOfArea);
 
-    /**
-     * @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class.
-     */
+    /** @brief generates URDF model of robot as configured in SoftTrunk_common.h. It is then read by the AugmentedRigidArm class. */
     void generateRobotURDF();
 
     /** @brief default chamber configuration */

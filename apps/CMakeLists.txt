@@ -1,17 +1,8 @@
 
 ### examples
 
-add_executable(example_SoftTrunkModel example_SoftTrunkModel.cpp)
-target_link_libraries(example_SoftTrunkModel SoftTrunkModel)
-
-add_executable(example_Simulator example_Simulator.cpp)
-target_link_libraries(example_Simulator ControllerPCC)
-
 add_executable(example_Characterizer example_Characterizer.cpp)
 target_link_libraries(example_Characterizer Characterize)
-
-add_executable(example_IDCon example_IDCon.cpp)
-target_link_libraries(example_IDCon IDCon)
 
 add_executable(example_Model example_Model.cpp)
 target_link_libraries(example_Model Model)
@@ -34,9 +25,6 @@ target_link_libraries(example_OSC ControllerPCC OSC)
 add_executable(simulate_logged_pressure simulate_logged_pressure.cpp)
 target_link_libraries(simulate_logged_pressure ControllerPCC Threads::Threads)
 
-
-add_executable(example_QuasiStatic example_QuasiStatic.cpp)
-target_link_libraries(example_QuasiStatic QuasiStatic)
 
 if(${roscpp_FOUND})
 #    add_executable(ui_controller ui_controller.cpp)

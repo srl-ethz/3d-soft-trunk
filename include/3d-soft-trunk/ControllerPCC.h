@@ -22,26 +22,29 @@ public:
 
     ~ControllerPCC();
 
-    /** @brief set the reference pose (trajectory) of the arm
-     */
+    /** @brief Set the reference state of the arm (configuration space)*/
     void set_ref(const srl::State &state_ref);
+    /** @brief Set the reference state of the arm (task space)*/
     void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
 
 
-    /** @brief toggles logging of x,q to a csv file, filename is defined in string filename elsewhere */
+    /** @brief Toggles logging of x,q to a csv file, filename is defined in string filename elsewhere */
     void toggle_log();
 
-    /** @brief forward simulate the stm by dt while inputting pressure p
-    *   @return if the simulation was successful (true) or overflowed (false) */
+    /** @brief Forward simulate the model while inputting pressure p
+    *   @return If the simulation was successful (true) or overflowed (false) */
     bool simulate(const VectorXd &p);
 
-    /** @brief toggles gripper */
+    /** @brief Toggles gripper */
     void toggleGripper();
 
-    /** @brief gripper attached */
+    /** @brief Actuate the arm
+     * @param p Pressure vector, 3 pressures per segment for default SoPrA*/
+    void actuate(const VectorXd &p);
+
     bool gripperAttached_ = false;
 
-    /** @brief load attached to the arm, in Newtons */
+    /** @brief Load attached to the tip of the arm, in newton*/
     double loadAttached_ = 0.;
 
     // arm configuration
@@ -62,28 +65,23 @@ public:
 
     const SoftTrunkParameters st_params_;
 
-    /** @brief log filename */
+    /** @brief Log filename */
     std::string filename_;
 
 
 protected:
 
-    /**
-     * actuate the arm using generalized forces
-     * @param p pressure vector, 3 pressures per segment
-     */
-    void actuate(const VectorXd &p);
 
     /**
-     * @brief give a pseudopressure vector which will compensate for gravity + state related forces (includes velocity based ones)
-     * @details gravity_compensate3 uses the stm->A matrix instead of the stm->A_pseudo, should functionally be the same
+     * @brief Give a pseudopressure vector which will compensate for gravity + state related forces
+     * @details Effectively makes the arm "weightless", i.e. PID control should work
      * @param state state for which should be equalized
      * @return VectorXd of pseudopressures, unit mbar
      */
     VectorXd gravity_compensate(const srl::State state);
 
-    /** @brief check if J is in a singularity
-    *   @return order of the singularity
+    /** @brief Check if J is in a singularity (within a threshold)
+    *   @return Order of the singularity
     */
     int singularity(const MatrixXd &J);
 
@@ -121,7 +119,7 @@ protected:
 
     bool run_;
 private:
-    /** @brief forward simulate using beeman method
-    *   @details explained here https://www.compadre.org/PICUP/resources/Numerical-Integration/ */
+    /** @brief Forward simulate using Beeman method
+    *   @details Explained here https://www.compadre.org/PICUP/resources/Numerical-Integration/ */
     bool Beeman(const VectorXd &p);
 };

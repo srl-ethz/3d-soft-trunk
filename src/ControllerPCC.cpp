@@ -177,3 +177,10 @@ int ControllerPCC::singularity(const MatrixXd &J) {
     }
     return order;
 }
+
+
+VectorXd ControllerPCC::gravity_compensate(const srl::State state){
+    assert(st_params_.sections_per_segment == 1);
+    VectorXd gravcomp = dyn_.A_pseudo.inverse() * (dyn_.g + dyn_.K * state.q + dyn_.D * state.dq + dyn_.c);
+    return gravcomp/100; //to mbar
+}
