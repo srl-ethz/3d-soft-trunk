@@ -78,11 +78,11 @@ void MotionCapture::calculator_loop(){
         Matrix3d rot;
         rot << 0, 0, -1, 0, 1, 0, 1, 0, 0; //this matrix rotates the base frame into the desired orientation;
 
-        for (int i = st_params_.num_segments + st_params_.prismatic - 1; i >= 0; i--){
+        for (int i = st_params_.num_segments + st_params_.prismatic; i >= 0; i--){
             //make translation relative to base frame and align orientation correctly
             abs_transforms_[i].translation() = rot*(abs_transforms_[i].translation() - abs_transforms_[0].translation());
             //bring rotation into desired orientation
-            abs_transforms_[i].matrix().block(0,0,3,3) = rot*abs_transforms_[i].matrix().block(0,0,3,3);
+            abs_transforms_[i].matrix().block(0,0,3,3) = abs_transforms_[i].matrix().block(0,0,3,3)*rot;
         }
 
         for (int i = 0; i < st_params_.num_segments; i++) {
