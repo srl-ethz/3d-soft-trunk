@@ -76,7 +76,7 @@ void OSC::control_loop() {
 
         tau_ref = J.transpose()*f_ + (MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J.transpose()*J_inv.transpose())*tau_null;
         
-        p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100 + mdl_->gravity_compensate(state_));
+        p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state_));
 
         if (st_params_.sensors[0] != SensorType::simulator) {actuate(p_);}
         else {

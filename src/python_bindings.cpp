@@ -37,7 +37,7 @@ PYBIND11_MODULE(softtrunk_pybind_module, m){
     py::class_<ControllerPCC>(m, "ControllerPCC")
         .def(py::init<SoftTrunkParameters>())
         .def("set_ref", py::overload_cast<const srl::State&>(&ControllerPCC::set_ref))
-        .def("set_ref", py::overload_cast<const Vector3d&>(&ControllerPCC::set_ref))
+        .def("set_ref", py::overload_cast<const Vector3d&, const Vector3d&, const Vector3d&>(&ControllerPCC::set_ref))
         .def("toggle_log", &ControllerPCC::toggle_log)
         .def("simulate", &ControllerPCC::simulate);
 }

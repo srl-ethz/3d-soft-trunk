@@ -33,7 +33,7 @@ void PID::control_loop(){
         for (int i = 0; i < 2 * st_params_.num_segments; ++i)
             f_[i] = miniPIDs[i].getOutput(state_.q[i], state_ref_.q[i]);
         
-        p_ = mdl_->pseudo2real(f_ + mdl_->gravity_compensate(state_));
+        p_ = mdl_->pseudo2real(f_ + gravity_compensate(state_));
 
         actuate(p_);
     }

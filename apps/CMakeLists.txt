@@ -1,8 +1,7 @@
-
 ### examples
 
 add_executable(example_Characterizer example_Characterizer.cpp)
-target_link_libraries(example_Characterizer Characterize)
+target_link_libraries(example_Characterizer Characterizer)
 
 add_executable(example_Model example_Model.cpp)
 target_link_libraries(example_Model Model)

@@ -73,7 +73,7 @@ protected:
 
 
     /**
-     * @brief Give a pseudopressure vector which will compensate for gravity + state related forces
+     * @brief Determine a pseudopressure which will compensate for gravity + state related forces
      * @details Effectively makes the arm "weightless", i.e. PID control should work
      * @param state state for which should be equalized
      * @return VectorXd of pseudopressures, unit mbar

@@ -1,4 +1,4 @@
-#include "3d-soft-trunk/Controllers/Characterize.h"
+#include "3d-soft-trunk/Controllers/Characterizer.h"
 
 Characterize::Characterize(const SoftTrunkParameters st_params) : ControllerPCC(st_params){
 
