@@ -274,6 +274,7 @@ public:
             fmt::print("Error reading sensors from YAML!\n");
             assert(false);
         }
+        
         std::string modeltype = params["model type"].as<std::string>();
         if (modeltype == "augmented"){
             model_type = ModelType::augmentedrigidarm;

@@ -1,2 +1,0 @@
-add_executable(grip_weightcomp grip_weightcomp.cpp)
-target_link_libraries(grip_weightcomp OSC)

@@ -3,15 +3,18 @@
 #include "3d-soft-trunk/SoftTrunk_common.h"
 #include <mobilerack-interface/QualisysClient.h>
 
+/** @brief Motion Capture sensor.
+ * @details SRL uses a Qualisys motion capture system. This object uses their API to read frames by number
+ * @details The frames must be numbered accordingly in the Qualisys Software. 0 for base (top) frame. */
 class MotionCapture{
 public:
     MotionCapture(const SoftTrunkParameters& st_params);
 
     ~MotionCapture();
 
-    /** @brief get an individual homogenous transformation from qualisys
+    /** @brief Get a homogenous transformation from qualisys
      * @param id number of the frame to grab
-     * @details this function is for debugging purposes */
+     * @details This function is for debugging purposes */
     Eigen::Transform<double, 3, Eigen::Affine> get_frame(int id);
     
     SoftTrunkParameters st_params_;
@@ -23,7 +26,7 @@ private:
  
     /** @brief the connection to QTM server */
     std::unique_ptr<QualisysClient> optiTrackClient;
-    /** @brief absolute qualisys tranformations */
+    /** @brief Absolute qualisys tranformations */
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> abs_transforms_;
 
     unsigned long long int timestamp_ = 0;

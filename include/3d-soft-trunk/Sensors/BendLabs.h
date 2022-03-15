@@ -3,9 +3,12 @@
 #include "3d-soft-trunk/SoftTrunk_common.h"
 #include <mobilerack-interface/SerialInterface.h>
 
-
+/** @brief BendLabs sensor reader
+ * @details Using following sensor: https://www.bendlabs.com/products/2-axis-soft-flex-sensor/
+ * @details This sensor can only read curvature, tip positions must be estimated with forward kinematics */
 class BendLabs{
 public:
+
     BendLabs(const SoftTrunkParameters& st_params);
 
     ~BendLabs();
@@ -14,7 +17,6 @@ public:
     
 private:
     SoftTrunkParameters st_params_;
-
 
     srl::State state_prev_;
 

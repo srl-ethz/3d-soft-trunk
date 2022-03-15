@@ -38,7 +38,7 @@ void IDCon::control_loop(){
         J_inv = computePinv(J, eps, lambda);
         state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-kd*state_.dq);
 
-        tau_ref = dyn_.B*state_ref_.ddq + dyn_.c + dyn_.g + dyn_.K * state_.q + dyn_.D*state_.dq;
+        tau_ref = dyn_.B*state_ref_.ddq + gravity_compensate(state_);
         
         p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100);
 
