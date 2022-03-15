@@ -144,7 +144,7 @@ bool Characterize::valveMap(int maxpressure){
     new_params.valvemap = newMap;
     fmt::print("New map:");
     for (int i = 0; i < newMap.size(); i++){
-        fmt::print("{},",valveMap[i]);
+        fmt::print("{},",newMap[i]);
     }
     fmt::print("\n");
 
