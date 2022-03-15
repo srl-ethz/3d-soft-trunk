@@ -80,7 +80,7 @@ void MotionCapture::calculator_loop(){
 
         for (int i = st_params_.num_segments + st_params_.prismatic; i >= 0; i--){
             //make translation relative to base frame and align orientation correctly
-            abs_transforms_[i].translation() = rot*(abs_transforms_[i].translation() - abs_transforms_[0].translation());
+            abs_transforms_[i].translation() = abs_transforms_[st_params_.prismatic].rotation()*rot*(abs_transforms_[i].translation() - abs_transforms_[0].translation());
             //bring rotation into desired orientation
             abs_transforms_[i].matrix().block(0,0,3,3) = abs_transforms_[i].matrix().block(0,0,3,3)*rot;
         }
