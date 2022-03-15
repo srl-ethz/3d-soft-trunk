@@ -149,35 +149,38 @@ public:
     }
     /** @brief name of robot (and of urdf / xacro file) */
     std::string robot_name = "2segment";
+
     /** @brief number of actuated segments */
     int num_segments = 2;
+
     /** @brief number of PCC elements per section */
     int sections_per_segment = 1;
+
     /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
-     * segment 2: 160g, 1-2 connector: 20g, segment: 1 82g, gripper: 23g
-     */
+     * @details {base segment, base connector, ..., tip segment, gripper}*/
     std::vector<double> masses = {0.160, 0.020, 0.082, 0.023};
+
     /** @brief length of each part, in m
-     * account for a bit of stretching under pressure...
-     * {length of base segment, length of base connector piece, ..., length of tip segment} */
+     * @details {base segment, base connector piece, ..., tip segment} */
     std::vector<double> lengths = {0.125, 0.02, 0.125, 0.02};
-    /**
-     * @brief outer diameters of semicircular chamber
-     * {base of base segment, tip of base segment = base of next segment, ...}
-     */
+
+    /** @brief outer diameters of semicircular chamber
+     * @details {base of base segment, tip of base segment = base of next segment, ...}*/
     std::vector<double> diameters = {0.035, 0.028, 0.0198};
+
     /** @brief angle of arm rel. to upright */
     double armAngle = 180;
 
     /** @brief shear modulus of Dragon Skin 10, in Pa
-     * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.
-     */
+    * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.*/
     std::vector<double> shear_modulus = {40686, 59116};
+
+    /** @brief Drag coefficients of arm (air resistance, internal damping...). This is heuristic at the moment. */
     std::vector<double> drag_coef = {28000., 8000.};
 
     /** @brief maps valves to the manipulator chambers 
-     * scheme: chamber facing towards you, chamber back left, chamber back right
-     * going from topmost segment downwards
+     * scheme: chamber facing x direction (towards user), chamber back left, chamber back right
+     * starts at top segment, iterates downwards
      * final chamber is for the gripper
     */
     std::vector<int> valvemap = {3,1,2,4,6,5,0};
@@ -222,7 +225,7 @@ public:
     /** @brief size of the real pressure vector */
     int p_size;
 
-    /** @brief describes if the arm is mounted to the prismatic joint */
+    /** @brief describes if the arm is mounted to a base prismatic joint */
     bool prismatic = false;
 
     void finalize(){
@@ -290,6 +293,10 @@ public:
             model_update_rate = sensor_refresh_rate;
         }
     }
+
+    void write_yaml(const std::string filename){
+
+    }
     
     bool is_finalized() const {
         return finalized;
@@ -298,17 +305,13 @@ private:
     bool finalized = false;
 };
 
-/**
- * @brief convert from phi-theta parametrization to longitudinal, for a single PCC section.
- */
+/** @brief convert from phi-theta parametrization to longitudinal, for a single PCC section. */
 inline void phiTheta2longitudinal(double phi, double theta, double& Lx, double& Ly){
     Lx = -cos(phi) * theta;
     Ly = -sin(phi) * theta;
 }
 
-/**
- * @brief convert from longitudinal to phi-theta parametrization, for a single PCC section.
- */
+/** @brief convert from longitudinal to phi-theta parametrization, for a single PCC section. */
 inline void longitudinal2phiTheta(double Lx, double Ly, double& phi, double& theta){
     phi = atan2(-Ly, -Lx);
     if (Lx == 0 && Ly == 0)

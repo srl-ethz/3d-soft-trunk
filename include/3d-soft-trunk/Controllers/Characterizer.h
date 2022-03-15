@@ -10,12 +10,17 @@ public:
      * @details the arm doesn't actuate equally in all directions, this is meant to enable counteracting that
      * this takes very long to execute (30 minutes) as it is very precise
      * @param segment segment characterized, starts at 0 (base) */
-    void logRadialPressureDist(int segment, std::string filename);
+    void angularError(int segment, std::string filename);
 
-    /** @brief calculate optimal coefficients for gravity vs K term using least squares fitting
-     * */
-    void calcK(int segment, int directions = 8, int verticalsteps = 5);
+    /** @brief calculate optimal coefficients for gravity vs K term using least squares fitting*/
+    void stiffness(int segment, int directions = 8, int verticalsteps = 5, int maxpressure = 500);
+
+    bool valveMap(int maxpressure = 500);
+
+    std::string yaml_name_ = "defaultCharacterizer.yaml";
     
+protected:
+    SoftTrunkParameters new_params;
 private:
     const double deg2rad = 0.01745329;
 };

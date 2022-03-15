@@ -1,16 +1,15 @@
 #include "3d-soft-trunk/Controllers/Characterizer.h"
 
-Characterize::Characterize(const SoftTrunkParameters st_params) : ControllerPCC(st_params){
+Characterize::Characterize(const SoftTrunkParameters st_params) : ControllerPCC(st_params), new_params(st_params){
 
 }
 
-void Characterize::logRadialPressureDist(int segment, std::string fname){
+void Characterize::angularError(int segment, std::string fname){
     VectorXd pressures = VectorXd::Zero(st_params_.p_pseudo_size);
-    filename_ = fname;
-
-    filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename_);
-    fmt::print("Starting radial log to {}\n", filename_);
-    log_file_.open(filename_, std::fstream::out);
+    
+    filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, fname);
+    fmt::print("Starting radial log to {}\n", fname);
+    log_file_.open(fname, std::fstream::out);
     log_file_ << "angle";
     //write header
     log_file_ << fmt::format(", angle_measured, r");
@@ -67,22 +66,25 @@ void Characterize::logRadialPressureDist(int segment, std::string fname){
     }
 }
 
-void Characterize::calcK(int segment, int directions, int verticalsteps){
+void Characterize::stiffness(int segment, int directions, int verticalsteps, int maxpressure){
+    assert(st_params_.model_type==ModelType::augmentedrigidarm);
+    assert(segment < st_params_.num_segments); //sanity check
+
     VectorXd K = VectorXd::Zero(2*directions*verticalsteps,1);
     VectorXd tau = VectorXd::Zero(2*directions*verticalsteps);
+    
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(st_params_.p_pseudo_size);
-    fmt::print("Starting coefficient characterization in {} directions\n", directions);
-    for (int i = 0; i < directions; i ++){
-        angle = 45+i*360/directions; 
+    fmt::print("Starting stiffness coefficient characterization in {} directions for segment {}\n", directions,segment);
 
-        for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
+    for (int i = 0; i < directions; i ++){
+        angle = i*360/directions; 
+
+        for (int j = 0; j < verticalsteps; j++){   //iterate through multiple heights for the respective angle
             pressures(2*(segment+st_params_.prismatic)) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
             pressures(2*(segment+st_params_.prismatic)+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
 
             actuate(mdl_->pseudo2real(pressures));
-
-            fmt::print("angle = {}, intensity = {}\n", angle, 500/verticalsteps+500*j/verticalsteps);
 
             srl::sleep(10); //wait to let swinging subside
 
@@ -98,4 +100,60 @@ void Characterize::calcK(int segment, int directions, int verticalsteps){
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
     fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
+
+    new_params.shear_modulus[segment] = st_params_.shear_modulus[segment]*Kcoeff(0);
+}
+
+bool Characterize::valveMap(int maxpressure){
+    std::vector<int> newMap(st_params_.p_size);
+
+    for (int i = 0; i < st_params_.p_size + 1 - 2*st_params_.prismatic; i++){
+        vc_->setSinglePressure(i,300);
+        srl::sleep(7);
+        int segment = 0;
+        double largest = 0;
+
+        //find which segment contains the largest curvature
+        for (int j = 0; j < st_params_.num_segments; j++){
+            if (state_.q.segment(2*(j+st_params_.prismatic),2).norm() > largest){
+                largest = state_.q.segment(2*(j+st_params_.prismatic),2).norm();
+                segment = j;
+            }
+        }
+
+        if (largest < 0.18) { //if nothing is bending, it must be the gripper
+            newMap[st_params_.p_size - 1] = i;
+
+        } else { //otherwise, determine which chamber it is
+
+            double angle = atan2(state_.q(2*(segment+st_params_.prismatic)),
+                state_.q(2*(segment+st_params_.prismatic)+1))*180/3.14156; //angle of bending
+
+            if (angle > 120 or angle <= -120) 
+                newMap[3*segment+2*st_params_.prismatic] = st_params_.valvemap[i];
+            else if (angle > 0 and angle <= 120)
+                newMap[3*segment+1+2*st_params_.prismatic] = st_params_.valvemap[i];
+            else if (angle < 0 and angle > -120)
+                newMap[3*segment+2+2*st_params_.prismatic] = st_params_.valvemap[i];
+            else return false;
+        }
+
+        vc_->setSinglePressure(i,0);
+    }
+    
+    new_params.valvemap = newMap;
+    fmt::print("New map:");
+    for (int i = 0; i < newMap.size(); i++){
+        fmt::print("{},",valveMap[i]);
+    }
+    fmt::print("\n");
+
+    //remove this in favor of yaml vomiter
+    std::string file = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,this->yaml_name_);
+    YAML::Node params = YAML::LoadFile(file);
+    std::ofstream fout(file);
+    params["valveMap"] = newMap;
+    params["valveMap"].SetStyle(YAML::EmitterStyle::Flow);
+    fout << params;
+    return true;
 }
