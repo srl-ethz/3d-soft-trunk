@@ -9,10 +9,10 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params_
     ara = std::make_unique<AugmentedRigidArm>(st_params);
 
     dyn_.coordtype = st_params_.coord_type;
-    dyn_.K = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2 * st_params_.sections_per_segment * st_params_.num_segments);
-    dyn_.D = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 2 * st_params_.sections_per_segment * st_params_.num_segments);
-    dyn_.A = MatrixXd::Zero(2 * st_params_.sections_per_segment * st_params_.num_segments, 3 * st_params_.num_segments);
-    dyn_.A_pseudo = MatrixXd::Zero(st_params_.q_size, 2*st_params_.num_segments);
+    dyn_.K = MatrixXd::Zero(st_params_.q_size, st_params_.q_size);
+    dyn_.D = MatrixXd::Zero(st_params_.q_size, st_params_.q_size);
+    dyn_.A = MatrixXd::Zero(st_params_.q_size, st_params_.p_size);
+    dyn_.A_pseudo = MatrixXd::Zero(st_params_.q_size, st_params_.p_pseudo_size);
     dyn_.J.resize(st_params_.num_segments);
     chamberMatrix << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2;
 

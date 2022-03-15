@@ -1,7 +1,7 @@
 #include "3d-soft-trunk/Controllers/Characterizer.h"
 
-Characterize::Characterize(const SoftTrunkParameters st_params) : ControllerPCC(st_params), new_params(st_params){
-
+Characterize::Characterize(const SoftTrunkParameters st_params) : ControllerPCC(st_params){
+    new_params = st_params_;
 }
 
 void Characterize::angularError(int segment, std::string fname){
@@ -70,7 +70,7 @@ void Characterize::stiffness(int segment, int directions, int verticalsteps, int
     assert(st_params_.model_type==ModelType::augmentedrigidarm);
     assert(segment < st_params_.num_segments); //sanity check
 
-    VectorXd K = VectorXd::Zero(2*directions*verticalsteps,1);
+    VectorXd K = VectorXd::Zero(2*directions*verticalsteps);
     VectorXd tau = VectorXd::Zero(2*directions*verticalsteps);
     
     double angle = 0;
@@ -81,25 +81,24 @@ void Characterize::stiffness(int segment, int directions, int verticalsteps, int
         angle = i*360/directions; 
 
         for (int j = 0; j < verticalsteps; j++){   //iterate through multiple heights for the respective angle
-            pressures(2*(segment+st_params_.prismatic)) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
-            pressures(2*(segment+st_params_.prismatic)+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
+            pressures(2*segment+st_params_.prismatic) = (maxpressure/verticalsteps+maxpressure*j/verticalsteps)*cos(angle*deg2rad);
+            pressures(2*segment+st_params_.prismatic+1) = -(maxpressure/verticalsteps+maxpressure*j/verticalsteps)*sin(angle*deg2rad);
 
             actuate(mdl_->pseudo2real(pressures));
 
             srl::sleep(10); //wait to let swinging subside
 
-            tau(2*verticalsteps*i + 2*j) = pressures(2*(segment+st_params_.prismatic)) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*(segment+st_params_.prismatic));
-            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*(segment+st_params_.prismatic)+1) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*(segment+st_params_.prismatic)+1);
+            tau(2*verticalsteps*i + 2*j) = pressures(2*segment+st_params_.prismatic) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*segment+st_params_.prismatic);
+            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*segment+st_params_.prismatic+1) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*segment+st_params_.prismatic+1);
 
-            K(2*verticalsteps*i + 2*j) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*(segment+st_params_.prismatic));
-            K(2*verticalsteps*i + 2*j + 1) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*(segment+st_params_.prismatic) + 1);
-
+            K(2*verticalsteps*i + 2*j) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*segment+st_params_.prismatic);
+            K(2*verticalsteps*i + 2*j + 1) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*segment+st_params_.prismatic + 1);
+            fmt::print("q: {}\n",state_.q.transpose());
         }
     }
 
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
-    
-    fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
+    fmt::print("Finished coeffient characterization. Best fit is {}\n", Kcoeff(0)*st_params_.shear_modulus[segment]);
 
     new_params.shear_modulus[segment] = st_params_.shear_modulus[segment]*Kcoeff(0);
 }
@@ -107,7 +106,7 @@ void Characterize::stiffness(int segment, int directions, int verticalsteps, int
 bool Characterize::valveMap(int maxpressure){
     std::vector<int> newMap(st_params_.p_size);
 
-    for (int i = 0; i < st_params_.p_size + 1 - 2*st_params_.prismatic; i++){
+    for (int i = 0; i < st_params_.p_size - 2*st_params_.prismatic; i++){
         vc_->setSinglePressure(i,300);
         srl::sleep(7);
         int segment = 0;
@@ -115,26 +114,33 @@ bool Characterize::valveMap(int maxpressure){
 
         //find which segment contains the largest curvature
         for (int j = 0; j < st_params_.num_segments; j++){
-            if (state_.q.segment(2*(j+st_params_.prismatic),2).norm() > largest){
-                largest = state_.q.segment(2*(j+st_params_.prismatic),2).norm();
+            if (state_.q.segment(2*j+st_params_.prismatic,2).norm() > largest){
+                largest = state_.q.segment(2*j+st_params_.prismatic,2).norm();
                 segment = j;
             }
         }
+        fmt::print("q: {}\n", state_.q.transpose());
 
         if (largest < 0.18) { //if nothing is bending, it must be the gripper
-            newMap[st_params_.p_size - 1] = i;
-
+            fmt::print("Gripper\n");
+            newMap[st_params_.p_size - 1] = st_params_.valvemap[i];
         } else { //otherwise, determine which chamber it is
-
-            double angle = atan2(state_.q(2*(segment+st_params_.prismatic)),
-                state_.q(2*(segment+st_params_.prismatic)+1))*180/3.14156; //angle of bending
-
-            if (angle > 120 or angle <= -120) 
+            fmt::print("Segment {}, direction: ", segment);
+            double angle = atan2(state_.q(2*segment+st_params_.prismatic+1),
+                state_.q(2*segment+st_params_.prismatic))*180/3.14156; //angle of bending
+            
+            if (angle > 120 or angle <= -120){
+                fmt::print("1\n");
                 newMap[3*segment+2*st_params_.prismatic] = st_params_.valvemap[i];
-            else if (angle > 0 and angle <= 120)
+            }
+            else if (angle > 0 and angle <= 120){
+                fmt::print("2\n");
                 newMap[3*segment+1+2*st_params_.prismatic] = st_params_.valvemap[i];
-            else if (angle < 0 and angle > -120)
+            }
+            else if (angle <= 0 and angle > -120){
+                fmt::print("3\n");
                 newMap[3*segment+2+2*st_params_.prismatic] = st_params_.valvemap[i];
+            }
             else return false;
         }
 
@@ -142,13 +148,14 @@ bool Characterize::valveMap(int maxpressure){
     }
     
     new_params.valvemap = newMap;
-    fmt::print("New map:");
+    fmt::print("New map: ");
     for (int i = 0; i < newMap.size(); i++){
-        fmt::print("{},",newMap[i]);
+        fmt::print("{} ", newMap[i]);
     }
     fmt::print("\n");
 
     //remove this in favor of yaml vomiter
+    /*
     std::string file = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,this->yaml_name_);
     YAML::Node params = YAML::LoadFile(file);
     std::ofstream fout(file);
@@ -156,4 +163,5 @@ bool Characterize::valveMap(int maxpressure){
     params["valveMap"].SetStyle(YAML::EmitterStyle::Flow);
     fout << params;
     return true;
+    */
 }

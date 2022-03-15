@@ -27,7 +27,7 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
     vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, p_max);
 
     sensor_thread_ = std::thread(&ControllerPCC::sensor_loop, this);
-    //model_thread_ = std::thread(&ControllerPCC::model_loop, this);
+    model_thread_ = std::thread(&ControllerPCC::model_loop, this);
 
     fmt::print("ControllerPCC object initialized.\n");
 }

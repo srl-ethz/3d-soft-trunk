@@ -20,6 +20,7 @@ armAngle: 180
 shear_modulus: [35000,62000]
 #Drag coefficients of the segments
 drag_coef: [28000,8000]
+valvemap: [3,2,1,0,4,5,6]
 
 #######################
 # MODEL CONFIGURATION #

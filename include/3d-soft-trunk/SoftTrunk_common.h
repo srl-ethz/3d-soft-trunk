@@ -237,8 +237,9 @@ public:
         assert(num_segments + 1 == diameters.size());
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
-
-        q_size = 2*num_segments*sections_per_segment;
+        p_size = 3*num_segments+2*prismatic+1;
+        q_size = 2*num_segments*sections_per_segment+prismatic;
+        p_pseudo_size = q_size;
         finalized = true;
     }
 
@@ -258,6 +259,7 @@ public:
         this->armAngle = params["armAngle"].as<double>();
         this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
         this->drag_coef = params["drag_coef"].as<std::vector<double>>();  
+        this->valvemap = params["valvemap"].as<std::vector<int>>();
 
         std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
         this->sensors.clear();

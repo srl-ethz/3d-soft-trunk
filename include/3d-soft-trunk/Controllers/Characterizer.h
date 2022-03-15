@@ -13,14 +13,15 @@ public:
     void angularError(int segment, std::string filename);
 
     /** @brief calculate optimal coefficients for gravity vs K term using least squares fitting*/
-    void stiffness(int segment, int directions = 8, int verticalsteps = 5, int maxpressure = 500);
+    void stiffness(int segment, int directions = 8, int verticalsteps = 2, int maxpressure = 500);
 
     bool valveMap(int maxpressure = 500);
 
     std::string yaml_name_ = "defaultCharacterizer.yaml";
     
 protected:
-    SoftTrunkParameters new_params;
+    SoftTrunkParameters new_params{};
+
 private:
     const double deg2rad = 0.01745329;
 };

@@ -2,9 +2,10 @@
 
 int main(){
     SoftTrunkParameters st_params{};
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
     Characterize ch{st_params};
-    //ch.calcK(0,8,5);
-    ch.logRadialPressureDist(0, "topRadialLog500");
-    
+    //ch.valveMap();
+    ch.stiffness(0);
+    return 1;
 }
