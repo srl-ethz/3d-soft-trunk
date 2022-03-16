@@ -152,6 +152,7 @@ bool Characterize::valveMap(int maxpressure){
     fmt::print("\n");
 
     new_params.valvemap = newMap;
+    return true;
 }
 
 void Characterize::actuation(int segment, int points, int pressure){
@@ -190,7 +191,7 @@ void Characterize::actuation(int segment, int points, int pressure){
 
     MatrixXd A_top = Kqg.block(0,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
     MatrixXd A_bot = Kqg.block(1,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
-    
+
     fmt::print("A_top: {}\n",A_top);
     fmt::print("A_bot: {}\n",A_bot);
     MatrixXd A = MatrixXd::Zero(2,3);
