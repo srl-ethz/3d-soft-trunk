@@ -13,7 +13,7 @@ public:
     void angularError(int segment, std::string filename);
 
     /** @brief calculate optimal coefficients for gravity vs K term using least squares fitting*/
-    void stiffness(int segment, int directions = 8, int verticalsteps = 2, int maxpressure = 500);
+    void stiffness(int segment, int verticalsteps = 2, int maxpressure = 500);
 
     bool valveMap(int maxpressure = 500);
 
