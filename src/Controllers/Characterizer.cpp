@@ -86,11 +86,9 @@ void Characterize::stiffness(int segment, int directions, int verticalsteps, int
 
             srl::sleep(10); //wait to let swinging subside
 
-            tau(2*verticalsteps*i + 2*j) = pressures(2*segment+st_params_.prismatic) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*segment+st_params_.prismatic);
-            tau(2*verticalsteps*i + 2*j + 1) = pressures(2*segment+st_params_.prismatic+1) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*segment+st_params_.prismatic+1);
+            tau.segment(2*verticalsteps*i,2) = (dyn_.A_pseudo*pressures/100 - dyn_.g).segment(st_params_.prismatic + 2*segment,2);
+            K.segment(2*verticalsteps*i,2) = (dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment,2);
 
-            K(2*verticalsteps*i + 2*j) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*segment+st_params_.prismatic);
-            K(2*verticalsteps*i + 2*j + 1) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*segment+st_params_.prismatic + 1);
             fmt::print("q: {}\n",state_.q.transpose());
         }
     }
