@@ -229,7 +229,7 @@ public:
     bool prismatic = false;
 
     void finalize(){
-        assert(!is_finalized()); // already finalized
+        assert(!is_finalized()); 
 
         // run sanity checks to make sure that at least the size of the arrays make sense
         assert(num_segments * 2 == masses.size());
@@ -246,59 +246,11 @@ public:
     /** @brief populate the parameters by reading from a YAML file
      * @details the YAML file should be placed inside of the config folder to be read
      */
-    void load_yaml(const std::string filename){
-        assert(!is_finalized());
-        std::string loc = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,filename);
-        YAML::Node params = YAML::LoadFile(loc);
-        this->robot_name = params["robot_name"].as<std::string>();
-        this->num_segments = params["num_segments"].as<int>();
-        this->sections_per_segment = params["sections_per_segment"].as<int>();
-        this->masses = params["masses"].as<std::vector<double>>();
-        this->lengths = params["lengths"].as<std::vector<double>>();
-        this->diameters = params["diameters"].as<std::vector<double>>();
-        this->armAngle = params["armAngle"].as<double>();
-        this->shear_modulus = params["shear_modulus"].as<std::vector<double>>();
-        this->drag_coef = params["drag_coef"].as<std::vector<double>>();  
-        this->valvemap = params["valvemap"].as<std::vector<int>>();
+    void load_yaml(const std::string filename);
 
-        std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
-        this->sensors.clear();
-        for (int i = 0; i < sensor_vec.size(); i++){
-            if (sensor_vec[i]=="qualisys"){
-                sensors.push_back(SensorType::qualisys);
-                continue;
-            }
-            if (sensor_vec[i]=="bendlabs"){
-                sensors.push_back(SensorType::bendlabs);
-                continue;
-            }
-            if (sensor_vec[i]=="simulator"){
-                sensors.push_back(SensorType::simulator);
-                continue;
-            }
-            fmt::print("Error reading sensors from YAML!\n");
-            assert(false);
-        }
-        
-        std::string modeltype = params["model type"].as<std::string>();
-        if (modeltype == "augmented"){
-            model_type = ModelType::augmentedrigidarm;
-        }
-        if (modeltype == "lagrange"){
-            model_type = ModelType::lagrange;
-        }
-
-        this->sensor_refresh_rate = params["sensor refresh rate"].as<double>();
-        this->bendlabs_address = params["bendlabs address"].as<std::string>();
-
-        if (sensor_refresh_rate < model_update_rate){
-            model_update_rate = sensor_refresh_rate;
-        }
-    }
-
-    void write_yaml(const std::string filename){
-
-    }
+    /** @brief Spit out all parameters into a YAML file
+     * @details The created YAML is placed inside the config folder */
+    void write_yaml(const std::string filename);
     
     bool is_finalized() const {
         return finalized;
@@ -319,4 +271,87 @@ inline void longitudinal2phiTheta(double Lx, double Ly, double& phi, double& the
     if (Lx == 0 && Ly == 0)
         phi = 0;
     theta = sqrt(pow(Lx, 2) + pow(Ly, 2));
+}
+
+
+void SoftTrunkParameters::load_yaml(const std::string filename){
+    assert(!is_finalized());
+    std::string loc = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,filename);
+    YAML::Node params = YAML::LoadFile(loc);
+    this->robot_name = params["robot name"].as<std::string>();
+    this->num_segments = params["num segments"].as<int>();
+    this->sections_per_segment = params["sections per segment"].as<int>();
+    this->masses = params["masses"].as<std::vector<double>>();
+    this->lengths = params["lengths"].as<std::vector<double>>();
+    this->diameters = params["diameters"].as<std::vector<double>>();
+    this->armAngle = params["armAngle"].as<double>();
+    this->shear_modulus = params["shear modulus"].as<std::vector<double>>();
+    this->drag_coef = params["drag coef"].as<std::vector<double>>();  
+    this->valvemap = params["valvemap"].as<std::vector<int>>();
+    this->sensor_refresh_rate = params["sensor refresh rate"].as<double>();
+    this->bendlabs_address = params["bendlabs address"].as<std::string>();
+    this->model_update_rate = params["model update rate"].as<double>();
+
+    std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
+    this->sensors.clear();
+    for (int i = 0; i < sensor_vec.size(); i++){
+        if (sensor_vec[i]=="qualisys"){
+            sensors.push_back(SensorType::qualisys);
+            continue;
+        }
+        if (sensor_vec[i]=="bendlabs"){
+            sensors.push_back(SensorType::bendlabs);
+            continue;
+        }
+        if (sensor_vec[i]=="simulator"){
+            sensors.push_back(SensorType::simulator);
+            continue;
+        }
+        fmt::print("Error reading sensors from YAML!\n");
+        assert(false);
+    }
+    
+    std::string modeltype = params["model type"].as<std::string>();
+    if (modeltype == "augmented"){
+        model_type = ModelType::augmentedrigidarm;
+    } else if (modeltype == "lagrange"){
+        model_type = ModelType::lagrange;
+    } else {
+        fmt::print("Error reading model type from YAML!\n");
+        assert(false);
+    }
+
+    if (sensor_refresh_rate < model_update_rate){
+        model_update_rate = sensor_refresh_rate;
+    }
+}
+
+void SoftTrunkParameters::write_yaml(const std::string filename){
+    assert(is_finalized());
+    std::string loc = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,filename);
+    YAML::Node params;
+    params["robot name"] = this->robot_name;
+    params["num segments"] = this->num_segments;
+    params["sections per segment"] = this-> sections_per_segment;
+    params["masses"] = this->masses;
+    params["masses"].SetStyle(YAML::EmitterStyle::Flow); //flow style makes it appear as a vector instead of indented
+    params["lengths"] = this->lengths;
+    params["lengths"].SetStyle(YAML::EmitterStyle::Flow);
+    params["diameters"] = this->diameters;
+    params["diameters"].SetStyle(YAML::EmitterStyle::Flow);
+    params["armAngle"] = this->armAngle;
+    params["shear modulus"] = this->shear_modulus;
+    params["shear modulus"].SetStyle(YAML::EmitterStyle::Flow);
+    params["drag coef"] = this->drag_coef;
+    params["drag coef"].SetStyle(YAML::EmitterStyle::Flow);
+    params["valvemap"] = this->valvemap;
+    params["valvemap"].SetStyle(YAML::EmitterStyle::Flow);  
+    params["sensor refresh rate"] = this->sensor_refresh_rate;
+    params["bendlabs address"] = this->bendlabs_address;
+    params["model update rate"] = this->model_update_rate;
+
+    std::ofstream out(loc);
+    out << "#This file is autogenerated and therefore does not contain documentation of the parameters\n";
+    out << "#See the README in the config folder for descriptions on each parameter\n";
+    out << params;
 }

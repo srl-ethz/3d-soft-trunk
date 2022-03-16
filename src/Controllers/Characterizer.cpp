@@ -35,8 +35,6 @@ void Characterize::angularError(int segment, std::string fname){
         double angle = atan2(x_(1),x_(0))*180/3.14156;
         if (angle < 0) angle+=360;
 
-        fmt::print("angle: {}, angle_measured: {} radius: {}\n", (double) i, angle, sqrt(x_(1)*x_(1) + x_(0)*x_(0)));
-
         log_file_ << fmt::format("{},{},{}", (double) i, angle, sqrt(x_(0)*x_(0)+x_(1)*x_(1)));
         ang_err(i) = i - angle;
         if (abs(ang_err(i)) > 180) ang_err(i) -= ((ang_err(i) > 0) - (ang_err(i) < 0))*360;
@@ -59,10 +57,7 @@ void Characterize::angularError(int segment, std::string fname){
     for(int p = 0; p < 3; p++){ 
         MatrixXd angval120 = angle_vals.block(0,0,120,4);
         VectorXd poly_coeffs = (angval120.transpose()*angval120).inverse()*angval120.transpose()*ang_err.segment(p*120,120); //calculate polynomial coeffs using least squares
-        polynomial_out << fmt::format("angular: {}*pow(angle-{},3) + {}*pow(angle-{},2) + {}*(angle-{}) + {}\n",poly_coeffs(0),p*120,poly_coeffs(1),p*120,poly_coeffs(2),p*120,poly_coeffs(3));
-        poly_coeffs = (angval120.transpose()*angval120).inverse()*angval120.transpose()*radii.segment(p*120,120); //calculate polynomial coeffs using least squares
-        polynomial_out << fmt::format("radial: {}*pow(angle-{},3) + {}*pow(angle-{},2) + {}*(angle-{}) + {}\n",poly_coeffs(0),p*120,poly_coeffs(1),p*120,poly_coeffs(2),p*120,poly_coeffs(3));
-
+        /** @todo log these values to yaml */
     }
 }
 

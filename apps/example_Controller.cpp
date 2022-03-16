@@ -4,6 +4,8 @@ int main(){
     SoftTrunkParameters st_params;
     st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
+    st_params.write_yaml("test.yaml");
+    /*
     ControllerPCC cpcc{st_params};
     while(true){
         fmt::print("q: {}\n",cpcc.state_.q.transpose());
@@ -12,4 +14,5 @@ int main(){
     }
 
     return 1;
+    */
 }
