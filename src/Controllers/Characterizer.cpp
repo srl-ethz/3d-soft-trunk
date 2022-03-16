@@ -65,58 +65,31 @@ void Characterize::angularError(int segment, std::string fname){
 }
 
 void Characterize::stiffness(int segment, int verticalsteps, int maxpressure){
-    assert(st_params_.model_type==ModelType::augmentedrigidarm);
-    assert(segment < st_params_.num_segments); //sanity check
-
-    VectorXd K = VectorXd::Zero(2*6*verticalsteps);
-    VectorXd tau = VectorXd::Zero(2*6*verticalsteps);
-    
+    VectorXd K = VectorXd::Zero(4*verticalsteps);
+    VectorXd tau = VectorXd::Zero(4*verticalsteps);
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(st_params_.p_pseudo_size);
-    fmt::print("Starting stiffness coefficient characterization in {} directions for segment {}\n", 8, segment);
+    fmt::print("Starting coefficient characterization in {} directions\n", 4);
+    for (int i = 0; i < 4; i++){
+        angle = i*360/4; 
 
-    int counter = 0; //counter because I am too lazy to do nice looking math
-    for (int i = 0; i < 8; i ++){
-        angle = i*360/8; 
-
-        for (int j = 0; j < verticalsteps; j++){   //iterate through multiple heights for the respective angle
-            pressures(2*segment+st_params_.prismatic) = (maxpressure/verticalsteps+maxpressure*j/verticalsteps)*cos(angle*deg2rad);
-            pressures(2*segment+st_params_.prismatic+1) = -(maxpressure/verticalsteps+maxpressure*j/verticalsteps)*sin(angle*deg2rad);
-
+        for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
+            pressures(2*segment+st_params_.prismatic) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
+            pressures(2*segment+st_params_.prismatic+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
             actuate(mdl_->pseudo2real(pressures));
 
             srl::sleep(10); //wait to let swinging subside
-            switch (i%4){
-                case 0:
-                    tau(counter) = (dyn_.A_pseudo*pressures/100 - dyn_.g)(st_params_.prismatic + 2*segment);
-                    K(counter) = (dyn_.K*state_.q)(st_params_.prismatic+2*segment);
-                    counter++;
-                    break;
-                case 1:
-                    tau.segment(counter,2) = (dyn_.A_pseudo*pressures/100 - dyn_.g).segment(st_params_.prismatic + 2*segment,2);
-                    K.segment(counter,2) = (dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment,2);
-                    counter+=2;
-                    break;
-                case 2:
-                    tau(counter) = (dyn_.A_pseudo*pressures/100 - dyn_.g)(st_params_.prismatic + 2*segment+1);
-                    K(counter) = (dyn_.K*state_.q)(st_params_.prismatic+2*segment+1);
-                    counter++;
-                    break;
-                case 3:
-                    tau.segment(counter,2) = (dyn_.A_pseudo*pressures/100 - dyn_.g).segment(st_params_.prismatic + 2*segment,2);
-                    K.segment(counter,2) = (dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment,2);
-                    counter+=2;
-                    break;
-            }
 
+
+            tau(verticalsteps*i+j) = pressures(2*segment+st_params_.prismatic + i%2) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*segment+st_params_.prismatic+i%2);
+            K(verticalsteps*i+j) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*segment+st_params_.prismatic+i%2);
         }
-        fmt::print("q: {}\n",state_.q.transpose());
     }
 
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
-    fmt::print("Shear modulus for segment{}: {}\n", segment, Kcoeff(0)*st_params_.shear_modulus[segment]);
+    
+    fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
 
-    new_params.shear_modulus[segment] = st_params_.shear_modulus[segment]*Kcoeff(0);
 }
 
 bool Characterize::valveMap(int maxpressure){

@@ -153,7 +153,7 @@ void ControllerPCC::sensor_loop(){
 }
 
 void ControllerPCC::model_loop(){
-    srl::Rate r{1./st_params_.model_update_rate};
+    srl::Rate r{st_params_.model_update_rate};
     while(run_){
         mdl_->update(state_);
         this->dyn_ = mdl_->dyn_;

@@ -14,7 +14,7 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             this->dyn_ = lag_->dyn_;
             break;
     }
-    chamber_config_ << 1, -0.5, -0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
+    chamber_config_ << -1, 0.5, 0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
     
     state_ = st_params_.getBlankState();
     fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
@@ -46,31 +46,26 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
     VectorXd truePressure = VectorXd::Zero(2);
 
     for (int i = 0; i < st_params_.num_segments; i++){
-        double angle = atan2(p_pseudo(2*i+st_params_.prismatic), p_pseudo(2*i+st_params_.prismatic+1))*180/3.14156; //determine direction the pressure wants to actuate in
+        double angle = atan2(p_pseudo(2*i+st_params_.prismatic+1), p_pseudo(2*i+st_params_.prismatic))*180/3.14156; //determine direction the pressure wants to actuate in
 
-        angle -=90; //shift angle so chamber boundaries are easier to describe
-        if (angle < 0) angle += 360; //ensure angle is within [0,360]
-
-
-        if (angle >= 0 && angle < 120){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
+        if (angle < -60){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
             inverter.col(0) = chamber_config_.col(0);
             inverter.col(1) = chamber_config_.col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1);
-        }
-
-        if (angle >= 120 && angle < 240){ //depends on angle
+        } else if (angle > -60 and angle < 60){ //depends on angle
             inverter.col(0) = chamber_config_.col(1);
             inverter.col(1) = chamber_config_.col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << 0, truePressure(0), truePressure(1);
-        }
-
-        if (angle >=240 && angle < 360){
+        } else if (angle > 60){
             inverter.col(0) = chamber_config_.col(0);
             inverter.col(1) = chamber_config_.col(1);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << truePressure(0), truePressure(1), 0;
+        } else {
+            fmt::print("Actuation angle out of bounds. This should never trigger.\n");
+            assert(false);
         }
 
         if (st_params_.prismatic){
@@ -78,5 +73,6 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
         }
 
     }
+    fmt::print("output: {}\n",output.transpose());
     return output;
 }
