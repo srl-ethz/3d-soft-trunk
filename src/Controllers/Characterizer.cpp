@@ -50,15 +50,18 @@ void Characterize::angularError(int segment, std::string fname){
     log_file_.close();
     fmt::print("\n Finished radial logging\n");   
 
-    std::string poly_location = fmt::format("{}/polynomial_{}.txt", SOFTTRUNK_PROJECT_DIR,segment);
-    std::fstream polynomial_out;
-    polynomial_out.open(poly_location, std::fstream::out);
-
-    for(int p = 0; p < 3; p++){ 
-        MatrixXd angval120 = angle_vals.block(0,0,120,4);
-        VectorXd poly_coeffs = (angval120.transpose()*angval120).inverse()*angval120.transpose()*ang_err.segment(p*120,120); //calculate polynomial coeffs using least squares
-        /** @todo log these values to yaml */
+    std::vector<double> angOffsetCoeffs(12);
+    
+    for (int i = 0; i < 3; i++){
+        VectorXd poly_coeffs = (angle_vals.block(120*i,0,120,4).transpose()*angle_vals.block(120*i,0,120,4)).inverse()
+            *angle_vals.block(120*i,0,120,4).transpose()*ang_err.segment(120*i,120); //calculate polynomial coeffs using least squares
+        fmt::print("Polynomial {}: {}\n",poly_coeffs.transpose());
+        for (int j = 0; j < 4; j++){
+            angOffsetCoeffs[4*i+j] = poly_coeffs(4*i+j);
+        }
     }
+    
+    new_params.angOffsetCoeffs = angOffsetCoeffs;
 }
 
 void Characterize::stiffness(int segment, int directions, int verticalsteps, int maxpressure){
@@ -93,7 +96,7 @@ void Characterize::stiffness(int segment, int directions, int verticalsteps, int
     }
 
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
-    fmt::print("Finished coeffient characterization. Best fit is {}\n", Kcoeff(0)*st_params_.shear_modulus[segment]);
+    fmt::print("Shear modulus for segment{}: {}\n", segment, Kcoeff(0)*st_params_.shear_modulus[segment]);
 
     new_params.shear_modulus[segment] = st_params_.shear_modulus[segment]*Kcoeff(0);
 }
@@ -142,21 +145,57 @@ bool Characterize::valveMap(int maxpressure){
         vc_->setSinglePressure(i,0);
     }
     
-    new_params.valvemap = newMap;
     fmt::print("New map: ");
     for (int i = 0; i < newMap.size(); i++){
         fmt::print("{} ", newMap[i]);
     }
     fmt::print("\n");
 
-    //remove this in favor of yaml vomiter
-    /*
-    std::string file = fmt::format("{}/config/{}",SOFTTRUNK_PROJECT_DIR,this->yaml_name_);
-    YAML::Node params = YAML::LoadFile(file);
-    std::ofstream fout(file);
-    params["valveMap"] = newMap;
-    params["valveMap"].SetStyle(YAML::EmitterStyle::Flow);
-    fout << params;
-    return true;
-    */
+    new_params.valvemap = newMap;
+}
+
+void Characterize::actuation(int segment, int points, int pressure){
+    filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename_);
+    log_file_.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
+    fmt::print("Estimating A...\n");
+    int rotation = 360;
+    MatrixXd p = MatrixXd::Zero(3,rotation);
+    MatrixXd Kqg = MatrixXd::Zero(2,rotation);
+    vc_->setSinglePressure(2*st_params_.prismatic+segment*3, pressure);
+    srl::sleep(8);
+    srl::Rate r{2};
+    for (int i = 0; i < rotation; i++){
+        
+        Kqg.block(0,i,2,1) = (dyn_.g + dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment, 2);
+
+        if (i >= 0 && i < 120) p.block(0,i,3,1) << cos(i*deg2rad*90/120)*pressure, sin(i*deg2rad*90/120)*pressure, 0;
+        if (i >= 120 && i < 240) p.block(0,i,3,1) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
+        if (i >= 240 && i < 360) p.block(0,i,3,1) << sin((i-240)*deg2rad*90/120)*pressure, 0, sin((i-120)*90*deg2rad/120)*pressure;
+
+        vc_->setSinglePressure(2+segment*3, p(0,i));
+        vc_->setSinglePressure(2+segment*3+1, p(1,i));
+        vc_->setSinglePressure(2+segment*3+2, p(2,i));
+
+        r.sleep();
+    }
+    log_file_ << "i,kqg0,kqg1,p0,p1,p2";
+    for (int i = 0; i < rotation; i++){
+        log_file_ << fmt::format("{},{},{},{},{},{}\n",i, Kqg(0,i), Kqg(1,i), p(0,i), p(1,i), p(2,i));
+    }
+    log_file_.close();
+
+    p = p*dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment)*100;
+
+    fmt::print("Constant: {}\n",dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment));
+
+    MatrixXd A_top = Kqg.block(0,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
+    MatrixXd A_bot = Kqg.block(1,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
+    
+    fmt::print("A_top: {}\n",A_top);
+    fmt::print("A_bot: {}\n",A_bot);
+    MatrixXd A = MatrixXd::Zero(2,3);
+    A << A_top, A_bot;
+    fmt::print("A: {}\n",A);
+    A = A/(sqrt(A(0,0)*A(0,0) + A(0,1)*A(0,1)));
+    fmt::print("A: {}\n",A);
 }

@@ -49,5 +49,5 @@ bendlabs address: /dev/ttyACM0
 actuationMatrix: [1, 1, 1, 1, 1, 1, 1]
 
 #polynomial coefficients which describe angular offset of the arm
-offsetPoly: [1, 1, 1, 1]
+angOffsetCoeffs: [1, 1, 1, 1]
 ...

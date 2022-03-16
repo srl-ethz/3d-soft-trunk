@@ -228,6 +228,8 @@ public:
     /** @brief describes if the arm is mounted to a base prismatic joint */
     bool prismatic = false;
 
+    std::vector<double> angOffsetCoeffs = {0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0};
+
     void finalize(){
         assert(!is_finalized()); 
 
