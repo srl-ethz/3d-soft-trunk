@@ -20,8 +20,7 @@ public:
     void actuation(int segment, int points, int maxpressure);
 
     std::string yaml_name_ = "defaultCharacterizer.yaml";
-    
-protected:
+
     SoftTrunkParameters new_params{};
 
 private:
