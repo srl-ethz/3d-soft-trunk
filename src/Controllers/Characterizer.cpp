@@ -149,17 +149,17 @@ bool Characterize::valveMap(int maxpressure){
 void Characterize::actuation(int segment, int points, int pressure){
     filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename_);
     log_file_.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
-    fmt::print("Estimating A...\n");
+    fmt::print("Estimating A for segment {}\n",segment);
     int rotation = 360;
     MatrixXd p = MatrixXd::Zero(3,rotation);
     MatrixXd Kqg = MatrixXd::Zero(2,rotation);
+
     vc_->setSinglePressure(2*st_params_.prismatic+segment*3, pressure);
     srl::sleep(8);
     srl::Rate r{2};
+
     for (int i = 0; i < rotation; i++){
         
-        Kqg.block(0,i,2,1) = (dyn_.g + dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment, 2);
-
         if (i >= 0 && i < 120) p.block(0,i,3,1) << cos(i*deg2rad*90/120)*pressure, sin(i*deg2rad*90/120)*pressure, 0;
         if (i >= 120 && i < 240) p.block(0,i,3,1) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
         if (i >= 240 && i < 360) p.block(0,i,3,1) << sin((i-240)*deg2rad*90/120)*pressure, 0, sin((i-120)*90*deg2rad/120)*pressure;
@@ -167,6 +167,8 @@ void Characterize::actuation(int segment, int points, int pressure){
         vc_->setSinglePressure(2+segment*3, p(0,i));
         vc_->setSinglePressure(2+segment*3+1, p(1,i));
         vc_->setSinglePressure(2+segment*3+2, p(2,i));
+
+        Kqg.block(0,i,2,1) = (dyn_.g + dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment, 2);
 
         r.sleep();
     }
@@ -176,9 +178,9 @@ void Characterize::actuation(int segment, int points, int pressure){
     }
     log_file_.close();
 
-    p = p*dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment)*100;
+    p = p*dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment*2)*100;
 
-    fmt::print("Constant: {}\n",dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment));
+    fmt::print("Constant: {}\n", dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + 2*segment));
 
     MatrixXd A_top = Kqg.block(0,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
     MatrixXd A_bot = Kqg.block(1,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
@@ -189,5 +191,5 @@ void Characterize::actuation(int segment, int points, int pressure){
     A << A_top, A_bot;
     fmt::print("A: {}\n",A);
     A = A/(sqrt(A(0,0)*A(0,0) + A(0,1)*A(0,1)));
-    fmt::print("A: {}\n",A);
+    fmt::print("A normalized: {}\n",A);
 }
