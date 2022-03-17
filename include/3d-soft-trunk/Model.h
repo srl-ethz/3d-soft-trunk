@@ -22,7 +22,7 @@ public:
 
     srl::State state_;
     DynamicParams dyn_;
-    MatrixXd chamber_config_ = MatrixXd::Zero(2,3);
+    std::vector<MatrixXd> chamber_config_;
 
     const SoftTrunkParameters st_params_;
 

@@ -14,10 +14,16 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             this->dyn_ = lag_->dyn_;
             break;
     }
-    chamber_config_ << -1, 0.5, 0.5, 0, sqrt(3) / 2, -sqrt(3) / 2; //default "correct" configuration
-    
+
+    chamber_config_.resize(st_params_.num_segments);
+    for (int i = 0; i < st_params_.num_segments; i++){
+        chamber_config_[i] = MatrixXd::Zero(2,3);
+        chamber_config_[i] << st_params_.chamberConfigs[i*6], st_params_.chamberConfigs[i*6+1], st_params_.chamberConfigs[i*6+2], 
+            st_params_.chamberConfigs[i*6+3], st_params_.chamberConfigs[i*6+4], st_params_.chamberConfigs[i*6+5];
+    }
+
     state_ = st_params_.getBlankState();
-    fmt::print("Model initialized at {}Hz with {} model.\n",st_params_.model_update_rate,st_params_.model_type);
+    fmt::print("Model initialized at {}Hz.\n",st_params_.model_update_rate);
 }
 
 Model::~Model(){
@@ -42,25 +48,25 @@ void Model::update(const srl::State& state){
 VectorXd Model::pseudo2real(VectorXd p_pseudo){
     assert(p_pseudo.size() == st_params_.p_pseudo_size);
     VectorXd output = VectorXd::Zero(st_params_.p_size);
-    MatrixXd inverter = MatrixXd::Zero(2,2);
     VectorXd truePressure = VectorXd::Zero(2);
 
     for (int i = 0; i < st_params_.num_segments; i++){
         double angle = atan2(p_pseudo(2*i+st_params_.prismatic+1), p_pseudo(2*i+st_params_.prismatic))*180/3.14156; //determine direction the pressure wants to actuate in
+        MatrixXd inverter = MatrixXd::Zero(2,2);
 
         if (angle < -60){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
-            inverter.col(0) = chamber_config_.col(0);
-            inverter.col(1) = chamber_config_.col(2);
+            inverter.col(0) = chamber_config_[i].col(0);
+            inverter.col(1) = chamber_config_[i].col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1);
         } else if (angle > -60 and angle < 60){ //depends on angle
-            inverter.col(0) = chamber_config_.col(1);
-            inverter.col(1) = chamber_config_.col(2);
+            inverter.col(0) = chamber_config_[i].col(1);
+            inverter.col(1) = chamber_config_[i].col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << 0, truePressure(0), truePressure(1);
         } else if (angle > 60){
-            inverter.col(0) = chamber_config_.col(0);
-            inverter.col(1) = chamber_config_.col(1);
+            inverter.col(0) = chamber_config_[i].col(0);
+            inverter.col(1) = chamber_config_[i].col(1);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
             output.segment(3*i+st_params_.prismatic,3) << truePressure(0), truePressure(1), 0;
         } else {
@@ -71,7 +77,6 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
         if (st_params_.prismatic){
             output(0) = p_pseudo(0);
         }
-
     }
     return output;
 }

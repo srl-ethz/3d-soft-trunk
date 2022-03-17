@@ -17,7 +17,7 @@ public:
 
     bool valveMap(int maxpressure = 500);
 
-    void actuation(int segment, int points, int maxpressure);
+    void actuation(int segment, int maxpressure=500);
 
     std::string yaml_name_ = "defaultCharacterizer.yaml";
 

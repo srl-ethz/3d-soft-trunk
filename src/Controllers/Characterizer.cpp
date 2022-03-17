@@ -146,7 +146,7 @@ bool Characterize::valveMap(int maxpressure){
     return true;
 }
 
-void Characterize::actuation(int segment, int points, int pressure){
+void Characterize::actuation(int segment, int pressure){
     filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, filename_);
     log_file_.open(fmt::format("{}/actuationEstimate.csv", SOFTTRUNK_PROJECT_DIR), std::fstream::out);
     fmt::print("Estimating A for segment {}\n",segment);
@@ -164,32 +164,37 @@ void Characterize::actuation(int segment, int points, int pressure){
         if (i >= 120 && i < 240) p.block(0,i,3,1) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
         if (i >= 240 && i < 360) p.block(0,i,3,1) << sin((i-240)*deg2rad*90/120)*pressure, 0, sin((i-120)*90*deg2rad/120)*pressure;
 
-        vc_->setSinglePressure(2+segment*3, p(0,i));
-        vc_->setSinglePressure(2+segment*3+1, p(1,i));
-        vc_->setSinglePressure(2+segment*3+2, p(2,i));
+        vc_->setSinglePressure(2*st_params_.prismatic+segment*3, p(0,i));
+        vc_->setSinglePressure(2*st_params_.prismatic+segment*3+1, p(1,i));
+        vc_->setSinglePressure(2*st_params_.prismatic+segment*3+2, p(2,i));
 
         Kqg.block(0,i,2,1) = (dyn_.g + dyn_.K*state_.q).segment(st_params_.prismatic + 2*segment, 2);
 
         r.sleep();
     }
-    log_file_ << "i,kqg0,kqg1,p0,p1,p2";
+    vc_->setSinglePressure(2*st_params_.prismatic+segment*3, 0);
+    vc_->setSinglePressure(2*st_params_.prismatic+segment*3+1, 0);
+    vc_->setSinglePressure(2*st_params_.prismatic+segment*3+2, 0);
+
+    p = p*100*dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment*2);
+
+    p = p*100;
+    Kqg = Kqg*100;
+
+
+    log_file_ << "i,kqg0,kqg1,p0,p1,p2\n";
     for (int i = 0; i < rotation; i++){
         log_file_ << fmt::format("{},{},{},{},{},{}\n",i, Kqg(0,i), Kqg(1,i), p(0,i), p(1,i), p(2,i));
     }
     log_file_.close();
 
-    p = p*dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + segment*2)*100;
+    MatrixXd A_top = p.transpose().bdcSvd(ComputeThinU | ComputeThinV).solve(Kqg.block(0,0,1,rotation).transpose()).transpose(); //least squares
+    MatrixXd A_bot = p.transpose().bdcSvd(ComputeThinU | ComputeThinV).solve(Kqg.block(1,0,1,rotation).transpose()).transpose();
 
-    fmt::print("Constant: {}\n", dyn_.A_pseudo(st_params_.prismatic + segment*2, st_params_.prismatic + 2*segment));
-
-    MatrixXd A_top = Kqg.block(0,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
-    MatrixXd A_bot = Kqg.block(1,0,1,rotation)*(p.transpose()*p).inverse()*p.transpose();
-
-    fmt::print("A_top: {}\n",A_top);
-    fmt::print("A_bot: {}\n",A_bot);
     MatrixXd A = MatrixXd::Zero(2,3);
     A << A_top, A_bot;
-    fmt::print("A: {}\n",A);
-    A = A/(sqrt(A(0,0)*A(0,0) + A(0,1)*A(0,1)));
-    fmt::print("A normalized: {}\n",A);
+    fmt::print("A for segment {}:\n {}\n",segment,A);
+    for (int i = 0; i < 6; i++){
+        new_params.chamberConfigs[6*segment+i] = A(i/3,i%3);
+    }
 }

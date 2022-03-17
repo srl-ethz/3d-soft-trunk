@@ -228,7 +228,9 @@ public:
     /** @brief describes if the arm is mounted to a base prismatic joint */
     bool prismatic = false;
 
-    std::vector<double> angOffsetCoeffs = {0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0};
+    std::vector<double> angOffsetCoeffs = {0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0};
+
+    std::vector<double> chamberConfigs = {-1, 0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2, -1, 0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2};
 
     void finalize(){
         assert(!is_finalized()); 
@@ -239,6 +241,8 @@ public:
         assert(num_segments + 1 == diameters.size());
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
+        assert(chamberConfigs.size() == num_segments*6);
+        assert(angOffsetCoeffs.size() == num_segments*12);
         p_size = 3*num_segments+2*prismatic+1;
         q_size = 2*num_segments*sections_per_segment+prismatic;
         p_pseudo_size = q_size;
@@ -265,6 +269,7 @@ public:
     this->sensor_refresh_rate = params["sensor refresh rate"].as<double>();
     this->bendlabs_address = params["bendlabs address"].as<std::string>();
     this->model_update_rate = params["model update rate"].as<double>();
+    this->chamberConfigs = params["chamberConfigs"].as<std::vector<double>>();
 
     std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
     this->sensors.clear();
@@ -325,6 +330,8 @@ public:
     params["sensor refresh rate"] = this->sensor_refresh_rate;
     params["bendlabs address"] = this->bendlabs_address;
     params["model update rate"] = this->model_update_rate;
+    params["chamberConfigs"] = this->chamberConfigs;
+    params["chamberConfigs"].SetStyle(YAML::EmitterStyle::Flow);
     std::vector<std::string> sensor_vec;
     for (int i = 0; i < this->sensors.size(); i++){
         if (sensors[i]==SensorType::qualisys){
