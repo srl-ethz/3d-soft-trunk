@@ -151,7 +151,7 @@ void SoftTrunkModel::generateRobotURDF(){
             calculateCrossSectionProperties(sectionRadius, tmp1, siliconeArea, singleChamberArea, tmp2);
             segmentVolume += siliconeArea * sectionLengthInSegment;
         }
-        fmt::print("estimated volume of segment {} is {} m^3, i.e. {} g. Actual value is {}g.\n", i, segmentVolume, segmentVolume*dragon_skin_10_density, segmentMass*1e3); // Dragon Skin 10 is 1.07g/cc
+        //fmt::print("estimated volume of segment {} is {} m^3, i.e. {} g. Actual value is {}g.\n", i, segmentVolume, segmentVolume*dragon_skin_10_density, segmentMass*1e3); // Dragon Skin 10 is 1.07g/cc
 
         for (int j = 0; j < st_params_.sections_per_segment + 1; j++)
         {
@@ -169,7 +169,7 @@ void SoftTrunkModel::generateRobotURDF(){
                 sectionLength = connectorLength; // this is the connection piece which is for implementation represented as another PCC section.
                 sectionVolume = (siliconeArea + 3 * singleChamberArea) * sectionLength;
                 sectionMass = connectorMass;
-                fmt::print("estimated volume of connector at tip of segment {} is {} m^3, i.e. {}g. Actual value is {}g.\n", i, sectionVolume, sectionVolume*dragon_skin_10_density, connectorMass*1e3);
+                //fmt::print("estimated volume of connector at tip of segment {} is {} m^3, i.e. {}g. Actual value is {}g.\n", i, sectionVolume, sectionVolume*dragon_skin_10_density, connectorMass*1e3);
             }
             xacro_file << fmt::format("<xacro:PCC id='seg{}_sec{}' parent='{}' child='{}' length='{}' mass='{}' radius='{}'/>\n", i, j, parent, child, sectionLength, sectionMass, sectionRadius);
             xacro_file << fmt::format("<xacro:empty_link name='{}'/>\n", child);

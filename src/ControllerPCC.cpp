@@ -34,7 +34,9 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
 
 ControllerPCC::~ControllerPCC(){
     run_ = false;
-    control_thread_.join();
+    if (control_thread_.joinable()){
+        control_thread_.join();
+    }
     sensor_thread_.join();
     model_thread_.join();
 }

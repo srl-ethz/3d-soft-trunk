@@ -73,6 +73,5 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
         }
 
     }
-    fmt::print("output: {}\n",output.transpose());
     return output;
 }

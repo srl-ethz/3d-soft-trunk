@@ -88,8 +88,8 @@ void Characterize::stiffness(int segment, int verticalsteps, int maxpressure){
 
     VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
     
-    fmt::print("Finished coeffient characterization. Best fit is g + {}*K*q\n\n", Kcoeff(0));
-
+    new_params.shear_modulus[segment] = Kcoeff(0)*st_params_.shear_modulus[segment];
+    fmt::print("Shear Modulus for segment {}: {}\n", segment, Kcoeff(0)*st_params_.shear_modulus[segment]);
 }
 
 bool Characterize::valveMap(int maxpressure){

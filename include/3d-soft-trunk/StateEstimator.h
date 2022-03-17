@@ -8,6 +8,8 @@
 class StateEstimator{
 public:
     StateEstimator(const SoftTrunkParameters& st_params);
+    ~StateEstimator();
+
 
     /** @brief Fetch new state data from all sensors, and filter them. */
     void poll_sensors();

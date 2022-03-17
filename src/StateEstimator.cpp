@@ -25,6 +25,8 @@ StateEstimator::StateEstimator(const SoftTrunkParameters& st_params) : st_params
     fmt::print("State Estimator initialized with {} sensors.\n",sensors_.size());
 }
 
+StateEstimator::~StateEstimator(){
+}
 
 void StateEstimator::poll_sensors(){    
     get_states();
