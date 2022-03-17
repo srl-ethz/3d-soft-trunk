@@ -374,9 +374,10 @@ void AugmentedRigidArm::update(const srl::State &state)
     B = map_normal2expanded.transpose() * (Jm_.transpose() * B_xi_ * Jm_) * map_normal2expanded;
     c = map_normal2expanded.transpose() * (Jm_.transpose() * c_xi_);
     g = map_normal2expanded.transpose() * (Jm_.transpose() * g_xi_);
-    for (int i = 0; i < st_params.num_segments; i++)
+    for (int i = 0; i < st_params.num_segments; i++){
       J[i] = Jxi_[i] * Jm_ * map_normal2expanded;
-
+      J[i].block(1,0,1,st_params.q_size) = -1*J[i].block(1,0,1,st_params.q_size); //correct y axis alignment
+    }
     //    update_dJm(state.q,state.dq);
     //
 }

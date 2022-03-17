@@ -61,7 +61,6 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
                 break;
         }
         fmt::print("kp = {}, kd = {}\n", osc.kp_, osc.kd_);
-        fmt::print("cutoff = {}, strength = {}\n", osc.potfields_[0].cutoff_distance_, osc.potfields_[0].strength_);
     }
 }
 
@@ -69,7 +68,8 @@ void printer(OSC& osc){
     srl::Rate r{0.3};
     while(true){
         fmt::print("------------------------------------\n");
-        fmt::print("x tip: {}\n", osc.x_);
+        fmt::print("q: {}\n",osc.state_.q.transpose());
+        fmt::print("x tip: {}\n", osc.x_.transpose());
         fmt::print("x error: {}\n", (x_ref-osc.x_).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-osc.x_).norm());
         r.sleep();
@@ -78,6 +78,7 @@ void printer(OSC& osc){
 
 int main(){
     SoftTrunkParameters st_params;
+    st_params.load_yaml("testing.yaml");
     st_params.finalize();
     OSC osc(st_params);
     VectorXd p;
@@ -85,7 +86,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref << 0.15,0.00,-0.2;
+    x_ref << 0.1,0.00,-0.24;
     std::thread print_thread(printer, std::ref(osc));
 
     
@@ -98,19 +99,18 @@ int main(){
     double coef = 2 * 3.1415 / 8;
     osc.gripperAttached_ = true;
     osc.loadAttached_ = 0;
-    getchar();
-    osc.toggleGripper();
 
     getchar();
     osc.set_ref(x_ref, dx_ref, ddx_ref);
+    srl::sleep(0.1);
     getchar();
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
     while (true){
-        double r = 0.13;
-        circle << r*cos(coef*t), r*sin(coef*t),-0.215;
+        double r = 0.1;
+        circle << r*cos(coef*t), r*sin(coef*t),-0.24;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
 

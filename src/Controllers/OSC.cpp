@@ -23,20 +23,17 @@ OSC::OSC(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_
 
 void OSC::control_loop() {
     srl::Rate r{1./dt_};
-    while(true){
+    while(run_){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
 
         //update the internal visualization
-        
+        x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
+
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
 
-        dyn_ = mdl_->dyn_;
         J = dyn_.J[st_params_.num_segments-1+st_params_.prismatic];
-
-        x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
-        assert(x_ == Vector3d::Zero()); //reminder to check for an easy way to grab x tip from qualisys
         //this x is from forward kinematics, use when using bendlabs sensors
 
 
