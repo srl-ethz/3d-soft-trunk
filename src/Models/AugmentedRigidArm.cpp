@@ -45,10 +45,10 @@ void AugmentedRigidArm::setup_drake_model()
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    int num_joints = multibody_plant->num_joints() - 2; //subtract one mystery joint, and one fixed joint at the base
+    num_joints = multibody_plant->num_joints() - 2; //subtract one mystery joint, and one fixed joint at the base
     
     // check that parameters make sense, just in case
-    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1));
+    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1) + st_params.prismatic  );
 
     // initialize variables
     xi_ = VectorXd::Zero(num_joints);
@@ -56,17 +56,20 @@ void AugmentedRigidArm::setup_drake_model()
     B_xi_ = MatrixXd::Zero(num_joints, num_joints);
     c_xi_ = VectorXd::Zero(num_joints);
     g_xi_ = VectorXd::Zero(num_joints);
-    Jm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1));
-    dJm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1));
+    Jm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1)+st_params.prismatic);
+    dJm_ = MatrixXd::Zero(num_joints, 2 * st_params.num_segments * (st_params.sections_per_segment+1)+st_params.prismatic);
     Jxi_.resize(st_params.num_segments);
     J.resize(st_params.num_segments);
     for (int i = 0; i < st_params.num_segments; i++)
       Jxi_[i] = MatrixXd::Zero(3, num_joints);
     H_list.resize(st_params.num_segments);
 
-    map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1), 2*st_params.num_segments*st_params.sections_per_segment);
+    map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1)+st_params.prismatic, st_params.q_size);
     for (int i = 0; i < st_params.num_segments; i++)
-      map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1), 2*i*st_params.sections_per_segment, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+      map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1)+st_params.prismatic, 2*i*st_params.sections_per_segment+st_params.prismatic, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+    if (st_params.prismatic){
+      map_normal2expanded(0,0) = 1; //prismatic joint can be taken 1:1
+    }
     fmt::print("Finished loading URDF model.\n");
     update_drake_model();
 }
@@ -82,6 +85,11 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
     double l; // length of current section
     int joint_id_head; // index of first joint in section (5 joints per section)
     int segment_id;
+    double topmost_value = q_(0);
+
+    if (st_params.prismatic){ //if there is a prismatic joint, we ignore it for sake of calculating m and then add it back at the end
+      q_.segment(0,q_.size()-1) = q_.segment(1,q_.size()-1);
+    }
     for (int section_id = 0; section_id < st_params.num_segments * (st_params.sections_per_segment + 1); ++section_id)
     {
         segment_id = section_id / (st_params.sections_per_segment + 1);
@@ -109,6 +117,17 @@ void AugmentedRigidArm::calculate_m(VectorXd q_)
         t0 = t1;
         p0 = p1;
     }
+
+    if (st_params.prismatic){ //shift back and add the prismatic
+      Eigen::VectorXd xi_intermediate;
+      xi_intermediate = xi_;
+      for (size_t i = 0; i < num_joints - 1; i++)
+      {
+        xi_(i+1) = xi_intermediate(i);
+      }
+      xi_(0) = topmost_value;
+    }
+
 }
 
 void AugmentedRigidArm::update_drake_model()
@@ -340,6 +359,9 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
         Jm_.block(xi_head, q_head, 5, 2) = dxi_dpt * dpt_dL;
         p0 = p1;
         t0 = t1;
+    } 
+    if (st_params.prismatic){ //again, if prismatic we simply change the first value
+      Jm_(0,0) = 1;
     }
 }
 

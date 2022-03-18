@@ -93,6 +93,7 @@ private:
     std::vector<Eigen::Transform<double, 3, Eigen::Affine>> H_list;
     /** @brief pose of the base, relative to world */
     Eigen::Transform<double, 3, Eigen::Affine> H_base;
+    int num_joints;
 
 public:
     AugmentedRigidArm(const SoftTrunkParameters &st_params);
