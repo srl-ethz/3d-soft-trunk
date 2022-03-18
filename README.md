@@ -84,6 +84,6 @@ Example code are in `apps/example_*.cpp` and `examples_python/example_*.py`.
 Refer to the README files in `src/`.
 
 # I am not a member of SRL
-You will likely be using different sensors and actuators. Refer to the README files in `src/` for how to add new sensors to the `StateEstimator`.
+You will likely be using different sensors and actuators. Refer to the wiki for how to add new sensors to the `StateEstimator`.
 To add your own actuation method, you will need to add a submodule class which allows you to set inputs for the actuators, and replace the `ValveController` object in the `ControllerPCC` class.
 Then you simply need to adjust the `ControllerPCC::actuate(VectorXd p)` to use your new actuator instead, and the framework should work.
