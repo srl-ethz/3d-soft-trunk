@@ -228,6 +228,8 @@ public:
     /** @brief describes if the arm is mounted to a base prismatic joint */
     bool prismatic = false;
 
+    double p_max = 650;
+
     std::vector<double> angOffsetCoeffs = {0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0};
 
     std::vector<double> chamberConfigs = {-1, 0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2, -1, 0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2};
@@ -270,6 +272,7 @@ public:
     this->bendlabs_address = params["bendlabs address"].as<std::string>();
     this->model_update_rate = params["model update rate"].as<double>();
     this->chamberConfigs = params["chamberConfigs"].as<std::vector<double>>();
+    this->p_max = params["p_max"].as<double>();
 
     std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
     this->sensors.clear();
@@ -332,6 +335,7 @@ public:
     params["model update rate"] = this->model_update_rate;
     params["chamberConfigs"] = this->chamberConfigs;
     params["chamberConfigs"].SetStyle(YAML::EmitterStyle::Flow);
+    params["p_max"] = this->p_max;
     std::vector<std::string> sensor_vec;
     for (int i = 0; i < this->sensors.size(); i++){
         if (sensors[i]==SensorType::qualisys){

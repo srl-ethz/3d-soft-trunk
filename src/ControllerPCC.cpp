@@ -24,12 +24,12 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
     mdl_ = std::make_unique<Model>(st_params_);
     ste_ = std::make_unique<StateEstimator>(st_params_);
 
-    vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, p_max);
+    vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, st_params_.p_max);
 
     sensor_thread_ = std::thread(&ControllerPCC::sensor_loop, this);
     model_thread_ = std::thread(&ControllerPCC::model_loop, this);
 
-    fmt::print("ControllerPCC object initialized.\n");
+    fmt::print("ControllerPCC object initialized with max pressure {}.\n", st_params_.p_max);
 }
 
 ControllerPCC::~ControllerPCC(){

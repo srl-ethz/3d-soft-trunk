@@ -9,7 +9,7 @@ void Characterize::angularError(int segment, std::string fname){
     
     filename_ = fmt::format("{}/{}.csv", SOFTTRUNK_PROJECT_DIR, fname);
     fmt::print("Starting radial log to {}\n", fname);
-    log_file_.open(fname, std::fstream::out);
+    log_file_.open(filename_, std::fstream::out);
     log_file_ << "angle";
     //write header
     log_file_ << fmt::format(", angle_measured, r");
@@ -27,7 +27,7 @@ void Characterize::angularError(int segment, std::string fname){
 
     for (double i = 0; i < 360; i+=1.){
         pressures(2*(segment+st_params_.prismatic)+st_params_.prismatic*2) = 500*cos(i*deg2rad);
-        pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic*2) = -500*sin(i*deg2rad);
+        pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic*2) = 500*sin(i*deg2rad);
 
         actuate(mdl_->pseudo2real(pressures));        
 
@@ -55,7 +55,7 @@ void Characterize::angularError(int segment, std::string fname){
     for (int i = 0; i < 3; i++){
         VectorXd poly_coeffs = (angle_vals.block(120*i,0,120,4).transpose()*angle_vals.block(120*i,0,120,4)).inverse()
             *angle_vals.block(120*i,0,120,4).transpose()*ang_err.segment(120*i,120); //calculate polynomial coeffs using least squares
-        fmt::print("Polynomial {}: {}\n",poly_coeffs.transpose());
+            
         for (int j = 0; j < 4; j++){
             angOffsetCoeffs[4*i+j] = poly_coeffs(4*i+j);
         }
@@ -69,13 +69,13 @@ void Characterize::stiffness(int segment, int verticalsteps, int maxpressure){
     VectorXd tau = VectorXd::Zero(4*verticalsteps);
     double angle = 0;
     VectorXd pressures = VectorXd::Zero(st_params_.p_pseudo_size);
-    fmt::print("Starting coefficient characterization in {} directions\n", 4);
+    fmt::print("Estimating stiffness for segment {} in {} directions\n", segment, 4);
     for (int i = 0; i < 4; i++){
         angle = i*360/4; 
 
         for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
-            pressures(2*segment+st_params_.prismatic) = (500/verticalsteps+500*j/verticalsteps)*cos(angle*deg2rad);
-            pressures(2*segment+st_params_.prismatic+1) = -(500/verticalsteps+500*j/verticalsteps)*sin(angle*deg2rad);
+            pressures(2*segment+st_params_.prismatic) = (maxpressure/verticalsteps+maxpressure*j/verticalsteps)*cos(angle*deg2rad);
+            pressures(2*segment+st_params_.prismatic+1) = -(maxpressure/verticalsteps+maxpressure*j/verticalsteps)*sin(angle*deg2rad);
             actuate(mdl_->pseudo2real(pressures));
 
             srl::sleep(10); //wait to let swinging subside

@@ -68,9 +68,9 @@ public:
     /** @brief Log filename */
     std::string filename_;
 
-
-protected:
-
+    //actuation vectors, p is pressures and f is torques
+    VectorXd p_;
+    VectorXd f_;
 
     /**
      * @brief Determine a pseudopressure which will compensate for gravity + state related forces
@@ -79,6 +79,10 @@ protected:
      * @return VectorXd of pseudopressures, unit mbar
      */
     VectorXd gravity_compensate(const srl::State state);
+protected:
+
+
+
 
     /** @brief Check if J is in a singularity (within a threshold)
     *   @return Order of the singularity
@@ -106,10 +110,6 @@ protected:
     std::mutex mtx;
 
     bool gripping_ = false;
-
-    //actuation vectors, p is pressures and f is torques
-    VectorXd p_;
-    VectorXd f_;
 
     //logging variables
     bool logging_ = false;

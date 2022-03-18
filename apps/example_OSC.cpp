@@ -72,6 +72,7 @@ void printer(OSC& osc){
         fmt::print("x tip: {}\n", osc.x_.transpose());
         fmt::print("x error: {}\n", (x_ref-osc.x_).transpose());
         fmt::print("x error normalized: {}\n", (x_ref-osc.x_).norm());
+        fmt::print("gravity: {}\n",osc.gravity_compensate(osc.state_).transpose());
         r.sleep();
     }
 }
@@ -86,8 +87,7 @@ int main(){
 
     Vector3d x_ref_center;
     
-    x_ref << 0.1,0.00,-0.24;
-    std::thread print_thread(printer, std::ref(osc));
+    x_ref << 0.1,0.00,-0.22;
 
     
     double t = 0;
@@ -104,13 +104,15 @@ int main(){
     osc.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(0.1);
     getchar();
+        std::thread print_thread(printer, std::ref(osc));
+
     // arguments to pass by reference must be explicitly designated as so
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
     while (true){
         double r = 0.1;
-        circle << r*cos(coef*t), r*sin(coef*t),-0.24;
+        circle << r*cos(coef*t), r*sin(coef*t),-0.22;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
         dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
 

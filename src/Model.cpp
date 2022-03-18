@@ -52,6 +52,9 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
 
     for (int i = 0; i < st_params_.num_segments; i++){
         double angle = atan2(p_pseudo(2*i+st_params_.prismatic+1), p_pseudo(2*i+st_params_.prismatic))*180/3.14156; //determine direction the pressure wants to actuate in
+        if (p_pseudo.segment(2*i+st_params_.prismatic,2).norm() > st_params_.p_max){
+            p_pseudo.segment(2*i+st_params_.prismatic,2) = st_params_.p_max * p_pseudo.segment(2*i+st_params_.prismatic,2).normalized();
+        }
         MatrixXd inverter = MatrixXd::Zero(2,2);
 
         if (angle < -60){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
