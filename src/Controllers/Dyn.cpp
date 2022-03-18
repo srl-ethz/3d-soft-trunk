@@ -11,7 +11,7 @@ Dyn::Dyn(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_
 
 void Dyn::control_loop(){
     srl::Rate r{1./dt_};
-    while(true){
+    while(run_){
         r.sleep();
         std::lock_guard<std::mutex> lock(mtx);
         
@@ -25,5 +25,5 @@ void Dyn::control_loop(){
         p_ = mdl_->pseudo2real(f_/100) + mdl_->pseudo2real(gravity_compensate(state_)); //to mbar
 
         actuate(p_);
-        }
+    }
 };
