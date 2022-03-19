@@ -24,6 +24,8 @@ target_link_libraries(example_OSC ControllerPCC OSC)
 add_executable(simulate_logged_pressure simulate_logged_pressure.cpp)
 target_link_libraries(simulate_logged_pressure ControllerPCC Threads::Threads)
 
+add_executable(fullCharacterize fullCharacterize.cpp)
+target_link_libraries(fullCharacterize Characterizer)
 
 if(${roscpp_FOUND})
 #    add_executable(ui_controller ui_controller.cpp)
