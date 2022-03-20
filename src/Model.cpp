@@ -4,6 +4,7 @@
 
 
 Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
+    //determine which model is being used
     switch (st_params_.model_type) {
         case ModelType::augmentedrigidarm: 
             stm_ = std::make_unique<SoftTrunkModel>(st_params_);  
@@ -15,6 +16,7 @@ Model::Model(const SoftTrunkParameters& st_params) : st_params_(st_params){
             break;
     }
 
+    //read in the chamber configurations
     chamber_config_.resize(st_params_.num_segments);
     for (int i = 0; i < st_params_.num_segments; i++){
         chamber_config_[i] = MatrixXd::Zero(2,3);
@@ -51,17 +53,19 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
     VectorXd truePressure = VectorXd::Zero(2);
 
     for (int i = 0; i < st_params_.num_segments; i++){
+
         double angle = atan2(p_pseudo(2*i+st_params_.prismatic+1), p_pseudo(2*i+st_params_.prismatic))*180/3.14156; //determine direction the pressure wants to actuate in
-        if (p_pseudo.segment(2*i+st_params_.prismatic,2).norm() > st_params_.p_max){
+
+        if (p_pseudo.segment(2*i+st_params_.prismatic,2).norm() > st_params_.p_max){ //constrain the pressure to max allowed value
             p_pseudo.segment(2*i+st_params_.prismatic,2) = st_params_.p_max * p_pseudo.segment(2*i+st_params_.prismatic,2).normalized();
         }
         MatrixXd inverter = MatrixXd::Zero(2,2);
 
-        if (angle < -60){ //now, based on angle determine which chamber receives zero pressure and which must be calculated
+        if (angle < -60){ //now, based on angle we know which chamber receives zero pressure and which must be calculated
             inverter.col(0) = chamber_config_[i].col(0);
-            inverter.col(1) = chamber_config_[i].col(2);
-            truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
-            output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1);
+            inverter.col(1) = chamber_config_[i].col(2); //read in the correct chamberes
+            truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2); //invert to obtain desired pressure
+            output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1); //map to output
         } else if (angle > -60 and angle < 60){ //depends on angle
             inverter.col(0) = chamber_config_[i].col(1);
             inverter.col(1) = chamber_config_[i].col(2);

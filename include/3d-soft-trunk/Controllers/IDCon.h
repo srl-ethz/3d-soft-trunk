@@ -7,6 +7,9 @@
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 #include <iostream>
+
+/** @brief Inverse Dynamic Controller 
+ * @details Similar to OSC, but uses Jacobian inversion instead of Operational Space Inertia Matrix */
 class IDCon: public ControllerPCC {
 public:
     IDCon(const SoftTrunkParameters st_params);

@@ -2,6 +2,7 @@
 
 #include "3d-soft-trunk/ControllerPCC.h"
 
+/** @brief Potential field to avoid task space objects */
 class PotentialField{
 public:
     PotentialField();
@@ -18,6 +19,8 @@ public:
     double radius_;
 };
 
+/** @brief Operational Space Controller
+ * @details Used in Fischer 2022 Dynamic */
 class OSC: public ControllerPCC
 {
 public:

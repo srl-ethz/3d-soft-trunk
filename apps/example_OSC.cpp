@@ -7,12 +7,7 @@ Vector3d x;
 Vector3d dx_ref;
 Vector3d ddx_ref;
 
-//for crossing
-double crosstime;
-Vector3d newx;
-Vector3d diff;
-
-void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
+void gain(OSC& osc){ //change parameters online with keyboard to avoid recompiling, q/a change kp, w/s change kd, i/k change potfield size and o/l change potfield strength
     char c;
     while(true) {
         c = getchar();
@@ -64,7 +59,7 @@ void gain(OSC& osc){ //change gain with keyboard to avoid recompiling, q/a chang
     }
 }
 
-void printer(OSC& osc){
+void printer(OSC& osc){ //print some stuff every once in a while
     srl::Rate r{0.3};
     while(true){
         fmt::print("------------------------------------\n");
@@ -110,7 +105,7 @@ int main(){
     // https://en.cppreference.com/w/cpp/thread/thread/thread
     std::thread gain_thread(gain, std::ref(osc));
     
-    while (true){
+    while (true){ //circle
         double r = 0.1;
         circle << r*cos(coef*t), r*sin(coef*t),-0.22;
         d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;

@@ -20,6 +20,7 @@ void Dyn::control_loop(){
         if (!is_initial_ref_received) //only control after receiving a reference position
             continue;
         
+        //state space PD
         f_ = dyn_.A_pseudo.inverse() * (dyn_.D*state_ref_.dq 
                     + Kp.asDiagonal()*(state_ref_.q - state_.q) + Kd.asDiagonal()*(state_ref_.dq - state_.dq)); 
         p_ = mdl_->pseudo2real(f_/100) + mdl_->pseudo2real(gravity_compensate(state_)); //to mbar

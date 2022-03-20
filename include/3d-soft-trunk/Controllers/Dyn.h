@@ -1,7 +1,8 @@
 #pragma once
 
 #include "3d-soft-trunk/ControllerPCC.h"
-
+/** @brief A state space PD dynamic controller
+ * @brief Used in Katzschmann 2019 Dynamic */
 class Dyn: public ControllerPCC
 {
 public:

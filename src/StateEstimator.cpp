@@ -34,18 +34,19 @@ void StateEstimator::poll_sensors(){
 }
 
 void StateEstimator::get_states(){
-    for (int i = 0; i < all_states_.size(); i++)
-    switch (sensors_[i]){
-        case SensorType::qualisys:
-            all_states_[i] = mocap_->state_;
-            assert(all_states_[i].coordtype==st_params_.coord_type);
-            break;
-        case SensorType::bendlabs:
-            all_states_[i] = bendlabs_->state_;
-            assert(all_states_[i].coordtype==st_params_.coord_type);
-            break;
-        case SensorType::simulator:
-            break;
+    for (int i = 0; i < all_states_.size(); i++){
+        switch (sensors_[i]){
+            case SensorType::qualisys:
+                all_states_[i] = mocap_->state_;
+                assert(all_states_[i].coordtype==st_params_.coord_type);
+                break;
+            case SensorType::bendlabs:
+                all_states_[i] = bendlabs_->state_;
+                assert(all_states_[i].coordtype==st_params_.coord_type);
+                break;
+            case SensorType::simulator:
+                break;
+        }
     }
 }
 

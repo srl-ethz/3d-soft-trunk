@@ -28,14 +28,16 @@ void IDCon::control_loop(){
         J = dyn_.J[st_params_.num_segments-1+st_params_.prismatic]; //tip jacobian
         dJ = (J - J_prev)/dt_;
 
-        J_prev = J;
-        //do controls
+        J_prev = J; //for JDot
+        
         x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
-
         dx_ = J*state_.dq;
         ddx_d = ddx_ref + kp*(x_ref_ - x_) + kd*(dx_ref_ - dx_); 
+
         //J_inv = J.transpose()*(J*J.transpose()).inverse();
-        J_inv = computePinv(J, eps, lambda);
+        J_inv = computePinv(J, eps, lambda); //use a damped pseudoinverse, since normal Moore-Penrose was wobbly
+
+        //inverse dynamics, for detailed explanation check out "Operational Space Control: Empirical and Theoretical Comparison"
         state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-kd*state_.dq);
 
         tau_ref = dyn_.B*state_ref_.ddq + gravity_compensate(state_);

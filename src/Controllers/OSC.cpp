@@ -34,18 +34,16 @@ void OSC::control_loop() {
             continue;
 
         J = dyn_.J[st_params_.num_segments-1+st_params_.prismatic];
-        //this x is from forward kinematics, use when using bendlabs sensors
-
 
         dx_ = J*state_.dq;
         
         ddx_des = ddx_ref_ + kp_*(x_ref_ - x_) + kd_*(dx_ref_ - dx_);            //desired acceleration from PD controller
 
-        if ((x_ref_ - x_).norm() > 0.05) { //saturate the proportional gain
+        if ((x_ref_ - x_).norm() > 0.05) { //saturate ddx_des if it's too far away
             ddx_des = ddx_ref_ + kp_*(x_ref_ - x_).normalized()*0.05 + kd_*(dx_ref_ - dx_);  
         }
 
-        for (int i = 0; i < potfields_.size(); i++) {            //add the potential fields from objects to reference
+        for (int i = 0; i < potfields_.size(); i++) { //add the potential fields from objects to reference
             if (!freeze){
                 potfields_[i].pos_ = state_.objects[i].translation();
             }
@@ -57,15 +55,14 @@ void OSC::control_loop() {
         }
         
 
-        B_op = (J*dyn_.B.inverse()*J.transpose()).inverse();
+        B_op = (J*dyn_.B.inverse()*J.transpose()).inverse(); //operational space inertia matrix
         J_inv = computePinv(J, 0.5e-1, 1.0e-1);
          
         f_ = B_op*ddx_des;
         
-        f_(0) += loadAttached_;
-        f_(2) += loadAttached_ + 0.24*gripperAttached_; //the gripper weights 0.24 Newton
+        f_(2) += loadAttached_ + 0.24*gripperAttached_; //compensate tip forces, the gripper weights 0.24 Newton
 
-        tau_null = -kd_*0.0001*state_.dq;
+        tau_null = -kd_*0.0001*state_.dq; //try to reduce oscillations with nullspace input
         
         for(int i = 0; i < st_params_.q_size; i++){     //for some reason tau is sometimes nan, catch that
             if(isnan(tau_null(i))) tau_null = VectorXd::Zero(2*st_params_.num_segments);
@@ -75,10 +72,7 @@ void OSC::control_loop() {
 
         p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state_));
 
-        if (st_params_.sensors[0] != SensorType::simulator) {actuate(p_);}
-        else {
-            assert(simulate(p_));
-        }
+        actuate(p_);
     }
 }
 

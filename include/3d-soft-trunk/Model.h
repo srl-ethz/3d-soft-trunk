@@ -21,13 +21,18 @@ public:
     VectorXd pseudo2real(VectorXd p_pseudo);
 
     srl::State state_;
+
+    /** @brief The Model's DynamicParams object. This is automatically updated when update() is called */
     DynamicParams dyn_;
+
     std::vector<MatrixXd> chamber_config_;
 
     const SoftTrunkParameters st_params_;
 
 private:
+    /** @brief Pointer to the Lagrange object */
     std::unique_ptr<Lagrange> lag_;
+    /** @brief Pointer to the SoftTrunkModel (AugmentedRigidArm) object */
     std::unique_ptr<SoftTrunkModel> stm_;
 
     MatrixXd chamber_inv_;

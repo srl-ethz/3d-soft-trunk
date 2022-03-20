@@ -8,7 +8,7 @@ int main(){
     st_params.load_yaml("fullCharacterize.yaml");
     st_params.finalize();
     Characterize ch{st_params};
-    ch.valveMap();
+    ch.valveMap(st_params.p_max);
     ch.new_params.write_yaml("fullCharacterize.yaml");
     }
 
@@ -19,7 +19,7 @@ int main(){
     st_params.finalize();
     Characterize ch{st_params};
     for (int i = 0; i < st_params.num_segments; i++){
-        ch.stiffness(i);
+        ch.stiffness(i,2,st_params.p_max);
     }
     ch.new_params.write_yaml("fullCharacterize.yaml");
     }
@@ -31,7 +31,7 @@ int main(){
     st_params.finalize();
     Characterize ch{st_params};
     for (int i = 0; i < st_params.num_segments; i++){
-        ch.actuation(i);
+        ch.actuation(i,st_params.p_max);
     }
     ch.new_params.write_yaml("fullCharacterize.yaml");
     }

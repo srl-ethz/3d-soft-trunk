@@ -2,6 +2,7 @@
 
 #include "3d-soft-trunk/ControllerPCC.h"
 
+/** @brief Task Space Jacobian Controller using a Quasi-Static assumption */
 class QuasiStatic: public ControllerPCC{
 public:
     QuasiStatic(const SoftTrunkParameters st_params);

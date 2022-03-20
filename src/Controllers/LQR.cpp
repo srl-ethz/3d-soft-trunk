@@ -17,6 +17,7 @@ LQR::LQR(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_
 
 void LQR::relinearize(){    
     //update A, B with new dynamics
+    //this function takes FOREVER to execute
     A << MatrixXd::Zero(st_params_.q_size,st_params_.q_size), MatrixXd::Identity(st_params_.q_size, st_params_.q_size), - dyn_.B.inverse() * dyn_.K, -dyn_.B.inverse() * dyn_.D;
     B << MatrixXd::Zero(st_params_.q_size, 2*st_params_.num_segments), dyn_.B.inverse()*dyn_.A_pseudo;
 
@@ -65,8 +66,10 @@ void LQR::control_loop() {
         
         //do controls
 
+        // for LQR, use "fullstate" which is just a vector combining both q and dq
         fullstate << state_.q, state_.dq;
         fullstate_ref << state_ref_.q, state_ref_.dq;
+
         f_ = K*(fullstate_ref - fullstate)/100;
 
         p_ = mdl_->pseudo2real(f_ + gravity_compensate(state_));

@@ -101,40 +101,38 @@ namespace srl{
     };
 }
 
-/** @brief parameters used in the dynamic equation of the arm */
-
+/** @brief Parameters used in the dynamic equation of the arm */
 struct DynamicParams{
-    /** @brief coordinates the parameters are in */
+    /** @brief Coordinate parametrization of the instance */
     CoordType coordtype;
-    /** @brief actuation matrix, maps pressures to torque */
+    /** @brief Actuation matrix, maps pressures to torque */
     MatrixXd A;
-    /** @brief actuation matrix simplified to 2 coordinates (x,y "pseudopressures") */
+    /** @brief Actuation matrix simplified to 2 coordinates (x,y "pseudopressures") */
     MatrixXd A_pseudo;
-    /** @brief inertia matrix, maps 2nd derivative of coordinate to torque */
+    /** @brief Inertia matrix, maps 2nd derivative of coordinate to torque */
     MatrixXd B;
-    /** @brief vector containing coriolis and related torques*/
+    /** @brief Vector containing coriolis and related torques*/
     VectorXd c;
-    /** @brief damping matrix, maps 1st derivative of coordinate to torque*/
+    /** @brief Damping matrix, maps 1st derivative of coordinate to torque*/
     MatrixXd D;
-    /** @brief gravity vector, contains gravity torques*/
+    /** @brief Gravity vector, contains gravity torques*/
     VectorXd g;
-    /** @brief stiffness matrix, maps coordinate to torque */
+    /** @brief Stiffness matrix, maps coordinate to torque */
     MatrixXd K;
-    /** @brief coriolis matrix, maps 1st derivative of coordinate to torque */
+    /** @brief Coriolis matrix, maps 1st derivative of coordinate to torque */
     MatrixXd S;
-    /** @brief vector containing jacobians of all segment tips */
+    /** @brief Vector containing jacobians of all segment tips */
     std::vector<MatrixXd> J;
-    /** @brief vector containing jacobian derivatives of all segment tips */
+    /** @brief Vector containing jacobian derivatives of all segment tips */
     std::vector<MatrixXd> dJ;
-    /** @brief vector containing forward kinematic positions of all segment tips */
+    /** @brief Vector containing forward kinematic positions of all segment tips */
     std::vector<Vector3d> x;
 };
 
 /**
- * @brief save various parameters related to the configuration of the soft trunk.
+ * @brief Save various parameters related to the configuration of the soft trunk.
  * The parameters are first populated by their default values. After customizing them by changing the member variables or reading from a YAML file,
  * call finalize() to run sanity checks on the values, and to set other parameters.
- * check apps/example_SoftTrunkModel.cpp to for a demo of how to edit these values
  * @todo the parameters ideally should be private members, and only changeable through functions, to prevent further change after finalize() is called. for now, leave it as is, maybe change when more people start to use it.
  */
 class SoftTrunkParameters{
@@ -147,91 +145,96 @@ public:
         state.tip_transforms.resize(num_segments+1+prismatic);
         return state;
     }
-    /** @brief name of robot (and of urdf / xacro file) */
+    /** @brief Name of robot (and of urdf / xacro file) */
     std::string robot_name = "2segment";
 
-    /** @brief number of actuated segments */
+    /** @brief Number of actuated segments */
     int num_segments = 2;
 
-    /** @brief number of PCC elements per section */
+    /** @brief Number of PCC elements per section */
     int sections_per_segment = 1;
 
-    /** @brief mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
+    /** @brief Mass of each section and connector of entire robot, in kg. The model sets the mass of each PCC element based on this and the estimated volume.
      * @details {base segment, base connector, ..., tip segment, gripper}*/
     std::vector<double> masses = {0.160, 0.020, 0.082, 0.023};
 
-    /** @brief length of each part, in m
+    /** @brief Length of each part, in m
      * @details {base segment, base connector piece, ..., tip segment} */
     std::vector<double> lengths = {0.125, 0.02, 0.125, 0.02};
 
-    /** @brief outer diameters of semicircular chamber
+    /** @brief Outer diameters of semicircular chamber
      * @details {base of base segment, tip of base segment = base of next segment, ...}*/
     std::vector<double> diameters = {0.035, 0.028, 0.0198};
 
-    /** @brief angle of arm rel. to upright */
+    /** @brief Angle of arm rel. to upright */
     double armAngle = 180;
 
-    /** @brief shear modulus of Dragon Skin 10, in Pa
+    /** @brief Shear modulus of segment silicone, in Pa
     * literature value for shear modulus is 85000. The values here are determined from characterization_actuation and characterize.py.*/
     std::vector<double> shear_modulus = {40686, 59116};
 
     /** @brief Drag coefficients of arm (air resistance, internal damping...). This is heuristic at the moment. */
     std::vector<double> drag_coef = {28000., 8000.};
 
-    /** @brief maps valves to the manipulator chambers 
+    /** @brief Maps valves to the manipulator chambers 
      * scheme: chamber facing x direction (towards user), chamber back left, chamber back right
      * starts at top segment, iterates downwards
      * final chamber is for the gripper
     */
     std::vector<int> valvemap = {3,1,2,4,6,5,0};
 
-    /** @brief model used to derive the parameters of the dynamic equation */
+    /** @brief Model used to derive the parameters of the dynamic equation */
     ModelType model_type = ModelType::augmentedrigidarm;
 
-    /** @brief coordinate parametrization of all variables */
+    /** @brief Coordinate parametrization of all variables */
     CoordType coord_type = CoordType::thetax;
 
-    /** @brief all sensors which are to be used */
+    /** @brief All sensors which are to be used */
     std::vector<SensorType> sensors = {SensorType::qualisys};
 
-    /** @brief controller */
+    /** @brief Controller */
     ControllerType controller_type = ControllerType::osc;
 
-    /** @brief filtering type between multiple sensor inputs */
+    /** @brief Filtering type between multiple sensor inputs */
     FilterType filter_type = FilterType::none;
 
-    /** @brief degrees of freedom of arm. is set when finalize() is called */
+    /** @brief Degrees of freedom of arm. is set when finalize() is called */
     int q_size;
 
-    /** @brief extra objects to be tracked by sensors */
+    /** @brief Extra objects to be tracked by sensors */
     int objects = 0;
 
-    /** @brief sensor refresh rate in hz 
-     * @details some sensors may be restricted to lower polling rates automatically due to hardware restrictions
+    /** @brief Sensor refresh rate in hz 
+     * @details Some sensors may be restricted to lower polling rates automatically due to hardware restrictions
     */
     double sensor_refresh_rate = 100.;
 
-    /** @brief speed at which model self-updates, given in hz */
+    /** @brief Speed at which model self-updates, given in hz */
     double model_update_rate = 100.;
 
-    /** @brief controller refresh rate in hz */
+    /** @brief Controller refresh rate in hz */
     double controller_update_rate = 50;
 
+    /** @brief Serial address of the BendLabs sensors (if using) */
     std::string bendlabs_address = "/dev/ttyACM0";
 
-    /** @brief size of the pseudo pressure vector */
+    /** @brief Size of the pseudo pressure vector
+     * @details The pseudo-pressure vector is of same size as q_size, to avoid underaction. You can transform back to "real" pressure with Model::pseudo2real */
     int p_pseudo_size;
 
-    /** @brief size of the real pressure vector */
+    /** @brief Size of the real pressure vector */
     int p_size;
 
-    /** @brief describes if the arm is mounted to a base prismatic joint */
+    /** @brief Determines if there is an additional prismatic joint at the base of the robot */
     bool prismatic = false;
 
-    double p_max = 650;
+    /** @brief Maximal pressure for the valve controller */
+    int p_max = 650;
 
+    /** @brief Coefficients for an angular offset polynomial. currently not used. */
     std::vector<double> angOffsetCoeffs = {0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0};
 
+    /** @brief A matrix configurations. Characterized from script. */
     std::vector<double> chamberConfigs = {-1, 0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2, -1, 0.5, -0.5, 0, sqrt(3)/2, -sqrt(3)/2};
 
     void finalize(){
@@ -272,7 +275,7 @@ public:
     this->bendlabs_address = params["bendlabs address"].as<std::string>();
     this->model_update_rate = params["model update rate"].as<double>();
     this->chamberConfigs = params["chamberConfigs"].as<std::vector<double>>();
-    this->p_max = params["p_max"].as<double>();
+    this->p_max = params["p_max"].as<int>();
 
     std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
     this->sensors.clear();

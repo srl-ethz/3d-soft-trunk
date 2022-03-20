@@ -2,6 +2,7 @@
 
 #include "3d-soft-trunk/ControllerPCC.h"
 
+/** @brief Another State Space Dynamic PD controller */
 class PID: public ControllerPCC 
 {
 public:

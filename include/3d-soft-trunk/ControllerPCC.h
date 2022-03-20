@@ -12,7 +12,7 @@
 
 
 /**
- * @brief Implements the PCC controller as described in paper.
+ * @brief Base class for controllers.
  * @details Different controllers can be implemented by creating a child class of this class.
  * Includes a simulator functionality, which integrates the analytical model forward in time.
  **/
@@ -24,11 +24,12 @@ public:
 
     /** @brief Set the reference state of the arm (configuration space)*/
     void set_ref(const srl::State &state_ref);
+
     /** @brief Set the reference state of the arm (task space)*/
     void set_ref(const Vector3d &x_ref, const Vector3d &dx_ref = Vector3d::Zero(), const Vector3d &ddx_ref = Vector3d::Zero());
 
 
-    /** @brief Toggles logging of x,q to a csv file, filename is defined in string filename elsewhere */
+    /** @brief Toggles logging of x,q to a csv file, filename is defined in string filename_  */
     void toggle_log();
 
     /** @brief Forward simulate the model while inputting pressure p
@@ -44,7 +45,7 @@ public:
 
     bool gripperAttached_ = false;
 
-    /** @brief Load attached to the tip of the arm, in newton*/
+    /** @brief Load attached to the tip of the arm, in Newton*/
     double loadAttached_ = 0.;
 
     // arm configuration
@@ -54,13 +55,15 @@ public:
     Vector3d ddx_;
     srl::State state_prev_; //for simulation
 
-    //references
+    //reference states
     Vector3d x_ref_;
     Vector3d dx_ref_;
     Vector3d ddx_ref_;
     srl::State state_ref_;
 
     DynamicParams dyn_;
+
+    /** @brief Control loop refresh rate */
     double dt_ = 1./50;
 
     const SoftTrunkParameters st_params_;
@@ -68,8 +71,9 @@ public:
     /** @brief Log filename */
     std::string filename_;
 
-    //actuation vectors, p is pressures and f is torques
+    /** @brief Actuation pressure vector (size: p_size) */
     VectorXd p_;
+    /** @brief Actuation torques (size: q_size) */
     VectorXd f_;
 
     /**
@@ -85,16 +89,15 @@ protected:
 
 
     /** @brief Check if J is in a singularity (within a threshold)
-    *   @return Order of the singularity
-    */
+    *   @return Order of the singularity */
     int singularity(const MatrixXd &J);
 
-
+    /** @brief Pointer to the Model object */
     std::unique_ptr<Model> mdl_;
+    /** @brief Pointer to the StateEstimator object */
     std::unique_ptr<StateEstimator> ste_;
+    /** @brief Pointer to the ValveController object */
     std::unique_ptr<ValveController> vc_;
-
-    const int p_max = 700; // 700 for DS 10, 1200 for DS 30
 
     double t_ = 0;
 
@@ -104,7 +107,10 @@ protected:
     std::thread sensor_thread_;
     std::thread model_thread_;
 
+    /** @brief This loop fetches sensor data from the StateEstimator with refresh rate from YAML */
     void sensor_loop();
+
+    /** @brief This loop fetches dynamic parameters from the Model with refresh rate from YAML */
     void model_loop();
 
     std::mutex mtx;
@@ -117,6 +123,7 @@ protected:
     std::fstream log_file_;
     void log(double t);
 
+    /** @brief Is the robot running. Used to terminate the object */
     bool run_;
 private:
     /** @brief Forward simulate using Beeman method

@@ -9,7 +9,7 @@ QuasiStatic::QuasiStatic(const SoftTrunkParameters st_params) : ControllerPCC::C
     kd = 5.5;
 
 
-    //qs
+    //quasi static -> low refresh rate
     dt_ = 1./10;
 
     control_thread_ = std::thread(&QuasiStatic::control_loop, this);

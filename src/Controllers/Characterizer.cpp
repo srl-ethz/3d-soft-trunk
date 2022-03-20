@@ -25,14 +25,13 @@ void Characterize::angularError(int segment, std::string fname){
     VectorXd radii = VectorXd::Zero(360);
     MatrixXd angle_vals = MatrixXd::Zero(360,4);
 
-    for (double i = 0; i < 360; i+=1.){
+    for (double i = 0; i < 360; i+=1.){ //Draw a circle while logging measured angle vs desired angle
         pressures(2*(segment+st_params_.prismatic)+st_params_.prismatic*2) = 500*cos(i*deg2rad);
         pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic*2) = 500*sin(i*deg2rad);
 
         actuate(mdl_->pseudo2real(pressures));        
 
-        x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
-        double angle = atan2(x_(1),x_(0))*180/3.14156;
+        double angle = atan2(state_.q(2*segment + st_params_.prismatic + 1),state_.q(2*segment + st_params_.prismatic))*180/3.14156;
         if (angle < 0) angle+=360;
 
         log_file_ << fmt::format("{},{},{}", (double) i, angle, sqrt(x_(0)*x_(0)+x_(1)*x_(1)));
@@ -52,7 +51,7 @@ void Characterize::angularError(int segment, std::string fname){
 
     std::vector<double> angOffsetCoeffs(12);
     
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++){ //least squares solve to obtain polynomials describing the angular error
         VectorXd poly_coeffs = (angle_vals.block(120*i,0,120,4).transpose()*angle_vals.block(120*i,0,120,4)).inverse()
             *angle_vals.block(120*i,0,120,4).transpose()*ang_err.segment(120*i,120); //calculate polynomial coeffs using least squares
             
@@ -73,20 +72,20 @@ void Characterize::stiffness(int segment, int verticalsteps, int maxpressure){
     for (int i = 0; i < 4; i++){
         angle = i*360/4; 
 
-        for (int j = 0; j < verticalsteps; j++){                                //iterate through multiple heights for the respective angle
+        for (int j = 0; j < verticalsteps; j++){        //iterate through multiple heights for the respective angle
             pressures(2*segment+st_params_.prismatic) = (maxpressure/verticalsteps+maxpressure*j/verticalsteps)*cos(angle*deg2rad);
             pressures(2*segment+st_params_.prismatic+1) = -(maxpressure/verticalsteps+maxpressure*j/verticalsteps)*sin(angle*deg2rad);
             actuate(mdl_->pseudo2real(pressures));
 
             srl::sleep(10); //wait to let swinging subside
 
-
+            //log values of the dynamic equation (assumption: no movement, since we waited 10 seconds)
             tau(verticalsteps*i+j) = pressures(2*segment+st_params_.prismatic + i%2) - (dyn_.A_pseudo.inverse()*dyn_.g/100)(2*segment+st_params_.prismatic+i%2);
             K(verticalsteps*i+j) = (dyn_.A_pseudo.inverse()*dyn_.K*state_.q/100)(2*segment+st_params_.prismatic+i%2);
         }
     }
 
-    VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau;
+    VectorXd Kcoeff = (K.transpose()*K).inverse()*K.transpose()*tau; //least squares solve for stiffness
     
     new_params.shear_modulus[segment] = Kcoeff(0)*st_params_.shear_modulus[segment];
     fmt::print("Shear Modulus for segment {}: {}\n", segment, Kcoeff(0)*st_params_.shear_modulus[segment]);
@@ -158,7 +157,7 @@ void Characterize::actuation(int segment, int pressure){
     srl::sleep(8);
     srl::Rate r{2};
 
-    for (int i = 0; i < rotation; i++){
+    for (int i = 0; i < rotation; i++){ //draw a circle while logging dynamic equation coefficients
         
         if (i >= 0 && i < 120) p.block(0,i,3,1) << cos(i*deg2rad*90/120)*pressure, sin(i*deg2rad*90/120)*pressure, 0;
         if (i >= 120 && i < 240) p.block(0,i,3,1) << 0, sin(i*deg2rad*90/120)*pressure, sin((i-120)*90*deg2rad/120)*pressure;
@@ -188,8 +187,8 @@ void Characterize::actuation(int segment, int pressure){
     }
     log_file_.close();
 
-    MatrixXd A_top = p.transpose().bdcSvd(ComputeThinU | ComputeThinV).solve(Kqg.block(0,0,1,rotation).transpose()).transpose(); //least squares
-    MatrixXd A_bot = p.transpose().bdcSvd(ComputeThinU | ComputeThinV).solve(Kqg.block(1,0,1,rotation).transpose()).transpose();
+    MatrixXd A_top = p.transpose().bdcSvd(ComputeThinU | ComputeThinV).solve(Kqg.block(0,0,1,rotation).transpose()).transpose(); //least squares to determine A (x direction)
+    MatrixXd A_bot = p.transpose().bdcSvd(ComputeThinU | ComputeThinV).solve(Kqg.block(1,0,1,rotation).transpose()).transpose(); // least squares to determine A (y direction)
 
     MatrixXd A = MatrixXd::Zero(2,3);
     A << A_top, A_bot;

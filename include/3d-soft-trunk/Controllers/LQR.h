@@ -2,6 +2,7 @@
 
 #include "3d-soft-trunk/ControllerPCC.h"
 
+/** @brief State Space LQR Controller */
 class LQR: public ControllerPCC
 {
 public:
