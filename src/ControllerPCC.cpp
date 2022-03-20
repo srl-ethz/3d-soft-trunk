@@ -69,8 +69,12 @@ void ControllerPCC::toggleGripper(){
 
 void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to mapping from header
     assert(p.size() == st_params_.p_size);
-    for (int i = 0; i < st_params_.p_size; i++){
-        vc_->setSinglePressure(i, p(i));
+    if (st_params_.sensors[0]==SensorType::simulator){
+        simulate(p);
+    } else{
+        for (int i = 0; i < st_params_.p_size; i++){
+            vc_->setSinglePressure(i, p(i));
+        }
     }
     if (logging_){  
         log(state_.timestamp/10e6);       //log once per control timestep

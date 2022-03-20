@@ -52,6 +52,8 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
     VectorXd output = VectorXd::Zero(st_params_.p_size);
     VectorXd truePressure = VectorXd::Zero(2);
 
+    /** @todo add the prismatic pseudo2real */
+
     for (int i = 0; i < st_params_.num_segments; i++){
 
         double angle = atan2(p_pseudo(2*i+st_params_.prismatic+1), p_pseudo(2*i+st_params_.prismatic))*180/3.14156; //determine direction the pressure wants to actuate in
