@@ -34,7 +34,7 @@ VisualizerROS::VisualizerROS(SoftTrunkModel& stm) : stm(stm), st_params(stm.getS
 
 void VisualizerROS::publishState(){
     for (int i = 0; i < joint_msg.name.size(); i++)
-        joint_msg.position[i] = stm.get_xi()(i);
+        joint_msg.position[i] = stm.xi_(i);
     joint_msg.header.stamp = ros::Time::now();
     joint_pub.publish(joint_msg);
 }
