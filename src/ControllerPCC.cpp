@@ -25,8 +25,11 @@ ControllerPCC::ControllerPCC(const SoftTrunkParameters st_params) : st_params_(s
     //initialize data gathering and actuator objects
     mdl_ = std::make_unique<Model>(st_params_);
     ste_ = std::make_unique<StateEstimator>(st_params_);
-    vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, st_params_.p_max);
 
+    if(st_params_.sensors[0]!=SensorType::simulator){
+        vc_ = std::make_unique<ValveController>("192.168.0.100", st_params_.valvemap, st_params_.p_max);
+    }
+    
     //start the state update loops
     sensor_thread_ = std::thread(&ControllerPCC::sensor_loop, this);
     model_thread_ = std::thread(&ControllerPCC::model_loop, this);
