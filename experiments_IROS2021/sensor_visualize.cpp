@@ -1,4 +1,4 @@
-#include <3d-soft-trunk/SoftTrunkModel.h>
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
 #include <mobilerack-interface/SerialInterface.h>
 
 /**
@@ -38,7 +38,7 @@ int main(){
             state.q(2*i) = (bendLab_data[2*segment_id] - bendLab_offset[2*segment_id]) * PI / 180. / st_params.sections_per_segment;
             state.q(2*i+1) = (bendLab_data[2*segment_id+1] - bendLab_offset[2*segment_id+1]) * PI / 180. / st_params.sections_per_segment;
         }
-        stm.updateState(state);
+        stm.set_state(state);
         r.sleep();
     }
     

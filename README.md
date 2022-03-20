@@ -1,8 +1,8 @@
 # 3D Soft Trunk repository
 ## [SoPrA fabrication guide](https://gitlab.ethz.ch/srl/3d-soft-trunk/-/wikis/home)
-available in the wiki of this repository
+Available in the wiki of this repository
 
-## get this repository
+## Installing this repository
 
 In the desired directory, run...
 ```bash
@@ -16,19 +16,19 @@ git clone --recursive git@gitlab.ethz.ch:srl/3d-soft-trunk.git
 ```
 (`--recursive` option will automatically clone the submodules as well)
 
-## install necessary packages for mobilerack-interface
+## Install necessary packages for mobilerack-interface
 
-**refer to [README of mobilerack-interface](mobilerack-interface/README.md)**
+**Refer to [README of mobilerack-interface](mobilerack-interface/README.md)**
 
-also install these packages:
+Also install these packages:
 ```bash
 sudo apt install python3-pip
 pip3 install xacro # used to convert robot model files from XACRO to URDF
 ```
 
-## install Drake
+## Install Drake
 
-refer to [Drake documentation- binary installation](https://drake.mit.edu/from_binary.html) and [Drake sample CMake project](https://github.com/RobotLocomotion/drake-external-examples/tree/master/drake_cmake_installed).
+Refer to [Drake documentation- binary installation](https://drake.mit.edu/from_binary.html) and [Drake sample CMake project](https://github.com/RobotLocomotion/drake-external-examples/tree/master/drake_cmake_installed).
 
 For Ubuntu 20.04, basic steps are:
 ```bash
@@ -49,7 +49,7 @@ cmake -DCMAKE_PREFIX_PATH=/opt/drake .
 make
 ```
 
-executables are output to bin, libraries are output to lib/. For visualization of the model, use the Drake Visualizer, at `/opt/drake/bin/drake-visualizer`.
+Executables are output to bin, libraries are output to lib/. For visualization of the model, use the Drake Visualizer, at `/opt/drake/bin/drake-visualizer`.
 
 ## Python interface
 In its current implementation, you must set the `$PYTHONPATH` environment variable to point to the directory containing the library binaries in order to run. (probably `3d-soft-trunk/lib`)
@@ -78,3 +78,12 @@ Uses Doxygen to generate documentation from inline comments in code. Install [Do
 run `doxygen Doxyfile` in this directory to generate HTML (can be seen with browser at html/index.html) & LATEX output.
 
 Example code are in `apps/example_*.cpp` and `examples_python/example_*.py`.
+
+# I want to add my own sensor/controller/model
+
+Refer to the README files in `src/`.
+
+# I am not a member of SRL
+You will likely be using different sensors and actuators. Refer to the wiki for how to add new sensors to the `StateEstimator`.
+To add your own actuation method, you will need to add a submodule class which allows you to set inputs for the actuators, and replace the `ValveController` object in the `ControllerPCC` class.
+Then you simply need to adjust the `ControllerPCC::actuate(VectorXd p)` to use your new actuator instead, and the framework should work.

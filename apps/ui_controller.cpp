@@ -1,6 +1,6 @@
 #include <3d-soft-trunk/VisualizerROS.h>
-#include "3d-soft-trunk/OSC.h"
-#include <3d-soft-trunk/SoftTrunkModel.h>
+#include "3d-soft-trunk/Controllers/OSC.h"
+#include <3d-soft-trunk/Models/SoftTrunkModel.h>
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
