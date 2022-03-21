@@ -8,6 +8,8 @@ robot name: 2segment
 num segments: 2
 #PCC sections per segment
 sections per segment: 1
+#Prismatic at base
+prismatic: true
 #Masses of segments and connectors, starting at topmost segment. Unit: kg
 masses: [0.160, 0.020, 0.082, 0.023]
 #Lengths of segments and connectors, starting at topmost segment. Unit: m
@@ -21,7 +23,7 @@ shear modulus: [35000,62000]
 #Drag coefficients of the segments
 drag coef: [28000,8000]
 #Maps Valve numbers to robot actuators, can be obtained with characterization script
-valvemap: [3,2,1,0,4,5,6]
+valvemap: [10,11,3,2,1,0,4,5,6]
 #Maximum allowed pressure
 p_max: 500
 

@@ -4,11 +4,11 @@ MotionCapture::MotionCapture(const SoftTrunkParameters& st_params) : st_params_(
     assert(st_params.is_finalized());
 
     //initialize transformation vector to also contain objects    
-    abs_transforms_.resize(st_params.num_segments + 1 + st_params_.objects + st_params.prismatic);
+    abs_transforms_.resize(st_params_.num_segments + 1 + st_params_.objects + st_params_.prismatic);
 
     //initialize client
     std::vector<int> emptyCameraList = {};
-    optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + st_params_.objects, emptyCameraList, "6D", true);
+    optiTrackClient = std::make_unique<QualisysClient>(st_params.num_segments + 1 + st_params_.prismatic + st_params_.objects, emptyCameraList, "6D", true);
 
     state_ = st_params_.getBlankState();
 
