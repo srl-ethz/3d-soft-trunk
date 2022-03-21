@@ -22,6 +22,8 @@ shear modulus: [35000,62000]
 drag coef: [28000,8000]
 #Maps Valve numbers to robot actuators, can be obtained with characterization script
 valvemap: [3,2,1,0,4,5,6]
+#Maximum allowed pressure
+p_max: 500
 
 #######################
 # MODEL CONFIGURATION #
@@ -46,8 +48,10 @@ bendlabs address: /dev/ttyACM0
 #########################
 #this section is dedicated to things which can only be obtained with scripts
 #"real" actuation matrix which considers production errors
-actuationMatrix: [1, 1, 1, 1, 1, 1, 1]
+chamberConfigs: [-0.92811524600122333, 0.48552316705362519, 0.48350075188108343, 0.0086581242863340013, 0.85637067489404051, -0.80236848652134118, -0.9504235257539142, 0.4489369575629617, 0.48394529677067272, 0.03622247291977182, 0.83902497412497257, -0.83911945611853067]
 
 #polynomial coefficients which describe angular offset of the arm
 angOffsetCoeffs: [1, 1, 1, 1]
+
+
 ...

@@ -5,7 +5,7 @@ int main(){
     //first, determine valve mapping
     if(true){ //this if statement allows us to destroy everything after doing characterization
     SoftTrunkParameters st_params{};
-    st_params.load_yaml("fullCharacterize.yaml");
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.finalize();
     Characterize ch{st_params};
     ch.valveMap(st_params.p_max);
