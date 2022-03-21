@@ -276,6 +276,7 @@ public:
     this->model_update_rate = params["model update rate"].as<double>();
     this->chamberConfigs = params["chamberConfigs"].as<std::vector<double>>();
     this->p_max = params["p_max"].as<int>();
+    this->prismatic = params["prismatic"].as<bool>();
 
     std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
     this->sensors.clear();
@@ -339,6 +340,7 @@ public:
     params["chamberConfigs"] = this->chamberConfigs;
     params["chamberConfigs"].SetStyle(YAML::EmitterStyle::Flow);
     params["p_max"] = this->p_max;
+    params["prismatic"] = this->prismatic;
     std::vector<std::string> sensor_vec;
     for (int i = 0; i < this->sensors.size(); i++){
         if (sensors[i]==SensorType::qualisys){

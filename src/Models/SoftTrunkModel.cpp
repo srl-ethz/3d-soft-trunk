@@ -32,10 +32,14 @@ SoftTrunkModel::SoftTrunkModel(const SoftTrunkParameters& st_params): st_params_
 
         calculateCrossSectionProperties(radius, chamberCentroidDist, siliconeArea, chamberArea, secondMomentOfArea);
 
-        dyn_.K.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params_.shear_modulus[segment_id] * secondMomentOfArea / l;
-        dyn_.A.block(2 * section_id, 3 * segment_id, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
-        dyn_.D.block(2 * section_id, 2 * section_id, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params_.drag_coef[segment_id] / l; /** this is "heuristic" */
-        dyn_.A_pseudo.block(2 * section_id, 2*segment_id, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
+        dyn_.K.block(2 * section_id + st_params_.prismatic, 2 * section_id + st_params_.prismatic, 2, 2) = MatrixXd::Identity(2, 2) * 4 * st_params_.shear_modulus[segment_id] * secondMomentOfArea / l;
+        dyn_.A.block(2 * section_id + st_params_.prismatic, 3 * segment_id + st_params_.prismatic, 2, 3) = chamberArea * chamberCentroidDist * chamberMatrix; 
+        dyn_.D.block(2 * section_id + st_params_.prismatic, 2 * section_id + st_params_.prismatic, 2, 2) = MatrixXd::Identity(2, 2) * secondMomentOfArea * st_params_.drag_coef[segment_id] / l; /** this is "heuristic" */
+        dyn_.A_pseudo.block(2 * section_id + st_params_.prismatic, 2*segment_id + st_params_.prismatic, 2, 2) = chamberArea * chamberCentroidDist * MatrixXd::Identity(2,2);
+    }
+    if (st_params_.prismatic){
+        dyn_.A(0,0) = 1;
+        dyn_.A_pseudo(0,0) = 1;
     }
     fmt::print("SoftTrunkModel initialized\n");
 }
@@ -122,11 +126,20 @@ void SoftTrunkModel::generateRobotURDF(){
                << fmt::format("<robot xmlns:xacro='http://www.ros.org/wiki/xacro' name='{}'>\n", st_params_.robot_name)
                << "<xacro:include filename='macro_definitions.urdf.xacro' />\n"
                << "<xacro:empty_link name='base_link'/>\n"
-               << fmt::format("<xacro:rigid_rotation rotX='0' rotY='{}' rotZ='0' parent='base_link' child='softTrunk_base'/>", st_params_.armAngle*pi/180)
-               << "<xacro:empty_link name='softTrunk_base'/>\n";
+               << fmt::format("<xacro:rigid_rotation rotX='0' rotY='{}' rotZ='0' parent='base_link'", st_params_.armAngle*pi/180);
 
     std::string parent = "softTrunk_base";
     std::string child;
+
+    if(st_params_.prismatic){
+        xacro_file << " child='prismaticSoPrA'/>\n"
+        << "<xacro:empty_link name='prismaticSoPrA'/>\n";
+        xacro_file << fmt::format("<xacro:prismatic id='prismaticSoPrA' parent='base_link' child='softTrunk_base' length='0.15' mass='0.001' radius='0.03'/>\n");
+    } else {
+        xacro_file << " child='softTrunk_base'/>\n";
+    }
+
+    xacro_file << "<xacro:empty_link name='softTrunk_base'/>\n";
     for (int i = 0; i < st_params_.num_segments; i++)
     {
         // create sections that gradually taper

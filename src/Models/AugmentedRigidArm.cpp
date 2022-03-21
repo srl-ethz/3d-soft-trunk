@@ -45,10 +45,10 @@ void AugmentedRigidArm::setup_drake_model()
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
 
-    num_joints = multibody_plant->num_joints() - 2; //subtract one mystery joint, and one fixed joint at the base
+    num_joints = multibody_plant->num_joints() - 2 ; //subtract one mystery joint, and one fixed joint at the base
     
     // check that parameters make sense, just in case
-    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1) + st_params.prismatic  );
+    assert(num_joints == 5 * st_params.num_segments * (st_params.sections_per_segment + 1) + st_params.prismatic);
 
     // initialize variables
     xi_ = VectorXd::Zero(num_joints);
@@ -66,7 +66,7 @@ void AugmentedRigidArm::setup_drake_model()
 
     map_normal2expanded = MatrixXd::Zero(2*st_params.num_segments*(st_params.sections_per_segment + 1)+st_params.prismatic, st_params.q_size);
     for (int i = 0; i < st_params.num_segments; i++)
-      map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1)+st_params.prismatic, 2*i*st_params.sections_per_segment+st_params.prismatic, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
+      map_normal2expanded.block(2*i*(st_params.sections_per_segment + 1)+st_params.prismatic, 2*i*st_params.sections_per_segment + st_params.prismatic, 2*st_params.sections_per_segment, 2*st_params.sections_per_segment) = MatrixXd::Identity(2*st_params.sections_per_segment, 2*st_params.sections_per_segment);
     if (st_params.prismatic){
       map_normal2expanded(0,0) = 1; //prismatic joint can be taken 1:1
     }
@@ -198,8 +198,8 @@ void AugmentedRigidArm::update_Jm(VectorXd q_)
     {
         segment_id = section_id / (st_params.sections_per_segment+1);
         // differentiation is calculated via phi-theta parametrization for easier formulation.
-        int q_head = 2 * section_id;
-        int xi_head = 5 * section_id;
+        int q_head = 2 * section_id + st_params.prismatic;
+        int xi_head = 5 * section_id + st_params.prismatic;
         l = st_params.lengths[2 * segment_id] / st_params.sections_per_segment;
         longitudinal2phiTheta(q_(q_head), q_(q_head+1), p1, t1);
         /** @todo this is a hack way to get rid of computation errors when values are 0 */

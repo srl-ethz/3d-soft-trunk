@@ -26,8 +26,8 @@ void Characterize::angularError(int segment, std::string fname){
     MatrixXd angle_vals = MatrixXd::Zero(360,4);
 
     for (double i = 0; i < 360; i+=1.){ //Draw a circle while logging measured angle vs desired angle
-        pressures(2*(segment+st_params_.prismatic)+st_params_.prismatic*2) = 500*cos(i*deg2rad);
-        pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic*2) = 500*sin(i*deg2rad);
+        pressures(2*(segment+st_params_.prismatic)+st_params_.prismatic) = 500*cos(i*deg2rad);
+        pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic) = 500*sin(i*deg2rad);
 
         actuate(mdl_->pseudo2real(pressures));        
 
@@ -95,7 +95,7 @@ bool Characterize::valveMap(int maxpressure){
     std::vector<int> newMap(st_params_.p_size);
 
     for (int i = 0; i < st_params_.p_size - 2*st_params_.prismatic; i++){
-        vc_->setSinglePressure(i,300);
+        vc_->setSinglePressure(i+2*st_params_.prismatic,300);
         srl::sleep(7);
         int segment = 0;
         double largest = 0;
@@ -111,7 +111,7 @@ bool Characterize::valveMap(int maxpressure){
 
         if (largest < 0.18) { //if nothing is bending, it must be the gripper
             fmt::print("Gripper\n");
-            newMap[st_params_.p_size - 1] = st_params_.valvemap[i];
+            newMap[st_params_.p_size - 1] = st_params_.valvemap[i+2*st_params_.prismatic];
         } else { //otherwise, determine which chamber it is
             fmt::print("Segment {}, direction: ", segment);
             double angle = atan2(state_.q(2*segment+st_params_.prismatic+1),
@@ -119,20 +119,25 @@ bool Characterize::valveMap(int maxpressure){
             
             if (angle > 120 or angle <= -120){
                 fmt::print("1\n");
-                newMap[3*segment+2*st_params_.prismatic] = st_params_.valvemap[i];
+                newMap[3*segment+2*st_params_.prismatic] = st_params_.valvemap[i+2*st_params_.prismatic];
             }
             else if (angle > 0 and angle <= 120){
                 fmt::print("2\n");
-                newMap[3*segment+1+2*st_params_.prismatic] = st_params_.valvemap[i];
+                newMap[3*segment+1+2*st_params_.prismatic] = st_params_.valvemap[i+2*st_params_.prismatic];
             }
             else if (angle <= 0 and angle > -120){
                 fmt::print("3\n");
-                newMap[3*segment+2+2*st_params_.prismatic] = st_params_.valvemap[i];
+                newMap[3*segment+2+2*st_params_.prismatic] = st_params_.valvemap[i+2*st_params_.prismatic];
             }
             else return false;
         }
 
-        vc_->setSinglePressure(i,0);
+        vc_->setSinglePressure(i+2*st_params_.prismatic,0);
+    }
+
+    if(st_params_.prismatic){
+        newMap[0] = st_params_.valvemap[0];
+        newMap[1] = st_params_.valvemap[1];
     }
     
     fmt::print("New map: ");
@@ -140,6 +145,8 @@ bool Characterize::valveMap(int maxpressure){
         fmt::print("{} ", newMap[i]);
     }
     fmt::print("\n");
+
+
 
     new_params.valvemap = newMap;
     return true;

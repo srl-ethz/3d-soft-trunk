@@ -54,6 +54,11 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
 
     /** @todo add the prismatic pseudo2real */
 
+    if(st_params_.prismatic){
+        output(0) = 0;
+        output(1) = 1;
+    }
+
     for (int i = 0; i < st_params_.num_segments; i++){
 
         double angle = atan2(p_pseudo(2*i+st_params_.prismatic+1), p_pseudo(2*i+st_params_.prismatic))*180/3.14156; //determine direction the pressure wants to actuate in
@@ -67,24 +72,20 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
             inverter.col(0) = chamber_config_[i].col(0);
             inverter.col(1) = chamber_config_[i].col(2); //read in the correct chamberes
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2); //invert to obtain desired pressure
-            output.segment(3*i+st_params_.prismatic,3) << truePressure(0), 0, truePressure(1); //map to output
+            output.segment(3*i+2*st_params_.prismatic,3) << truePressure(0), 0, truePressure(1); //map to output
         } else if (angle > -60 and angle < 60){ //depends on angle
             inverter.col(0) = chamber_config_[i].col(1);
             inverter.col(1) = chamber_config_[i].col(2);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
-            output.segment(3*i+st_params_.prismatic,3) << 0, truePressure(0), truePressure(1);
+            output.segment(3*i+2*st_params_.prismatic,3) << 0, truePressure(0), truePressure(1);
         } else if (angle > 60){
             inverter.col(0) = chamber_config_[i].col(0);
             inverter.col(1) = chamber_config_[i].col(1);
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2);
-            output.segment(3*i+st_params_.prismatic,3) << truePressure(0), truePressure(1), 0;
+            output.segment(3*i+2*st_params_.prismatic,3) << truePressure(0), truePressure(1), 0;
         } else {
             fmt::print("Actuation angle out of bounds. This should never trigger.\n");
             assert(false);
-        }
-
-        if (st_params_.prismatic){
-            output(0) = p_pseudo(0);
         }
     }
     return output;
