@@ -139,12 +139,8 @@ void ControllerPCC::toggle_log(){
 }
 
 void ControllerPCC::log(double time){
-    Vector3d x_tip = Vector3d::Zero();
-
-    if (st_params_.sensors[0] == SensorType::qualisys){
-        x_tip = state_.tip_transforms[st_params_.prismatic].rotation()*(state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation()-state_.tip_transforms[st_params_.prismatic].translation());
-    }
-
+    Vector3d x_tip = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
+    log_file_ << time;
     log_file_ << fmt::format(", {}, {}, {}, {}, {}, {}, {}", x_tip(0), x_tip(1), x_tip(2), x_ref_(0), x_ref_(1), x_ref_(2), (x_tip - x_ref_).norm());
 
     for (int i=0; i < st_params_.q_size; i++)               //log q

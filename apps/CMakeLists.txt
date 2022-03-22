@@ -12,6 +12,9 @@ target_link_libraries(example_StateEstimator StateEstimator)
 add_executable(example_Controller example_Controller.cpp)
 target_link_libraries(example_Controller ControllerPCC)
 
+add_executable(idc idc.cpp)
+target_link_libraries(idc IDCon)
+
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)
     target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)

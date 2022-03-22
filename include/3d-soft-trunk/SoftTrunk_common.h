@@ -198,6 +198,9 @@ public:
     /** @brief Filtering type between multiple sensor inputs */
     FilterType filter_type = FilterType::none;
 
+    /** @brief describes is the arm is rotated and therefore horizontal */
+    bool horizontal = false;
+
     /** @brief Degrees of freedom of arm. is set when finalize() is called */
     int q_size;
 
@@ -277,6 +280,7 @@ public:
     this->chamberConfigs = params["chamberConfigs"].as<std::vector<double>>();
     this->p_max = params["p_max"].as<int>();
     this->prismatic = params["prismatic"].as<bool>();
+    this->horizontal = params["horizontal"].as<bool>();
 
     std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
     this->sensors.clear();
@@ -341,6 +345,7 @@ public:
     params["chamberConfigs"].SetStyle(YAML::EmitterStyle::Flow);
     params["p_max"] = this->p_max;
     params["prismatic"] = this->prismatic;
+    params["horizontal"] = this->horizontal;
     std::vector<std::string> sensor_vec;
     for (int i = 0; i < this->sensors.size(); i++){
         if (sensors[i]==SensorType::qualisys){

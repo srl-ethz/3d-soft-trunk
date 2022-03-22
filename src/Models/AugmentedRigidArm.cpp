@@ -27,7 +27,9 @@ void AugmentedRigidArm::setup_drake_model()
 
     // weld base link to world frame
     drake::math::RigidTransform<double> world_to_base{};
-    // world_to_base.set_rotation(drake::math::RollPitchYaw(0., st_params.armAngle*PI/180., 0.));
+    if (st_params.horizontal){
+      world_to_base.set_rotation(drake::math::RollPitchYaw(0., -PI/2, 0.));
+    }
     multibody_plant->WeldFrames(multibody_plant->world_frame(), multibody_plant->GetFrameByName("base_link"),
                                 world_to_base);
     multibody_plant->Finalize();

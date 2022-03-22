@@ -6,8 +6,8 @@
 IDCon::IDCon(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_params){
     filename_ = "ID_logger";
     J_prev = MatrixXd::Zero(3, st_params.q_size);
-    kp = 70;
-    kd = 5.5;
+    kp_ = 70;
+    kd_ = 5.5;
     dt_ = 1./50;
     control_thread_ = std::thread(&IDCon::control_loop, this);
     eps = 1e-1;
@@ -32,18 +32,17 @@ void IDCon::control_loop(){
         
         x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
         dx_ = J*state_.dq;
-        ddx_d = ddx_ref + kp*(x_ref_ - x_) + kd*(dx_ref_ - dx_); 
+        ddx_d = ddx_ref + kp_*(x_ref_ - x_) + kd_*(dx_ref_ - dx_); 
 
         //J_inv = J.transpose()*(J*J.transpose()).inverse();
         J_inv = computePinv(J, eps, lambda); //use a damped pseudoinverse, since normal Moore-Penrose was wobbly
 
         //inverse dynamics, for detailed explanation check out "Operational Space Control: Empirical and Theoretical Comparison"
-        state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-kd*state_.dq);
+        state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-1.5*kd_*state_.dq -0.05*kp_*state_.q);
 
-        tau_ref = dyn_.B*state_ref_.ddq + gravity_compensate(state_);
+        tau_ref = dyn_.B*state_ref_.ddq;
         
-        p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100);
-
+        p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state_));
         actuate(p_);
     }
 

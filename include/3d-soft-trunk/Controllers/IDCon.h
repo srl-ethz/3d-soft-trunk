@@ -13,12 +13,12 @@
 class IDCon: public ControllerPCC {
 public:
     IDCon(const SoftTrunkParameters st_params);
-
+    double kp_;
+    double kd_;
 private:
     void control_loop();
     /** @brief gains for ID*/
-    double kp;
-    double kd;
+
     MatrixXd J;
     MatrixXd dJ;
     MatrixXd J_prev;

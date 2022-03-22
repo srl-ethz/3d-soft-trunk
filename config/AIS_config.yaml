@@ -4,13 +4,13 @@
 robot name: 2segment
 num segments: 2
 sections per segment: 1
-masses: [0.12, 0.02, 0.042000000000000003, 0.023]
-lengths: [0.125, 0.03, 0.125, 0.005]
+masses: [0.16, 0.02, 0.082000000000000003, 0.023]
+lengths: [0.125, 0.02, 0.125, 0.02]
 diameters: [0.035000000000000003, 0.028000000000000001, 0.019800000000000002]
 armAngle: 180
-shear modulus: [50000, 50000]
+shear modulus: [43799.889880650633, 62487.958196477404]
 drag coef: [28000, 8000]
-valvemap: [1, 6, 4, 2, 3, 0, 5]
+valvemap: [0, 2, 4, 1, 6, 3, 5]
 sensor refresh rate: 100
 bendlabs address: /dev/ttyACM0
 model update rate: 100
@@ -19,5 +19,4 @@ p_max: 650
 prismatic: false
 sensors: [qualisys]
 model type: augmented
-horizontal: true
 ...

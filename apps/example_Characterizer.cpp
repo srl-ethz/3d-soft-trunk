@@ -5,7 +5,8 @@ int main(){
     st_params.load_yaml("fullCharacterize.yaml"); //load the YAML "testing.yaml"
     st_params.finalize();
     Characterize ch{st_params}; //create a characterizer using the loaded YAML
-    ch.stiffness(0); //do the valvemap
-    ch.new_params.write_yaml("testing.yaml"); //overwrite the YAML with the new valvemapping
+    ch.stiffness(0);
+    ch.stiffness(1);
+    ch.new_params.write_yaml("stiffness_vertical_test.yaml"); //overwrite the YAML with the new valvemapping
     return 0;
 }
