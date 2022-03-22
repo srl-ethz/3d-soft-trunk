@@ -2,7 +2,7 @@
 
 int main(){ 
     SoftTrunkParameters st_params{};
-    st_params.load_yaml("fullCharacterize.yaml"); //load the YAML "testing.yaml"
+    st_params.load_yaml("stiffness_vertical_test.yaml"); //load the YAML "testing.yaml"
     st_params.finalize();
     Characterize ch{st_params}; //create a characterizer using the loaded YAML
     ch.stiffness(0);

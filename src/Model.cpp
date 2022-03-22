@@ -66,18 +66,26 @@ VectorXd Model::pseudo2real(VectorXd p_pseudo){
         std::vector<double> ch_angle(3);
         for (int j = 0; j < ch_angle.size(); j++){
             ch_angle[j] = atan2(chamber_config_[i](1,j),chamber_config_[i](0,j))*180/3.14156;
-            ch_angle[j] -= ch_angle[0];
         }
 
         angle -= ch_angle[0];
         if (angle < 0) angle += 360;
+        if (angle >360) angle -= 360;
+
+        for (int j = ch_angle.size() - 1; j >= 0; j--){
+            ch_angle[j] -= ch_angle[0];
+            if (ch_angle[j] < 0) ch_angle[j] += 360;
+            if (ch_angle[j] > 360) ch_angle[j] -= 360;
+        }
+
+
 
         if (p_pseudo.segment(2*i+st_params_.prismatic,2).norm() > double(st_params_.p_max)){ //constrain the pressure to max allowed value
             p_pseudo.segment(2*i+st_params_.prismatic,2) = st_params_.p_max * p_pseudo.segment(2*i+st_params_.prismatic,2).normalized();
         }
         MatrixXd inverter = MatrixXd::Zero(2,2);
 
-        if (angle > 0 && angle < ch_angle[2]){ //now, based on angle we know which chamber receives zero pressure and which must be calculated
+        if (angle >= 0 && angle < ch_angle[2]){ //now, based on angle we know which chamber receives zero pressure and which must be calculated
             inverter.col(0) = chamber_config_[i].col(0);
             inverter.col(1) = chamber_config_[i].col(2); //read in the correct chamberes
             truePressure = inverter.inverse()*p_pseudo.segment(2*i+st_params_.prismatic,2); //invert to obtain desired pressure
