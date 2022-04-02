@@ -54,7 +54,7 @@ int main(){
     Vector3d x_ref_center;
     
     //x_ref << 0.1,0.00,-0.235;
-    x_ref << 0.265, 0.05, 0.0;
+    x_ref << 0.255, 0.0, 0;
 
 
     
@@ -75,11 +75,11 @@ int main(){
     srl::sleep(0.1);
 
 
-    while(true){}
-    getchar();
-
     
-    while (true){ //circle
+    getchar();
+    IDCon.toggle_log();
+    t=0;
+    while (t<16){ //circle
         double r = 0.05;
         //vertical configuration circle
         /* 
@@ -90,9 +90,9 @@ int main(){
 
 
        // horizontal configuration circle
-        circle << 0.265, r*cos(coef*t), r*sin(coef*t);
-        d_circle << 0, -r*coef*sin(coef*t), r*coef*cos(coef*t);
-        dd_circle << 0,  -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t);
+        circle << 0.255,-r*sin(coef*t), -0.05+r*cos(coef*t);
+        d_circle << 0, r*coef*cos(coef*t), -r*coef*sin(coef*t);
+        dd_circle << 0,  -r*coef*coef*sin(coef*t), -r*coef*coef*cos(coef*t);
 
         x_ref = circle;
         dx_ref = d_circle;
@@ -103,6 +103,6 @@ int main(){
         t+=dt;
         srl::sleep(dt);
     }
-
+    IDCon.toggle_log();
     return 1;
 }

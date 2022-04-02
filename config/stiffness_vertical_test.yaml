@@ -8,7 +8,7 @@ masses: [0.12, 0.02, 0.042000000000000003, 0.023]
 lengths: [0.125, 0.029999999999999999, 0.125, 0.0050000000000000001]
 diameters: [0.035000000000000003, 0.028000000000000001, 0.019800000000000002]
 armAngle: 180
-shear modulus: [81063.622717133127, 83424.917452209527]
+shear modulus: [75000.622717133127, 75000.917452209527]
 drag coef: [28000, 8000]
 valvemap: [1, 6, 4, 2, 3, 0, 5]
 sensor refresh rate: 100
@@ -20,4 +20,3 @@ prismatic: false
 horizontal: true
 sensors: [qualisys]
 model type: augmented
-...
