@@ -15,6 +15,9 @@ target_link_libraries(example_Controller ControllerPCC)
 add_executable(idc idc.cpp)
 target_link_libraries(idc IDCon)
 
+add_executable(qs qs.cpp)
+target_link_libraries(qs QuasiStatic)
+
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)
     target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)
