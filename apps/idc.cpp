@@ -59,7 +59,7 @@ int main(){
 
     
     double t = 0;
-    double dt = 0.1;
+    double dt = 0.05;
     Vector3d circle;
     Vector3d d_circle;
     Vector3d dd_circle;
@@ -74,7 +74,8 @@ int main(){
     IDCon.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(0.1);
 
-
+    fmt::print("Base transform: \n{}\n",IDCon.state_.tip_transforms[0].matrix());
+    fmt::print("Tip transform: \n{}\n",IDCon.state_.tip_transforms[2].matrix());
     
     getchar();
     IDCon.toggle_log();
