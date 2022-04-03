@@ -53,7 +53,7 @@ int main(){
     Vector3d x_ref_center;
     
     //x_ref << 0.1,0.00,-0.235;
-    x_ref << 0.255, 0.0, 0;
+    x_ref << 0.265, 0.0, 0.0;
 
 
     
@@ -63,7 +63,7 @@ int main(){
     Vector3d d_circle;
     Vector3d dd_circle;
 
-    double coef = 2 * 3.1415 / 8;
+    double coef = 2 * 3.1415 / 46;
     QuasiStatic.gripperAttached_ = true;
     QuasiStatic.loadAttached_ = 0;
 
@@ -74,12 +74,16 @@ int main(){
     srl::sleep(0.1);
 
     const drake::math::RigidTransformd X_W_B {QuasiStatic.state_.tip_transforms[0].matrix()}, X_W_T{QuasiStatic.state_.tip_transforms[2].matrix()};
-    const auto X_B_T {X_W_T.inverse() * X_W_B};
+    const auto X_B_T {X_W_B.inverse() * X_W_T};
+
+    fmt::print("X_W_B: \n{}\n", X_W_B.GetAsMatrix4());
+    fmt::print("X_W_T: \n{}\n", X_W_T.GetAsMatrix4());
+    fmt::print("X_B_T: \n{}\n", X_B_T.GetAsMatrix4());
 
     getchar();
     QuasiStatic.toggle_log();
     t=0;
-    while (t<16){ //circle
+    while (t<20){ //circle
         double radius = 0.05;
         //vertical configuration circle
         /*
@@ -89,18 +93,19 @@ int main(){
         */
 
         // horizontal configuration circle
+        /*
         circle << 0, -radius * sin(coef * t), radius * cos(coef * t);
         d_circle << 0, radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
         dd_circle << 0, -radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
 
-        x_ref = X_B_T * circle;
-        dx_ref = X_B_T.rotation() * d_circle;
-        ddx_ref = X_B_T.rotation() * dd_circle;
-
-        QuasiStatic.set_ref(x_ref,dx_ref, ddx_ref);
-        
+        x_ref = X_W_T * circle;
+        dx_ref = X_W_T.rotation() * d_circle;
+        ddx_ref = X_W_T.rotation() * dd_circle;
+        QuasiStatic.set_ref(x_ref);
+        */
         t+=dt;
         srl::sleep(dt);
+        
     }
     QuasiStatic.toggle_log();
     return 1;

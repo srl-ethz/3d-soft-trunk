@@ -80,7 +80,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
         }
     }
     if (logging_){  
-        log(state_.timestamp/10e6);       //log once per control timestep
+        log(state_.timestamp/10e5);       //log once per control timestep
     }
 }
 

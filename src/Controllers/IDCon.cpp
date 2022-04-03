@@ -6,9 +6,9 @@
 IDCon::IDCon(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC(st_params){
     filename_ = "ID_logger";
     J_prev = MatrixXd::Zero(3, st_params.q_size);
-    kp_ = 70;
+    kp_ = 100;
     kd_ = 5.5;
-    dt_ = 1./50;
+    dt_ = 1./60;
     control_thread_ = std::thread(&IDCon::control_loop, this);
     eps = 1e-1;
 	lambda = 0.5e-1;
@@ -38,7 +38,7 @@ void IDCon::control_loop(){
         J_inv = computePinv(J, eps, lambda); //use a damped pseudoinverse, since normal Moore-Penrose was wobbly
 
         //inverse dynamics, for detailed explanation check out "Operational Space Control: Empirical and Theoretical Comparison"
-        state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-1.5*kd_*state_.dq -0.05*kp_*state_.q);
+        state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-0.1*kd_*state_.dq -0.02*kp_*state_.q);
 
         tau_ref = dyn_.B*state_ref_.ddq;
         

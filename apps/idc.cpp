@@ -45,7 +45,7 @@ void printer(IDCon& IDCon){ //print some stuff every once in a while
 
 int main(){
     SoftTrunkParameters st_params;
-    st_params.load_yaml("stiffness_vertical_test.yaml");
+    st_params.load_yaml("stiffness_vertical_test2.yaml");
     st_params.finalize();
     IDCon IDCon(st_params);
     VectorXd p;
@@ -54,15 +54,16 @@ int main(){
     Vector3d x_ref_center;
     
     //x_ref << 0.1,0.00,-0.235;
-    x_ref << 0.255, 0.0, 0;
+    x_ref << 0.265, 0.0, 0.;
 
 
     
     double t = 0;
-    double dt = 0.05;
-    Vector3d circle;
-    Vector3d d_circle;
-    Vector3d dd_circle;
+    double dt = 1./60;
+    Vector3d traj1;
+    Vector3d traj2;
+    Vector3d d_traj;
+    Vector3d dd_traj;
 
     double coef = 2 * 3.1415 / 8;
     IDCon.gripperAttached_ = true;
@@ -75,31 +76,52 @@ int main(){
     srl::sleep(0.1);
 
     const drake::math::RigidTransformd X_W_B {IDCon.state_.tip_transforms[0].matrix()}, X_W_T{IDCon.state_.tip_transforms[2].matrix()};
-    const auto X_B_T {X_W_T.inverse() * X_W_B};
+    const auto X_B_T {X_W_B.inverse() * X_W_T};
+
+    fmt::print("X_W_B: \n{}\n", X_W_B.GetAsMatrix4());
+    fmt::print("X_W_T: \n{}\n", X_W_T.GetAsMatrix4());
+    fmt::print("X_B_T: \n{}\n", X_B_T.GetAsMatrix4());
 
     getchar();
     IDCon.toggle_log();
     t=0;
-    while (t<16){ //circle
+    while (t<20){ 
         double radius = 0.05;
         //vertical configuration circle
         /*
-        circle << radius*cos(coef*t), radius*sin(coef*t),-0.235;
-        d_circle << -radius*coef*sin(coef*t), radius*coef*cos(coef*t),0;
-        dd_circle << -radius*coef*coef*cos(coef*t), -radius*coef*coef*sin(coef*t),0;
+        x_ref << radius*cos(coef*t), radius*sin(coef*t),-0.235;
+        dx_ref << -radius*coef*sin(coef*t), radius*coef*cos(coef*t),0;
+        ddx_ref << -radius*coef*coef*cos(coef*t), -radius*coef*coef*sin(coef*t),0;
         */
 
         // horizontal configuration circle
-        circle << 0, -radius * sin(coef * t), radius * cos(coef * t);
-        d_circle << 0, radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
-        dd_circle << 0, -radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
+        /*
+        x_ref << 0, -radius * sin(coef * t), radius * cos(coef * t);
+        dx_ref << 0, radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
+        ddx_ref << 0, -radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
+        */
 
-        x_ref = X_B_T * circle;
-        dx_ref = X_B_T.rotation() * d_circle;
-        ddx_ref = X_B_T.rotation() * dd_circle;
+       //horizontal configuration triangle
+       if (std::fmod(t,coef)<2*3.1415/3) {
+           traj1 << 0, radius*sin(0), radius*cos(0);
 
-        IDCon.set_ref(x_ref,dx_ref, ddx_ref);
+       }
+
+
+
+
+
+
+        //translate into horizontal
+        x_ref = X_W_T * x_ref;
+        dx_ref = X_W_T.rotation() * dx_ref;
+        ddx_ref = X_W_T.rotation() * ddx_ref;
+
+
+        //IDCon.set_ref(x_ref,dx_ref, ddx_ref);
         
+        //fmt::print("t: {} target: {}\n", t, x_ref.transpose());
+
         t+=dt;
         srl::sleep(dt);
     }
