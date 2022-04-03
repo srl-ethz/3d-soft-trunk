@@ -102,12 +102,21 @@ int main(){
         */
 
        //horizontal configuration triangle
-       if (std::fmod(t,coef)<2*3.1415/3) {
-           traj1 << 0, radius*sin(0), radius*cos(0);
-
+       double loc = std::fmod(t,coef);
+       if (loc<2*3.1415/3) {
+            traj1 << 0, radius*sin(0), radius*cos(0);
+            traj2 << 0, radius*sin(2*3.1415/3), radius*cos(2*3.1415/3);
+       } else if (loc<2*2*3.1415/3){
+           traj1 << 0, radius*sin(2*3.1415/3), radius*cos(2*3.1415/3);
+           traj2 << 0, radius*sin(2*2*3.1415/3), radius*cos(2*2*3.1415/3);
+       } else if (loc<2*3.1415) {
+           traj1 << 0, radius*sin(2*2*3.1415/3), radius*cos(2*2*3.1415/3);
+           traj2 << 0, radius*sin(0), radius*cos(0);
        }
 
-
+        x_ref = traj1 + (fmod(t,2*3.1415/(3*coef))/(2*3.1415/(3*coef)))*(traj2 - traj1);
+        dx_ref = (traj2 - traj1)/(2*3.1415/(3*coef));
+        ddx_ref << 0, 0, 0;
 
 
 
@@ -118,7 +127,7 @@ int main(){
         ddx_ref = X_W_T.rotation() * ddx_ref;
 
 
-        //IDCon.set_ref(x_ref,dx_ref, ddx_ref);
+        IDCon.set_ref(x_ref,dx_ref, ddx_ref);
         
         //fmt::print("t: {} target: {}\n", t, x_ref.transpose());
 
