@@ -5,8 +5,8 @@ QuasiStatic::QuasiStatic(const SoftTrunkParameters st_params) : ControllerPCC::C
 
 
     //set the gains
-    kp = 10;
-    kd = 5.5;
+    kp_ = 10;
+    kd_ = 5.5;
 
 
     //quasi static -> low refresh rate
@@ -29,7 +29,7 @@ void QuasiStatic::control_loop(){
         x_ = state_.tip_transforms[st_params_.num_segments+st_params_.prismatic].translation();
         dx_ = J*state_.dq;
         
-        ddx_des = ddx_ref_ + kp*(x_ref_ - x_).normalized()*0.05;            //desired acceleration from PD controller
+        ddx_des = ddx_ref_ + kp_*(x_ref_ - x_).normalized()*0.05;            //desired acceleration from PD controller
         //normed to always assume a distance of 5cm
 
 
