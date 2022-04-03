@@ -74,30 +74,29 @@ int main(){
     IDCon.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(0.1);
 
-    fmt::print("Base transform: \n{}\n",IDCon.state_.tip_transforms[0].matrix());
-    fmt::print("Tip transform: \n{}\n",IDCon.state_.tip_transforms[2].matrix());
-    
+    const drake::math::RigidTransformd X_W_B {IDCon.state_.tip_transforms[0].matrix()}, X_W_T{IDCon.state_.tip_transforms[2].matrix()};
+    const auto X_B_T {X_W_T.inverse() * X_W_B};
+
     getchar();
     IDCon.toggle_log();
     t=0;
     while (t<16){ //circle
-        double r = 0.05;
+        double radius = 0.05;
         //vertical configuration circle
-        /* 
-        circle << r*cos(coef*t), r*sin(coef*t),-0.235;
-        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
-        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
+        /*
+        circle << radius*cos(coef*t), radius*sin(coef*t),-0.235;
+        d_circle << -radius*coef*sin(coef*t), radius*coef*cos(coef*t),0;
+        dd_circle << -radius*coef*coef*cos(coef*t), -radius*coef*coef*sin(coef*t),0;
         */
 
+        // horizontal configuration circle
+        circle << 0, -radius * sin(coef * t), radius * cos(coef * t);
+        d_circle << 0, radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
+        dd_circle << 0, -radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
 
-       // horizontal configuration circle
-        circle << 0.255,-r*sin(coef*t), -0.05+r*cos(coef*t);
-        d_circle << 0, r*coef*cos(coef*t), -r*coef*sin(coef*t);
-        dd_circle << 0,  -r*coef*coef*sin(coef*t), -r*coef*coef*cos(coef*t);
-
-        x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
+        x_ref = X_B_T * circle;
+        dx_ref = X_B_T.rotation() * d_circle;
+        ddx_ref = X_B_T.rotation() * dd_circle;
 
         IDCon.set_ref(x_ref,dx_ref, ddx_ref);
         
