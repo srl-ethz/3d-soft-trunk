@@ -40,7 +40,9 @@ void IDCon::control_loop(){
         //inverse dynamics, for detailed explanation check out "Operational Space Control: Empirical and Theoretical Comparison"
         state_ref_.ddq = J_inv*(ddx_d - dJ*state_.dq) + ((MatrixXd::Identity(st_params_.q_size, st_params_.q_size) - J_inv*J))*(-0.1*kd_*state_.dq -0.02*kp_*state_.q);
 
-        tau_ref = dyn_.B*state_ref_.ddq;
+        Vector3d f{0, 0, loadAttached_};
+
+        tau_ref = dyn_.B*state_ref_.ddq + J.transpose()*f;
         
         p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100 + gravity_compensate(state_));
         actuate(p_);

@@ -54,7 +54,6 @@ int main(){
     Vector3d x_ref_center;
     
     //x_ref << 0.1,0.00,-0.235;
-    x_ref << 0.265, 0.0, 0.;
 
 
     
@@ -65,9 +64,16 @@ int main(){
     Vector3d d_traj;
     Vector3d dd_traj;
 
-    double coef = 2 * 3.1415 / 8;
+    double period = 8;
+    double coef = 2 * 3.1415 / period;
     IDCon.gripperAttached_ = true;
     IDCon.loadAttached_ = 0;
+    getchar();
+
+    const drake::math::RigidTransformd X_W_B {IDCon.state_.tip_transforms[0].matrix()}, X_W_T{IDCon.state_.tip_transforms[2].matrix()};
+    const auto X_B_T {X_W_B.inverse() * X_W_T};
+    x_ref << 0.0, 0.0, 0.05;
+    x_ref << X_W_T*x_ref;
 
     getchar();
     std::thread print_thread(printer, std::ref(IDCon));
@@ -75,17 +81,10 @@ int main(){
     IDCon.set_ref(x_ref, dx_ref, ddx_ref);
     srl::sleep(0.1);
 
-    const drake::math::RigidTransformd X_W_B {IDCon.state_.tip_transforms[0].matrix()}, X_W_T{IDCon.state_.tip_transforms[2].matrix()};
-    const auto X_B_T {X_W_B.inverse() * X_W_T};
-
-    fmt::print("X_W_B: \n{}\n", X_W_B.GetAsMatrix4());
-    fmt::print("X_W_T: \n{}\n", X_W_T.GetAsMatrix4());
-    fmt::print("X_B_T: \n{}\n", X_B_T.GetAsMatrix4());
-
     getchar();
     IDCon.toggle_log();
     t=0;
-    while (t<20){ 
+    while (t<2.5*period){ 
         double radius = 0.05;
         //vertical configuration circle
         /*
@@ -102,35 +101,30 @@ int main(){
         */
 
        //horizontal configuration triangle
-       double loc = std::fmod(t,coef);
-       if (loc<2*3.1415/3) {
+       double loc = std::fmod(t,period);
+       if (loc < period/3) {
             traj1 << 0, radius*sin(0), radius*cos(0);
             traj2 << 0, radius*sin(2*3.1415/3), radius*cos(2*3.1415/3);
-       } else if (loc<2*2*3.1415/3){
+       } else if (loc < 2*period/3){
            traj1 << 0, radius*sin(2*3.1415/3), radius*cos(2*3.1415/3);
            traj2 << 0, radius*sin(2*2*3.1415/3), radius*cos(2*2*3.1415/3);
-       } else if (loc<2*3.1415) {
+       } else if (loc < period) {
            traj1 << 0, radius*sin(2*2*3.1415/3), radius*cos(2*2*3.1415/3);
            traj2 << 0, radius*sin(0), radius*cos(0);
        }
 
-        x_ref = traj1 + (fmod(t,2*3.1415/(3*coef))/(2*3.1415/(3*coef)))*(traj2 - traj1);
-        dx_ref = (traj2 - traj1)/(2*3.1415/(3*coef));
+        double pos = std::fmod(t,period/3);
+        x_ref = traj1 + pos*(traj2 - traj1)/(period/3);
+        dx_ref = (traj2 - traj1)/(period/3);
         ddx_ref << 0, 0, 0;
-
-
-
 
         //translate into horizontal
         x_ref = X_W_T * x_ref;
         dx_ref = X_W_T.rotation() * dx_ref;
         ddx_ref = X_W_T.rotation() * ddx_ref;
 
-
         IDCon.set_ref(x_ref,dx_ref, ddx_ref);
         
-        //fmt::print("t: {} target: {}\n", t, x_ref.transpose());
-
         t+=dt;
         srl::sleep(dt);
     }

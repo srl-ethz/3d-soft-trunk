@@ -53,37 +53,37 @@ int main(){
     Vector3d x_ref_center;
     
     //x_ref << 0.1,0.00,-0.235;
-    x_ref << 0.265, 0.0, 0.0;
 
 
     
     double t = 0;
     double dt = 0.05;
-    Vector3d circle;
-    Vector3d d_circle;
-    Vector3d dd_circle;
+    Vector3d traj1;
+    Vector3d traj2;
 
-    double coef = 2 * 3.1415 / 46;
+    double period = 37;
+    double coef = 2 * 3.1415 / period;
     QuasiStatic.gripperAttached_ = true;
     QuasiStatic.loadAttached_ = 0;
 
     getchar();
     std::thread print_thread(printer, std::ref(QuasiStatic));
     std::thread gain_thread(gain, std::ref(QuasiStatic));
-    QuasiStatic.set_ref(x_ref, dx_ref, ddx_ref);
+
     srl::sleep(0.1);
 
     const drake::math::RigidTransformd X_W_B {QuasiStatic.state_.tip_transforms[0].matrix()}, X_W_T{QuasiStatic.state_.tip_transforms[2].matrix()};
     const auto X_B_T {X_W_B.inverse() * X_W_T};
 
-    fmt::print("X_W_B: \n{}\n", X_W_B.GetAsMatrix4());
-    fmt::print("X_W_T: \n{}\n", X_W_T.GetAsMatrix4());
-    fmt::print("X_B_T: \n{}\n", X_B_T.GetAsMatrix4());
+    x_ref << 0, 0, 0.05;
+    x_ref = X_W_T*x_ref;
+
+    QuasiStatic.set_ref(x_ref, dx_ref, ddx_ref);
 
     getchar();
     QuasiStatic.toggle_log();
     t=0;
-    while (t<20){ //circle
+    while (t<1.3*period){ //circle
         double radius = 0.05;
         //vertical configuration circle
         /*
@@ -97,12 +97,31 @@ int main(){
         circle << 0, -radius * sin(coef * t), radius * cos(coef * t);
         d_circle << 0, radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
         dd_circle << 0, -radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
-
-        x_ref = X_W_T * circle;
-        dx_ref = X_W_T.rotation() * d_circle;
-        ddx_ref = X_W_T.rotation() * dd_circle;
-        QuasiStatic.set_ref(x_ref);
         */
+       //horizontal configuration triangle
+       double loc = std::fmod(t,period);
+       if (loc < period/3) {
+            traj1 << 0, radius*sin(0), radius*cos(0);
+            traj2 << 0, radius*sin(2*3.1415/3), radius*cos(2*3.1415/3);
+       } else if (loc < 2*period/3){
+           traj1 << 0, radius*sin(2*3.1415/3), radius*cos(2*3.1415/3);
+           traj2 << 0, radius*sin(2*2*3.1415/3), radius*cos(2*2*3.1415/3);
+       } else if (loc < period) {
+           traj1 << 0, radius*sin(2*2*3.1415/3), radius*cos(2*2*3.1415/3);
+           traj2 << 0, radius*sin(0), radius*cos(0);
+       }
+
+        double pos = std::fmod(t,period/3);
+        x_ref = traj1 + pos*(traj2 - traj1)/(period/3);
+        dx_ref = (traj2 - traj1)/(period/3);
+        ddx_ref << 0, 0, 0;
+
+        //translate into horizontal
+        x_ref = X_W_T * x_ref;
+        dx_ref = X_W_T.rotation() * dx_ref;
+        ddx_ref = X_W_T.rotation() * ddx_ref;
+        QuasiStatic.set_ref(x_ref);
+        
         t+=dt;
         srl::sleep(dt);
         
