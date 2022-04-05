@@ -7,7 +7,7 @@ IDCon::IDCon(const SoftTrunkParameters st_params) : ControllerPCC::ControllerPCC
     filename_ = "ID_logger";
     J_prev = MatrixXd::Zero(3, st_params.q_size);
     kp_ = 100;
-    kd_ = 5.5;
+    kd_ = 6.5;
     dt_ = 1./60;
     control_thread_ = std::thread(&IDCon::control_loop, this);
     eps = 1e-1;
