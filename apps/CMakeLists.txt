@@ -18,6 +18,12 @@ target_link_libraries(idc IDCon)
 add_executable(qs qs.cpp)
 target_link_libraries(qs QuasiStatic)
 
+add_executable(idc_beating idc_beating.cpp)
+target_link_libraries(idc_beating IDCon)
+
+add_executable(qs_beating qs_beating.cpp)
+target_link_libraries(qs_beating QuasiStatic)
+
 if(${roscpp_FOUND})
     add_executable(example_VisualizerROS example_VisualizerROS.cpp)
     target_link_libraries(example_VisualizerROS SoftTrunkModel VisualizerROS)

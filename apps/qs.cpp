@@ -44,7 +44,7 @@ void printer(QuasiStatic& QuasiStatic){ //print some stuff every once in a while
 
 int main(){
     SoftTrunkParameters st_params;
-    st_params.load_yaml("stiffness_vertical_test.yaml");
+    st_params.load_yaml("stateoftheart.yaml");
     st_params.finalize();
     QuasiStatic QuasiStatic(st_params);
     VectorXd p;
