@@ -31,7 +31,7 @@ void gain(IDCon& IDCon){ //change parameters online with keyboard to avoid recom
 }
 
 void printer(IDCon& IDCon){ //print some stuff every once in a while
-    srl::Rate r{0.3};
+    srl::Rate r{1};
     while(true){
         fmt::print("------------------------------------\n");
         fmt::print("q: {}\n",IDCon.state_.q.transpose());
@@ -94,13 +94,14 @@ int main(){
         */
 
         // horizontal configuration circle
-        /*
+        
         x_ref << 0, -radius * sin(coef * t), radius * cos(coef * t);
-        dx_ref << 0, radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
-        ddx_ref << 0, -radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
-        */
+        dx_ref << 0, -radius * coef * cos(coef * t), -radius * coef * sin(coef * t);
+        ddx_ref << 0, radius * coef * coef * sin(coef * t), -radius * coef * coef * cos(coef * t);
+        
 
        //horizontal configuration triangle
+       /*
        double loc = std::fmod(t,period);
        if (loc < period/3) {
             traj1 << 0, radius*sin(0), radius*cos(0);
@@ -117,8 +118,9 @@ int main(){
         x_ref = traj1 + pos*(traj2 - traj1)/(period/3);
         dx_ref = (traj2 - traj1)/(period/3);
         ddx_ref << 0, 0, 0;
+        */
 
-        //translate into horizontal
+        //transform into horizontal
         x_ref = X_W_T * x_ref;
         dx_ref = X_W_T.rotation() * dx_ref;
         ddx_ref = X_W_T.rotation() * ddx_ref;
