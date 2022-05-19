@@ -279,8 +279,6 @@ public:
     this->model_update_rate = params["model update rate"].as<double>();
     this->chamberConfigs = params["chamberConfigs"].as<std::vector<double>>();
     this->p_max = params["p_max"].as<int>();
-    this->prismatic = params["prismatic"].as<bool>();
-    this->horizontal = params["horizontal"].as<bool>();
 
     std::vector<std::string> sensor_vec = params["sensors"].as<std::vector<std::string>>();
     this->sensors.clear();
