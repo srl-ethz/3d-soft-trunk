@@ -19,5 +19,5 @@ p_max: 650
 prismatic: false
 sensors: [qualisys]
 model type: augmented
-horizontal: true
+horizontal: false
 ...
