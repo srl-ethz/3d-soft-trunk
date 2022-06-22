@@ -16,6 +16,8 @@ public:
     double kp;
     double kd;
 
+    void circle(int pressure, double period);
+
 private:
     void control_loop();
     /** @brief gains for ID*/

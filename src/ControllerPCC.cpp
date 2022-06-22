@@ -129,7 +129,7 @@ void ControllerPCC::toggle_log(){
             log_file_ << fmt::format(", q_{}", i);
         for (int i=0; i < st_params_.p_size; i++)
             log_file_ << fmt::format(", p_{}", i);
-
+        log_file_<< ", x_base, y_base, z_base";
         log_file_ << "\n";
     } else { //otherwise, end the log
         logging_ = false;
@@ -151,6 +151,9 @@ void ControllerPCC::log(double time){
         log_file_ << fmt::format(", {}", state_.q(i));
     for (int i=0; i < st_params_.p_size; i++)               // log real p
         log_file_ << fmt::format(", {}", p_(i));
+    for (int i=0; i < 3; i++){
+        log_file_ << fmt::format(", {}", state_.tip_transforms[st_params_.prismatic].translation()(i));
+    }
     log_file_ << "\n";
 }
 

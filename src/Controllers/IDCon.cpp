@@ -44,7 +44,7 @@ void IDCon::control_loop(){
         
         p_ = mdl_->pseudo2real(dyn_.A_pseudo.inverse()*tau_ref/100);
 
-        actuate(p_);
+        //actuate(p_);
     }
 
 }
@@ -77,4 +77,25 @@ Eigen::MatrixXd IDCon::computePinv(Eigen::MatrixXd j,double e,double lambda)
 	Eigen::MatrixXd pJacobian(j.cols(), j.rows());
 	dampedPseudoInverse(j,e,lambda, pJacobian, Eigen::ComputeThinU | Eigen::ComputeThinV);
 	return pJacobian;
+}
+
+void IDCon::circle(int pressure, double period){
+    toggle_log();
+    srl::Rate r{1./dt_};
+    double t = 0;
+
+    double c = 2 * 3.1415 / period;
+
+    VectorXd p = VectorXd::Zero(4);
+
+    p << pressure, 0, pressure, 0;
+    srl::sleep(5);
+    while (t < 3*period){
+        for (int i = 0; i < st_params_.num_segments; i++){
+            p(2*i) = cos(c*t) * pressure;
+            p(2*i+1) = sin(c*t) * pressure;
+        }
+        actuate(mdl_->pseudo2real(p));
+        r.sleep();
+    }
 }

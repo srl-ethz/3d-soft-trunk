@@ -56,44 +56,10 @@ int main(){
     VectorXd p;
     srl::State state = st_params.getBlankState();
 
-    Vector3d x_ref_center;
-    
-    x_ref << 0.1,0.00,-0.22;
-
-    
-    double t = 0;
-    double dt = 0.1;
-    Vector3d circle;
-    Vector3d d_circle;
-    Vector3d dd_circle;
-
-    double coef = 2 * 3.1415 / 8;
 
     getchar();
-    idc.set_ref(x_ref, dx_ref, ddx_ref);
-    srl::sleep(0.1);
-    getchar();
-        std::thread print_thread(printer, std::ref(idc));
-
-    // arguments to pass by reference must be explicitly designated as so
-    // https://en.cppreference.com/w/cpp/thread/thread/thread
-    std::thread gain_thread(gain, std::ref(idc));
-    
-    while (true){ //circle
-        double r = 0.1;
-        circle << r*cos(coef*t), r*sin(coef*t),-0.22;
-        d_circle << -r*coef*sin(coef*t), r*coef*cos(coef*t),0;
-        dd_circle << -r*coef*coef*cos(coef*t), -r*coef*coef*sin(coef*t),0;
-
-        x_ref = circle;
-        dx_ref = d_circle;
-        ddx_ref = dd_circle;
-
-        idc.set_ref(x_ref,dx_ref, ddx_ref);
-        
-        t+=dt;
-        srl::sleep(dt);
-    }
+    // pressure, period
+    idc.circle(500, 8);
 
     return 1;
 }
