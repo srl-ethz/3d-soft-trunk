@@ -24,6 +24,9 @@ endif(${roscpp_FOUND})
 add_executable(example_OSC example_OSC.cpp)
 target_link_libraries(example_OSC ControllerPCC OSC)
 
+add_executable(example_IDCon example_IDCon.cpp)
+target_link_libraries(example_IDCon ControllerPCC IDCon)
+
 add_executable(simulate_logged_pressure simulate_logged_pressure.cpp)
 target_link_libraries(simulate_logged_pressure ControllerPCC Threads::Threads)
 
