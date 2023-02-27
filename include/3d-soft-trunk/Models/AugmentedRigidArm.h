@@ -42,12 +42,11 @@ private:
     /** @brief SceneGraph manages all the systems that uses geometry
      * https://drake.mit.edu/doxygen_cxx/classdrake_1_1geometry_1_1_scene_graph.html
      * */
-    drake::geometry::SceneGraph<double> &scene_graph = *builder.AddSystem<drake::geometry::SceneGraph>();
+    drake::geometry::SceneGraph<double> *scene_graph;
     /** @brief MultibodyPlant is the model of interconnected bodies.
      * https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_multibody_plant.html
      */
-    drake::multibody::MultibodyPlant<double> *multibody_plant = builder.AddSystem<drake::multibody::MultibodyPlant<double>>(
-            1.0e-3);
+    drake::multibody::MultibodyPlant<double> *multibody_plant;
     std::unique_ptr<drake::systems::Diagram<double>> diagram;
     std::unique_ptr<drake::systems::Context<double>> diagram_context;
     // drake variables end
