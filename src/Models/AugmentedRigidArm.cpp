@@ -37,7 +37,10 @@ void AugmentedRigidArm::setup_drake_model()
                     scene_graph.get_source_pose_port(multibody_plant->get_source_id().value()));
     builder.Connect(scene_graph.get_query_output_port(), multibody_plant->get_geometry_query_input_port());
 
-    drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, scene_graph);
+    // drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, scene_graph);
+    // drake::geometry::MeshcatVisualizer::AddToBuilder(&builder, scene_graph);
+    // https://drake.mit.edu/doxygen_cxx/namespacedrake_1_1visualization.html#a11c1e790d0738fd19d648423c5ce3c65
+    drake::visualization::AddDefaultVisualization(&builder);  // TODO: this errors when run
 
     diagram = builder.Build();
     diagram_context = diagram->CreateDefaultContext();
@@ -139,7 +142,7 @@ void AugmentedRigidArm::update_drake_model()
     multibody_plant->SetVelocities(&plant_context, dxi_);
 
     // update drake visualization
-    diagram->Publish(*diagram_context);
+    // diagram->Publish(*diagram_context);  // TODO: replace
 
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);

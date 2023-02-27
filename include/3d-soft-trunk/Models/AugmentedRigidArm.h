@@ -3,7 +3,8 @@
 #include <Eigen/Dense>
 #include <drake/common/drake_assert.h>
 #include <drake/common/find_resource.h>
-#include <drake/geometry/drake_visualizer.h>
+#include <drake/geometry/meshcat.h>
+#include <drake/geometry/meshcat_visualizer.h>
 #include <drake/geometry/scene_graph.h>
 #include <drake/multibody/parsing/parser.h>
 #include <drake/multibody/plant/multibody_plant.h>
@@ -16,9 +17,10 @@
 #include <drake/math/gradient.h>
 #include <drake/common/autodiff.h>
 #include <drake/common/autodiffxd.h>
-#include <drake/common/autodiffxd_make_coherent.h>
+// #include <drake/common/autodiffxd_make_coherent.h>
 #include <drake/common/autodiff_overloads.h>
 #include <drake/math/autodiff.h>
+#include "drake/visualization/visualization_config_functions.h"
 #include "mdefs.h"
 #include "3d-soft-trunk/SoftTrunk_common.h"
 
