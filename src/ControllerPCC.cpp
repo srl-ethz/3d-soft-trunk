@@ -86,6 +86,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 
 
 bool ControllerPCC::simulate(const VectorXd &p){
+    assert(p.size() == st_params_.p_size);
     mdl_->update(state_);
     this->dyn_ = mdl_->dyn_;
     state_prev_.ddq = state_.ddq;
