@@ -26,6 +26,7 @@ void Characterize::angularError(int segment, std::string fname){
     MatrixXd angle_vals = MatrixXd::Zero(360,4);
 
     for (double i = 0; i < 360; i+=1.){ //Draw a circle while logging measured angle vs desired angle
+        int int_i = (int) i;
         pressures(2*(segment+st_params_.prismatic)+st_params_.prismatic) = 500*cos(i*deg2rad);
         pressures(2*(segment+st_params_.prismatic)+1+st_params_.prismatic) = 500*sin(i*deg2rad);
 
@@ -34,14 +35,14 @@ void Characterize::angularError(int segment, std::string fname){
         double angle = atan2(state_.q(2*segment + st_params_.prismatic + 1),state_.q(2*segment + st_params_.prismatic))*180/3.14156;
         if (angle < 0) angle+=360;
 
-        log_file_ << fmt::format("{},{},{}", (double) i, angle, sqrt(x_(0)*x_(0)+x_(1)*x_(1)));
-        ang_err(i) = i - angle;
-        if (abs(ang_err(i)) > 180) ang_err(i) -= ((ang_err(i) > 0) - (ang_err(i) < 0))*360;
-        angle_vals(i,0) = i*i*i;
-        angle_vals(i,1) = i*i;
-        angle_vals(i,2) = i;
-        angle_vals(i,3) = 1;
-        radii(i) = sqrt(x_(0)*x_(0)+x_(1)*x_(1));
+        log_file_ << fmt::format("{},{},{}", i, angle, sqrt(x_(0)*x_(0)+x_(1)*x_(1)));
+        ang_err(int_i) = i - angle;
+        if (abs(ang_err(int_i)) > 180) ang_err(int_i) -= ((ang_err(int_i) > 0) - (ang_err(int_i) < 0))*360;
+        angle_vals(int_i,0) = i*i*i;
+        angle_vals(int_i,1) = i*i;
+        angle_vals(int_i,2) = i;
+        angle_vals(int_i,3) = 1;
+        radii(int_i) = sqrt(x_(0)*x_(0)+x_(1)*x_(1));
 
         log_file_ << "\n";
         r.sleep();
@@ -199,7 +200,7 @@ void Characterize::actuation(int segment, int pressure){
 
     MatrixXd A = MatrixXd::Zero(2,3);
     A << A_top, A_bot;
-    fmt::print("A for segment {}:\n {}\n",segment,A);
+    std::cout << "A for segment " << segment << ":\n" << A << std::endl;
     for (int i = 0; i < 6; i++){
         new_params.chamberConfigs[6*segment+i] = A(i/3,i%3);
     }
