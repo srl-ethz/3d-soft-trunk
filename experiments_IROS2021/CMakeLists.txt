@@ -1,5 +1,5 @@
 add_executable(record_qtm_frames record_qtm_frames.cpp)
-target_link_libraries(record_qtm_frames QualisysClient)
+target_link_libraries(record_qtm_frames QualisysClient yaml-cpp)
 
 add_executable(sensor_visualize sensor_visualize.cpp)
 target_link_libraries(sensor_visualize SoftTrunkModel SerialInterface)
