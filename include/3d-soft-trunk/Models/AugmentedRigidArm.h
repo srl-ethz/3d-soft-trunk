@@ -5,6 +5,7 @@
 #include <drake/common/find_resource.h>
 #include <drake/geometry/meshcat.h>
 #include <drake/geometry/meshcat_visualizer.h>
+#include <drake/geometry/drake_visualizer.h>
 #include <drake/geometry/scene_graph.h>
 #include <drake/multibody/parsing/parser.h>
 #include <drake/multibody/plant/multibody_plant.h>

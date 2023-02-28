@@ -30,16 +30,12 @@ void AugmentedRigidArm::setup_drake_model()
                                 world_to_base);
     multibody_plant->Finalize();
 
-    // connect plant with scene_graph to get collision info
-    // builder.Connect(multibody_plant->get_geometry_poses_output_port(),
-    //                 scene_graph->get_source_pose_port(multibody_plant->get_source_id().value()));
-    // builder.Connect(scene_graph->get_query_output_port(), multibody_plant->get_geometry_query_input_port());
-
-    // drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, scene_graph);
-    // drake::geometry::MeshcatVisualizer::AddToBuilder(&builder, scene_graph);
+    // Use the DrakeVisualizerd, which can talk to meldis through LCM communication instead of the deprecated drake-visualizer.
+    // It is also possible to directly create a meshcat visualization using AddDefaultVisualization, but this resets the camera view each time program is run and thus is less useful...
+    drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, *scene_graph);
     // https://drake.mit.edu/doxygen_cxx/namespacedrake_1_1visualization.html#a11c1e790d0738fd19d648423c5ce3c65
     // https://drake.mit.edu/pydrake/pydrake.visualization.html
-    drake::visualization::AddDefaultVisualization(&builder);  // TODO: this errors when run
+    // drake::visualization::AddDefaultVisualization(&builder);  // this works as well and doesn't require meldis to be running, but it resets camera view each time program is run...
 
     diagram = builder.Build();
     diagram_context = diagram->CreateDefaultContext();
@@ -142,7 +138,7 @@ void AugmentedRigidArm::update_drake_model()
     multibody_plant->SetVelocities(&plant_context, dxi_);
 
     // update drake visualization
-    // diagram->Publish(*diagram_context);  // TODO: replace
+    diagram->ForcedPublish(*diagram_context);
 
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);

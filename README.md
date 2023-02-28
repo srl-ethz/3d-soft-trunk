@@ -49,7 +49,9 @@ cmake -DCMAKE_PREFIX_PATH=/opt/drake .
 make
 ```
 
-Executables are output to bin, libraries are output to lib/. For visualization of the model, use the Drake Visualizer, at `/opt/drake/bin/drake-visualizer`.
+Executables are output to bin, libraries are output to lib/.
+For visualization of the model, use the Meshcat Visualizer (Drake visualizer [has](https://stackoverflow.com/questions/75303201/drake-meshcat-visualizer-example-on-ubuntu-22-04-with-apt-installation) [been](https://github.com/RobotLocomotion/drake/issues/) deprecated).
+Launch `/opt/drake/bin/meldis` (which [relays LCM connections from Drake to the Meshcat visualization](https://drake.mit.edu/pydrake/pydrake.visualization.meldis.html)), and go to the URL shown (probably http://localhost:7000) in your browser.
 
 ## Python interface
 In its current implementation, you must set the `$PYTHONPATH` environment variable to point to the directory containing the library binaries in order to run. (probably `3d-soft-trunk/lib`)
