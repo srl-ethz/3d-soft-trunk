@@ -34,6 +34,9 @@ p_max: 500
 model update rate: 100
 #model, valid args: augmented, lagrange
 model type: "augmented"
+# coordinate type, thetax or phitheta
+# thetax on Lagrange model is unsupported, phitheta on augmented model might not work
+coord_type: "thetax"
 #########################
 # SENSOR CONFIGURATIONS #
 #########################
