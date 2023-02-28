@@ -7,13 +7,13 @@
 int main(){
 
     SoftTrunkParameters st_params;
-    // st_params.load_yaml("softtrunkparams_example.yaml");
+    st_params.load_yaml("softtrunkparams_example.yaml");
     st_params.sensors = {SensorType::simulator};
     st_params.finalize();
     ControllerPCC cpcc = ControllerPCC(st_params);
 
     srl::State state = st_params.getBlankState();
-    VectorXd p = VectorXd::Zero(3*st_params.num_segments + 1);  // each chamber + gripper
+    VectorXd p = VectorXd::Zero(st_params.p_size);  // each chamber + gripper
     double time = 4.0;
     const double dt = 0.01;
 
@@ -28,15 +28,17 @@ int main(){
     }
     std::cout << "q: " << state.q.transpose() << std::endl;
     cpcc.state_ = state;
+    cpcc.state_prev_ = state;
     std::cout << "x: " << cpcc.state_.tip_transforms[st_params.num_segments+st_params.prismatic].translation().transpose() << std::endl;
     const double hz = 1./dt;
-    // cpcc.set_frequency(hz);
+    srl::Rate r(hz);
+    cpcc.dt_ = dt;
 
     auto start = std::chrono::steady_clock::now();
 
     for (double t=0; t < time; t+=dt){
         bool ret = cpcc.simulate(p);
-        // cpcc.get_state(state);
+        r.sleep();
     }
 
 
