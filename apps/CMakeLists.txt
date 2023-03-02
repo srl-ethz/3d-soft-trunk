@@ -1,5 +1,11 @@
 ### examples
 
+add_executable(example_Simulator example_Simulator.cpp)
+target_link_libraries(example_Simulator ControllerPCC)
+
+add_executable(example_AugmentedRigidArm example_AugmentedRigidArm.cpp)
+target_link_libraries(example_AugmentedRigidArm AugmentedRigidArm)
+
 add_executable(example_Characterizer example_Characterizer.cpp)
 target_link_libraries(example_Characterizer Characterizer)
 
@@ -7,7 +13,7 @@ add_executable(example_Model example_Model.cpp)
 target_link_libraries(example_Model Model)
 
 add_executable(example_StateEstimator example_StateEstimator.cpp)
-target_link_libraries(example_StateEstimator StateEstimator)
+target_link_libraries(example_StateEstimator StateEstimator Model)
 
 add_executable(example_Controller example_Controller.cpp)
 target_link_libraries(example_Controller ControllerPCC)

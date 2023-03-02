@@ -11,19 +11,17 @@ AugmentedRigidArm::AugmentedRigidArm(const SoftTrunkParameters &st_params): st_p
 void AugmentedRigidArm::setup_drake_model()
 {
     // load robot model into Drake
-    // cf: https://drake.guzhaoyuan.com/thing-to-do-in-drake/create-a-urdf-sdf-robot
-    // https://github.com/RobotLocomotion/drake/blob/fc77701531605956fc3f6979c9bd2a156e354039/examples/multibody/cart_pole/cart_pole_passive_simulation.cc
-    scene_graph.set_name("scene_graph");
-    multibody_plant->set_name(st_params.robot_name);
-    multibody_plant->RegisterAsSourceForSceneGraph(&scene_graph);
+    // cf: https://drake.guzhaoyuan.com/thing-to-do-in-drake/create-a-urdf-sdf-robot (this is outdated so just for reference)
+    // example robot: https://github.com/RobotLocomotion/drake/blob/master/examples/multibody/cart_pole/cart_pole_passive_simulation.cc
+    // How to add multibody plant connected to a scenegraph:
+    // https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_multibody_plant.html#add_multibody_plant_scene_graph
+    std::tie(multibody_plant, scene_graph) = drake::multibody::AddMultibodyPlantSceneGraph(&builder, 0.01);
 
     std::string urdf_file = fmt::format("{}/urdf/{}.urdf", SOFTTRUNK_PROJECT_DIR, st_params.robot_name);
     fmt::print("loading URDF file {}...\n", urdf_file);
     // load URDF into multibody_plant
-    drake::multibody::ModelInstanceIndex plant_model_instance_index = drake::multibody::Parser(multibody_plant,
-                                                                                               &scene_graph)
-                                                                          .AddModelFromFile(
-                                                                              urdf_file);
+    drake::multibody::ModelInstanceIndex plant_model_instance_index = drake::multibody::Parser(multibody_plant, scene_graph)
+                                                                      .AddModelFromFile(urdf_file);
 
     // weld base link to world frame
     drake::math::RigidTransform<double> world_to_base{};
@@ -32,15 +30,16 @@ void AugmentedRigidArm::setup_drake_model()
                                 world_to_base);
     multibody_plant->Finalize();
 
-    // connect plant with scene_graph to get collision info
-    builder.Connect(multibody_plant->get_geometry_poses_output_port(),
-                    scene_graph.get_source_pose_port(multibody_plant->get_source_id().value()));
-    builder.Connect(scene_graph.get_query_output_port(), multibody_plant->get_geometry_query_input_port());
-
-    drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, scene_graph);
+    // Use the DrakeVisualizerd, which can talk to meldis through LCM communication instead of the deprecated drake-visualizer.
+    // It is also possible to directly create a meshcat visualization using AddDefaultVisualization, but this resets the camera view each time program is run and thus is less useful...
+    drake::geometry::DrakeVisualizerd::AddToBuilder(&builder, *scene_graph);
+    // https://drake.mit.edu/doxygen_cxx/namespacedrake_1_1visualization.html#a11c1e790d0738fd19d648423c5ce3c65
+    // https://drake.mit.edu/pydrake/pydrake.visualization.html
+    // drake::visualization::AddDefaultVisualization(&builder);  // this works as well and doesn't require meldis to be running, but it resets camera view each time program is run...
 
     diagram = builder.Build();
     diagram_context = diagram->CreateDefaultContext();
+    diagram->SetDefaultContext(diagram_context.get());
 
     // This is supposed to be required to visualize without simulation, but it does work without one...
     // drake::geometry::DrakeVisualizer::DispatchLoadMessage(scene_graph, lcm);
@@ -139,7 +138,7 @@ void AugmentedRigidArm::update_drake_model()
     multibody_plant->SetVelocities(&plant_context, dxi_);
 
     // update drake visualization
-    diagram->Publish(*diagram_context);
+    diagram->ForcedPublish(*diagram_context);
 
     // update some dynamic & kinematic params
     multibody_plant->CalcMassMatrix(plant_context, &B_xi_);

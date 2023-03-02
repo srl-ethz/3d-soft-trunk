@@ -18,7 +18,12 @@ int main(){
     mdl.update(state);
     dyn = mdl.dyn_;
 
-    fmt::print("Actuation: {}\n Inertia: {}\n Stiffness: {}\n Coriolis: {}\n Damping: {}\n Gravity: {}",dyn.A, dyn.B, dyn.K, dyn.c, dyn.D, dyn.g);
+    std::cout << "Actuation: " << dyn.A << std::endl;
+    std::cout << "Inertia: " << dyn.B << std::endl;
+    std::cout << "Stiffness: " << dyn.K << std::endl;
+    std::cout << "Coriolis: " << dyn.c << std::endl;
+    std::cout << "Damping: " << dyn.D << std::endl;
+    std::cout << "Gravity: " << dyn.g << std::endl;
 
     getchar();
     return 0;

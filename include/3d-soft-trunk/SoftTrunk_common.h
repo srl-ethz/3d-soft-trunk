@@ -306,6 +306,15 @@ public:
         fmt::print("Error reading model type from YAML!\n");
         assert(false);
     }
+    std::string coordtype = params["coord_type"].as<std::string>();
+    if (coordtype == "thetax"){
+        coord_type = CoordType::thetax;
+    } else if (coordtype == "phitheta"){
+        coord_type = CoordType::phitheta;
+    } else {
+        fmt::print("Error reading coordinate type from YAML!\n");
+        assert(false);
+    }
 
     if (sensor_refresh_rate < model_update_rate){
         model_update_rate = sensor_refresh_rate;

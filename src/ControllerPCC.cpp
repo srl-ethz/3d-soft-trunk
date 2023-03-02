@@ -86,6 +86,7 @@ void ControllerPCC::actuate(const VectorXd &p) { //actuates valves according to 
 
 
 bool ControllerPCC::simulate(const VectorXd &p){
+    assert(p.size() == st_params_.p_size);
     mdl_->update(state_);
     this->dyn_ = mdl_->dyn_;
     state_prev_.ddq = state_.ddq;
@@ -157,18 +158,24 @@ void ControllerPCC::log(double time){
 void ControllerPCC::sensor_loop(){
     srl::Rate r{st_params_.sensor_refresh_rate};
     while(run_){
+        r.sleep();
+        if (st_params_.sensors[0] == SensorType::simulator)
+            continue;  // in simulation model, the state is updated within simulate()
+
         ste_->poll_sensors();
         this->state_ = ste_->state_;
-        r.sleep();
     }
 }
 
 void ControllerPCC::model_loop(){
     srl::Rate r{st_params_.model_update_rate};
     while(run_){
+        r.sleep();
+        if (st_params_.sensors[0] == SensorType::simulator)
+            continue;  // in simulation model, the model is updated within simulate()
+        // TODO: this may conflict with the visualization loop if state is not received from the sensor?
         mdl_->update(state_);
         this->dyn_ = mdl_->dyn_;
-        r.sleep();
     }
 }
 
