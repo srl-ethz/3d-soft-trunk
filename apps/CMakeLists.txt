@@ -13,7 +13,7 @@ add_executable(example_Model example_Model.cpp)
 target_link_libraries(example_Model Model)
 
 add_executable(example_StateEstimator example_StateEstimator.cpp)
-target_link_libraries(example_StateEstimator StateEstimator)
+target_link_libraries(example_StateEstimator StateEstimator Model)
 
 add_executable(example_Controller example_Controller.cpp)
 target_link_libraries(example_Controller ControllerPCC)
