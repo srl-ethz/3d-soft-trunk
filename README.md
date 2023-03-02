@@ -1,18 +1,11 @@
 # 3D Soft Trunk repository
 ## [SoPrA fabrication guide](https://gitlab.ethz.ch/srl/3d-soft-trunk/-/wikis/home)
-Available in the wiki of this repository
 
 ## Installing this repository
 
-In the desired directory, run...
+Set up SSH key authentication for GitHub, then in the desired directory, run...
 ```bash
-## option 1: clone with https- enter username & password each time you access remote
-git clone --recursive https://gitlab.ethz.ch/srl/3d-soft-trunk.git 
-```
-or
-```bash
-## option 2: clone with SSH- need to set up SSH key in GitLab, no username / password required
-git clone --recursive git@gitlab.ethz.ch:srl/3d-soft-trunk.git
+git clone --recursive git@github.com:srl-ethz/3d-soft-trunk.git
 ```
 (`--recursive` option will automatically clone the submodules as well)
 
