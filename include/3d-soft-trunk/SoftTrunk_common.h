@@ -247,7 +247,6 @@ public:
         assert(num_segments == shear_modulus.size());
         assert(num_segments == drag_coef.size());
         assert(chamberConfigs.size() == num_segments*6);
-        assert(angOffsetCoeffs.size() == num_segments*12);
         p_size = 3*num_segments+2*prismatic+1;
         q_size = 2*num_segments*sections_per_segment+prismatic;
         p_pseudo_size = q_size;
