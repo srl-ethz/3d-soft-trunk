@@ -4,6 +4,29 @@
     simple forward simulation of the trunk
 */
 
+void keys_to_pressure_thread(VectorXd& p){
+    /**
+     * keep listening to the keyboard, when user presses 1, the first chamber is pressurized, and so on.
+     * when user presses 0, all chambers are depressurized.
+     */
+    while(true){
+        char c;
+        while(true){
+            c = getchar();
+            // convert to int if it's a number
+            if (c >= '0' && c <= '9'){
+                c -= '0';
+                if (c == 0){
+                    p.setZero();
+                } else if (c <= p.size()){
+                    p(c-1) += 100;
+                }
+                std::cout << "p: " << p.transpose() << std::endl;
+            }
+        }
+    }
+}
+
 int main(){
 
     SoftTrunkParameters st_params;
@@ -14,7 +37,7 @@ int main(){
 
     srl::State state = st_params.getBlankState();
     VectorXd p = VectorXd::Zero(st_params.p_size);  // each chamber + gripper
-    double time = 4.0;
+    double time = 30.0;
     const double dt = 0.01;
 
     for (int i = 0; i < st_params.num_segments; i++) {
@@ -35,6 +58,9 @@ int main(){
     cpcc.dt_ = dt;
 
     auto start = std::chrono::steady_clock::now();
+
+    std::thread key_thread(keys_to_pressure_thread, std::ref(p));
+    std::cout << "Press 1-9 and [ENTER] to pressurize the corresponding chamber, 0 [ENTER] to depressurize all chambers." << std::endl;
 
     for (double t=0; t < time; t+=dt){
         bool ret = cpcc.simulate(p);
