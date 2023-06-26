@@ -1,5 +1,6 @@
 # 3D Soft Trunk repository
-## [SoPrA fabrication guide](https://gitlab.ethz.ch/srl/3d-soft-trunk/-/wikis/home)
+## [SoPrA fabrication guide](https://github.com/srl-ethz/3d-soft-trunk/wiki)
+check the Wiki of this repo for details of fabrication process, links to STL files, etc.
 
 ## Installing this repository
 
