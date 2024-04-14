@@ -22,13 +22,16 @@ pip3 install xacro # used to convert robot model files from XACRO to URDF
 
 ## Install Drake
 
+
 Refer to [Drake documentation- binary installation](https://drake.mit.edu/from_binary.html) and [Drake sample CMake project](https://github.com/RobotLocomotion/drake-external-examples/tree/master/drake_cmake_installed).
 
-For Ubuntu 20.04, basic steps are:
+For Ubuntu 22.04, basic steps are:
 ```bash
-curl -O https://drake-packages.csail.mit.edu/drake/nightly/drake-latest-focal.tar.gz
+## Recent Drake releases have a breaking change in the URDF loading functions- I've checked that v1.16.0 works, so we will use that version
+## older releases can be found in https://github.com/RobotLocomotion/drake/releases
+https://github.com/RobotLocomotion/drake/releases/download/v1.16.0/drake-20230518-jammy.tar.gz  # for Ubuntu 22.04 = Jammy Jellyfish
 ## decompress and place drake files into /opt/drake
-sudo tar -xvzf drake-latest-focal.tar.gz -C /opt
+sudo tar -xvzf drake-20230518-jammy.tar.gz -C /opt
 ## install prerequisites
 sudo /opt/drake/share/drake/setup/install_prereqs
 ```
