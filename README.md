@@ -12,7 +12,7 @@ git clone --recursive git@github.com:srl-ethz/3d-soft-trunk.git
 
 ## Install necessary packages for mobilerack-interface
 
-**Refer to [README of mobilerack-interface](mobilerack-interface/README.md)**
+**Refer to [README of mobilerack-interface](https://github.com/srl-ethz/mobilerack-interface)**
 
 Also install these packages:
 ```bash
@@ -29,9 +29,9 @@ For Ubuntu 22.04, basic steps are:
 ```bash
 ## Recent Drake releases have a breaking change in the URDF loading functions- I've checked that v1.16.0 works, so we will use that version
 ## older releases can be found in https://github.com/RobotLocomotion/drake/releases
-https://github.com/RobotLocomotion/drake/releases/download/v1.16.0/drake-20230518-jammy.tar.gz  # for Ubuntu 22.04 = Jammy Jellyfish
+curl -fsSLO https://github.com/RobotLocomotion/drake/releases/download/v1.40.0/drake-1.40.0-noble.tar.gz  # for Ubuntu 24.04 = Noble Numbat
 ## decompress and place drake files into /opt/drake
-sudo tar -xvzf drake-20230518-jammy.tar.gz -C /opt
+sudo tar -xvzf drake-1.40.0-noble.tar.gz -C /opt
 ## install prerequisites
 sudo /opt/drake/share/drake/setup/install_prereqs
 ```
@@ -47,8 +47,11 @@ make
 ```
 
 Executables are output to bin, libraries are output to lib/.
+
 For visualization of the model, use the Meshcat Visualizer (Drake visualizer [has](https://stackoverflow.com/questions/75303201/drake-meshcat-visualizer-example-on-ubuntu-22-04-with-apt-installation) [been](https://github.com/RobotLocomotion/drake/issues/) deprecated).
 Launch `/opt/drake/bin/meldis` (which [relays LCM connections from Drake to the Meshcat visualization](https://drake.mit.edu/pydrake/pydrake.visualization.meldis.html)), and go to the URL shown (probably http://localhost:7000) in your browser.
+
+You may have to run `pip install "numpy<2.0" matplotlib pyyaml` in your Python environment, for running Drake visualizer.
 
 ## Python interface
 In its current implementation, you must set the `$PYTHONPATH` environment variable to point to the directory containing the library binaries in order to run. (probably `3d-soft-trunk/lib`)
