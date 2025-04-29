@@ -25,10 +25,9 @@ pip3 install xacro # used to convert robot model files from XACRO to URDF
 
 Refer to [Drake documentation- binary installation](https://drake.mit.edu/from_binary.html) and [Drake sample CMake project](https://github.com/RobotLocomotion/drake-external-examples/tree/master/drake_cmake_installed).
 
-For Ubuntu 22.04, basic steps are:
+For Ubuntu 24.04, basic steps are:
 ```bash
-## Recent Drake releases have a breaking change in the URDF loading functions- I've checked that v1.16.0 works, so we will use that version
-## older releases can be found in https://github.com/RobotLocomotion/drake/releases
+## other releases can be found in https://github.com/RobotLocomotion/drake/releases
 curl -fsSLO https://github.com/RobotLocomotion/drake/releases/download/v1.40.0/drake-1.40.0-noble.tar.gz  # for Ubuntu 24.04 = Noble Numbat
 ## decompress and place drake files into /opt/drake
 sudo tar -xvzf drake-1.40.0-noble.tar.gz -C /opt
