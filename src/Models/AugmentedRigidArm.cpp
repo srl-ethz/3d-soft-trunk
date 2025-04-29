@@ -21,7 +21,7 @@ void AugmentedRigidArm::setup_drake_model()
     fmt::print("loading URDF file {}...\n", urdf_file);
     // load URDF into multibody_plant
     drake::multibody::ModelInstanceIndex plant_model_instance_index = drake::multibody::Parser(multibody_plant, scene_graph)
-                                                                      .AddModelFromFile(urdf_file);
+                                                                      .AddModels(urdf_file)[0];
 
     // weld base link to world frame
     drake::math::RigidTransform<double> world_to_base{};
